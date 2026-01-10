@@ -7,16 +7,55 @@ definePageMeta({
 
 // Timer state
 const timerMode = ref<"countdown" | "unlimited">("countdown");
-const targetMinutes = ref(10);
+const targetMinutes = ref(1);
 const elapsedSeconds = ref(0);
 const isRunning = ref(false);
 const isPaused = ref(false);
 const timerInterval = ref<ReturnType<typeof setInterval> | null>(null);
 const category = ref("sitting");
 const isSaving = ref(false);
+const customMinutes = ref<string>("");
+const loopCount = ref(1);
+const loopsCompleted = ref(0);
+const bellSound = ref("bell");
+const showSettings = ref(false);
 
-// Timer presets
-const presets = [5, 10, 15, 20, 30, 45, 60];
+// Timer presets (includes 30s for debug only in dev mode)
+const presets = computed(() => {
+  const basePresets = [
+    { label: "1m", seconds: 60 },
+    { label: "3m", seconds: 180 },
+    { label: "5m", seconds: 300 },
+    { label: "6m", seconds: 360 },
+    { label: "10m", seconds: 600 },
+    { label: "15m", seconds: 900 },
+    { label: "20m", seconds: 1200 },
+    { label: "30m", seconds: 1800 },
+    { label: "60m", seconds: 3600 },
+    { label: "Custom", seconds: -1 },
+    { label: "∞", seconds: 0 },
+  ];
+  
+  // Add 30s debug preset in dev mode only
+  if (process.dev) {
+    basePresets.unshift({ label: "30s", seconds: 30 });
+  }
+  
+  return basePresets;
+});
+
+// Loop options
+const loopOptions = [1, 2, 4, 5, 10, Infinity];
+
+// Bell sounds
+const bellSounds = [
+  { value: "bell", label: "Bell" },
+  { value: "chime", label: "Chime" },
+  { value: "gong", label: "Gong" },
+  { value: "gong2", label: "Gong 2" },
+  { value: "cymbal", label: "Cymbal" },
+  { value: "silence", label: "None" },
+];
 
 // Activity categories
 const categories = [
@@ -32,10 +71,10 @@ const categories = [
 // Computed display values
 const displayTime = computed(() => {
   if (timerMode.value === "countdown") {
-    const remaining = Math.max(
-      0,
-      targetMinutes.value * 60 - elapsedSeconds.value
-    );
+    const targetSeconds = customMinutes.value 
+      ? parseInt(customMinutes.value) * 60 
+      : targetMinutes.value;
+    const remaining = Math.max(0, targetSeconds - elapsedSeconds.value);
     const mins = Math.floor(remaining / 60);
     const secs = remaining % 60;
     return `${mins}:${secs.toString().padStart(2, "0")}`;
@@ -48,34 +87,53 @@ const displayTime = computed(() => {
 
 const progress = computed(() => {
   if (timerMode.value === "countdown") {
-    return (elapsedSeconds.value / (targetMinutes.value * 60)) * 100;
+    const targetSeconds = customMinutes.value 
+      ? parseInt(customMinutes.value) * 60 
+      : targetMinutes.value;
+    return (elapsedSeconds.value / targetSeconds) * 100;
   }
   return 0;
 });
 
 const isComplete = computed(() => {
-  return (
-    timerMode.value === "countdown" &&
-    elapsedSeconds.value >= targetMinutes.value * 60
-  );
+  if (timerMode.value !== "countdown") return false;
+  const targetSeconds = customMinutes.value 
+    ? parseInt(customMinutes.value) * 60 
+    : targetMinutes.value;
+  return elapsedSeconds.value >= targetSeconds;
 });
 
 // Timer controls
 function startTimer() {
   isRunning.value = true;
   isPaused.value = false;
+  showSettings.value = false; // Hide settings when starting
   timerInterval.value = setInterval(() => {
     elapsedSeconds.value++;
 
     // Check for completion in countdown mode
-    if (
-      timerMode.value === "countdown" &&
-      elapsedSeconds.value >= targetMinutes.value * 60
-    ) {
-      stopTimer();
-      playBell();
+    if (timerMode.value === "countdown") {
+      const targetSeconds = customMinutes.value 
+        ? parseInt(customMinutes.value) * 60 
+        : targetMinutes.value;
+      if (elapsedSeconds.value >= targetSeconds) {
+        playBell();
+        handleLoopOrComplete();
+      }
     }
   }, 1000);
+}
+
+function handleLoopOrComplete() {
+  loopsCompleted.value++;
+  if (loopsCompleted.value < loopCount.value) {
+    // Loop: reset and continue
+    elapsedSeconds.value = 0;
+  } else {
+    // All loops complete
+    showSettings.value = true; // Show settings again when complete
+    stopTimer();
+  }
 }
 
 function pauseTimer() {
@@ -91,12 +149,14 @@ function resumeTimer() {
   timerInterval.value = setInterval(() => {
     elapsedSeconds.value++;
 
-    if (
-      timerMode.value === "countdown" &&
-      elapsedSeconds.value >= targetMinutes.value * 60
-    ) {
-      stopTimer();
-      playBell();
+    if (timerMode.value === "countdown") {
+      const targetSeconds = customMinutes.value 
+        ? parseInt(customMinutes.value) * 60 
+        : targetMinutes.value;
+      if (elapsedSeconds.value >= targetSeconds) {
+        playBell();
+        handleLoopOrComplete();
+      }
     }
   }, 1000);
 }
@@ -113,24 +173,28 @@ function stopTimer() {
 function resetTimer() {
   stopTimer();
   elapsedSeconds.value = 0;
+  loopsCompleted.value = 0;
+  customMinutes.value = "";
 }
 
 function playBell() {
-  // TODO: Implement actual audio playback when bell sounds are added
-  // For now, use browser notification sound or console
-  console.log("🔔 Bell!");
+  if (bellSound.value === "silence") return;
 
-  // Try to play a system notification sound if available
-  if ("Audio" in window) {
-    try {
-      const audio = new Audio("/sounds/bell.mp3");
-      audio.play().catch(() => {
-        // Fallback to console if audio fails
-        console.log("Bell sound failed to play");
-      });
-    } catch {
-      console.log("Audio not available");
-    }
+  const soundFiles: Record<string, string> = {
+    bell: "/sounds/bell.mp3",
+    chime: "/sounds/chime.mp3",
+    gong: "/sounds/gong.mp3",
+    gong2: "/sounds/gong2.mp3",
+    cymbal: "/sounds/cymbal.mp3",
+  };
+
+  try {
+    const audio = new Audio(soundFiles[bellSound.value]);
+    audio.play().catch(() => {
+      console.log("Bell sound failed to play");
+    });
+  } catch {
+    console.log("Audio not available");
   }
 }
 
@@ -241,23 +305,128 @@ onUnmounted(() => {
     </div>
 
     <!-- Duration presets (only for countdown, when not running) -->
-    <div
-      v-if="timerMode === 'countdown' && !isRunning"
-      class="flex flex-wrap gap-2 justify-center mb-8"
+    <div max-w-lg"
     >
       <button
         v-for="preset in presets"
-        :key="preset"
+        :key="preset.label"
         class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
         :class="
-          targetMinutes === preset
+          (preset.seconds === -1 && customMinutes) ||
+          (preset.seconds === 0 && timerMode === 'unlimited') ||
+          (preset.seconds > 0 && targetMinutes === preset.seconds)
             ? 'bg-tada-100 dark:bg-tada-900/50 text-tada-700 dark:text-tada-300'
             : 'bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600'
         "
-        @click="targetMinutes = preset"
+        @click="
+          preset.seconds === -1
+            ? null
+            : preset.seconds === 0
+              ? (timerMode = 'unlimited')
+              : ((targetMinutes = preset.seconds), (customMinutes = ''))
+        "
       >
-        {{ preset }}m
+        {{ preset.label }}
       </button>
+    </div>
+
+    <!-- Custom duration input (only when Custom is active) -->
+    <div
+      v-if="timerMode === 'countdown' && !isRunning && customMinutes !== ''"
+      class="flex items-center gap-2 justify-center mb-4"
+    >
+      <input
+        v-model="customMinutes"
+        type="number"
+        placeholder="minutes"
+        class="w-20 px-2 py-1.5 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 text-stone-900 dark:text-white text-sm"
+        min="1"
+        @input="customMinutes = customMinutes.replace(/^0+/, '')"
+      />
+      <span class="text-sm text-stone-600 dark:text-stone-300">minutes</span>
+    </div>
+
+    <!-- Settings Accordion (only when not running) -->
+    <div v-if="!isRunning" class="w-full max-w-md px-4 mb-6">
+      <button
+        class="w-full flex items-center justify-between px-4 py-2 rounded-lg bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"
+        @click="showSettings = !showSettings"
+      >
+        <span class="text-sm font-medium text-stone-700 dark:text-stone-300">
+          Settings
+        </span>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5 text-stone-500 dark:text-stone-400 transition-transform"
+          :class="{ 'rotate-180': showSettings }"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M19 9l-7 7-7-7"
+          />
+        </svg>
+      </button>
+
+      <!-- Settings Panel -->
+      <div
+        v-show="showSettings"
+        class="mt-2 p-4 rounded-lg bg-stone-50 dark:bg-stone-800/50 space-y-4"
+      >
+        <!-- Loop selector -->
+        <div>
+          <label
+            class="block text-xs font-medium text-stone-600 dark:text-stone-300 mb-2"
+          >
+            Loops
+          </label>
+          <div class="flex flex-wrap gap-2">
+            <button
+              v-for="loop in loopOptions"
+              :key="loop"
+              class="px-2 py-1 rounded text-xs font-medium transition-colors"
+              :class="
+                loopCount === loop
+                  ? 'bg-tada-100 dark:bg-tada-900/50 text-tada-700 dark:text-tada-300'
+                  : 'bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600'
+              "
+              @click="loopCount = loop"
+            >
+              {{ loop === Infinity ? "∞" : loop }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Bell sound selector -->
+        <div>
+          <label
+            class="block text-xs font-medium text-stone-600 dark:text-stone-300 mb-2"
+          >
+            Bell Sound
+          </label>
+          <div class="flex flex-wrap gap-2">
+            <button
+              v-for="sound in bellSounds"
+              :key="sound.value"
+              class="px-2 py-1 rounded text-xs font-medium transition-colors"
+              :class="
+                bellSound === sound.value
+                  ? 'bg-tada-100 dark:bg-tada-900/50 text-tada-700 dark:text-tada-300'
+                  : 'bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600'
+              "
+              @click="bellSound = sound.value"
+            >
+              {{ sound.label }}
+            </button>
+          </div
+            {{ sound.label }}
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- Timer display -->
@@ -411,14 +580,31 @@ onUnmounted(() => {
       </template>
     </div>
 
-    <!-- Session complete message -->
-    <div v-if="isComplete" class="mt-8 text-center">
-      <p class="text-lg text-tada-600 dark:text-tada-400 font-medium">
-        🎉 Session complete!
-      </p>
-      <p class="text-sm text-stone-500 dark:text-stone-400 mt-1">
-        Tap the checkmark to save your session
-      </p>
+    <!-- Session complete message (only show save button, no text) -->
+    <div v-if="isComplete && !isRunning" class="mt-8">
+      <button
+        :disabled="isSaving"
+        class="px-6 py-3 rounded-lg bg-tada-600 hover:bg-tada-700 disabled:bg-stone-300 disabled:cursor-not-allowed text-white font-medium transition-colors flex items-center gap-2"
+        @click="saveSession"
+      >
+        <svg
+          v-if="!isSaving"
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M5 13l4 4L19 7"
+          />
+        </svg>
+        <div v-else class="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+        {{ isSaving ? "Saving..." : "Save Session" }}
+      </button>
     </div>
   </div>
 </template>

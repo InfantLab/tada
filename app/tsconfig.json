@@ -1,6 +1,7 @@
 {
   "extends": "./.nuxt/tsconfig.json",
   "compilerOptions": {
+    "baseUrl": ".",
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
@@ -16,13 +17,6 @@
       "#imports": [".nuxt/imports.d.ts"]
     }
   },
-  "include": [
-    ".nuxt/nuxt.d.ts",
-    "**/*.ts",
-    "**/*.vue"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist"
-  ]
+  "include": [".nuxt/nuxt.d.ts", "**/*.ts", "**/*.vue"],
+  "exclude": ["node_modules", "dist"]
 }

@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Personal lifelogger - Track Activities, Discover Achievements",
   "scripts": {
-    "dev": "nuxt dev",
+    "dev": "DATABASE_URL=file:/workspaces/tada/app/data/db.sqlite nuxt dev",
     "build": "nuxt build",
     "build:docker": "NUXT_TYPESCRIPT_TYPECHECK=false nuxt build",
     "generate": "nuxt generate",
