@@ -1,0 +1,79 @@
+import { defineEventHandler, getRouterParam, readBody, createError } from 'h3'
+import { db } from '~/server/db'
+import { entries } from '~/server/db/schema'
+import { eq, and } from 'drizzle-orm'
+
+export default defineEventHandler(async (event) => {
+  try {
+    const id = getRouterParam(event, 'id')
+    const userId = 'default-user' // TODO: Get from auth context once Lucia is implemented
+    
+    if (!id) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: 'Entry ID is required',
+      })
+    }
+    
+    const body = await readBody(event)
+    
+    // Check if entry exists and belongs to user
+    const [existing] = await db
+      .select()
+      .from(entries)
+      .where(and(eq(entries.id, id), eq(entries.userId, userId)))
+      .limit(1)
+    
+    if (!existing) {
+      throw createError({
+        statusCode: 404,
+        statusMessage: 'Entry not found',
+      })
+    }
+    
+    // Prepare update data
+    const updateData: Record<string, any> = {
+      updatedAt: new Date().toISOString(),
+    }
+    
+    // Only update provided fields
+    if (body.type !== undefined) updateData.type = body.type
+    if (body.name !== undefined) updateData.name = body.name
+    if (body.timestamp !== undefined) updateData.timestamp = body.timestamp
+    if (body.startedAt !== undefined) updateData.startedAt = body.startedAt
+    if (body.endedAt !== undefined) updateData.endedAt = body.endedAt
+    if (body.durationSeconds !== undefined) updateData.durationSeconds = body.durationSeconds
+    if (body.date !== undefined) updateData.date = body.date
+    if (body.timezone !== undefined) updateData.timezone = body.timezone
+    if (body.data !== undefined) updateData.data = body.data
+    if (body.tags !== undefined) updateData.tags = body.tags
+    if (body.notes !== undefined) updateData.notes = body.notes
+    
+    // Update entry
+    await db
+      .update(entries)
+      .set(updateData)
+      .where(and(eq(entries.id, id), eq(entries.userId, userId)))
+    
+    // Return updated entry
+    const [updated] = await db
+      .select()
+      .from(entries)
+      .where(eq(entries.id, id))
+      .limit(1)
+    
+    return updated
+  } catch (error: any) {
+    console.error('Failed to update entry:', error)
+    
+    if (error.statusCode) {
+      throw error
+    }
+    
+    throw createError({
+      statusCode: 500,
+      statusMessage: 'Failed to update entry',
+      data: { error: error.message },
+    })
+  }
+})
