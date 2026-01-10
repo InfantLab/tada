@@ -20,8 +20,8 @@ export default defineEventHandler(async (event) => {
     ];
 
     // Filter by type if provided
-    if (query.type && typeof query.type === "string") {
-      conditions.push(eq(entries.type, query.type));
+    if (query["type"] && typeof query["type"] === "string") {
+      conditions.push(eq(entries.type, query["type"]));
     }
 
     // Query entries
@@ -30,7 +30,7 @@ export default defineEventHandler(async (event) => {
       .from(entries)
       .where(and(...conditions))
       .orderBy(desc(entries.timestamp))
-      .limit(query.limit ? parseInt(query.limit as string) : 100);
+      .limit(query["limit"] ? parseInt(query["limit"] as string) : 100);
 
     logger.info("Entries fetched successfully", { count: userEntries.length });
     return userEntries;

@@ -24,12 +24,24 @@ cd tada
 1. Open the project in VS Code
 2. Install the "Dev Containers" extension if not already installed
 3. Click "Reopen in Container" when prompted
-4. Run setup:
+4. Container setup runs automatically:
+   - Dependencies installed via `bun install`
+   - CA certificates configured for HTTPS operations
+   - Git SSH agent forwarding enabled (VS Code native)
+   - GitHub push via HTTPS works automatically (forwarded to SSH)
+5. Start development:
    ```bash
    cd app
-   bun install
    bun run dev
    ```
+
+**Git & GitHub in Dev Container**
+
+Git operations (push, pull, clone) work frictionlessly:
+- **SSH Agent Forwarding** — VS Code automatically forwards your host's SSH agent to the container, so `git push` to GitHub works without additional setup
+- **HTTPS Fallback** — Even HTTPS `git` URLs are automatically redirected to SSH for added reliability
+- **CA Certificates** — Both the dev container and production image include CA certificates for HTTPS operations
+- **No Manual Config Needed** — Just `git push`, it works
 
 **Option 2: Local Development**
 

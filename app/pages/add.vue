@@ -8,7 +8,7 @@ definePageMeta({
 const route = useRoute();
 
 // Form state
-const entryType = ref((route.query.type as string) || "tada");
+const entryType = ref((route.query["type"] as string) || "tada");
 const title = ref("");
 const notes = ref("");
 const isSubmitting = ref(false);

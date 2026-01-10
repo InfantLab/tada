@@ -1,12 +1,19 @@
 <script setup lang="ts">
 // Habits page - Seinfeld method streak tracking
+import type { Habit } from "~/server/db/schema";
 
 definePageMeta({
   layout: "default",
 });
 
+// Extended habit with UI-specific fields
+interface HabitWithUI extends Habit {
+  completedToday: boolean;
+  emoji: string;
+}
+
 // Fetch habits from API
-const habits = ref<unknown[]>([]);
+const habits = ref<HabitWithUI[]>([]);
 const isLoading = ref(true);
 const error = ref<string | null>(null);
 

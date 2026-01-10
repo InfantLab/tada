@@ -14,7 +14,8 @@ export default defineNuxtConfig({
   // TypeScript strict mode
   typescript: {
     strict: true,
-    typeCheck: true,
+    // Allow disabling typecheck via env in container builds
+    typeCheck: process.env.NUXT_TYPESCRIPT_TYPECHECK !== "false",
   },
 
   // Runtime config (environment variables)

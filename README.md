@@ -194,4 +194,3 @@ git push origin main
 ---
 
 _Tada is an anagram of "data" — because your life's data belongs to you._ 🎉
-

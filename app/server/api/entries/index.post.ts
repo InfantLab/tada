@@ -1,20 +1,48 @@
 import { defineEventHandler, readBody, createError } from "h3";
 import { db } from "~/server/db";
 import { entries, type NewEntry } from "~/server/db/schema";
+import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { createLogger } from "~/server/utils/logger";
 
 const logger = createLogger("api:entries:post");
 
+interface CreateEntryBody {
+  type: string;
+  name: string;
+  timestamp?: string;
+  startedAt?: string | null;
+  endedAt?: string | null;
+  durationSeconds?: number | null;
+  date?: string | null;
+  timezone?: string;
+  data?: Record<string, unknown>;
+  tags?: string[];
+  notes?: string | null;
+  source?: string;
+  externalId?: string | null;
+}
+
 export default defineEventHandler(async (event) => {
+  let body: unknown;
   try {
-    const body = await readBody(event);
+    body = await readBody(event);
     const userId = "default-user"; // TODO: Get from auth context once Lucia is implemented
     
-    logger.debug("Creating entry", { type: body.type, userId });
+    // Type guard: ensure body is an object
+    if (!body || typeof body !== "object") {
+      throw createError({
+        statusCode: 400,
+        statusMessage: "Invalid request body",
+      });
+    }
+
+    const typedBody = body as Partial<CreateEntryBody>;
+    
+    logger.debug("Creating entry", { type: typedBody.type, userId });
 
     // Validate required fields
-    if (!body.type || !body.name) {
+    if (!typedBody.type || !typedBody.name) {
       throw createError({
         statusCode: 400,
         statusMessage: "Missing required fields: type and name are required",
@@ -26,19 +54,19 @@ export default defineEventHandler(async (event) => {
     const newEntry: NewEntry = {
       id: nanoid(),
       userId,
-      type: body.type,
-      name: body.name,
-      timestamp: body.timestamp || now,
-      startedAt: body.startedAt || null,
-      endedAt: body.endedAt || null,
-      durationSeconds: body.durationSeconds || null,
-      date: body.date || null,
-      timezone: body.timezone || "UTC",
-      data: body.data || {},
-      tags: body.tags || [],
-      notes: body.notes || null,
-      source: body.source || "manual",
-      externalId: body.externalId || null,
+      type: typedBody.type,
+      name: typedBody.name,
+      timestamp: typedBody.timestamp || now,
+      startedAt: typedBody.startedAt || null,
+      endedAt: typedBody.endedAt || null,
+      durationSeconds: typedBody.durationSeconds || null,
+      date: typedBody.date || null,
+      timezone: typedBody.timezone || "UTC",
+      data: typedBody.data || {},
+      tags: typedBody.tags || [],
+      notes: typedBody.notes || null,
+      source: typedBody.source || "manual",
+      externalId: typedBody.externalId || null,
       createdAt: now,
       updatedAt: now,
       deletedAt: null,
@@ -57,7 +85,8 @@ export default defineEventHandler(async (event) => {
     logger.info("Entry created successfully", { entryId: newEntry.id, type: newEntry.type });
     return created || newEntry;
   } catch (error: unknown) {
-    logger.error("Failed to create entry", error, { type: body?.type });
+    const bodyType = body && typeof body === "object" && "type" in body ? (body as { type?: unknown }).type : undefined;
+    logger.error("Failed to create entry", error, { type: bodyType });
 
     if (error && typeof error === "object" && "statusCode" in error) {
       throw error;

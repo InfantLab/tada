@@ -3,7 +3,7 @@ import { drizzle } from 'drizzle-orm/libsql'
 import * as schema from './schema'
 
 // Get database path from runtime config or environment
-const databaseUrl = process.env.DATABASE_URL || 'file:./data/db.sqlite'
+const databaseUrl = process.env["DATABASE_URL"] || 'file:./data/db.sqlite'
 
 // Create libSQL client (works with Bun, no native deps needed)
 const client = createClient({

@@ -1,26 +1,30 @@
 <script setup lang="ts">
 // Timeline page - the main view showing all entries chronologically
+import type { Entry } from "~/server/db/schema";
 
 definePageMeta({
   layout: 'default',
 })
 
 // Fetch entries from API
-const entries = ref<unknown[]>([]);
+const entries = ref<Entry[]>([]);
 const isLoading = ref(true)
 const error = ref<string | null>(null)
 
-onMounted(async () => {
+async function fetchEntries() {
   try {
+    isLoading.value = true;
     const data = await $fetch('/api/entries')
-    entries.value = data
+    entries.value = data as Entry[];
   } catch (err: unknown) {
     console.error('Failed to fetch entries:', err)
     error.value = err instanceof Error ? err.message : 'Failed to load entries'
   } finally {
     isLoading.value = false
   }
-})
+}
+
+onMounted(fetchEntries);
 
 // Format relative time
 function formatRelativeTime(timestamp: string): string {
@@ -63,12 +67,11 @@ function getTypeIcon(type: string): string {
 }
 
 // Group entries by date
-function groupByDate(entries: unknown[]): Map<string, unknown[]> {
-  const groups = new Map<string, unknown[]>();
+function groupByDate(entries: Entry[]): Map<string, Entry[]> {
+  const groups = new Map<string, Entry[]>();
   for (const entry of entries) {
-    const e = entry as { timestamp?: string; startedAt?: string; date?: string };
-    const timestamp = e.timestamp || e.startedAt || e.date;
-    const date = new Date(timestamp || "").toLocaleDateString();
+    const timestamp = entry.timestamp || entry.startedAt || entry.date || entry.createdAt;
+    const date = new Date(timestamp).toLocaleDateString();
     if (!groups.has(date)) {
       groups.set(date, [])
     }
@@ -113,7 +116,7 @@ function groupByDate(entries: unknown[]): Map<string, unknown[]> {
       <p class="text-stone-500 dark:text-stone-400 mb-4">{{ error }}</p>
       <button 
         class="px-4 py-2 bg-tada-600 hover:bg-tada-700 text-white rounded-lg font-medium transition-colors"
-        @click="() => { isLoading = true; onMounted(); }"
+        @click="() => { isLoading = true; fetchEntries(); }"
       >
         Try again
       </button>
@@ -174,7 +177,7 @@ function groupByDate(entries: unknown[]): Map<string, unknown[]> {
                     {{ entry.name }}
                   </h4>
                   <span class="text-xs text-stone-500 dark:text-stone-400 flex-shrink-0">
-                    {{ formatRelativeTime(entry.timestamp || entry.startedAt || entry.date) }}
+                    {{ formatRelativeTime(entry.timestamp || entry.startedAt || entry.date || entry.createdAt) }}
                   </span>
                 </div>
                 

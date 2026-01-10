@@ -1,12 +1,13 @@
 <script setup lang="ts">
 // Journal page - dream journaling and free-form entries
+import type { Entry } from "~/server/db/schema";
 
 definePageMeta({
   layout: "default",
 });
 
 // Fetch journal entries from API
-const entries = ref<unknown[]>([]);
+const entries = ref<Entry[]>([]);
 const isLoading = ref(true);
 const error = ref<string | null>(null);
 const selectedType = ref<"all" | "dream" | "journal" | "tada">("all");
@@ -14,10 +15,9 @@ const selectedType = ref<"all" | "dream" | "journal" | "tada">("all");
 onMounted(async () => {
   try {
     // Fetch journal-type entries (dream, journal, tada)
-    const data = await $fetch("/api/entries");
-    type EntryType = { type: string };
-    entries.value = data.filter((e: unknown) =>
-      ["dream", "journal", "tada", "note"].includes((e as EntryType).type)
+    const data: Entry[] = await $fetch("/api/entries");
+    entries.value = data.filter((e) =>
+      ["dream", "journal", "tada", "note"].includes(e.type)
     );
   } catch (err: unknown) {
     console.error("Failed to fetch journal entries:", err);
@@ -166,12 +166,12 @@ function getTypeIcon(type: string): string {
               <h3
                 class="font-medium text-stone-800 dark:text-stone-100 truncate"
               >
-                {{ entry.title }}
+                {{ entry.name }}
               </h3>
               <span
                 class="text-xs text-stone-400 dark:text-stone-500 whitespace-nowrap"
               >
-                {{ formatDate(entry.occurredAt) }}
+                {{ formatDate(entry.timestamp || entry.startedAt || entry.date || entry.createdAt) }}
               </span>
             </div>
             <p
@@ -183,20 +183,20 @@ function getTypeIcon(type: string): string {
 
             <!-- Dream-specific metadata -->
             <div
-              v-if="entry.type === 'dream' && entry.data"
+              v-if="entry.type === 'dream' && entry.data && typeof entry.data === 'object'"
               class="flex gap-2 mt-2"
             >
               <span
-                v-if="entry.data.lucid"
+                v-if="'lucid' in entry.data && entry.data['lucid']"
                 class="text-xs px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300"
               >
                 Lucid
               </span>
               <span
-                v-if="entry.data.vivid"
+                v-if="'vivid' in entry.data && entry.data['vivid']"
                 class="text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300"
               >
-                Vivid: {{ entry.data.vivid }}/5
+                Vivid: {{ entry.data['vivid'] }}/5
               </span>
             </div>
           </div>

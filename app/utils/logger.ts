@@ -17,7 +17,7 @@ class ClientLogger {
   }
 
   private formatMessage(level: LogLevel, message: string): string {
-    const timestamp = new Date().toISOString().split("T")[1].split(".")[0];
+    const timestamp = new Date().toISOString().split("T")[1]?.split(".")[0] || "00:00:00";
     const emoji = {
       debug: "🔍",
       info: "ℹ️",
