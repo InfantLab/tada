@@ -38,19 +38,24 @@ async function submitEntry() {
   try {
     const entry = {
       type: entryType.value,
+      name: title.value.trim() || `${entryType.value} entry`,
       title: title.value.trim() || null,
       notes: notes.value.trim() || null,
-      occurredAt: new Date().toISOString(),
-      data: entryType.value === 'dream' ? dreamData.value : null,
+      timestamp: new Date().toISOString(),
+      data: entryType.value === 'dream' ? dreamData.value : {},
+      tags: entryType.value === 'dream' ? ['dream'] : [],
     }
     
-    // TODO: POST to /api/entries
-    console.log('Creating entry:', entry)
+    await $fetch('/api/entries', {
+      method: 'POST',
+      body: entry,
+    })
     
     // Navigate back to timeline
     navigateTo('/')
-  } catch (error) {
+  } catch (error: any) {
     console.error('Failed to create entry:', error)
+    alert(`Failed to create entry: ${error.message || 'Unknown error'}`)
   } finally {
     isSubmitting.value = false
   }
