@@ -28,7 +28,9 @@
           "source.fixAll.eslint": "explicit"
         },
         "typescript.preferences.importModuleSpecifier": "relative",
-        "vue.inlayHints.missingProps": true
+        "vue.inlayHints.missingProps": true,
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "terminal.integrated.shellIntegration.enabled": true
       }
     }
   },
