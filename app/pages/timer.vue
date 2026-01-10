@@ -128,7 +128,7 @@ function playBell() {
         // Fallback to console if audio fails
         console.log("Bell sound failed to play");
       });
-    } catch (e) {
+    } catch {
       console.log("Audio not available");
     }
   }
@@ -167,9 +167,10 @@ async function saveSession() {
 
     // Navigate to timeline
     navigateTo("/");
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Failed to save session:", error);
-    alert(`Failed to save session: ${error.message || "Unknown error"}`);
+    const message = error instanceof Error ? error.message : "Unknown error";
+    alert(`Failed to save session: ${message}`);
   } finally {
     isSaving.value = false;
   }

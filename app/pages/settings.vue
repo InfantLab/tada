@@ -79,9 +79,10 @@ async function exportData() {
     a.download = `tada-export-${new Date().toISOString().split("T")[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Export failed:", error);
-    alert(`Export failed: ${error.message}`);
+    const message = error instanceof Error ? error.message : "Unknown error";
+    alert(`Export failed: ${message}`);
   } finally {
     isExporting.value = false;
   }

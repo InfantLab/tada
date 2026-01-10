@@ -32,7 +32,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // Prepare update data
-    const updateData: Record<string, any> = {
+    const updateData: Record<string, unknown> = {
       updatedAt: new Date().toISOString(),
     };
 
@@ -64,17 +64,18 @@ export default defineEventHandler(async (event) => {
       .limit(1);
 
     return updated;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Failed to update entry:", error);
 
-    if (error.statusCode) {
+    if (error && typeof error === "object" && "statusCode" in error) {
       throw error;
     }
 
+    const message = error instanceof Error ? error.message : "Unknown error";
     throw createError({
       statusCode: 500,
       statusMessage: "Failed to update entry",
-      data: { error: error.message },
+      data: { error: message },
     });
   }
 });

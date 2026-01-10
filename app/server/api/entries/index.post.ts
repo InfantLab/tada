@@ -56,17 +56,18 @@ export default defineEventHandler(async (event) => {
 
     logger.info("Entry created successfully", { entryId: newEntry.id, type: newEntry.type });
     return created || newEntry;
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error("Failed to create entry", error, { type: body?.type });
 
-    if (error.statusCode) {
+    if (error && typeof error === "object" && "statusCode" in error) {
       throw error;
     }
 
+    const message = error instanceof Error ? error.message : "Unknown error";
     throw createError({
       statusCode: 500,
       statusMessage: "Failed to create entry",
-      data: { error: error.message },
+      data: { error: message },
     });
   }
 });

@@ -34,12 +34,13 @@ export default defineEventHandler(async (event) => {
 
     logger.info("Entries fetched successfully", { count: userEntries.length });
     return userEntries;
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error("Failed to fetch entries", error);
+    const message = error instanceof Error ? error.message : "Unknown error";
     throw createError({
       statusCode: 500,
       statusMessage: "Failed to fetch entries",
-      data: { error: error.message },
+      data: { error: message },
     });
   }
 });

@@ -6,7 +6,7 @@ definePageMeta({
 });
 
 // Fetch habits from API
-const habits = ref<any[]>([]);
+const habits = ref<unknown[]>([]);
 const isLoading = ref(true);
 const error = ref<string | null>(null);
 
@@ -15,9 +15,9 @@ onMounted(async () => {
     // TODO: Create habits API endpoint in Phase 2
     // For now, show placeholder that Phase 2 is needed
     habits.value = [];
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Failed to fetch habits:", err);
-    error.value = err.message || "Failed to load habits";
+    error.value = err instanceof Error ? err.message : "Failed to load habits";
   } finally {
     isLoading.value = false;
   }

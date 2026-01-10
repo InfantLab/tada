@@ -83,9 +83,10 @@ async function submitEntry() {
 
     // Navigate back to timeline
     navigateTo("/");
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Failed to create entry:", error);
-    alert(`Failed to create entry: ${error.message || "Unknown error"}`);
+    const message = error instanceof Error ? error.message : "Unknown error";
+    alert(`Failed to create entry: ${message}`);
   } finally {
     isSubmitting.value = false;
   }

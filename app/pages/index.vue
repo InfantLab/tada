@@ -6,7 +6,7 @@ definePageMeta({
 })
 
 // Fetch entries from API
-const entries = ref<any[]>([])
+const entries = ref<unknown[]>([]);
 const isLoading = ref(true)
 const error = ref<string | null>(null)
 
@@ -14,9 +14,9 @@ onMounted(async () => {
   try {
     const data = await $fetch('/api/entries')
     entries.value = data
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Failed to fetch entries:', err)
-    error.value = err.message || 'Failed to load entries'
+    error.value = err instanceof Error ? err.message : 'Failed to load entries'
   } finally {
     isLoading.value = false
   }
@@ -63,11 +63,12 @@ function getTypeIcon(type: string): string {
 }
 
 // Group entries by date
-function groupByDate(entries: any[]): Map<string, any[]> {
-  const groups = new Map<string, any[]>()
+function groupByDate(entries: unknown[]): Map<string, unknown[]> {
+  const groups = new Map<string, unknown[]>();
   for (const entry of entries) {
-    const timestamp = entry.timestamp || entry.startedAt || entry.date
-    const date = new Date(timestamp).toLocaleDateString()
+    const e = entry as { timestamp?: string; startedAt?: string; date?: string };
+    const timestamp = e.timestamp || e.startedAt || e.date;
+    const date = new Date(timestamp || "").toLocaleDateString();
     if (!groups.has(date)) {
       groups.set(date, [])
     }

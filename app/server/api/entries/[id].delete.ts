@@ -39,17 +39,18 @@ export default defineEventHandler(async (event) => {
       .where(and(eq(entries.id, id), eq(entries.userId, userId)));
 
     return { success: true, id };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Failed to delete entry:", error);
 
-    if (error.statusCode) {
+    if (error && typeof error === "object" && "statusCode" in error) {
       throw error;
     }
 
+    const message = error instanceof Error ? error.message : "Unknown error";
     throw createError({
       statusCode: 500,
       statusMessage: "Failed to delete entry",
-      data: { error: error.message },
+      data: { error: message },
     });
   }
 });

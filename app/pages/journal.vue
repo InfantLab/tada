@@ -6,7 +6,7 @@ definePageMeta({
 });
 
 // Fetch journal entries from API
-const entries = ref<any[]>([]);
+const entries = ref<unknown[]>([]);
 const isLoading = ref(true);
 const error = ref<string | null>(null);
 const selectedType = ref<"all" | "dream" | "journal" | "tada">("all");
@@ -15,12 +15,13 @@ onMounted(async () => {
   try {
     // Fetch journal-type entries (dream, journal, tada)
     const data = await $fetch("/api/entries");
-    entries.value = data.filter((e: any) =>
-      ["dream", "journal", "tada", "note"].includes(e.type)
+    type EntryType = { type: string };
+    entries.value = data.filter((e: unknown) =>
+      ["dream", "journal", "tada", "note"].includes((e as EntryType).type)
     );
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Failed to fetch journal entries:", err);
-    error.value = err.message || "Failed to load entries";
+    error.value = err instanceof Error ? err.message : "Failed to load entries";
   } finally {
     isLoading.value = false;
   }
