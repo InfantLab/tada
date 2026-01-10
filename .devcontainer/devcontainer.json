@@ -5,7 +5,7 @@
     "target": "production"
   },
   "forwardPorts": [3000, 4983],
-  "postCreateCommand": "cd app && bun install && git config --global url.ssh://git@github.com/.insteadOf https://github.com/",
+  "postCreateCommand": "cd app && bun install",
   "customizations": {
     "vscode": {
       "extensions": [
