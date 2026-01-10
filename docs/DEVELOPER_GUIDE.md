@@ -133,14 +133,14 @@ tada/
 
 ```typescript
 interface Entry {
-  id: string              // nanoid
-  userId: string          // FK to users
-  type: string            // 'meditation', 'dream', 'tada', 'journal', etc.
-  occurredAt: Date        // When it happened
-  durationSeconds?: number
-  title?: string
-  notes?: string
-  data?: object           // Type-specific metadata (JSONB)
+  id: string; // nanoid
+  userId: string; // FK to users
+  type: string; // 'meditation', 'dream', 'tada', 'journal', etc.
+  occurredAt: Date; // When it happened
+  durationSeconds?: number;
+  title?: string;
+  notes?: string;
+  data?: object; // Type-specific metadata (JSONB)
 }
 ```
 
@@ -154,6 +154,7 @@ interface Entry {
 - **Schema**: `app/server/db/schema.ts`
 
 The schema defines:
+
 - `users` — User accounts
 - `sessions` — Lucia auth sessions
 - `entries` — Main data table (all activities)
@@ -188,7 +189,7 @@ We use **conventional commits** for clear history:
 
 ```bash
 feat: add entry CRUD API endpoints
-fix: correct timer countdown calculation  
+fix: correct timer countdown calculation
 test: add unit tests for streak calculation
 docs: update README with testing guide
 refactor: extract timer logic to composable
@@ -198,7 +199,7 @@ chore: upgrade Nuxt to 3.21
 **Branch Strategy:**
 
 - `main` — Always deployable, protected
-- `feature/description` — Human-authored features  
+- `feature/description` — Human-authored features
 - `copilot/description` — AI agent-authored changes (auto-created by GitHub Copilot)
 
 **Pull Request Process:**
@@ -213,6 +214,7 @@ chore: upgrade Nuxt to 3.21
 ### Testing Philosophy
 
 **Goals:**
+
 - 80%+ unit test coverage target
 - Critical user flows covered by E2E tests
 - Co-locate tests with implementation
@@ -232,6 +234,7 @@ app/
 ```
 
 **Test-Driven Development:**
+
 - Write tests first when possible
 - Test behavior, not implementation details
 - Keep tests focused and readable
@@ -241,30 +244,33 @@ app/
 ### Adding an API Endpoint
 
 1. Create the endpoint file:
+
    ```bash
    # For GET requests
    touch app/server/api/entries.get.ts
-   
+
    # For POST requests
    touch app/server/api/entries.post.ts
    ```
 
 2. Implement the handler:
+
    ```typescript
    // app/server/api/entries.get.ts
-   import { db } from '~/server/db'
-   import { entries } from '~/server/db/schema'
-   
+   import { db } from "~/server/db";
+   import { entries } from "~/server/db/schema";
+
    export default defineEventHandler(async (event) => {
-     const allEntries = await db.select().from(entries)
-     return allEntries
-   })
+     const allEntries = await db.select().from(entries);
+     return allEntries;
+   });
    ```
 
 3. Add tests:
+
    ```typescript
    // app/server/api/entries.get.test.ts
-   import { describe, it, expect } from 'vitest'
+   import { describe, it, expect } from "vitest";
    // ... test implementation
    ```
 
@@ -276,16 +282,18 @@ app/
 ### Adding a New Page
 
 1. Create the Vue component:
+
    ```bash
    touch app/pages/your-page.vue
    ```
 
 2. Implement using Composition API:
+
    ```vue
    <script setup lang="ts">
    // Your component logic
    </script>
-   
+
    <template>
      <div>
        <!-- Your template -->
@@ -300,19 +308,22 @@ app/
 ### Modifying the Database Schema
 
 1. Edit the schema file:
+
    ```bash
    code app/server/db/schema.ts
    ```
 
 2. Make your changes to the schema:
+
    ```typescript
    export const entries = sqliteTable("entries", {
      // Add new fields
      newField: text("new_field"),
-   })
+   });
    ```
 
 3. Generate migration:
+
    ```bash
    cd app
    bun run db:generate
@@ -321,6 +332,7 @@ app/
 4. Review the generated SQL in `drizzle/` directory
 
 5. Apply the migration:
+
    ```bash
    bun run db:migrate
    ```
@@ -333,21 +345,21 @@ Entry types are flexible (not an enum). Just use them:
 
 ```typescript
 const meditationEntry = {
-  type: 'meditation',
+  type: "meditation",
   data: {
-    technique: 'vipassana',
-    location: 'home',
-  }
-}
+    technique: "vipassana",
+    location: "home",
+  },
+};
 
 const workoutEntry = {
-  type: 'workout',
+  type: "workout",
   data: {
-    exercise: 'running',
+    exercise: "running",
     distance: 5.2,
-    unit: 'km',
-  }
-}
+    unit: "km",
+  },
+};
 ```
 
 No schema changes needed — type-specific data goes in the `data` JSONB field.
@@ -405,19 +417,20 @@ Merges to `main` additionally trigger:
 
 ### Common Issues
 
-| Problem | Solution |
-|---------|----------|
-| **Module not found errors** | Run `cd app && bun install` to refresh dependencies |
-| **Port 3000 already in use** | Kill existing process: `pkill -f 'bun.*dev'`<br>Or use different port: `PORT=3001 bun run dev` |
-| **Database errors** | Delete `app/data/db.sqlite*` and restart (dev only!)<br>Or check migrations ran: `bun run db:migrate` |
-| **TypeScript errors** | Run `bun run typecheck` to see all errors<br>Check you're using strict mode correctly |
-| **Tests not found** | Ensure testing framework is installed<br>Check `package.json` for test scripts |
-| **Hot reload not working** | Restart dev server<br>Check file is in watched directory |
-| **PWA not updating** | Clear service worker cache<br>Hard refresh: Cmd+Shift+R (Mac) / Ctrl+Shift+R (Windows) |
+| Problem                      | Solution                                                                                              |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------- |
+| **Module not found errors**  | Run `cd app && bun install` to refresh dependencies                                                   |
+| **Port 3000 already in use** | Kill existing process: `pkill -f 'bun.*dev'`<br>Or use different port: `PORT=3001 bun run dev`        |
+| **Database errors**          | Delete `app/data/db.sqlite*` and restart (dev only!)<br>Or check migrations ran: `bun run db:migrate` |
+| **TypeScript errors**        | Run `bun run typecheck` to see all errors<br>Check you're using strict mode correctly                 |
+| **Tests not found**          | Ensure testing framework is installed<br>Check `package.json` for test scripts                        |
+| **Hot reload not working**   | Restart dev server<br>Check file is in watched directory                                              |
+| **PWA not updating**         | Clear service worker cache<br>Hard refresh: Cmd+Shift+R (Mac) / Ctrl+Shift+R (Windows)                |
 
 ### Debug Tips
 
 **View logs:**
+
 ```bash
 # Server-side logs
 cd app && bun run dev
@@ -427,12 +440,14 @@ cd app && bun run dev
 ```
 
 **Database inspection:**
+
 ```bash
 cd app && bun run db:studio
 # Opens Drizzle Studio on http://localhost:4983
 ```
 
 **API testing:**
+
 ```bash
 # Test GET endpoint
 curl http://localhost:3000/api/health
@@ -467,6 +482,7 @@ Tada follows these core principles (from [design/philosophy.md](../design/philos
 ### For AI Agents
 
 See [AGENTS.md](../AGENTS.md) for comprehensive agent-specific instructions, including:
+
 - Project architecture details
 - Testing strategies
 - Commit message formats
