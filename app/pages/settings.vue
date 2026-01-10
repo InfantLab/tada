@@ -5,13 +5,21 @@ definePageMeta({
   layout: 'default',
 })
 
+// App version
+const appVersion = '0.1.0'
+const appName = 'Tada'
+
 // User preferences
 const settings = ref({
   theme: 'system' as 'light' | 'dark' | 'system',
   defaultTimerMinutes: 10,
   bellSound: 'tibetan-bowl',
   notifications: true,
+  timezone: 'UTC',
 })
+
+const isSaving = ref(false)
+const isExporting = ref(false)
 
 // Available bell sounds
 const bellSounds = [
@@ -28,19 +36,53 @@ const themes = [
   { id: 'system', name: 'System', icon: '💻' },
 ]
 
+// Timezone detection
+onMounted(() => {
+  settings.value.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+})
+
 async function saveSettings() {
-  // TODO: Save to API / localStorage
-  console.log('Saving settings:', settings.value)
+  isSaving.value = true
+  try {
+    // Save to localStorage for now (Phase 2: save to user profile)
+    localStorage.setItem('tada-settings', JSON.stringify(settings.value))
+    console.log('Settings saved')
+  } catch (error) {
+    console.error('Failed to save settings:', error)
+  } finally {
+    isSaving.value = false
+  }
 }
 
 async function exportData() {
-  // TODO: Implement data export
-  console.log('Exporting data...')
-}
-
-async function logout() {
-  // TODO: Implement logout
-  navigateTo('/login')
+  isExporting.value = true
+  try {
+    // Fetch all entries
+    const entries = await $fetch('/api/entries', {
+      params: { limit: 10000 }
+    })
+    
+    // Create JSON export
+    const exportData = {
+      version: appVersion,
+      exportedAt: new Date().toISOString(),
+      entries,
+    }
+    
+    // Download as JSON file
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `tada-export-${new Date().toISOString().split('T')[0]}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  } catch (error: any) {
+    console.error('Export failed:', error)
+    alert(`Export failed: ${error.message}`)
+  } finally {
+    isExporting.value = false
+  }
 }
 </script>
 
@@ -170,13 +212,14 @@ async function logout() {
           <!-- Export -->
           <button
             @click="exportData"
-            class="w-full p-4 flex items-center justify-between hover:bg-stone-50 dark:hover:bg-stone-700/50 transition-colors"
+            :disabled="isExporting"
+            class="w-full p-4 flex items-center justify-between hover:bg-stone-50 dark:hover:bg-stone-700/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <div class="flex items-center gap-3">
               <span class="text-xl">📦</span>
               <div class="text-left">
                 <span class="block text-sm font-medium text-stone-700 dark:text-stone-300">
-                  Export data
+                  {{ isExporting ? 'Exporting...' : 'Export data' }}
                 </span>
                 <span class="text-xs text-stone-500 dark:text-stone-400">
                   Download all your entries as JSON
@@ -188,9 +231,10 @@ async function logout() {
             </svg>
           </button>
 
-          <!-- Import -->
+          <!-- Import (Phase 2) -->
           <button
-            class="w-full p-4 flex items-center justify-between hover:bg-stone-50 dark:hover:bg-stone-700/50 transition-colors"
+            disabled
+            class="w-full p-4 flex items-center justify-between opacity-50 cursor-not-allowed"
           >
             <div class="flex items-center gap-3">
               <span class="text-xl">📥</span>
@@ -199,7 +243,7 @@ async function logout() {
                   Import data
                 </span>
                 <span class="text-xs text-stone-500 dark:text-stone-400">
-                  Import from Insight Timer, CSV, etc.
+                  Coming in v0.2.0
                 </span>
               </div>
             </div>
@@ -210,27 +254,58 @@ async function logout() {
         </div>
       </section>
 
-      <!-- Account -->
+      <!-- About -->
       <section>
-        <h2 class="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-4">Account</h2>
-        <div class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700">
-          <button
-            @click="logout"
-            class="w-full p-4 flex items-center gap-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors rounded-xl"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-            <span class="font-medium">Log out</span>
-          </button>
+        <h2 class="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-4">About</h2>
+        <div class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 p-4">
+          <div class="flex items-start gap-3">
+            <span class="text-3xl">🎉</span>
+            <div>
+              <h3 class="font-semibold text-stone-800 dark:text-stone-100">
+                {{ appName }} <span class="text-sm font-normal text-stone-500">v{{ appVersion }}</span>
+              </h3>
+              <p class="text-sm text-stone-600 dark:text-stone-300 mt-1">
+                Track Activities, Discover Achievements
+              </p>
+              <p class="text-xs text-stone-500 dark:text-stone-400 mt-2">
+                Open source personal lifelogger. Your data belongs to you.
+              </p>
+              <div class="flex gap-3 mt-3">
+                <a 
+                  href="https://github.com/InfantLab/tada" 
+                  target="_blank"
+                  class="text-xs text-tada-600 dark:text-tada-400 hover:underline"
+                >
+                  GitHub
+                </a>
+                <a 
+                  href="/docs/DEVELOPER_GUIDE.md" 
+                  target="_blank"
+                  class="text-xs text-tada-600 dark:text-tada-400 hover:underline"
+                >
+                  Docs
+                </a>
+                <a 
+                  href="https://github.com/InfantLab/tada/blob/main/LICENSE" 
+                  target="_blank"
+                  class="text-xs text-tada-600 dark:text-tada-400 hover:underline"
+                >
+                  License (AGPL-3.0)
+                </a>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      <!-- App info -->
-      <div class="text-center text-sm text-stone-400 dark:text-stone-500 py-4">
-        <p>Tada v0.1.0</p>
-        <p class="mt-1">Made with 🎉 for life's moments</p>
-      </div>
+      <!-- Save button -->
+      <button
+        @click="saveSettings"
+        :disabled="isSaving"
+        class="w-full py-3 bg-tada-600 hover:bg-tada-700 disabled:bg-stone-300 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
+      >
+        {{ isSaving ? 'Saving...' : 'Save Settings' }}
+      </button>
     </div>
   </div>
 </template>

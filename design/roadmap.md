@@ -1,38 +1,77 @@
 # Tada Roadmap
 
-Feature ideas and future plans, organized by priority and phase. This keeps the SDR focused on core architecture while giving us a place to capture inspiration.
+Feature ideas and future plans, organized by version releases.
 
-## Phase 1: Foundation (Current)
-*Get the basics working*
+**Current Version:** v0.1.0 (MVP) ✅  
+**Next Release:** v0.2.0 (Phase 2)
 
+---
+
+## v0.1.0: MVP — Foundation ✅
+*Completed January 2026*
+
+**Core Functionality:**
 - [x] Project scaffolding (Nuxt 3, Bun, Drizzle)
 - [x] Database schema (unified Entry model)
-- [x] PWA configuration
-- [x] Docker setup
-- [ ] Entry CRUD API
-- [ ] Timeline view (connected to API)
-- [ ] Basic auth (password login)
-- [ ] Meditation timer with bells
+- [x] Database migrations
+- [x] PWA configuration & Docker setup
+- [x] Entry CRUD API (GET, POST, PATCH, DELETE)
+- [x] Timeline view (connected to API)
+- [x] Meditation timer with category selection
+- [x] Quick add entry form (dreams, notes, achievements)
+- [x] Journal page (displays journal-type entries)
+- [x] Habits page scaffolding
+- [x] Settings page with data export (JSON)
+- [x] Version display (v0.1.0)
 
-## Phase 2: Core Features
-*The essential experience*
+**What Users Can Do:**
+- ✅ Track timed activities (meditation, music practice, etc.)
+- ✅ Log dreams, notes, and achievements
+- ✅ View timeline of all entries
+- ✅ Export data to JSON
+- ✅ Install as PWA on any device
+- ✅ Use offline (no auth required for self-hosted)
 
+---
+
+## v0.2.0: Core Features — The Essential Experience
+*Target: Q1 2026*
+
+**Habit Tracking:**
+- [ ] Habit definitions API and UI
 - [ ] Habit streak calculations (Seinfeld method)
-- [ ] Dream journal with metadata (lucid, vivid, emotions)
-- [ ] Data export (JSON, CSV)
-- [ ] Data import (Insight Timer, Meditation Helper)
-- [ ] Settings persistence
-- [ ] Offline support (IndexedDB sync)
+- [ ] Calendar heatmap visualization
+- [ ] Weekly/monthly habit reports
 
-## Phase 3: Polish
-*Make it delightful*
+**Data Portability:**
+- [ ] Data import (Insight Timer CSV)
+- [ ] Data import (Meditation Helper SQLite)
+- [ ] CSV export option
+- [ ] Import history tracking (deduplication)
 
-- [ ] Timer bell sounds (download CC0 from Freesound)
+**Enhanced Features:**
 - [ ] Timer presets (save/load configurations)
-- [ ] Entry attachments (images, audio)
-- [ ] Search and filtering
-- [ ] Statistics and visualizations
-- [ ] Dark mode toggle (currently system-only)
+- [ ] Timer bell sounds (download CC0 audio)
+- [ ] Entry attachments (photos, audio recordings)
+- [ ] Search and filtering on timeline
+- [ ] Tags management UI
+
+**Authentication (Optional):**
+- [ ] Lucia Auth integration
+- [ ] Optional password for self-hosted
+- [ ] Session management
+- [ ] Multi-user support preparation
+
+**PWA Enhancements:**
+- [ ] IndexedDB offline storage with sync
+- [ ] Background sync when online
+- [ ] Push notifications for habit reminders
+- [ ] Wake Lock API for timer
+
+---
+
+## v0.3.0: Polish — Make it Delightful
+*Target: Q2 2026*
 
 ## Phase 4: Advanced
 *Power user features*
