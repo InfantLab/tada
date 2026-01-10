@@ -5,42 +5,25 @@ definePageMeta({
   layout: 'default',
 })
 
-// TODO: Fetch journal entries from API
+// Fetch journal entries from API
 const entries = ref<any[]>([])
 const isLoading = ref(true)
-const selectedType = ref<'all' | 'dream' | 'note' | 'tada'>('all')
+const error = ref<string | null>(null)
+const selectedType = ref<'all' | 'dream' | 'journal' | 'tada'>('all')
 
 onMounted(async () => {
-  // Placeholder data
-  entries.value = [
-    {
-      id: '1',
-      type: 'dream',
-      title: 'Flying over mountains',
-      notes: 'I was soaring above snow-capped peaks. The air was crisp and clear. Could see tiny villages below...',
-      occurredAt: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
-      data: {
-        lucid: true,
-        vivid: 4,
-        emotions: ['joy', 'wonder'],
-      },
-    },
-    {
-      id: '2',
-      type: 'tada',
-      title: 'Finished the API refactor',
-      notes: 'Finally completed the major refactoring work. Tests all passing.',
-      occurredAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-    },
-    {
-      id: '3',
-      type: 'note',
-      title: 'Gratitude',
-      notes: 'Grateful for the sunny morning, good coffee, and productive work session.',
-      occurredAt: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(),
-    },
-  ]
-  isLoading.value = false
+  try {
+    // Fetch journal-type entries (dream, journal, tada)
+    const data = await $fetch('/api/entries')
+    entries.value = data.filter((e: any) => 
+      ['dream', 'journal', 'tada', 'note'].includes(e.type)
+    )
+  } catch (err: any) {
+    console.error('Failed to fetch journal entries:', err)
+    error.value = err.message || 'Failed to load entries'
+  } finally {
+    isLoading.value = false
+  }
 })
 
 const filteredEntries = computed(() => {

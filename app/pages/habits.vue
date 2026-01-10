@@ -5,45 +5,22 @@ definePageMeta({
   layout: 'default',
 })
 
-// TODO: Fetch habits from API
+// Fetch habits from API
 const habits = ref<any[]>([])
 const isLoading = ref(true)
+const error = ref<string | null>(null)
 
 onMounted(async () => {
-  // Placeholder data for UI development
-  habits.value = [
-    {
-      id: '1',
-      name: 'Meditation',
-      emoji: '🧘',
-      targetType: 'daily',
-      targetCount: 1,
-      currentStreak: 12,
-      longestStreak: 45,
-      completedToday: true,
-    },
-    {
-      id: '2', 
-      name: 'Exercise',
-      emoji: '💪',
-      targetType: 'weekly',
-      targetCount: 3,
-      currentStreak: 4,
-      longestStreak: 8,
-      completedToday: false,
-    },
-    {
-      id: '3',
-      name: 'Reading',
-      emoji: '📚',
-      targetType: 'daily',
-      targetCount: 1,
-      currentStreak: 0,
-      longestStreak: 21,
-      completedToday: false,
-    },
-  ]
-  isLoading.value = false
+  try {
+    // TODO: Create habits API endpoint in Phase 2
+    // For now, show placeholder that Phase 2 is needed
+    habits.value = []
+  } catch (err: any) {
+    console.error('Failed to fetch habits:', err)
+    error.value = err.message || 'Failed to load habits'
+  } finally {
+    isLoading.value = false
+  }
 })
 
 // Get the last 7 days for the mini calendar
