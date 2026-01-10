@@ -55,6 +55,54 @@ bun run test:coverage # Coverage report
 - **Database location:** `app/data/db.sqlite` (created on first run, gitignored)
 - **Hot reload works** for Vue components and server routes
 
+### Testing Development Servers
+
+**IMPORTANT: Never interrupt a running dev server!**
+
+When testing API endpoints or frontend changes:
+
+**✅ DO THIS:**
+```bash
+# Start dev server in background
+cd app
+bun run dev  # Use isBackground: true in run_in_terminal
+
+# Then test using the browser or a separate terminal
+# The server continues running uninterrupted
+```
+
+**❌ DON'T DO THIS:**
+```bash
+# DON'T: Start server and then run commands in same terminal
+cd app
+bun run dev
+curl http://localhost:3000/api  # This will interrupt the server!
+```
+
+**Better Testing Strategies:**
+
+1. **Use the browser** — Navigate to `http://localhost:3000` and test UI directly
+2. **Start server with `isBackground: true`** — Server keeps running, you can check logs later with `get_terminal_output`
+3. **Tell the user to test** — Ask them to open browser and verify functionality
+4. **Write automated tests** — Use Vitest tests that don't need server running
+
+**Example: Proper testing workflow**
+```bash
+# 1. Start server in background
+run_in_terminal(
+  command: "cd app && bun run dev",
+  isBackground: true  # ← KEY: Server keeps running
+)
+
+# 2. Wait for it to start
+run_in_terminal(
+  command: "sleep 5"
+)
+
+# 3. Ask user to test in browser
+"Server is running at http://localhost:3000. Please test the new feature in your browser."
+```
+
 ## Architecture Overview
 
 ### Unified Entry Model
