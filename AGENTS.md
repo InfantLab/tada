@@ -4,11 +4,11 @@ This file provides context and instructions for AI coding agents working on Tada
 
 ## Project Overview
 
-Tada is a **personal lifelogger PWA** built with Nuxt 3, Vue 3, and TypeScript. It helps users track activities (meditation, dreams, habits) using a unified Entry model with offline-first architecture.
+Tada is a **personal lifelogger PWA** built with Nuxt 4, Vue 3, and TypeScript. It helps users track activities (meditation, dreams, habits) using a unified Entry model with offline-first architecture.
 
 **Repository size:** Small (~50 files)  
 **Languages:** TypeScript (95%), Vue (5%)  
-**Framework:** Nuxt 3.20 with Vite 7.3  
+**Framework:** Nuxt 4.2.2 with Vite 6  
 **Runtime:** Bun (not Node.js!)  
 **Database:** SQLite via Drizzle ORM  
 
