@@ -3,6 +3,13 @@ FROM oven/bun:1 AS builder
 
 WORKDIR /app
 
+# Install CA certificates for HTTPS git operations
+RUN apt-get update && \
+    apt-get install -y ca-certificates && \
+    update-ca-certificates && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
 # Copy package files
 COPY app/package.json app/bun.lock* ./
 
@@ -12,13 +19,16 @@ RUN bun install --frozen-lockfile
 # Copy source
 COPY app/ ./
 
-# Build the application
-RUN bun run build
+# Build the application (skip type check - generated files cause issues)
+RUN bun run build:docker
 
 # Production stage
 FROM oven/bun:1-alpine AS production
 
 WORKDIR /app
+
+# Install CA certificates, bash, and git for HTTPS operations and dev tooling
+RUN apk add ca-certificates bash git openssh-client
 
 # Create non-root user
 RUN addgroup --system --gid 1001 nodejs

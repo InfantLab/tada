@@ -1,14 +1,11 @@
 {
   "name": "Tada Dev Container",
-  "image": "oven/bun:debian",
-  "features": {
-    "ghcr.io/devcontainers/features/git:1": {}
+  "build": {
+    "dockerfile": "../Dockerfile",
+    "target": "production"
   },
   "forwardPorts": [3000, 4983],
-  "postCreateCommand": "cd app && bun install",
-  "remoteEnv": {
-    "SHELL": "/bin/bash"
-  },
+  "postCreateCommand": "cd app && bun install && git config --global url.ssh://git@github.com/.insteadOf https://github.com/",
   "customizations": {
     "vscode": {
       "extensions": [
@@ -28,9 +25,7 @@
           "source.fixAll.eslint": "explicit"
         },
         "typescript.preferences.importModuleSpecifier": "relative",
-        "vue.inlayHints.missingProps": true,
-        "terminal.integrated.defaultProfile.linux": "bash",
-        "terminal.integrated.shellIntegration.enabled": true
+        "vue.inlayHints.missingProps": true
       }
     }
   },
