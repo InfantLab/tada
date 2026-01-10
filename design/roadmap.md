@@ -8,9 +8,11 @@ Feature ideas and future plans, organized by version releases.
 ---
 
 ## v0.1.0: MVP — Foundation ✅
-*Completed January 2026*
+
+_Completed January 2026_
 
 **Core Functionality:**
+
 - [x] Project scaffolding (Nuxt 3, Bun, Drizzle)
 - [x] Database schema (unified Entry model)
 - [x] Database migrations
@@ -25,6 +27,7 @@ Feature ideas and future plans, organized by version releases.
 - [x] Version display (v0.1.0)
 
 **What Users Can Do:**
+
 - ✅ Track timed activities (meditation, music practice, etc.)
 - ✅ Log dreams, notes, and achievements
 - ✅ View timeline of all entries
@@ -35,21 +38,25 @@ Feature ideas and future plans, organized by version releases.
 ---
 
 ## v0.2.0: Core Features — The Essential Experience
-*Target: Q1 2026*
+
+_Target: Q1 2026_
 
 **Habit Tracking:**
+
 - [ ] Habit definitions API and UI
 - [ ] Habit streak calculations (Seinfeld method)
 - [ ] Calendar heatmap visualization
 - [ ] Weekly/monthly habit reports
 
 **Data Portability:**
+
 - [ ] Data import (Insight Timer CSV)
 - [ ] Data import (Meditation Helper SQLite)
 - [ ] CSV export option
 - [ ] Import history tracking (deduplication)
 
 **Enhanced Features:**
+
 - [ ] Timer presets (save/load configurations)
 - [ ] Timer bell sounds (download CC0 audio)
 - [ ] Entry attachments (photos, audio recordings)
@@ -57,12 +64,14 @@ Feature ideas and future plans, organized by version releases.
 - [ ] Tags management UI
 
 **Authentication (Optional):**
+
 - [ ] Lucia Auth integration
 - [ ] Optional password for self-hosted
 - [ ] Session management
 - [ ] Multi-user support preparation
 
 **PWA Enhancements:**
+
 - [ ] IndexedDB offline storage with sync
 - [ ] Background sync when online
 - [ ] Push notifications for habit reminders
@@ -71,10 +80,12 @@ Feature ideas and future plans, organized by version releases.
 ---
 
 ## v0.3.0: Polish — Make it Delightful
-*Target: Q2 2026*
+
+_Target: Q2 2026_
 
 ## Phase 4: Advanced
-*Power user features*
+
+_Power user features_
 
 - [ ] Voice input with LLM processing
 - [ ] Obsidian integration (dream journal sync)
@@ -90,6 +101,7 @@ Feature ideas and future plans, organized by version releases.
 The unified Entry model supports any `type` value. Here are ideas beyond the core set:
 
 ### Currently Planned
+
 - `timed` — Timer session (meditation, focus, etc.)
 - `tada` — Accomplishment/celebration
 - `dream` — Dream journal entry
@@ -97,9 +109,11 @@ The unified Entry model supports any `type` value. Here are ideas beyond the cor
 - `habit` — Habit completion (auto-created by habit rules)
 
 ### Future Candidates
+
 These fit the model but aren't in initial scope:
 
 #### 🧘 Contemplative
+
 - `zen` — Moment of presence, clarity, awakening
 - `sync` — Synchronicity, meaningful coincidence
 - `magick` — Ritual, sigil, working, result
@@ -107,17 +121,20 @@ These fit the model but aren't in initial scope:
 - `gratitude` — Appreciation practice
 
 #### 🏃 Physical
+
 - `exercise` — Workout, run, yoga
 - `gps-track` — GPS-tracked activity (run, bike, hike)
 - `reps` — Counted exercise (pushups, etc.)
 - `sleep` — Sleep log with quality rating
 
 #### 🎨 Creative
+
 - `practice` — Music, art, skill practice
 - `create` — Made something (art, code, writing)
 - `learn` — Studied, read, course progress
 
 #### 📊 Quantified
+
 - `mood` — Mood check-in with rating
 - `energy` — Energy level tracking
 - `focus` — Focus/flow state log
@@ -126,6 +143,7 @@ These fit the model but aren't in initial scope:
 ### Implementation Notes
 
 Adding a new type requires:
+
 1. No schema changes (Entry.type is open string)
 2. Optional: Add emoji mapping in UI
 3. Optional: Add type-specific fields in Entry.data
@@ -155,7 +173,7 @@ Random ideas that don't fit elsewhere yet:
 
 ## Non-Goals
 
-Things we're explicitly *not* building:
+Things we're explicitly _not_ building:
 
 - ❌ **Social network** — This is personal, not social
 - ❌ **Habit prescriptions** — We don't tell you what to do
@@ -166,4 +184,4 @@ Things we're explicitly *not* building:
 
 ---
 
-*Last updated: January 2026*
+_Last updated: January 2026_

@@ -1,168 +1,93 @@
 # Tada - Agent Instructions
 
-This file provides context and instructions for AI coding agents working on Tada. Think of this as a README specifically for agents.
+**⚠️ Keep this file concise!** Details belong in `design/` docs. This is a quick reference, not documentation.
 
-## Project Overview
+## Do
 
-Tada is a **personal lifelogger PWA** built with Nuxt 3, Vue 3, and TypeScript. It helps users track activities (meditation, dreams, habits) using a unified Entry model with offline-first architecture.
+- Use **double quotes** (`"`) not single (`'`)
+- Add **semicolons** at end of statements
+- Use **structured logging** (`createLogger`) not `console.log`
+- Run `bun run lint:fix` after editing files
+- Read `design/SDR.md` before major architectural changes
+- Ask clarifying questions when requirements are unclear
 
-**Repository size:** Small (~50 files)  
-**Languages:** TypeScript (95%), Vue (5%)  
-**Framework:** Nuxt 3.20 with Vite 7.3  
-**Runtime:** Bun (not Node.js!)  
-**Database:** SQLite via Drizzle ORM
+## Don't
 
-## Dev Environment Tips
+- ❌ Launch dev server (user has it on :3000)
+- ❌ Use `any` type (use proper TypeScript types)
+- ❌ Hard-code values that should be in config/env
+- ❌ Create large speculative changes without confirmation
+- ❌ Run project-wide builds for small changes
+- ❌ Add heavy dependencies without asking
 
-### Navigation
+## Project Essentials
 
-- **Root:** `/workspaces/tada/` contains Docker configs, design docs
-- **App:** `/workspaces/tada/app/` is the Nuxt application
-- Always `cd app` before running bun commands
+- **Stack:** Nuxt 3, Vue 3, TypeScript, Bun, SQLite + Drizzle ORM
+- **Architecture:** Unified Entry model (everything is an entry)
+- **Directory:** Always `cd app` before commands
+- **Ports:** 3000 (dev server), 4983 (Drizzle Studio)
 
-### Running Commands
+## Commands (File-Scoped)
 
 ```bash
-# Development
+# Always start here
 cd app
-bun run dev           # Starts Nuxt dev server on :3000
 
-# Building
-bun run build         # Production build
-bun run preview       # Preview production build
+# Check/fix single file (fast!)
+bun run lint:fix path/to/file.ts
+eslint --fix path/to/file.vue
 
-# Code Quality
-bun run lint          # ESLint check
-bun run lint:fix      # Auto-fix lint issues
-bun run typecheck     # TypeScript compilation check
+# Project-wide (only when needed)
+- **Logging:** Use `createLogger()` not `console.log()`
 
-# Database
-bun run db:generate   # Generate migrations from schema changes
-bun run db:migrate    # Apply migrations
-bun run db:studio     # Open Drizzle Studio UI on :4983
+## Safety & Permissions
 
-# Testing (after setup)
-bun run test          # Run tests
-bun run test:ui       # Visual test UI
-bun run test:coverage # Coverage report
+**Allowed without asking:**
+- Read/list files
+- Lint/typecheck single files
+- Edit code in existing files
+- Run `bun run lint:fix`
+
+**Ask first:**
+- Installing packages (`bun add`)
+- Deleting files
+- Database schema changes
+- Running full builds
+bun run lint:fix          # All files
+bun run typecheck         # Full type check
+bun run db:generate       # After schema change
+bun run db:migrate        # Apply migrations
+bun run db:studio         # DB UI on :4983
 ```
 
-### Important Gotchas
+## Code Style
 
-- **Always use `bun` not `npm` or `pnpm`** — This project uses Bun as package manager and runtime
-- **Port 3000** is the dev server, **4983** is Drizzle Studio
-- **Environment:** You're in a dev container with Debian, Bun, and Git pre-installed
-- **Database location:** `app/data/db.sqlite` (created on first run, gitignored)
-- **Hot reload works** for Vue components and server routes
+**Good examples to copy:**
 
-### Testing Development Servers
+- API endpoint: `app/server/api/entries/index.get.ts`
+- Logging: See any file in `app/server/api/`
+- Vue component: `app/pages/timer.vue`
 
-**IMPORTANT: Never interrupt a running dev server!**
+**Legacy patterns to avoid:**
 
-When testing API endpoints or frontend changes:
+- Using `console.log` directly (use `createLogger`)
+- Using `any` type (be specific)
+- **Quotes:** Double (`"`) not single (`'`)
+- **Semicolons:** Required
+- **No `any` types:** Use proper types
+- **Vue templates:** Multi-line attributes when 3+
+- **Markdown:** Use `_italic_` and `**bold**` (not `*`)
 
-**✅ DO THIS:**
-```bash
-# Start dev server in background
-cd app
-bun run dev  # Use isBackground: true in run_in_terminal
+## Key Architecture
 
-# Then test using the browser or a separate terminal
-# The server continues running uninterrupted
-```
+**Unified Entry Model:** Everything is an entry (meditation, dream, note, tada). Entry types are open strings, type-specific data goes in `data` JSON field.
 
-**❌ DON'T DO THIS:**
-```bash
-# DON'T: Start server and then run commands in same terminal
-cd app
-bun run dev
-curl http://localhost:3000/api  # This will interrupt the server!
-```
+**File locations:**
 
-**Better Testing Strategies:**
-
-1. **Use the browser** — Navigate to `http://localhost:3000` and test UI directly
-2. **Start server with `isBackground: true`** — Server keeps running, you can check logs later with `get_terminal_output`
-3. **Tell the user to test** — Ask them to open browser and verify functionality
-4. **Write automated tests** — Use Vitest tests that don't need server running
-
-**Example: Proper testing workflow**
-```bash
-# 1. Start server in background
-run_in_terminal(
-  command: "cd app && bun run dev",
-  isBackground: true  # ← KEY: Server keeps running
-)
-
-# 2. Wait for it to start
-run_in_terminal(
-  command: "sleep 5"
-)
-
-# 3. Ask user to test in browser
-"Server is running at http://localhost:3000. Please test the new feature in your browser."
-```
-
-## Architecture Overview
-
-### Unified Entry Model
-
-**Core concept:** Everything is an `Entry` — meditation sessions, dreams, todos, journal notes.
-
-```typescript
-// Database schema: app/server/db/schema.ts
-export const entries = sqliteTable("entries", {
-  id: text("id").primaryKey(), // nanoid
-  userId: text("user_id"), // FK to users
-  type: text("type").notNull(), // 'meditation', 'dream', 'tada', 'journal'
-  occurredAt: text("occurred_at"), // ISO8601 timestamp
-  durationSeconds: integer("duration_seconds"),
-  title: text("title"),
-  notes: text("notes"),
-  data: text("data", { mode: "json" }), // Type-specific JSONB
-  // ... more fields
-});
-```
-
-**Key insight:** Habits are NOT separate records — they're aggregation queries over entries using matchers.
-
-### Directory Structure
-
-```
-app/
-├── pages/              # Vue pages (routes)
-│   ├── index.vue       # Timeline (home)
-│   ├── timer.vue       # Meditation timer
-│   ├── habits.vue      # Habit tracking
-│   ├── journal.vue     # Journal view
-│   ├── settings.vue    # Settings
-│   └── add.vue         # Quick add entry
-├── layouts/
-│   └── default.vue     # Main layout with nav
-├── server/
-│   ├── api/            # API endpoints
-│   │   └── health.get.ts  # Only endpoint so far!
-│   └── db/
-│       ├── index.ts    # Drizzle client
-│       └── schema.ts   # Full schema (users, entries, habits, etc.)
-├── components/         # Vue components (none yet!)
-├── composables/        # Vue composables (none yet!)
-├── assets/css/         # Global CSS
-└── public/             # Static files (icons, sounds)
-```
-
-### PWA Configuration
-
-- Service worker via `@vite-pwa/nuxt`
-- Manifest in `nuxt.config.ts`
-- Icons in `public/icons/`
-- Designed for offline-first operation
-
-### Authentication Strategy
-
-- Using Lucia Auth (not yet implemented)
-- Sessions table already in schema
-- Optional password for self-hosted (can run passwordless)
+- `app/pages/*.vue` — Routes (auto-generated)
+- `app/server/api/**/*.ts` — API endpoints
+- `app/server/db/schema.ts` — Database schema
+- `design/SDR.md` — Full architecture (read this for details!)
 
 ## Testing Instructions
 
@@ -213,103 +138,14 @@ The CI pipeline (when setup) runs:
 
 Use **conventional commits:**
 
-```
+````
 feat: add entry CRUD API endpoints
-fix: correct timer countdown calculation
-test: add unit tests for streak calculation
-docs: update README with deployment guide
-refactor: extract timer logic to composable
-chore: upgrade Nuxt to 3.21
-```
+fixDesign Docs (Read Before Major Changes)
 
-### Branch Naming
-
-- **Manual work:** `feature/brief-description`
-- **Agent work:** `copilot/brief-description` (auto-created by GitHub Copilot)
-
-### PR Checklist
-
-Before opening PR, verify:
-
-- [ ] `bun run lint` passes
-- [ ] `bun run typecheck` passes
-- [ ] `bun run test` passes (when tests exist)
-- [ ] New code has tests
-- [ ] Updated docs if needed
-- [ ] Conventional commit messages
-
-### Code Review Process
-
-1. CI must pass (GitHub Actions)
-2. At least one review required for `main`
-3. Squash merge to keep history clean
-
-## Design Documents
-
-**Critical reading for major changes:**
-
-- `design/SDR.md` — Software Design Requirements (THE source of truth)
-- `design/philosophy.md` — Vision, tone, what we're NOT building
-- `design/decisions.md` — Technical decisions with rationale
-- `design/roadmap.md` — Feature phases and priorities
-
-**Key principles from philosophy:**
-
-- "Noticing, not tracking" — Focus on celebration, not obligation
-- Data ownership is paramount — Export must always work
-- Offline-first — Must work without internet
-- Simple > complex — Avoid premature optimization
-
-## Common Tasks
-
-### Adding a New API Endpoint
-
-1. Create `app/server/api/your-endpoint.{get|post}.ts`
-2. Import Drizzle client from `server/db`
-3. Use schema types from `server/db/schema`
-4. Add tests in `your-endpoint.{get|post}.test.ts`
-5. Verify with `curl http://localhost:3000/api/your-endpoint`
-
-### Adding a New Page
-
-1. Create `app/pages/your-page.vue`
-2. Update `layouts/default.vue` nav if needed
-3. Route is auto-generated: `/your-page`
-
-### Modifying Database Schema
-
-1. Edit `app/server/db/schema.ts`
-2. Run `cd app && bun run db:generate` — creates migration
-3. Run `bun run db:migrate` — applies migration
-4. Commit both schema AND migration files
-
-### Adding a New Entry Type
-
-Entry types are open (not enum). Just use them:
-
-```typescript
-const entry = {
-  type: "meditation", // or 'dream', 'tada', 'book', 'run', etc.
-  data: {
-    // Type-specific fields go here
-    technique: "vipassana",
-    location: "home",
-  },
-};
-```
-
-## Troubleshooting
-
-**"Module not found" errors:**
-
-- Run `cd app && bun install` to refresh dependencies
-- Check you're in `/workspaces/tada/app` directory
-
-**Port 3000 already in use:**
-
-- Kill existing process: `pkill -f 'bun.*dev'`
-- Or change port: `PORT=3001 bun run dev`
-
+- `design/SDR.md` — Software requirements (THE source of truth)
+- `design/philosophy.md` — Vision and principles
+- `design/decisions.md` — Technical decisions
+- `design/roadmap.md` — Feature roadmap
 **Database errors:**
 
 - Delete `app/data/db.sqlite*` and restart (dev only!)
@@ -333,7 +169,7 @@ const entry = {
 cd app
 bun run build         # Creates .output/ directory
 bun run preview       # Preview production build locally
-```
+````
 
 ### Docker
 
@@ -351,15 +187,24 @@ docker run -p 3000:3000 -v ./data:/app/data tada:latest
 
 ## Trust the Instructions
 
-When you see instructions in this file, code comments, or design documents, **trust them first** and only search/explore if:
+**New API endpoint:** Create `app/server/api/path.{get|post}.ts`, import `createLogger`, use types from `~/server/db/schema`
 
-- Instructions are incomplete
-- Instructions conflict with actual code behavior
-- You need more detail than provided
+**New page:** Create `app/pages/name.vue` (route auto-generated)
 
-The design documents (especially SDR) are comprehensive and up-to-date. Start there before deep exploration.
+**Schema change:** Edit `schema.ts` →
 
----
+## When Stuck
 
-**Last Updated:** January 10, 2026  
-**For questions:** See design/SDR.md or design/decisions.md
+- Ask a clarifying question with specific context
+- Propose a short plan before making large changes
+- Open discussion rather than making speculative changes
+- Check `design/` docs for architectural guidance `bun run db:generate` → `bun run db:migrate` → commit both
+
+**New entry type:** Just use it! Types are open strings. Put type-specific data in `data` field.
+
+## Quick Troubleshooting
+
+- **Module errors:** `bun install`
+- **DB errors:** `bun run db:migrate` or delete `app/data/db.sqlite*`
+- **Type errors:** `bun run typecheck`
+- **Lint errors:** `bun run lint:fix`

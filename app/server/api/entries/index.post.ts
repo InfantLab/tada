@@ -2,11 +2,16 @@ import { defineEventHandler, readBody, createError } from "h3";
 import { db } from "~/server/db";
 import { entries, type NewEntry } from "~/server/db/schema";
 import { nanoid } from "nanoid";
+import { createLogger } from "~/server/utils/logger";
+
+const logger = createLogger("api:entries:post");
 
 export default defineEventHandler(async (event) => {
   try {
     const body = await readBody(event);
     const userId = "default-user"; // TODO: Get from auth context once Lucia is implemented
+    
+    logger.debug("Creating entry", { type: body.type, userId });
 
     // Validate required fields
     if (!body.type || !body.name) {
@@ -49,9 +54,10 @@ export default defineEventHandler(async (event) => {
       .where(eq(entries.id, newEntry.id))
       .limit(1);
 
+    logger.info("Entry created successfully", { entryId: newEntry.id, type: newEntry.type });
     return created || newEntry;
   } catch (error: any) {
-    console.error("Failed to create entry:", error);
+    logger.error("Failed to create entry", error, { type: body?.type });
 
     if (error.statusCode) {
       throw error;

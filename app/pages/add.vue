@@ -120,7 +120,7 @@ async function submitEntry() {
       </h1>
     </div>
 
-    <form @submit.prevent="submitEntry" class="space-y-6">
+    <form class="space-y-6" @submit.prevent="submitEntry">
       <!-- Entry type selector -->
       <div>
         <label
@@ -133,13 +133,13 @@ async function submitEntry() {
             v-for="type in entryTypes"
             :key="type.value"
             type="button"
-            @click="entryType = type.value"
             class="p-3 rounded-xl border-2 text-left transition-colors"
             :class="
               entryType === type.value
                 ? 'border-tada-500 bg-tada-50 dark:bg-tada-900/20'
                 : 'border-stone-200 dark:border-stone-700 hover:border-stone-300 dark:hover:border-stone-600'
             "
+            @click="entryType = type.value"
           >
             <div class="flex items-center gap-2 mb-1">
               <span class="text-xl">{{ type.emoji }}</span>
@@ -174,7 +174,7 @@ async function submitEntry() {
               : 'Give it a title...'
           "
           class="w-full px-4 py-3 rounded-xl border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 text-stone-800 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-tada-500 focus:border-transparent"
-        />
+        >
       </div>
 
       <!-- Notes -->
@@ -210,7 +210,6 @@ async function submitEntry() {
           </label>
           <button
             type="button"
-            @click="dreamData.lucid = !dreamData.lucid"
             class="relative w-12 h-7 rounded-full transition-colors"
             :class="
               dreamData.lucid ? 'bg-tada-500' : 'bg-stone-300 dark:bg-stone-600'
@@ -218,6 +217,7 @@ async function submitEntry() {
             role="switch"
             :aria-checked="dreamData.lucid"
             aria-label="Toggle lucid dream"
+            @click="dreamData.lucid = !dreamData.lucid"
           >
             <span
               class="absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform"
@@ -234,12 +234,12 @@ async function submitEntry() {
             Vividness: {{ dreamData.vivid }}/5
           </label>
           <input
-            type="range"
             v-model.number="dreamData.vivid"
+            type="range"
             min="1"
             max="5"
             class="w-full accent-tada-500"
-          />
+          >
         </div>
 
         <!-- Emotions -->
@@ -254,18 +254,18 @@ async function submitEntry() {
               v-for="emotion in emotionOptions"
               :key="emotion"
               type="button"
+              class="px-3 py-1.5 rounded-full text-sm font-medium transition-colors"
+              :class="
+                dreamData.emotions.includes(emotion)
+                  ? 'bg-tada-500 text-white'
+                  : 'bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600'
+              "
               @click="
                 dreamData.emotions.includes(emotion)
                   ? (dreamData.emotions = dreamData.emotions.filter(
                       (e) => e !== emotion
                     ))
                   : dreamData.emotions.push(emotion)
-              "
-              class="px-3 py-1.5 rounded-full text-sm font-medium transition-colors"
-              :class="
-                dreamData.emotions.includes(emotion)
-                  ? 'bg-tada-500 text-white'
-                  : 'bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600'
               "
             >
               {{ emotion }}
@@ -281,9 +281,7 @@ async function submitEntry() {
         class="w-full py-3 px-4 bg-tada-600 hover:bg-tada-700 disabled:bg-stone-300 dark:disabled:bg-stone-600 text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
       >
         <span v-if="isSubmitting">Saving...</span>
-        <template v-else>
-          <span>{{ entryType === "tada" ? "🎉 Tada!" : "Save Entry" }}</span>
-        </template>
+        <span v-else>{{ entryType === "tada" ? "🎉 Tada!" : "Save Entry" }}</span>
       </button>
     </form>
   </div>

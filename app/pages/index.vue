@@ -100,7 +100,7 @@ function groupByDate(entries: any[]): Map<string, any[]> {
 
     <!-- Loading state -->
     <div v-if="isLoading" class="flex items-center justify-center py-12">
-      <div class="animate-spin rounded-full h-8 w-8 border-2 border-tada-600 border-t-transparent"></div>
+      <div class="animate-spin rounded-full h-8 w-8 border-2 border-tada-600 border-t-transparent"/>
     </div>
 
     <!-- Error state -->
@@ -111,8 +111,8 @@ function groupByDate(entries: any[]): Map<string, any[]> {
       </h2>
       <p class="text-stone-500 dark:text-stone-400 mb-4">{{ error }}</p>
       <button 
-        @click="() => { isLoading = true; onMounted(); }"
         class="px-4 py-2 bg-tada-600 hover:bg-tada-700 text-white rounded-lg font-medium transition-colors"
+        @click="() => { isLoading = true; onMounted(); }"
       >
         Try again
       </button>
@@ -196,33 +196,6 @@ function groupByDate(entries: any[]): Map<string, any[]> {
                 <p v-if="entry.notes" class="text-sm text-stone-600 dark:text-stone-300 line-clamp-2">
                   {{ entry.notes }}
                 </p>
-              </div>
-            </div>
-                <span v-else-if="entry.type === 'dream'" class="text-lg">🌙</span>
-                <span v-else-if="entry.type === 'tada'" class="text-lg">🎉</span>
-                <span v-else-if="entry.type === 'timed'" class="text-lg">⏱️</span>
-                <span v-else class="text-lg">📝</span>
-              </div>
-              
-              <!-- Entry content -->
-              <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-2 mb-1">
-                  <span class="text-xs font-medium text-tada-600 dark:text-tada-400 uppercase">
-                    {{ entry.type }}
-                  </span>
-                  <span class="text-xs text-stone-400">
-                    {{ formatRelativeTime(new Date(entry.occurredAt)) }}
-                  </span>
-                </div>
-                <p v-if="entry.title" class="font-medium text-stone-800 dark:text-stone-100">
-                  {{ entry.title }}
-                </p>
-                <p v-if="entry.notes" class="text-sm text-stone-600 dark:text-stone-300 line-clamp-2">
-                  {{ entry.notes }}
-                </p>
-                <div v-if="entry.durationSeconds" class="text-sm text-stone-500 dark:text-stone-400 mt-1">
-                  {{ Math.floor(entry.durationSeconds / 60) }}m {{ entry.durationSeconds % 60 }}s
-                </div>
               </div>
             </div>
           </div>
