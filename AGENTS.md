@@ -14,11 +14,13 @@
 ## Don't
 
 - ❌ Launch dev server (user has it on :3000)
-- ❌ Use `any` type (use proper TypeScript types)
+- ❌ Use `any` type - use `unknown` + type narrowing (`error instanceof Error`)
 - ❌ Hard-code values that should be in config/env
 - ❌ Create large speculative changes without confirmation
 - ❌ Run project-wide builds for small changes
 - ❌ Add heavy dependencies without asking
+
+**Why no `any`?** 94% of AI-generated code errors are type failures. Strong typing prevents bugs.
 
 ## Project Essentials
 
@@ -61,6 +63,13 @@ bun run db:studio         # DB UI on :4983
 ```
 
 ## Code Style
+
+- **Quotes:** Double (`"`) not single (`'`)
+- **Semicolons:** Required
+- **Types:** Never `any` - use `unknown` + type guards
+- **Vue templates:** Multi-line attributes when 3+
+- **Markdown:** Use `_italic_` and `**bold**` (not `*`)
+- **Logging:** Use `createLogger()` not `console.log()`
 
 **Good examples to copy:**
 
