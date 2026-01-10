@@ -145,6 +145,48 @@ See [design/roadmap.md](design/roadmap.md) for complete roadmap.
 - **Technical Decisions**: [design/decisions.md](design/decisions.md)
 - **Repository**: https://github.com/InfantLab/tada
 
+## Dev Container: Git Authentication
+
+If you're developing inside the VS Code Dev Container, use HTTPS with a Personal Access Token (PAT) for a hassle-free `git push`:
+
+- **Why HTTPS/PAT?** SSH requires your private key to be available in the container (via agent forwarding). If the agent isn't forwarded, `Permission denied (publickey)` occurs. HTTPS + PAT avoids this.
+- **Current config:** The devcontainer no longer rewrites GitHub HTTPS to SSH. You can push over HTTPS using your PAT.
+
+### Step-by-Step: Verify and Push
+
+```bash
+cd /workspaces/tada
+# Ensure remote is HTTPS
+git remote -v
+git remote set-url origin https://github.com/InfantLab/tada.git
+
+# Ensure no global rewrite to SSH exists
+git config -l | grep url || true
+git config --global --unset-all url.ssh://git@github.com/.insteadOf || true
+
+# Optional: cache credentials for an hour
+git config --global credential.helper "cache --timeout=3600"
+
+# Push
+git push origin main
+```
+
+### Prefer SSH instead?
+
+- Make sure your host SSH agent has your GitHub key loaded (`ssh-add -l`).
+- Reopen the Dev Container with agent forwarding enabled. Test inside container:
+
+```bash
+ssh -T git@github.com
+```
+
+You should see a success message from GitHub. Then set the remote to SSH and push:
+
+```bash
+git remote set-url origin ssh://git@github.com/InfantLab/tada.git
+git push origin main
+```
+
 ## License
 
 [AGPL-3.0](LICENSE) — Free to use, modify, and self-host. Contributions welcome!
@@ -152,3 +194,4 @@ See [design/roadmap.md](design/roadmap.md) for complete roadmap.
 ---
 
 _Tada is an anagram of "data" — because your life's data belongs to you._ 🎉
+
