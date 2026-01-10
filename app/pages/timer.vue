@@ -12,9 +12,22 @@ const elapsedSeconds = ref(0)
 const isRunning = ref(false)
 const isPaused = ref(false)
 const timerInterval = ref<ReturnType<typeof setInterval> | null>(null)
+const category = ref('sitting')
+const isSaving = ref(false)
 
 // Timer presets
 const presets = [5, 10, 15, 20, 30, 45, 60]
+
+// Activity categories
+const categories = [
+  { value: 'sitting', label: 'Sitting', icon: '🧘' },
+  { value: 'breathing', label: 'Breathing', icon: '🫁' },
+  { value: 'walking', label: 'Walking', icon: '🚶' },
+  { value: 'tai_chi', label: 'Tai Chi', icon: '🥋' },
+  { value: 'music', label: 'Music', icon: '🎵' },
+  { value: 'lesson', label: 'Lesson', icon: '📚' },
+  { value: 'other', label: 'Other', icon: '⏱️' },
+]
 
 // Computed display values
 const displayTime = computed(() => {
@@ -91,31 +104,59 @@ function resetTimer() {
 }
 
 function playBell() {
-  // TODO: Play bell sound from /audio/bells/
+  // TODO: Implement actual audio playback when bell sounds are added
+  // For now, use browser notification sound or console
   console.log('🔔 Bell!')
+  
+  // Try to play a system notification sound if available
+  if ('Audio' in window) {
+    try {
+      const audio = new Audio('/sounds/bell.mp3')
+      audio.play().catch(() => {
+        // Fallback to console if audio fails
+        console.log('Bell sound failed to play')
+      })
+    } catch (e) {
+      console.log('Audio not available')
+    }
+  }
 }
 
 async function saveSession() {
   if (elapsedSeconds.value < 1) return
   
-  // TODO: Save to API
-  const entry = {
-    type: 'timed',
-    durationSeconds: elapsedSeconds.value,
-    occurredAt: new Date().toISOString(),
-    data: {
-      mode: timerMode.value,
-      targetMinutes: timerMode.value === 'countdown' ? targetMinutes.value : null,
-    },
+  isSaving.value = true
+  
+  try {
+    const entry = {
+      type: 'timed',
+      name: `${categories.find(c => c.value === category.value)?.label || 'Meditation'} (${Math.floor(elapsedSeconds.value / 60)}m)`,
+      timestamp: new Date().toISOString(),
+      durationSeconds: elapsedSeconds.value,
+      data: {
+        mode: timerMode.value,
+        category: category.value,
+        targetMinutes: timerMode.value === 'countdown' ? targetMinutes.value : null,
+      },
+      tags: ['meditation', category.value],
+    }
+    
+    await $fetch('/api/entries', {
+      method: 'POST',
+      body: entry,
+    })
+    
+    // Reset for next session
+    resetTimer()
+    
+    // Navigate to timeline
+    navigateTo('/')
+  } catch (error: any) {
+    console.error('Failed to save session:', error)
+    alert(`Failed to save session: ${error.message || 'Unknown error'}`)
+  } finally {
+    isSaving.value = false
   }
-  
-  console.log('Saving session:', entry)
-  
-  // Reset for next session
-  resetTimer()
-  
-  // Navigate to timeline
-  navigateTo('/')
 }
 
 // Cleanup on unmount
@@ -131,6 +172,27 @@ onUnmounted(() => {
 
 <template>
   <div class="flex flex-col items-center justify-center min-h-[70vh]">
+    <!-- Category selector (only when not running) -->
+    <div v-if="!isRunning" class="mb-6">
+      <label class="block text-sm font-medium text-stone-600 dark:text-stone-300 mb-2 text-center">
+        Activity Type
+      </label>
+      <div class="flex flex-wrap gap-2 justify-center max-w-md">
+        <button
+          v-for="cat in categories"
+          :key="cat.value"
+          @click="category = cat.value"
+          class="px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
+          :class="category === cat.value 
+            ? 'bg-tada-100 dark:bg-tada-900/50 text-tada-700 dark:text-tada-300 ring-2 ring-tada-500' 
+            : 'bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600'"
+        >
+          <span>{{ cat.icon }}</span>
+          <span>{{ cat.label }}</span>
+        </button>
+      </div>
+    </div>
+
     <!-- Mode toggle (only when not running) -->
     <div v-if="!isRunning" class="flex gap-2 mb-8">
       <button
@@ -244,11 +306,13 @@ onUnmounted(() => {
         <!-- Stop / Save -->
         <button
           @click="saveSession"
-          class="w-20 h-20 rounded-full bg-tada-600 hover:bg-tada-700 text-white flex items-center justify-center shadow-lg transition-colors"
+          :disabled="isSaving"
+          class="w-20 h-20 rounded-full bg-tada-600 hover:bg-tada-700 disabled:bg-stone-300 disabled:cursor-not-allowed text-white flex items-center justify-center shadow-lg transition-colors"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg v-if="!isSaving" xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
           </svg>
+          <div v-else class="animate-spin rounded-full h-8 w-8 border-2 border-white border-t-transparent"></div>
         </button>
 
         <!-- Reset -->
