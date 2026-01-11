@@ -20,7 +20,7 @@ const isUpdating = ref(false);
 onMounted(async () => {
   try {
     // Fetch only Ta-Da! type entries
-    const data: Entry[] = await $fetch("/api/entries");
+    const data = (await $fetch("/api/entries")) as Entry[];
     entries.value = data.filter((e) => e.type === "tada");
   } catch (err: unknown) {
     console.error("Failed to fetch Ta-Da! entries:", err);

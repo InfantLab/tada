@@ -4,6 +4,9 @@
  * Uses emoji-picker-element for full native emoji support
  */
 
+// Type for emoji-picker-element custom element (simplified to avoid interface conflicts)
+type EmojiPickerElement = HTMLElement;
+
 interface Props {
   modelValue: boolean;
   entryName?: string;
@@ -18,7 +21,7 @@ const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 
 const pickerContainer = ref<HTMLElement | null>(null);
-const pickerInstance = ref<any>(null);
+const pickerInstance = ref<EmojiPickerElement | null>(null);
 
 // Close modal
 function close() {
@@ -29,7 +32,7 @@ function close() {
     try {
       pickerInstance.value.removeEventListener(
         "emoji-click",
-        handleEmojiSelect
+        handleEmojiSelect as EventListener
       );
       pickerContainer.value.innerHTML = "";
     } catch (error) {
@@ -99,7 +102,7 @@ onMounted(() => {
 onUnmounted(() => {
   document.removeEventListener("keydown", handleKeydown);
   if (pickerInstance.value) {
-    pickerInstance.value.removeEventListener("emoji-click", handleEmojiSelect);
+    pickerInstance.value.removeEventListener("emoji-click", handleEmojiSelect as EventListener);
   }
 });
 </script>

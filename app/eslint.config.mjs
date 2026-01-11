@@ -1,6 +1,11 @@
 // @ts-check
-import withNuxt from './.nuxt/eslint.config.mjs'
+import { createConfigForNuxt } from "@nuxt/eslint-config/flat";
 
-export default withNuxt(
-  // Your custom configs here
-)
+export default createConfigForNuxt({
+  // Features configuration
+}).append({
+  rules: {
+    // Disable the void element check entirely - self-closing is fine in Vue
+    "vue/html-self-closing": "off",
+  },
+});
