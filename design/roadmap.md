@@ -9,14 +9,14 @@ Feature ideas and future plans, organized by version releases.
 
 ## Version Summary
 
-| Version | Theme | Target |
-|---------|-------|--------|
-| **v0.1.0** | MVP — Foundation | ✅ Shipped Jan 2026 |
-| **v0.2.0** | Core Experience | Q1 2026 |
-| **v0.3.0** | Magic & Voice | Q2 2026 |
-| **v0.4.0** | Cloud Service (tada.living) | Q3 2026 |
-| **v0.5.0** | Rituals & AI Insights | Q4 2026 |
-| **v0.6.0** | Integrations | 2027+ |
+| Version    | Theme                       | Target              |
+| ---------- | --------------------------- | ------------------- |
+| **v0.1.0** | MVP — Foundation            | ✅ Shipped Jan 2026 |
+| **v0.2.0** | Core Experience             | Jan 2026            |
+| **v0.3.0** | Magic & Voice               | Feb 2026            |
+| **v0.4.0** | Cloud Service (tada.living) | Mar 2026            |
+| **v0.5.0** | Rituals & AI Insights       | Apr 2026            |
+| **v0.6.0** | Integrations                | May 2026            |
 
 ---
 
@@ -27,6 +27,7 @@ _Status: Shipped January 2026_
 See [CHANGELOG.md](../CHANGELOG.md) and [RELEASE_NOTES_v0.1.0.md](../RELEASE_NOTES_v0.1.0.md) for details.
 
 **Delivered:**
+
 - Unified Entry model with ontology (type/category/subcategory/emoji)
 - Meditation timer with bells and wake lock
 - Quick add for dreams, notes, ta-das
@@ -131,6 +132,7 @@ _Target: Q3 2026_
 Transform self-hosted app into hosted service at tada.living.
 
 **Infrastructure:**
+
 - [ ] Multi-tenant database architecture (tenant isolation)
 - [ ] User registration and onboarding flow
 - [ ] Account management dashboard
@@ -138,6 +140,7 @@ Transform self-hosted app into hosted service at tada.living.
 - [ ] Automated backups and recovery
 
 **Billing (Stripe):**
+
 - [ ] Subscription tiers (Free, Premium)
 - [ ] Stripe integration for payments
 - [ ] Usage-based limits (entries, storage)
@@ -145,6 +148,7 @@ Transform self-hosted app into hosted service at tada.living.
 - [ ] Cancellation and data export
 
 **Legal & Compliance:**
+
 - [ ] Privacy policy (GDPR-compliant)
 - [ ] Terms of service
 - [ ] Data processing agreements
@@ -152,6 +156,7 @@ Transform self-hosted app into hosted service at tada.living.
 - [ ] Data deletion workflow
 
 **Marketing & Content:**
+
 - [ ] Landing page with philosophy messaging
 - [ ] Blog with science/philosophy content:
   - Benefits of mindfulness tracking
@@ -162,6 +167,7 @@ Transform self-hosted app into hosted service at tada.living.
 - [ ] Email newsletter (opt-in)
 
 **Self-Hosted Compatibility:**
+
 - [ ] Self-hosted remains fully functional (no cloud required)
 - [ ] Optional cloud backup for self-hosted users
 - [ ] Migration path: self-hosted ↔ cloud
@@ -185,12 +191,14 @@ _Target: Q4 2026_
 Private, opt-in AI analysis with strong privacy protections.
 
 **Philosophy:**
+
 - All AI features are opt-in, off by default
 - Data never leaves device without explicit consent
 - No training on user data
 - Insights suggest, never prescribe
 
 **Features:**
+
 - [ ] Pattern recognition (weekly/monthly rhythms)
 - [ ] Gentle observations: "You tend to meditate more on weekends"
 - [ ] Correlation hints: "Sleep quality seems better after evening meditation"
@@ -198,6 +206,7 @@ Private, opt-in AI analysis with strong privacy protections.
 - [ ] Anomaly awareness: "This week looks different — everything okay?"
 
 **Privacy Controls:**
+
 - [ ] Granular opt-in per insight type
 - [ ] On-device processing option
 - [ ] Data retention controls
@@ -239,15 +248,18 @@ The unified Entry model supports any `type` value. Current types:
 ### Future Candidates
 
 #### 🧘 Contemplative
+
 - `sync` — Synchronicity, meaningful coincidence
 - `insight` — Sudden understanding, aha moment
 - `gratitude` — Appreciation practice
 
 #### 🏃 Physical
+
 - `exercise` — Workout, run, yoga
 - `sleep` — Sleep log with quality rating
 
 #### 🎨 Creative
+
 - `practice` — Music, art, skill practice
 - `create` — Made something (art, code, writing)
 

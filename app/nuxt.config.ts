@@ -30,6 +30,10 @@ export default defineNuxtConfig({
   // PWA configuration
   pwa: {
     registerType: "autoUpdate",
+    // Disable pwa-icons module to avoid type generation issues during dev
+    pwaAssets: {
+      disabled: true,
+    },
     manifest: {
       name: "Tada - Life Tracker",
       short_name: "Tada",
