@@ -1,220 +1,267 @@
-# Tada Roadmap
+# Ta-Da! Roadmap
 
 Feature ideas and future plans, organized by version releases.
 
-**Current Version:** v0.1.0 (MVP) ✅  
-**Next Release:** v0.2.0 (Phase 2)
+**Current Version:** v0.1.0 ✅ (shipped)  
+**Next Release:** v0.2.0
 
 ---
 
-## v0.1.0: MVP — Foundation 🚧
+## Version Summary
 
-_Status: In Progress - January 2026_
-
-**Core Functionality:**
-
-- [x] Project scaffolding (Nuxt 3, Bun, Drizzle)
-- [x] Database schema (unified Entry model)
-- [x] Database migrations
-- [x] PWA configuration & Docker setup
-- [x] Entry CRUD API (GET, POST, PATCH, DELETE)
-- [x] Timeline view (connected to API)
-- [x] Meditation timer with category selection
-- [x] Timer start and end bells (separate configuration)
-- [x] Timer wake lock (keep screen on during meditation)
-- [x] Settings persistence (localStorage)
-- [x] Quick add entry form (dreams, notes, achievements)
-- [x] Journal page (displays journal-type entries)
-- [x] Habits page scaffolding (placeholder for v0.2)
-- [x] Settings page with data export (JSON)
-- [x] Authentication system (Lucia Auth with password)
-- [x] Login/register page
-- [x] Version display (v0.1.0)
-
-**Ontology & Emoji System (v0.1.0):**
-
-- [x] Entry ontology: type + category + subcategory + emoji fields
-- [x] Category defaults config with emojis and colors
-- [x] Timer uses new ontology (type: timed, category: mindfulness, etc.)
-- [x] Add page uses new ontology (tada, journal with subcategories)
-- [x] Timeline displays emoji badges with category colors
-- [x] Normalize type values (meditation → timed + mindfulness)
-- [x] API endpoints accept and save category/subcategory/emoji
-- [x] Robust error handling with fallbacks for missing data
-- [x] Derived category lists (getTimedCategories) instead of hardcoding
-
-**What Users Can Do:**
-
-- ✅ Create account with password
-- ✅ Track timed activities (meditation, music practice, etc.)
-- ✅ Configure start/end bells separately
-- ✅ Keep screen awake during meditation
-- ✅ Log dreams, notes, and achievements
-- ✅ View timeline of all entries
-- ✅ Export data to JSON
-- ✅ Install as PWA on any device
-- ✅ Persist settings across sessions
-
-**Known Limitations:**
-
-- ⚠️ Habits tracking is placeholder only (coming in v0.2)
-- ⚠️ No offline sync (PWA works but doesn't cache data locally)
-- ⚠️ Single-user per instance (no multi-tenant support)
-
-**Technical Debt & Future Improvements:**
-
-- 🔧 **HIGH PRIORITY: Dedicated Ta-Da! add page** — Currently uses generic add form with dream/note options, losing the celebration magic (v0.2.0)
-- 🔧 Error messages use `alert()` — should use toast/notification system (v0.2.0)
-- 🔧 Legacy data migration — no automatic backfill of category/subcategory for pre-v0.1.0 entries
-- 🔧 Journal filter options hardcoded — should derive from category/subcategory data
-- 🔧 Subcategory collision (e.g., "walking" in mindfulness + movement) — flat lookup returns first match
-- 🔧 No user customization of categories yet — defaults work but editing deferred to v0.2.0
+| Version | Theme | Target |
+|---------|-------|--------|
+| **v0.1.0** | MVP — Foundation | ✅ Shipped Jan 2026 |
+| **v0.2.0** | Core Experience | Q1 2026 |
+| **v0.3.0** | Magic & Voice | Q2 2026 |
+| **v0.4.0** | Cloud Service (tada.living) | Q3 2026 |
+| **v0.5.0** | Rituals & AI Insights | Q4 2026 |
+| **v0.6.0** | Integrations | 2027+ |
 
 ---
 
-## v0.2.0: Core Features — The Essential Experience
+## v0.1.0: MVP — Foundation ✅
+
+_Status: Shipped January 2026_
+
+See [CHANGELOG.md](../CHANGELOG.md) and [RELEASE_NOTES_v0.1.0.md](../RELEASE_NOTES_v0.1.0.md) for details.
+
+**Delivered:**
+- Unified Entry model with ontology (type/category/subcategory/emoji)
+- Meditation timer with bells and wake lock
+- Quick add for dreams, notes, ta-das
+- Authentication system
+- PWA with Docker deployment
+- Data export (JSON)
+
+---
+
+## v0.2.0: Core Experience
 
 _Target: Q1 2026_
 
-**Ontology & Customization:**
+### 🎯 Timer Philosophy: Count Up
 
-- [ ] Category/subcategory emoji editing in Settings
-- [ ] Category color customization
-- [ ] Subcategory auto-complete (remember user additions like "metta")
-- [ ] Multi-category support for entries (e.g., concert → creative + events)
-- [ ] Toast/notification system to replace alert() dialogs
-- [ ] Legacy data backfill tool for pre-v0.1.0 entries without categories
+All timers count up, never down. We celebrate what you did, not what you "should" do.
+
+- [ ] Count-up timer as default (hide/remove countdown option)
+- [ ] Celebratory messaging: "You did 47 minutes!" not "Goal: 60 min"
+- [ ] Optional gentle milestones (chime at 10, 20, 30 min) — celebration, not pressure
+- [ ] Timer profiles: save/load named configurations (duration hint, category, bells)
+
+### 🎨 Custom Activities
+
+- [ ] User-defined activities beyond defaults
+- [ ] Custom emoji picker for any activity
+- [ ] Subcategory auto-complete (remember user additions like "metta", "walking")
 - [ ] Context-aware subcategory resolution (fix "walking" collision between categories)
-- [ ] Dynamic journal filter generation from actual entry data
 
-**Habit Tracking:**
+### 📉 Graceful Habit Chains
 
-- [ ] Habit definitions API and UI
-- [ ] Habit streak calculations (Seinfeld method)
-- [ ] Calendar heatmap visualization
-- [ ] Weekly/monthly habit reports
+Chains that bend, not break. When struggling, suggest easier tier instead of broken chain.
 
-**Data Portability:**
+- [ ] Tiered frequency targets:
+  - Tier 1: Daily (strict Seinfeld chain)
+  - Tier 2: 5 days/week
+  - Tier 3: 3 days/week
+  - Tier 4: 30 minutes/week
+  - Tier 5: X times/month
+- [ ] Automatic tier suggestion when streak would break
+- [ ] Identity-based framing: "You're becoming a meditator" not "47 sessions"
 
-- [ ] Data import (Insight Timer CSV)
-- [ ] Data import (Meditation Helper SQLite)
-- [ ] CSV export option
-- [ ] Import history tracking (deduplication)
+### 🔗 Practice Links
 
-**Enhanced Features:**
+- [ ] Link timer sessions to specific practices/resources
+- [ ] "I'm practicing X" with optional URL (YouTube video, Insight Timer guided, etc.)
+- [ ] Practice history: return to what worked
+- [ ] Share practice links between users (future)
 
-- [ ] Timer profiles (save/load named configurations with duration, category, bells)
-- [ ] Configurable start and end bells (different sounds allowed)
-- [ ] Timer bell sounds library (download CC0 audio)
-- [ ] Entry attachments (photos, audio recordings)
-- [ ] Search and filtering on timeline
-- [ ] Tags management UI
+### 📸 Photo Attachments
 
-**Authentication (Optional):**
+- [ ] Attach photos to entries (priority feature)
+- [ ] Photo gallery view for visual entries
+- [ ] Capture from camera or select from library
 
-- [ ] Lucia Auth integration
-- [ ] Optional password for self-hosted
-- [ ] Session management
-- [ ] Multi-user support preparation
+### 🔧 Polish
 
-**PWA Enhancements:**
-
-- [ ] IndexedDB offline storage with sync
-- [ ] Background sync when online
-- [ ] Push notifications for habit reminders
-- [ ] Wake Lock API for timer
+- [ ] Toast/notification system (replace `alert()` dialogs)
+- [ ] Dedicated Ta-Da! add page with celebration magic
+- [ ] Category/subcategory emoji editing in Settings
+- [ ] Legacy data backfill tool for pre-v0.1.0 entries
 
 ---
 
-## v0.3.0: Polish — Make it Delightful
+## v0.3.0: Magic & Voice
 
 _Target: Q2 2026_
 
-## Phase 4: Advanced
+### 🌙 Celestial Calendar Module
 
-_Power user features_
+Optional "magic" layer for those who want it, completely invisible to those who don't.
 
-- [ ] Voice input with LLM processing
-- [ ] Obsidian integration (dream journal sync)
-- [ ] Calendar heatmap view
-- [ ] Tags and categories
-- [ ] Bulk import/export
-- [ ] API for external integrations
+- [ ] Moon phase display and tracking
+- [ ] Lunar calendar integration (new moon, full moon, quarters)
+- [ ] Optional: planetary hours, astrological transits
+- [ ] Ritual timing suggestions (opt-in)
+- [ ] Celestial data in entry metadata (moon phase when entry was created)
+
+### ✨ Serendipity Capture
+
+- [ ] Quick capture for synchronicities and meaningful coincidences
+- [ ] "Just noticed something" minimal friction entry
+- [ ] Pattern recognition over time (opt-in insights)
+- [ ] Tag-based connections between serendipitous moments
+
+### 🎙️ Voice Input with LLM
+
+- [ ] Dictate entries via voice
+- [ ] LLM processing to structure dictated content
+- [ ] Extract category, mood, key details automatically
+- [ ] Review/edit before saving
+- [ ] Works offline with on-device processing (where possible)
+
+---
+
+## v0.4.0: Cloud Service — tada.living
+
+_Target: Q3 2026_
+
+### ☁️ Multi-Tenant Platform
+
+Transform self-hosted app into hosted service at tada.living.
+
+**Infrastructure:**
+- [ ] Multi-tenant database architecture (tenant isolation)
+- [ ] User registration and onboarding flow
+- [ ] Account management dashboard
+- [ ] Cross-device sync (real-time)
+- [ ] Automated backups and recovery
+
+**Billing (Stripe):**
+- [ ] Subscription tiers (Free, Premium)
+- [ ] Stripe integration for payments
+- [ ] Usage-based limits (entries, storage)
+- [ ] Trial period and conversion flow
+- [ ] Cancellation and data export
+
+**Legal & Compliance:**
+- [ ] Privacy policy (GDPR-compliant)
+- [ ] Terms of service
+- [ ] Data processing agreements
+- [ ] Cookie consent (minimal)
+- [ ] Data deletion workflow
+
+**Marketing & Content:**
+- [ ] Landing page with philosophy messaging
+- [ ] Blog with science/philosophy content:
+  - Benefits of mindfulness tracking
+  - Psychology of habit formation
+  - Identity-based behavior change research
+  - Contemplative practice traditions
+- [ ] SEO optimization
+- [ ] Email newsletter (opt-in)
+
+**Self-Hosted Compatibility:**
+- [ ] Self-hosted remains fully functional (no cloud required)
+- [ ] Optional cloud backup for self-hosted users
+- [ ] Migration path: self-hosted ↔ cloud
+
+---
+
+## v0.5.0: Rituals & AI Insights
+
+_Target: Q4 2026_
+
+### 🌅 Routines & Rituals
+
+- [ ] Morning/evening routine builder
+- [ ] Flexible ritual sequences (not rigid schedules)
+- [ ] "Ritual mode" — guided flow through routine items
+- [ ] Routine templates (shareable)
+- [ ] Time-of-day awareness (morning routine vs evening wind-down)
+
+### 🤖 AI Insights (with Guardrails)
+
+Private, opt-in AI analysis with strong privacy protections.
+
+**Philosophy:**
+- All AI features are opt-in, off by default
+- Data never leaves device without explicit consent
+- No training on user data
+- Insights suggest, never prescribe
+
+**Features:**
+- [ ] Pattern recognition (weekly/monthly rhythms)
+- [ ] Gentle observations: "You tend to meditate more on weekends"
+- [ ] Correlation hints: "Sleep quality seems better after evening meditation"
+- [ ] Identity reinforcement: "You've been consistent as a meditator this month"
+- [ ] Anomaly awareness: "This week looks different — everything okay?"
+
+**Privacy Controls:**
+- [ ] Granular opt-in per insight type
+- [ ] On-device processing option
+- [ ] Data retention controls
+- [ ] Easy disable/delete
+
+---
+
+## v0.6.0: Integrations
+
+_Target: 2027+_
+
+### 🔌 External Integrations
+
+- [ ] Obsidian integration (dream journal sync, markdown export)
+- [ ] Notion sync (two-way database sync)
+- [ ] Apple Health / Google Fit (meditation minutes)
+- [ ] IFTTT / Zapier webhooks
+- [ ] Public API for custom integrations
+- [ ] Calendar integration (schedule ritual times)
+
+### 📱 Platform Expansion
+
+- [ ] iOS/Android native apps (if needed beyond PWA)
+- [ ] Apple Watch quick entry
+- [ ] Home screen widgets (streak, quick capture)
+- [ ] Shortcuts/Tasker automation
 
 ---
 
 ## Entry Type Ideas
 
-The unified Entry model supports any `type` value. Here are ideas beyond the core set:
-
-### Currently Planned
+The unified Entry model supports any `type` value. Current types:
 
 - `timed` — Timer session (meditation, focus, etc.)
 - `tada` — Accomplishment/celebration
-- `dream` — Dream journal entry
-- `note` — Free-form thought
+- `journal` — Dream, note, reflection (uses subcategory)
 - `habit` — Habit completion (auto-created by habit rules)
 
 ### Future Candidates
 
-These fit the model but aren't in initial scope:
-
 #### 🧘 Contemplative
-
-- `zen` — Moment of presence, clarity, awakening
 - `sync` — Synchronicity, meaningful coincidence
-- `magick` — Ritual, sigil, working, result
 - `insight` — Sudden understanding, aha moment
 - `gratitude` — Appreciation practice
 
 #### 🏃 Physical
-
 - `exercise` — Workout, run, yoga
-- `gps-track` — GPS-tracked activity (run, bike, hike)
-- `reps` — Counted exercise (pushups, etc.)
 - `sleep` — Sleep log with quality rating
 
 #### 🎨 Creative
-
 - `practice` — Music, art, skill practice
 - `create` — Made something (art, code, writing)
-- `learn` — Studied, read, course progress
 
-#### 📊 Quantified
-
-- `mood` — Mood check-in with rating
-- `energy` — Energy level tracking
-- `focus` — Focus/flow state log
-- `substance` — Coffee, supplements, etc.
-
-### Implementation Notes
-
-Adding a new type requires:
-
-1. No schema changes (Entry.type is open string)
-2. Optional: Add emoji mapping in UI
-3. Optional: Add type-specific fields in Entry.data
-4. Optional: Add specialized input form
-
-The beauty of the unified model is that new types are essentially free. The danger is UI clutter — we should add types only when there's a clear use case and the default "note" type isn't sufficient.
+Adding a new type requires no schema changes — just use it!
 
 ---
 
 ## Ideas Parking Lot
 
-Random ideas that don't fit elsewhere yet:
-
-- **Widgets** — iOS/Android home screen widgets showing streak
-- **Apple Watch** — Quick entry from watch
-- **Shortcuts/Tasker** — Automation integration
-- **IFTTT/Zapier** — Webhook triggers
-- **Notion sync** — Two-way sync with Notion databases
-- **AI insights** — Pattern recognition, suggestions
-- **Social sharing** — Optional streak sharing
-- **Gamification** — Achievements, levels (controversial — might conflict with philosophy)
+- **Gamification** — Achievements, levels (careful: might conflict with philosophy)
 - **Focus mode** — Block distractions during timer
-- **Pomodoro** — Work/break intervals
+- **Pomodoro** — Work/break intervals (conflicts with count-up philosophy?)
 - **Spaced repetition** — Review past entries
+- **Social sharing** — Optional, never required
 
 ---
 
@@ -224,6 +271,7 @@ Things we're explicitly _not_ building:
 
 - ❌ **Social network** — This is personal, not social
 - ❌ **Habit prescriptions** — We don't tell you what to do
+- ❌ **Countdown timers** — We count up, celebrating what you did
 - ❌ **Streaks as punishment** — Missing a day isn't failure
 - ❌ **Notifications spam** — Minimal, user-controlled only
 - ❌ **Monetization dark patterns** — No ads, no selling data

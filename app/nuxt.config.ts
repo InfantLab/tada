@@ -23,7 +23,7 @@ export default defineNuxtConfig({
     // Public (exposed to client)
     public: {
       appName: "Tada",
-      appVersion: "0.1.0",
+      appVersion: "0.1.1",
     },
   },
 
