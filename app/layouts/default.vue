@@ -34,7 +34,10 @@ const route = useRoute();
             :to="item.href"
             class="px-3 py-2 rounded-lg text-sm font-medium transition-colors"
             :class="
-              route.path === item.href || (item.href === '/tada' && route.path === '/add' && route.query.type === 'tada')
+              route.path === item.href ||
+              (item.href === '/tada' &&
+                route.path === '/add' &&
+                route.query.type === 'tada')
                 ? 'bg-gold-highlight/30 text-gold-light dark:bg-gold-dark/20 dark:text-gold-dark'
                 : 'text-text-light-secondary hover:bg-pearl-mist dark:text-text-dark-secondary dark:hover:bg-cosmic-indigo'
             "
@@ -89,7 +92,10 @@ const route = useRoute();
           :to="item.href"
           class="flex flex-col items-center justify-center gap-1 transition-colors"
           :class="
-            route.path === item.href || (item.href === '/tada' && route.path === '/add' && route.query.type === 'tada')
+            route.path === item.href ||
+            (item.href === '/tada' &&
+              route.path === '/add' &&
+              route.query.type === 'tada')
               ? 'text-gold-light dark:text-gold-dark'
               : 'text-text-light-muted dark:text-text-dark-muted'
           "

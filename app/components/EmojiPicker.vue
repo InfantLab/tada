@@ -23,11 +23,14 @@ const pickerInstance = ref<any>(null);
 // Close modal
 function close() {
   emit("update:modelValue", false);
-  
+
   // Clean up picker instance so it recreates fresh next time
   if (pickerInstance.value && pickerContainer.value) {
     try {
-      pickerInstance.value.removeEventListener("emoji-click", handleEmojiSelect);
+      pickerInstance.value.removeEventListener(
+        "emoji-click",
+        handleEmojiSelect
+      );
       pickerContainer.value.innerHTML = "";
     } catch (error) {
       console.error("Error cleaning up emoji picker:", error);
@@ -52,7 +55,7 @@ watch(
     if (isOpen && !pickerInstance.value) {
       // Wait for next tick to ensure DOM is ready
       await nextTick();
-      
+
       if (!pickerContainer.value) {
         console.error("Emoji picker container not found");
         return;

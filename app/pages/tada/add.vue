@@ -53,7 +53,9 @@ async function submitEntry() {
       notes: notes.value.trim() || null,
       timestamp: new Date().toISOString(),
       data: {},
-      tags: ["accomplishment", tadaSubcategory.value].filter(Boolean) as string[],
+      tags: ["accomplishment", tadaSubcategory.value].filter(
+        Boolean
+      ) as string[],
     };
 
     await $fetch("/api/entries", {
@@ -96,11 +98,7 @@ async function submitEntry() {
           />
         </svg>
       </NuxtLink>
-      <img
-        src="/icons/tada-logotype.png"
-        alt="TA-DA"
-        class="h-12 w-auto"
-      >
+      <img src="/icons/tada-logotype.png" alt="TA-DA" class="h-12 w-auto" />
     </div>
 
     <!-- Celebratory header -->
@@ -150,7 +148,9 @@ async function submitEntry() {
           @click="openEmojiPicker"
         >
           <span class="text-2xl">{{ customEmoji || "⚡" }}</span>
-          <span class="text-stone-500 dark:text-stone-400">Click to change emoji</span>
+          <span class="text-stone-500 dark:text-stone-400"
+            >Click to change emoji</span
+          >
         </button>
       </div>
 

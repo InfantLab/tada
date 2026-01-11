@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="app/public/icons/Ta-Da!-logotype.png" alt="TA-DA" width="300" />
+  <img src="https://raw.githubusercontent.com/InfantLab/tada/main/app/public/icons/Ta-Da!-logotype.png" alt="TA-DA" width="300" />
 </p>
 
 # ⚡ Ta-da!
