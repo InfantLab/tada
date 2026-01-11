@@ -1,4 +1,5 @@
 {
+  // PWA icon type warnings are expected during dev - icons generated at build time
   "extends": "./.nuxt/tsconfig.json",
   "compilerOptions": {
     "baseUrl": ".",
@@ -8,6 +9,7 @@
     "noPropertyAccessFromIndexSignature": true,
     "exactOptionalPropertyTypes": false,
     "moduleResolution": "bundler",
+    "types": ["bun-types"],
     "paths": {
       "~/*": ["./*"],
       "@/*": ["./*"],

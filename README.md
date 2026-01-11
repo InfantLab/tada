@@ -1,4 +1,8 @@
-# 🎉 Tada
+<p align="center">
+  <img src="app/public/icons/tada-logotype.png" alt="TA-DA" width="300" />
+</p>
+
+# ⚡ Tada
 
 **Track Activities, Discover Achievements** — A personal lifelogger for meditation, habits, dreams, and more.
 
@@ -9,7 +13,7 @@ Tada is an open-source Progressive Web App (PWA) that helps you notice and celeb
 - **🧘 Meditation Timer** — Countdown or unlimited modes with customizable bell sounds
 - **📊 Habit Tracking** — Seinfeld method streak tracking with daily/weekly goals
 - **🌙 Dream Journal** — Capture and categorize your dreams with rich metadata
-- **🎉 Tada List** — Inverted todo list to celebrate accomplishments
+- **⚡ Tada List** — Inverted todo list to celebrate accomplishments
 - **📱 PWA** — Works offline, installable on any device
 - **🔒 Self-Hosted** — Your data stays yours
 
@@ -151,4 +155,4 @@ See [design/roadmap.md](design/roadmap.md) for complete roadmap.
 
 ---
 
-_Tada is an anagram of "data" — because your life's data belongs to you._ 🎉
+_Tada is an anagram of "data" — because your life's data belongs to you._ ⚡

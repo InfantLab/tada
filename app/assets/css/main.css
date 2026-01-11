@@ -7,28 +7,28 @@
   html {
     @apply antialiased;
   }
-  
+
   body {
-    @apply text-stone-800 dark:text-stone-100;
+    @apply text-text-light-primary dark:text-text-dark-primary bg-pearl-base dark:bg-cosmic-violet;
   }
 }
 
 /* Custom component styles */
 @layer components {
   .btn-primary {
-    @apply px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-colors;
+    @apply px-4 py-2 bg-gold-light hover:bg-gold-line dark:bg-gold-dark dark:hover:bg-gold-amber text-text-light-primary dark:text-cosmic-void rounded-lg font-medium transition-colors;
   }
-  
+
   .btn-secondary {
-    @apply px-4 py-2 bg-stone-100 hover:bg-stone-200 dark:bg-stone-700 dark:hover:bg-stone-600 text-stone-700 dark:text-stone-200 rounded-lg font-medium transition-colors;
+    @apply px-4 py-2 bg-pearl-mist hover:bg-pearl-cream dark:bg-cosmic-indigo dark:hover:bg-cosmic-void text-text-light-primary dark:text-text-dark-primary rounded-lg font-medium transition-colors;
   }
-  
+
   .card {
-    @apply bg-white dark:bg-stone-800 rounded-xl p-4 shadow-sm border border-stone-200 dark:border-stone-700;
+    @apply bg-pearl-mist dark:bg-cosmic-indigo rounded-xl p-4 shadow-sm border border-text-light-muted/20 dark:border-text-dark-muted/20;
   }
-  
+
   .input {
-    @apply w-full px-4 py-3 rounded-xl border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 text-stone-800 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent;
+    @apply w-full px-4 py-3 rounded-xl border border-text-light-muted/30 dark:border-text-dark-muted/30 bg-pearl-base dark:bg-cosmic-void text-text-light-primary dark:text-text-dark-primary placeholder-text-light-muted focus:outline-none focus:ring-2 focus:ring-gold-light dark:focus:ring-gold-dark focus:border-transparent;
   }
 }
 

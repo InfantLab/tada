@@ -20,6 +20,44 @@ const settings = ref({
 
 const isSaving = ref(false);
 const isExporting = ref(false);
+const isLoggingOut = ref(false);
+
+// User info
+const currentUser = ref<{
+  id: string;
+  username: string;
+  timezone: string;
+} | null>(null);
+
+// Fetch current user
+onMounted(async () => {
+  try {
+    const session = await $fetch("/api/auth/session");
+    if (session.user) {
+      currentUser.value = session.user;
+    }
+  } catch (error) {
+    console.error("Failed to fetch user info:", error);
+  }
+});
+
+// Logout function
+async function logout() {
+  if (!confirm("Are you sure you want to log out?")) {
+    return;
+  }
+
+  isLoggingOut.value = true;
+  try {
+    await $fetch("/api/auth/logout", { method: "POST" });
+    navigateTo("/login");
+  } catch (error: unknown) {
+    console.error("Logout failed:", error);
+    alert("Failed to log out. Please try again.");
+  } finally {
+    isLoggingOut.value = false;
+  }
+}
 
 // Available bell sounds
 const bellSounds = [
@@ -36,9 +74,20 @@ const themes = [
   { id: "system", name: "System", icon: "💻" },
 ];
 
-// Timezone detection
+// Timezone detection and load settings
 onMounted(() => {
   settings.value.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+  // Load settings from localStorage
+  try {
+    const saved = localStorage.getItem("tada-settings");
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      settings.value = { ...settings.value, ...parsed };
+    }
+  } catch (error) {
+    console.error("Failed to load settings:", error);
+  }
 });
 
 async function saveSettings() {
@@ -118,6 +167,67 @@ async function exportData() {
     </div>
 
     <div class="space-y-8">
+      <!-- Account -->
+      <section v-if="currentUser">
+        <h2
+          class="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-4"
+        >
+          Account
+        </h2>
+        <div
+          class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 divide-y divide-stone-200 dark:divide-stone-700"
+        >
+          <!-- User info -->
+          <div class="p-4">
+            <div class="flex items-center gap-3">
+              <div
+                class="w-12 h-12 rounded-full bg-tada-100 dark:bg-tada-900/30 flex items-center justify-center"
+              >
+                <span class="text-xl">👤</span>
+              </div>
+              <div>
+                <p class="font-medium text-stone-800 dark:text-stone-100">
+                  {{ currentUser.username }}
+                </p>
+                <p class="text-sm text-stone-500 dark:text-stone-400">
+                  {{ currentUser.timezone }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Logout -->
+          <button
+            :disabled="isLoggingOut"
+            class="w-full p-4 flex items-center justify-between hover:bg-stone-50 dark:hover:bg-stone-700/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-left"
+            @click="logout"
+          >
+            <div class="flex items-center gap-3">
+              <span class="text-xl">🚪</span>
+              <span
+                class="text-sm font-medium text-stone-700 dark:text-stone-300"
+              >
+                {{ isLoggingOut ? "Logging out..." : "Log out" }}
+              </span>
+            </div>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5 text-stone-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </button>
+        </div>
+      </section>
+
       <!-- Appearance -->
       <section>
         <h2
@@ -350,8 +460,16 @@ async function exportData() {
         <div
           class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 p-4"
         >
+          <!-- Logotype -->
+          <div class="flex justify-center mb-4">
+            <img
+              src="/icons/tada-logotype.png"
+              alt="TA-DA"
+              class="h-16 w-auto"
+            />
+          </div>
           <div class="flex items-start gap-3">
-            <span class="text-3xl">🎉</span>
+            <span class="text-3xl">⚡</span>
             <div>
               <h3 class="font-semibold text-stone-800 dark:text-stone-100">
                 {{ appName }}

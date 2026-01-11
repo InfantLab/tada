@@ -32,8 +32,11 @@ export default defineNitroPlugin((nitroApp) => {
   // Log when the server is ready
   nitroApp.hooks.hook("request", (event) => {
     // Add error logging for requests
-    const originalEnd = event.node.res.end.bind(event.node.res);
-    event.node.res.end = function (...args: Parameters<typeof originalEnd>) {
+    const originalEnd = event.node.res.end;
+    event.node.res.end = function (
+      this: typeof event.node.res,
+      ...args: unknown[]
+    ) {
       // Log request errors if status >= 400
       if (event.node.res.statusCode >= 400) {
         logger.warn("Request error", {
@@ -42,7 +45,7 @@ export default defineNitroPlugin((nitroApp) => {
           statusCode: event.node.res.statusCode,
         });
       }
-      return originalEnd(...args);
+      return originalEnd.apply(this, args as Parameters<typeof originalEnd>);
     };
   });
 

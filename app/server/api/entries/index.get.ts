@@ -1,7 +1,7 @@
 import { defineEventHandler, getQuery, createError } from "h3";
 import { db } from "~/server/db";
 import { entries } from "~/server/db/schema";
-import { eq, and, desc, isNull } from "drizzle-orm";
+import { eq, and, desc, isNull, sql } from "drizzle-orm";
 import { createLogger } from "~/server/utils/logger";
 
 const logger = createLogger("api:entries:get");
@@ -9,8 +9,17 @@ const logger = createLogger("api:entries:get");
 export default defineEventHandler(async (event) => {
   try {
     const query = getQuery(event);
-    const userId = "default-user"; // TODO: Get from auth context once Lucia is implemented
-    
+
+    // Require authentication
+    if (!event.context.user) {
+      throw createError({
+        statusCode: 401,
+        statusMessage: "Unauthorized",
+      });
+    }
+
+    const userId = event.context.user.id;
+
     logger.debug("Fetching entries", { userId, query });
 
     // Build where conditions
@@ -24,12 +33,16 @@ export default defineEventHandler(async (event) => {
       conditions.push(eq(entries.type, query["type"]));
     }
 
-    // Query entries
+    // Query entries - sort by whichever timestamp field is populated
     const userEntries = await db
       .select()
       .from(entries)
       .where(and(...conditions))
-      .orderBy(desc(entries.timestamp))
+      .orderBy(
+        desc(
+          sql`COALESCE(${entries.timestamp}, ${entries.startedAt}, ${entries.date}, ${entries.createdAt})`
+        )
+      )
       .limit(query["limit"] ? parseInt(query["limit"] as string) : 100);
 
     logger.info("Entries fetched successfully", { count: userEntries.length });

@@ -7,9 +7,9 @@ Feature ideas and future plans, organized by version releases.
 
 ---
 
-## v0.1.0: MVP — Foundation ✅
+## v0.1.0: MVP — Foundation 🚧
 
-_Completed January 2026_
+_Status: In Progress - January 2026_
 
 **Core Functionality:**
 
@@ -20,20 +20,34 @@ _Completed January 2026_
 - [x] Entry CRUD API (GET, POST, PATCH, DELETE)
 - [x] Timeline view (connected to API)
 - [x] Meditation timer with category selection
+- [x] Timer start and end bells (separate configuration)
+- [x] Timer wake lock (keep screen on during meditation)
+- [x] Settings persistence (localStorage)
 - [x] Quick add entry form (dreams, notes, achievements)
 - [x] Journal page (displays journal-type entries)
-- [x] Habits page scaffolding
+- [x] Habits page scaffolding (placeholder for v0.2)
 - [x] Settings page with data export (JSON)
+- [x] Authentication system (Lucia Auth with password)
+- [x] Login/register page
 - [x] Version display (v0.1.0)
 
 **What Users Can Do:**
 
+- ✅ Create account with password
 - ✅ Track timed activities (meditation, music practice, etc.)
+- ✅ Configure start/end bells separately
+- ✅ Keep screen awake during meditation
 - ✅ Log dreams, notes, and achievements
 - ✅ View timeline of all entries
 - ✅ Export data to JSON
 - ✅ Install as PWA on any device
-- ✅ Use offline (no auth required for self-hosted)
+- ✅ Persist settings across sessions
+
+**Known Limitations:**
+
+- ⚠️ Habits tracking is placeholder only (coming in v0.2)
+- ⚠️ No offline sync (PWA works but doesn't cache data locally)
+- ⚠️ Single-user per instance (no multi-tenant support)
 
 ---
 
@@ -57,8 +71,9 @@ _Target: Q1 2026_
 
 **Enhanced Features:**
 
-- [ ] Timer presets (save/load configurations)
-- [ ] Timer bell sounds (download CC0 audio)
+- [ ] Timer profiles (save/load named configurations with duration, category, bells)
+- [ ] Configurable start and end bells (different sounds allowed)
+- [ ] Timer bell sounds library (download CC0 audio)
 - [ ] Entry attachments (photos, audio recordings)
 - [ ] Search and filtering on timeline
 - [ ] Tags management UI

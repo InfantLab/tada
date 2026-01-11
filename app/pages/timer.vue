@@ -17,8 +17,30 @@ const isSaving = ref(false);
 const customMinutes = ref<string>("");
 const loopCount = ref(1);
 const loopsCompleted = ref(0);
-const bellSound = ref("bell");
+const startBell = ref("bell");
+const endBell = ref("bell");
 const showSettings = ref(false);
+const wakeLock = ref<WakeLockSentinel | null>(null);
+
+// Load settings from localStorage
+onMounted(() => {
+  try {
+    const saved = localStorage.getItem("tada-settings");
+    if (saved) {
+      const settings = JSON.parse(saved);
+      if (settings.defaultTimerMinutes) {
+        targetMinutes.value = settings.defaultTimerMinutes * 60; // Convert minutes to seconds
+      }
+      if (settings.bellSound) {
+        // Apply bell sound to both start and end for backward compatibility
+        startBell.value = settings.bellSound;
+        endBell.value = settings.bellSound;
+      }
+    }
+  } catch (error) {
+    console.error("Failed to load timer settings:", error);
+  }
+});
 
 // Timer presets (includes 30s for debug only in dev mode)
 const presets = computed(() => {
@@ -35,12 +57,12 @@ const presets = computed(() => {
     { label: "Custom", seconds: -1 },
     { label: "∞", seconds: 0 },
   ];
-  
+
   // Add 30s debug preset in dev mode only
-  if (process.dev) {
+  if (import.meta.dev) {
     basePresets.unshift({ label: "30s", seconds: 30 });
   }
-  
+
   return basePresets;
 });
 
@@ -71,8 +93,8 @@ const categories = [
 // Computed display values
 const displayTime = computed(() => {
   if (timerMode.value === "countdown") {
-    const targetSeconds = customMinutes.value 
-      ? parseInt(customMinutes.value) * 60 
+    const targetSeconds = customMinutes.value
+      ? parseInt(customMinutes.value) * 60
       : targetMinutes.value;
     const remaining = Math.max(0, targetSeconds - elapsedSeconds.value);
     const mins = Math.floor(remaining / 60);
@@ -87,8 +109,8 @@ const displayTime = computed(() => {
 
 const progress = computed(() => {
   if (timerMode.value === "countdown") {
-    const targetSeconds = customMinutes.value 
-      ? parseInt(customMinutes.value) * 60 
+    const targetSeconds = customMinutes.value
+      ? parseInt(customMinutes.value) * 60
       : targetMinutes.value;
     return (elapsedSeconds.value / targetSeconds) * 100;
   }
@@ -97,8 +119,8 @@ const progress = computed(() => {
 
 const isComplete = computed(() => {
   if (timerMode.value !== "countdown") return false;
-  const targetSeconds = customMinutes.value 
-    ? parseInt(customMinutes.value) * 60 
+  const targetSeconds = customMinutes.value
+    ? parseInt(customMinutes.value) * 60
     : targetMinutes.value;
   return elapsedSeconds.value >= targetSeconds;
 });
@@ -108,13 +130,18 @@ function startTimer() {
   isRunning.value = true;
   isPaused.value = false;
   showSettings.value = false; // Hide settings when starting
+  playBell("start"); // Play start bell
+
+  // Request wake lock to keep screen on
+  requestWakeLock();
+
   timerInterval.value = setInterval(() => {
     elapsedSeconds.value++;
 
     // Check for completion in countdown mode
     if (timerMode.value === "countdown") {
-      const targetSeconds = customMinutes.value 
-        ? parseInt(customMinutes.value) * 60 
+      const targetSeconds = customMinutes.value
+        ? parseInt(customMinutes.value) * 60
         : targetMinutes.value;
       if (elapsedSeconds.value >= targetSeconds) {
         playBell();
@@ -150,8 +177,8 @@ function resumeTimer() {
     elapsedSeconds.value++;
 
     if (timerMode.value === "countdown") {
-      const targetSeconds = customMinutes.value 
-        ? parseInt(customMinutes.value) * 60 
+      const targetSeconds = customMinutes.value
+        ? parseInt(customMinutes.value) * 60
         : targetMinutes.value;
       if (elapsedSeconds.value >= targetSeconds) {
         playBell();
@@ -168,6 +195,7 @@ function stopTimer() {
     clearInterval(timerInterval.value);
     timerInterval.value = null;
   }
+  releaseWakeLock();
 }
 
 function resetTimer() {
@@ -177,8 +205,9 @@ function resetTimer() {
   customMinutes.value = "";
 }
 
-function playBell() {
-  if (bellSound.value === "silence") return;
+function playBell(bellType: "start" | "end" = "end") {
+  const bellToPlay = bellType === "start" ? startBell.value : endBell.value;
+  if (bellToPlay === "silence") return;
 
   const soundFiles: Record<string, string> = {
     bell: "/sounds/bell.mp3",
@@ -189,7 +218,7 @@ function playBell() {
   };
 
   try {
-    const audio = new Audio(soundFiles[bellSound.value]);
+    const audio = new Audio(soundFiles[bellToPlay]);
     audio.play().catch(() => {
       console.log("Bell sound failed to play");
     });
@@ -240,15 +269,35 @@ async function saveSession() {
   }
 }
 
+// Wake Lock API - keep screen on during meditation
+async function requestWakeLock() {
+  try {
+    if ("wakeLock" in navigator) {
+      wakeLock.value = await navigator.wakeLock.request("screen");
+      console.log("Wake lock acquired");
+    }
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    console.log("Wake lock failed:", message);
+  }
+}
+
+function releaseWakeLock() {
+  if (wakeLock.value) {
+    wakeLock.value.release().then(() => {
+      wakeLock.value = null;
+      console.log("Wake lock released");
+    });
+  }
+}
+
 // Cleanup on unmount
 onUnmounted(() => {
   if (timerInterval.value) {
     clearInterval(timerInterval.value);
   }
+  releaseWakeLock();
 });
-
-// Keep screen awake while timer is running
-// TODO: Implement wake lock API
 </script>
 
 <template>
@@ -305,7 +354,9 @@ onUnmounted(() => {
     </div>
 
     <!-- Duration presets (only for countdown, when not running) -->
-    <div max-w-lg"
+    <div
+      v-if="timerMode === 'countdown' && !isRunning"
+      class="flex flex-wrap gap-2 justify-center mb-4 max-w-lg"
     >
       <button
         v-for="preset in presets"
@@ -313,8 +364,8 @@ onUnmounted(() => {
         class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
         :class="
           (preset.seconds === -1 && customMinutes) ||
-          (preset.seconds === 0 && timerMode === 'unlimited') ||
-          (preset.seconds > 0 && targetMinutes === preset.seconds)
+          (preset.seconds === 0 && timerMode.value === 'unlimited') ||
+          (preset.seconds > 0 && targetMinutes.value === preset.seconds)
             ? 'bg-tada-100 dark:bg-tada-900/50 text-tada-700 dark:text-tada-300'
             : 'bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600'
         "
@@ -322,8 +373,8 @@ onUnmounted(() => {
           preset.seconds === -1
             ? null
             : preset.seconds === 0
-              ? (timerMode = 'unlimited')
-              : ((targetMinutes = preset.seconds), (customMinutes = ''))
+            ? (timerMode = 'unlimited')
+            : ((targetMinutes = preset.seconds), (customMinutes = ''))
         "
       >
         {{ preset.label }}
@@ -401,12 +452,12 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <!-- Bell sound selector -->
+        <!-- Start bell selector -->
         <div>
           <label
             class="block text-xs font-medium text-stone-600 dark:text-stone-300 mb-2"
           >
-            Bell Sound
+            Start Bell
           </label>
           <div class="flex flex-wrap gap-2">
             <button
@@ -414,17 +465,39 @@ onUnmounted(() => {
               :key="sound.value"
               class="px-2 py-1 rounded text-xs font-medium transition-colors"
               :class="
-                bellSound === sound.value
+                startBell === sound.value
                   ? 'bg-tada-100 dark:bg-tada-900/50 text-tada-700 dark:text-tada-300'
                   : 'bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600'
               "
-              @click="bellSound = sound.value"
+              @click="startBell = sound.value"
             >
               {{ sound.label }}
             </button>
-          </div
-            {{ sound.label }}
-          </button>
+          </div>
+        </div>
+
+        <!-- End bell selector -->
+        <div>
+          <label
+            class="block text-xs font-medium text-stone-600 dark:text-stone-300 mb-2"
+          >
+            End Bell
+          </label>
+          <div class="flex flex-wrap gap-2">
+            <button
+              v-for="sound in bellSounds"
+              :key="sound.value"
+              class="px-2 py-1 rounded text-xs font-medium transition-colors"
+              :class="
+                endBell === sound.value
+                  ? 'bg-tada-100 dark:bg-tada-900/50 text-tada-700 dark:text-tada-300'
+                  : 'bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600'
+              "
+              @click="endBell = sound.value"
+            >
+              {{ sound.label }}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -602,7 +675,10 @@ onUnmounted(() => {
             d="M5 13l4 4L19 7"
           />
         </svg>
-        <div v-else class="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+        <div
+          v-else
+          class="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"
+        />
         {{ isSaving ? "Saving..." : "Save Session" }}
       </button>
     </div>

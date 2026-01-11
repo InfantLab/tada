@@ -23,7 +23,15 @@ interface UpdateEntryBody {
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, "id");
   try {
-    const userId = "default-user"; // TODO: Get from auth context once Lucia is implemented
+    // Require authentication
+    if (!event.context.user) {
+      throw createError({
+        statusCode: 401,
+        statusMessage: "Unauthorized",
+      });
+    }
+
+    const userId = event.context.user.id;
 
     if (!id) {
       throw createError({
@@ -32,7 +40,7 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    const body = await readBody(event) as UpdateEntryBody;
+    const body = (await readBody(event)) as UpdateEntryBody;
 
     // Check if entry exists and belongs to user
     const [existing] = await db

@@ -48,7 +48,7 @@ function getTypeIcon(type: string): string {
     case "dream":
       return "🌙";
     case "tada":
-      return "🎉";
+      return "⚡";
     case "note":
       return "📝";
     default:
@@ -108,7 +108,7 @@ function getTypeIcon(type: string): string {
       >
         <span v-if="type === 'all'">All</span>
         <span v-else-if="type === 'dream'">🌙 Dreams</span>
-        <span v-else-if="type === 'tada'">🎉 Tada</span>
+        <span v-else-if="type === 'tada'">⚡ Tada</span>
         <span v-else>📝 Notes</span>
       </button>
     </div>
@@ -131,16 +131,18 @@ function getTypeIcon(type: string): string {
         thoughts.
       </p>
       <div class="flex flex-col sm:flex-row gap-3 justify-center">
-        <button
+        <NuxtLink
+          to="/add?type=dream"
           class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg font-medium transition-colors"
         >
           🌙 Record a dream
-        </button>
-        <button
+        </NuxtLink>
+        <NuxtLink
+          to="/add?type=tada"
           class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-tada-600 hover:bg-tada-700 text-white rounded-lg font-medium transition-colors"
         >
-          🎉 Celebrate a win
-        </button>
+          ⚡ Celebrate a win
+        </NuxtLink>
       </div>
     </div>
 
@@ -171,7 +173,14 @@ function getTypeIcon(type: string): string {
               <span
                 class="text-xs text-stone-400 dark:text-stone-500 whitespace-nowrap"
               >
-                {{ formatDate(entry.timestamp || entry.startedAt || entry.date || entry.createdAt) }}
+                {{
+                  formatDate(
+                    entry.timestamp ||
+                      entry.startedAt ||
+                      entry.date ||
+                      entry.createdAt
+                  )
+                }}
               </span>
             </div>
             <p
@@ -183,7 +192,11 @@ function getTypeIcon(type: string): string {
 
             <!-- Dream-specific metadata -->
             <div
-              v-if="entry.type === 'dream' && entry.data && typeof entry.data === 'object'"
+              v-if="
+                entry.type === 'dream' &&
+                entry.data &&
+                typeof entry.data === 'object'
+              "
               class="flex gap-2 mt-2"
             >
               <span
@@ -196,7 +209,7 @@ function getTypeIcon(type: string): string {
                 v-if="'vivid' in entry.data && entry.data['vivid']"
                 class="text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300"
               >
-                Vivid: {{ entry.data['vivid'] }}/5
+                Vivid: {{ entry.data["vivid"] }}/5
               </span>
             </div>
           </div>

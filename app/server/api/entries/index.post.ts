@@ -27,8 +27,17 @@ export default defineEventHandler(async (event) => {
   let body: unknown;
   try {
     body = await readBody(event);
-    const userId = "default-user"; // TODO: Get from auth context once Lucia is implemented
-    
+
+    // Require authentication
+    if (!event.context.user) {
+      throw createError({
+        statusCode: 401,
+        statusMessage: "Unauthorized",
+      });
+    }
+
+    const userId = event.context.user.id;
+
     // Type guard: ensure body is an object
     if (!body || typeof body !== "object") {
       throw createError({
@@ -38,7 +47,7 @@ export default defineEventHandler(async (event) => {
     }
 
     const typedBody = body as Partial<CreateEntryBody>;
-    
+
     logger.debug("Creating entry", { type: typedBody.type, userId });
 
     // Validate required fields
@@ -82,10 +91,16 @@ export default defineEventHandler(async (event) => {
       .where(eq(entries.id, newEntry.id))
       .limit(1);
 
-    logger.info("Entry created successfully", { entryId: newEntry.id, type: newEntry.type });
+    logger.info("Entry created successfully", {
+      entryId: newEntry.id,
+      type: newEntry.type,
+    });
     return created || newEntry;
   } catch (error: unknown) {
-    const bodyType = body && typeof body === "object" && "type" in body ? (body as { type?: unknown }).type : undefined;
+    const bodyType =
+      body && typeof body === "object" && "type" in body
+        ? (body as { type?: unknown }).type
+        : undefined;
     logger.error("Failed to create entry", error, { type: bodyType });
 
     if (error && typeof error === "object" && "statusCode" in error) {

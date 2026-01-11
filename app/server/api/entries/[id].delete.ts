@@ -6,7 +6,16 @@ import { eq, and } from "drizzle-orm";
 export default defineEventHandler(async (event) => {
   try {
     const id = getRouterParam(event, "id");
-    const userId = "default-user"; // TODO: Get from auth context once Lucia is implemented
+
+    // Require authentication
+    if (!event.context.user) {
+      throw createError({
+        statusCode: 401,
+        statusMessage: "Unauthorized",
+      });
+    }
+
+    const userId = event.context.user.id;
 
     if (!id) {
       throw createError({

@@ -18,7 +18,7 @@ const entryTypes = [
   {
     value: "tada",
     label: "Tada!",
-    emoji: "🎉",
+    emoji: "⚡",
     description: "Celebrate an accomplishment",
   },
   {
@@ -175,7 +175,7 @@ async function submitEntry() {
               : 'Give it a title...'
           "
           class="w-full px-4 py-3 rounded-xl border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 text-stone-800 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-tada-500 focus:border-transparent"
-        >
+        />
       </div>
 
       <!-- Notes -->
@@ -240,7 +240,7 @@ async function submitEntry() {
             min="1"
             max="5"
             class="w-full accent-tada-500"
-          >
+          />
         </div>
 
         <!-- Emotions -->
@@ -282,7 +282,9 @@ async function submitEntry() {
         class="w-full py-3 px-4 bg-tada-600 hover:bg-tada-700 disabled:bg-stone-300 dark:disabled:bg-stone-600 text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
       >
         <span v-if="isSubmitting">Saving...</span>
-        <span v-else>{{ entryType === "tada" ? "🎉 Tada!" : "Save Entry" }}</span>
+        <span v-else>{{
+          entryType === "tada" ? "⚡ Tada!" : "Save Entry"
+        }}</span>
       </button>
     </form>
   </div>

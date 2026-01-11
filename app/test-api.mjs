@@ -57,7 +57,7 @@ async function testAPI() {
     const deleted = await deleteResponse.json();
     console.log("✅ Deleted entry:", deleted.id);
 
-    console.log("\n🎉 All tests passed!");
+    console.log("\n⚡ All tests passed!");
   } catch (error) {
     console.error("❌ Test failed:", error.message);
     process.exit(1);

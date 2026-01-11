@@ -63,8 +63,9 @@ const last7Days = getLast7Days();
       </div>
 
       <!-- Add habit button -->
-      <button
-        class="flex items-center gap-2 px-4 py-2 bg-tada-600 hover:bg-tada-700 text-white rounded-lg font-medium transition-colors shadow-sm"
+      <div
+        class="flex items-center gap-2 px-4 py-2 bg-stone-200 dark:bg-stone-700 text-stone-500 dark:text-stone-400 rounded-lg font-medium cursor-not-allowed"
+        title="Coming in v0.2"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -81,7 +82,7 @@ const last7Days = getLast7Days();
           />
         </svg>
         <span class="hidden sm:inline">New Habit</span>
-      </button>
+      </div>
     </div>
 
     <!-- Loading state -->
@@ -95,14 +96,15 @@ const last7Days = getLast7Days();
     <div v-else-if="habits.length === 0" class="text-center py-12">
       <div class="text-6xl mb-4">📊</div>
       <h2 class="text-xl font-semibold text-stone-700 dark:text-stone-200 mb-2">
-        No habits yet
+        Habit tracking coming in v0.2
       </h2>
       <p class="text-stone-500 dark:text-stone-400 max-w-md mx-auto mb-6">
-        Create habits to track with the Seinfeld method. Each day you complete
-        the habit, you add a link to your chain.
+        Habits will let you track streaks using the Seinfeld method. Each day
+        you complete a habit, you add a link to your chain. This feature is
+        currently in development.
       </p>
-      <button
-        class="inline-flex items-center gap-2 px-4 py-2 bg-tada-600 hover:bg-tada-700 text-white rounded-lg font-medium transition-colors"
+      <div
+        class="inline-flex items-center gap-2 px-4 py-2 bg-stone-200 dark:bg-stone-700 text-stone-500 dark:text-stone-400 rounded-lg font-medium cursor-not-allowed"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -115,11 +117,11 @@ const last7Days = getLast7Days();
             stroke-linecap="round"
             stroke-linejoin="round"
             stroke-width="2"
-            d="M12 4v16m8-8H4"
+            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
           />
         </svg>
-        Create your first habit
-      </button>
+        Coming soon
+      </div>
     </div>
 
     <!-- Habits list -->
