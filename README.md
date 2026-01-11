@@ -1,21 +1,21 @@
 <p align="center">
-  <img src="app/public/icons/tada-logotype.png" alt="TA-DA" width="300" />
+  <img src="app/public/icons/Ta-Da!-logotype.png" alt="TA-DA" width="300" />
 </p>
 
-# ⚡ Tada
+# ⚡ Ta-da!
 
 **Track Activities, Discover Achievements** — A personal lifelogger for meditation, habits, dreams, and accomplishments.
 
-Tada is an open-source Progressive Web App (PWA) that helps you notice and celebrate your life. Rather than prescribing what you _should_ do, Tada helps you observe what you actually _did_ — turning the anxiety-inducing todo list into a celebration of accomplishment.
+Ta-Da! is an open-source Progressive Web App (PWA) that helps you notice and celebrate your life. Rather than prescribing what you _should_ do, Ta-Da! helps you observe what you actually _did_ — swapping the anxiety-inducing todo list into a celebration of accomplishment.
 
 > _"We don't want to tell people what they should be doing. We want to help them notice what they actually did, and help them feel good about it."_
 
 ## Philosophy
 
-Tada inverts the traditional productivity mindset:
+Ta-Da! inverts the traditional productivity mindset:
 
 - **Noticing, not tracking** — Observe your life without judgment
-- **Celebration, not obligation** — Turn todos into "tada"s
+- **Celebration, not obligation** — Turn todos into "Ta-Da!"s
 - **Data ownership** — Your life data belongs to you, always exportable
 - **Offline-first** — Works without internet, syncs when convenient
 - **Simple by design** — Feature-complete, not feature-bloated
@@ -25,7 +25,7 @@ Read more: [design/philosophy.md](design/philosophy.md)
 ## Features (v0.1.0)
 
 - **🧘 Meditation Timer** — Countdown or unlimited modes with customizable bell sounds, wake lock support
-- **⚡ Tada Accomplishments** — Quick capture of wins with category and emoji
+- **⚡ Ta-Da! Accomplishments** — Quick capture of wins with category and emoji
 - **🌙 Dream Journal** — Rich dream entries with mood and themes
 - **📝 Quick Notes** — Capture thoughts, gratitude, reflections
 - **📊 Entry Timeline** — Chronological feed with emoji badges and category colors
@@ -62,8 +62,8 @@ Visit `http://localhost:3000`, create an account, and start logging!
 ### For Developers
 
 ```bash
-git clone https://github.com/InfantLab/tada.git
-cd tada/app
+git clone https://github.com/InfantLab/Ta-Da!.git
+cd Ta-Da!/app
 bun install
 bun run dev
 ```
@@ -74,13 +74,13 @@ See [docs/DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) for complete setup and [d
 
 ## Entry Ontology
 
-Tada uses a flexible three-level classification system for all life activities:
+Ta-Da! uses a flexible three-level classification system for all life activities:
 
 ```
 Type (behavior)  →  Category (domain)  →  Subcategory (specific)
     ↓                     ↓                        ↓
   "timed"          "mindfulness"              "sitting"
-  "tada"          "accomplishment"              "work"
+  "Ta-Da!"          "accomplishment"              "work"
   "journal"          "journal"                 "dream"
 ```
 
@@ -92,9 +92,9 @@ Read more: [design/ontology.md](design/ontology.md)
 
 ## Architecture
 
-Tada uses a **unified Entry model** where everything is an entry. No separate tables for meditations, dreams, tadas — just one flexible `entries` table with type, category, and subcategory fields. Habits are aggregation queries over entries, not separate data.
+Ta-Da! uses a **unified Entry model** where everything is an entry. No separate tables for meditations, dreams, Ta-Da!s — just one flexible `entries` table with type, category, and subcategory fields. Habits are aggregation queries over entries, not separate data.
 
-**Why?** Simplicity. One data model, one API, infinite flexibility. Add new activity types without schema migrations.
+**Why?** Simplicity. One data model, one API, infinite flexibility. Add new activity types without schema migrations. Your life is different from mine.
 
 See [docs/PROJECT_STRUCTURE.md](docs/PROJECT_STRUCTURE.md) for detailed project layout and [design/SDR.md](design/SDR.md) for complete data model specification.
 
@@ -143,7 +143,7 @@ See [design/roadmap.md](design/roadmap.md) and [CHANGELOG.md](CHANGELOG.md) for 
 - **🗺️ Roadmap:** [design/roadmap.md](design/roadmap.md)
 - **🤖 AI Agent Guide:** [AGENTS.md](AGENTS.md)
 - **📝 Changelog:** [CHANGELOG.md](CHANGELOG.md)
-- **📦 Repository:** https://github.com/InfantLab/tada
+- **📦 Repository:** https://github.com/InfantLab/Ta-Da!
 
 ## Contributing
 
@@ -163,4 +163,4 @@ See [docs/DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) for detailed contribution
 
 ---
 
-_Tada is an anagram of "data" — because your life's data belongs to you._ ⚡
+_Ta-Da! is an anagram of "data" — your life's data belongs to you._ ⚡
