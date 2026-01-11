@@ -41,6 +41,40 @@ Not like:
 
 ---
 
+## Core Principles
+
+### ⏱️ Timers Count Up, Never Down
+
+We never say "you need to do 20 minutes." We celebrate that you did 20 seconds — and that might encourage you to do 20 more. All timers count upward. Frame as "you've done X" not "you must do Y."
+
+**Why this matters:** Countdown timers create anxiety and imply minimum requirements. Count-up timers celebrate whatever you actually did. Even 30 seconds of meditation is worth noticing.
+
+### 🦋 Identity Over Behavior (Tanya's Insight)
+
+The journey isn't from "someone who doesn't run" to "someone who runs occasionally." It's from "someone who goes running" to "**a runner**."
+
+Ta-Da! supports this transformation:
+
+- "You're becoming a writer" not "You wrote 5 times"
+- "You're becoming a meditator" not "47 sessions logged"
+- The habit page celebrates identity, not just streaks
+
+### 📉 Chains That Bend, Not Break
+
+Traditional streak tracking is all-or-nothing: miss one day, lose everything. This creates anxiety and, paradoxically, makes people quit entirely.
+
+Ta-Da! uses **graceful degradation**:
+
+- **Tier 1:** Daily (strict Seinfeld chain)
+- **Tier 2:** 5 days/week
+- **Tier 3:** 3 days/week
+- **Tier 4:** 30 minutes/week
+- **Tier 5:** X times/month
+
+When you're struggling, Ta-Da! suggests an easier tier instead of showing a broken chain. The goal is to keep you going, not to make you feel like a failure. A chain that bends is stronger than one that snaps.
+
+---
+
 ## Expanding the Canvas
 
 ### 🎬 Experiences
