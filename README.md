@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/InfantLab/tada/main/app/public/icons/Ta-Da!-logotype.png" alt="TA-DA" width="300" />
+  <img src="[https://raw.githubusercontent.com/InfantLab/tada/main/app/public/icons/Ta-Da!-logotype.png](https://github.com/InfantLab/tada/blob/main/app/public/icons/tada-logotype.png)" alt="TA-DA" width="300" />
 </p>
 
 # ⚡ Ta-da!
@@ -164,3 +164,4 @@ See [docs/DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) for detailed contribution
 ---
 
 _Ta-Da! is an anagram of "data" — your life's data belongs to you._ ⚡
+
