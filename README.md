@@ -4,30 +4,60 @@
 
 # ⚡ Tada
 
-**Track Activities, Discover Achievements** — A personal lifelogger for meditation, habits, dreams, and more.
+**Track Activities, Discover Achievements** — A personal lifelogger for meditation, habits, dreams, and accomplishments.
 
-Tada is an open-source Progressive Web App (PWA) that helps you notice and celebrate your life. Rather than prescribing what you _should_ do, Tada helps you observe what you actually _did_ — like collecting seashells on a beach walk.
+Tada is an open-source Progressive Web App (PWA) that helps you notice and celebrate your life. Rather than prescribing what you _should_ do, Tada helps you observe what you actually _did_ — turning the anxiety-inducing todo list into a celebration of accomplishment.
 
-## Features
+> _"We don't want to tell people what they should be doing. We want to help them notice what they actually did, and help them feel good about it."_
 
-- **🧘 Meditation Timer** — Countdown or unlimited modes with customizable bell sounds
-- **📊 Habit Tracking** — Seinfeld method streak tracking with daily/weekly goals
-- **🌙 Dream Journal** — Capture and categorize your dreams with rich metadata
-- **⚡ Tada List** — Inverted todo list to celebrate accomplishments
-- **📱 PWA** — Works offline, installable on any device
-- **🔒 Self-Hosted** — Your data stays yours
+## Philosophy
+
+Tada inverts the traditional productivity mindset:
+
+- **Noticing, not tracking** — Observe your life without judgment
+- **Celebration, not obligation** — Turn todos into "tada"s
+- **Data ownership** — Your life data belongs to you, always exportable
+- **Offline-first** — Works without internet, syncs when convenient
+- **Simple by design** — Feature-complete, not feature-bloated
+
+Read more: [design/philosophy.md](design/philosophy.md)
+
+## Features (v0.1.0)
+
+- **🧘 Meditation Timer** — Countdown or unlimited modes with customizable bell sounds, wake lock support
+- **⚡ Tada Accomplishments** — Quick capture of wins with category and emoji
+- **🌙 Dream Journal** — Rich dream entries with mood and themes
+- **📝 Quick Notes** — Capture thoughts, gratitude, reflections
+- **📊 Entry Timeline** — Chronological feed with emoji badges and category colors
+- **🎨 Emoji Customization** — Full system emoji picker for any entry
+- **📱 PWA** — Installable, works offline
+- **🔒 Self-Hosted** — Your data stays yours, full JSON export
+
+## Tech Stack
+
+- **Framework:** [Nuxt 3.15.1](https://nuxt.com/) + Vue 3 + TypeScript
+- **Database:** SQLite via [Drizzle ORM](https://orm.drizzle.team/)
+- **Authentication:** [Lucia Auth v3](https://lucia-auth.com/)
+- **PWA:** [@vite-pwa/nuxt](https://vite-pwa-org.netlify.app/frameworks/nuxt.html)
+- **Styling:** [Tailwind CSS](https://tailwindcss.com/)
+- **Runtime:** [Bun 1.3.5](https://bun.sh/)
+- **Container:** Docker with Alpine Linux
+
+**Why these choices?** See [design/decisions.md](design/decisions.md)
 
 ## Quick Start
 
 ### For Users
 
-**Self-Hosted:**
+**Docker (Recommended):**
 
 ```bash
 docker compose up -d
 ```
 
-Visit `http://localhost:3000` and start logging!
+Visit `http://localhost:3000`, create an account, and start logging!
+
+**Data Location:** `./app/data/db.sqlite` (mount as volume for persistence)
 
 ### For Developers
 
@@ -38,116 +68,94 @@ bun install
 bun run dev
 ```
 
-See [docs/DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) for complete development setup.
+Development server runs on `http://localhost:3000` with hot reload.
 
-## Project Structure
+See [docs/DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) for complete setup and [docs/PROJECT_STRUCTURE.md](docs/PROJECT_STRUCTURE.md) for architecture overview.
+
+## Entry Ontology
+
+Tada uses a flexible three-level classification system for all life activities:
 
 ```
-tada/
-├── app/                  # Nuxt 3 application
-│   ├── pages/            # Vue pages (Timeline, Timer, Habits, Journal)
-│   ├── layouts/          # App layouts
-│   ├── server/           # API routes and database
-│   │   ├── api/          # REST endpoints
-│   │   └── db/           # Drizzle ORM schema
-│   └── public/           # Static assets (icons, bell sounds)
-├── design/               # Design documents
-│   ├── SDR.md            # Software Design Requirements
-│   ├── philosophy.md     # Vision and tone
-│   ├── decisions.md      # Technical decisions
-│   └── alternatives.md   # Competitive analysis
-├── old_data/             # Sample import data
-├── Dockerfile            # Production container
-└── docker-compose.yml    # Container orchestration
+Type (behavior)  →  Category (domain)  →  Subcategory (specific)
+    ↓                     ↓                        ↓
+  "timed"          "mindfulness"              "sitting"
+  "tada"          "accomplishment"              "work"
+  "journal"          "journal"                 "dream"
 ```
 
-## Tech Stack
+Every entry can have a custom emoji, with sensible defaults based on category and subcategory. Seven built-in categories cover most life activities: mindfulness, movement, creative, learning, journal, accomplishment, and events.
 
-- **Framework**: [Nuxt 3](https://nuxt.com/) + Vue 3 + TypeScript
-- **Database**: SQLite via [Drizzle ORM](https://orm.drizzle.team/)
-- **PWA**: [@vite-pwa/nuxt](https://vite-pwa-org.netlify.app/frameworks/nuxt.html)
-- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
-- **Runtime**: Bun
+**Key principle:** Types define behavior (how it's recorded), categories enable grouping (life domains), subcategories provide specificity. All are open strings — add your own without touching code.
 
-See [docs/DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) for architecture details.
+Read more: [design/ontology.md](design/ontology.md)
 
-## Design Philosophy
+## Architecture
 
-> "We don't want to tell people what they should be doing. We want to help them notice what they actually did, and help them feel good about it."
+Tada uses a **unified Entry model** where everything is an entry. No separate tables for meditations, dreams, tadas — just one flexible `entries` table with type, category, and subcategory fields. Habits are aggregation queries over entries, not separate data.
 
-See [design/philosophy.md](design/philosophy.md) for more.
+**Why?** Simplicity. One data model, one API, infinite flexibility. Add new activity types without schema migrations.
 
-## Data Model
+See [docs/PROJECT_STRUCTURE.md](docs/PROJECT_STRUCTURE.md) for detailed project layout and [design/SDR.md](design/SDR.md) for complete data model specification.
 
-Tada uses a unified `Entry` model for all activity types:
+See [docs/PROJECT_STRUCTURE.md](docs/PROJECT_STRUCTURE.md) for detailed project layout and [design/SDR.md](design/SDR.md) for complete data model specification.
 
-```typescript
-interface Entry {
-  id: string;
-  userId: string;
-  type: string; // 'meditation', 'dream', 'tada', 'note', etc.
-  occurredAt: Date; // When it happened
-  durationSeconds?: number;
-  title?: string;
-  notes?: string;
-  data?: object; // Type-specific metadata
-}
+## Development
+
+**Commands:**
+
+```bash
+bun run dev          # Start dev server (:3000)
+bun run lint:fix     # Auto-fix code style
+bun run typecheck    # Type check
+bun run db:generate  # Generate migrations
+bun run db:migrate   # Apply migrations
+bun run db:studio    # Database UI (:4983)
 ```
 
-Habits are defined as aggregation queries over entries, not separate data.
+**CI/CD:**
 
-See [design/SDR.md](design/SDR.md) for complete data model specification.
+- ✅ ESLint + TypeScript checks on every push
+- ✅ Automated tests (when written)
+- ✅ Docker image build and push to GHCR on merge to `main`
 
-## Contributing
+See [docs/DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) for full development workflow.
 
-We welcome contributions! Please see [docs/DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) for:
-
-- Development setup and workflow
-- Testing guidelines
-- Code style conventions
-- Pull request process
-
-Quick checklist:
-
-1. ✅ Follow conventional commit format
-2. ✅ Include tests with changes
-3. ✅ Update docs if needed
-4. ✅ Open issue first for major changes
+See [docs/DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) for full development workflow.
 
 ## Roadmap
 
-See [design/roadmap.md](design/roadmap.md) for detailed phases.
+**Current:** v0.1.0 (MVP) ✅ — Feature complete!
 
-**Phase 1 (MVP):**
+**Next:** v0.2.0 (Q1 2026) — Habit tracking, category customization, data import
 
-- [x] Project scaffolding
-- [x] Database schema
-- [x] PWA configuration
-- [ ] Entry CRUD API
-- [ ] Timeline view
-- [ ] Meditation timer with bells
-- [ ] Basic authentication
+**Future:** v0.3.0+ — Voice input, Obsidian sync, advanced visualizations
 
-**Phase 2:**
-
-- [ ] Habit tracking with streaks
-- [ ] Data export (JSON/CSV)
-- [ ] Calendar heatmap
-
-**Phase 3:**
-
-- [ ] Import plugins (Insight Timer, Strava)
-- [ ] Voice input with LLM
-- [ ] Dream journal enhancements
-
-See [design/roadmap.md](design/roadmap.md) for complete roadmap.
+See [design/roadmap.md](design/roadmap.md) and [CHANGELOG.md](CHANGELOG.md) for details.
 
 ## Resources
 
-- **Documentation**: [docs/DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md)
-- **Design Philosophy**: [design/philosophy.md](design/philosophy.md)
-- **Technical Decisions**: [design/decisions.md](design/decisions.md)
-- **Repository**: https://github.com/InfantLab/tada
+- **📖 Documentation:** [docs/DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md)
+- **🏗️ Architecture:** [docs/PROJECT_STRUCTURE.md](docs/PROJECT_STRUCTURE.md)
+- **🎯 Design Philosophy:** [design/philosophy.md](design/philosophy.md)
+- **🎨 Visual Design:** [design/visual design.md](design/visual%20design.md)
+- **📊 Entry Ontology:** [design/ontology.md](design/ontology.md)
+- **🗺️ Roadmap:** [design/roadmap.md](design/roadmap.md)
+- **🤖 AI Agent Guide:** [AGENTS.md](AGENTS.md)
+- **📝 Changelog:** [CHANGELOG.md](CHANGELOG.md)
+- **📦 Repository:** https://github.com/InfantLab/tada
+
+## Contributing
+
+We welcome contributions! Quick checklist:
+
+1. ✅ Read [design/philosophy.md](design/philosophy.md) — Understand the "why"
+2. ✅ Check [design/roadmap.md](design/roadmap.md) — See what's planned
+3. ✅ Follow conventional commits — `feat:`, `fix:`, `docs:`, etc.
+4. ✅ Update docs if changing behavior
+5. ✅ Open an issue first for major changes
+
+See [docs/DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) for detailed contribution guidelines.
 
 ## License
 

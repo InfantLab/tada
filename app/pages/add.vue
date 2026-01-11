@@ -1,5 +1,6 @@
 <script setup lang="ts">
 // Add entry page - quick capture for any entry type
+import { getSubcategoriesForCategory } from "~/utils/categoryDefaults";
 
 definePageMeta({
   layout: "default",
@@ -13,33 +14,75 @@ const title = ref("");
 const notes = ref("");
 const isSubmitting = ref(false);
 
-// Entry types
+// Emoji picker state
+const customEmoji = ref<string | null>(null);
+const showEmojiPicker = ref(false);
+
+// Subcategory for tadas (home, work, personal, etc.)
+const tadaSubcategory = ref("personal");
+
+// Entry types - these map to our ontology
 const entryTypes = [
   {
     value: "tada",
-    label: "Tada!",
+    label: "Ta-Da!",
     emoji: "⚡",
     description: "Celebrate an accomplishment",
+    type: "tada",
+    category: "accomplishment",
   },
   {
     value: "dream",
     label: "Dream",
     emoji: "🌙",
     description: "Record a dream",
+    type: "journal",
+    category: "journal",
+    subcategory: "dream",
   },
   {
     value: "note",
     label: "Note",
     emoji: "📝",
     description: "Capture a thought",
+    type: "journal",
+    category: "journal",
+    subcategory: "note",
   },
   {
-    value: "meditation",
-    label: "Meditation",
-    emoji: "🧘",
-    description: "Log a session",
+    value: "gratitude",
+    label: "Gratitude",
+    emoji: "🙏",
+    description: "Express thankfulness",
+    type: "journal",
+    category: "journal",
+    subcategory: "gratitude",
   },
 ];
+
+// Function to open emoji picker
+function openEmojiPicker() {
+  showEmojiPicker.value = true;
+}
+
+// Function to handle emoji selection
+function handleEmojiSelect(emoji: string) {
+  customEmoji.value = emoji;
+}
+
+// Get subcategory options for tadas
+const tadaSubcategoryOptions = computed(() => {
+  return getSubcategoriesForCategory("accomplishment").map((s) => ({
+    value: s.slug,
+    label: s.label,
+    emoji: s.emoji,
+  }));
+});
+
+// Get the current entry type config
+const currentEntryType = computed(() => {
+  return entryTypes.find((t) => t.value === entryType.value) || entryTypes[0];
+});
 
 // Dream-specific fields
 const dreamData = ref({
@@ -50,6 +93,7 @@ const dreamData = ref({
 
 const emotionOptions = [
   "joy",
+  "delight",
   "fear",
   "wonder",
   "anxiety",
@@ -66,14 +110,32 @@ async function submitEntry() {
   isSubmitting.value = true;
 
   try {
+    const typeConfig = currentEntryType.value;
+
+    if (!typeConfig) {
+      throw new Error("Invalid entry type");
+    }
+
+    // Determine subcategory
+    let subcategory = typeConfig.subcategory;
+    if (entryType.value === "tada") {
+      subcategory = tadaSubcategory.value;
+    }
+
     const entry = {
-      type: entryType.value,
-      name: title.value.trim() || `${entryType.value} entry`,
+      type: typeConfig.type,
+      name: title.value.trim() || `${typeConfig.label} entry`,
+      category: typeConfig.category,
+      subcategory: subcategory,
+      emoji: customEmoji.value || undefined,
       title: title.value.trim() || null,
       notes: notes.value.trim() || null,
       timestamp: new Date().toISOString(),
-      data: entryType.value === "dream" ? dreamData.value : {},
-      tags: entryType.value === "dream" ? ["dream"] : [],
+      data:
+        entryType.value === "dream"
+          ? { ...dreamData.value, themes: dreamData.value.emotions }
+          : {},
+      tags: [typeConfig.category, subcategory].filter(Boolean) as string[],
     };
 
     await $fetch("/api/entries", {
@@ -176,6 +238,53 @@ async function submitEntry() {
           "
           class="w-full px-4 py-3 rounded-xl border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 text-stone-800 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-tada-500 focus:border-transparent"
         />
+      </div>
+
+      <!-- Custom Emoji -->
+      <div>
+        <label
+          class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2"
+        >
+          Emoji (optional)
+        </label>
+        <button
+          type="button"
+          class="w-full px-4 py-3 rounded-xl border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 text-stone-800 dark:text-stone-100 hover:bg-stone-50 dark:hover:bg-stone-750 transition-colors flex items-center gap-3"
+          @click="openEmojiPicker"
+        >
+          <span class="text-2xl">{{
+            customEmoji || currentEntryType.emoji
+          }}</span>
+          <span class="text-stone-500 dark:text-stone-400"
+            >Click to change emoji</span
+          >
+        </button>
+      </div>
+
+      <!-- Subcategory for Tadas -->
+      <div v-if="entryType === 'tada'">
+        <label
+          class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2"
+        >
+          Category
+        </label>
+        <div class="flex flex-wrap gap-2">
+          <button
+            v-for="subcat in tadaSubcategoryOptions"
+            :key="subcat.value"
+            type="button"
+            class="px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
+            :class="
+              tadaSubcategory === subcat.value
+                ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 ring-2 ring-amber-500'
+                : 'bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600'
+            "
+            @click="tadaSubcategory = subcat.value"
+          >
+            <span>{{ subcat.emoji }}</span>
+            <span>{{ subcat.label }}</span>
+          </button>
+        </div>
       </div>
 
       <!-- Notes -->
@@ -283,9 +392,16 @@ async function submitEntry() {
       >
         <span v-if="isSubmitting">Saving...</span>
         <span v-else>{{
-          entryType === "tada" ? "⚡ Tada!" : "Save Entry"
+          entryType === "tada" ? "⚡ Ta-Da!" : "Save Entry"
         }}</span>
       </button>
     </form>
+
+    <!-- Emoji Picker Component -->
+    <EmojiPicker
+      v-model="showEmojiPicker"
+      :entry-name="title || 'this entry'"
+      @select="handleEmojiSelect"
+    />
   </div>
 </template>

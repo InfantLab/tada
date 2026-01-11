@@ -10,6 +10,9 @@ const logger = createLogger("api:entries:post");
 interface CreateEntryBody {
   type: string;
   name: string;
+  category?: string | null;
+  subcategory?: string | null;
+  emoji?: string | null;
   timestamp?: string;
   startedAt?: string | null;
   endedAt?: string | null;
@@ -65,6 +68,9 @@ export default defineEventHandler(async (event) => {
       userId,
       type: typedBody.type,
       name: typedBody.name,
+      category: typedBody.category || null,
+      subcategory: typedBody.subcategory || null,
+      emoji: typedBody.emoji || null,
       timestamp: typedBody.timestamp || now,
       startedAt: typedBody.startedAt || null,
       endedAt: typedBody.endedAt || null,

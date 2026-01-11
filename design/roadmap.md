@@ -31,6 +31,18 @@ _Status: In Progress - January 2026_
 - [x] Login/register page
 - [x] Version display (v0.1.0)
 
+**Ontology & Emoji System (v0.1.0):**
+
+- [x] Entry ontology: type + category + subcategory + emoji fields
+- [x] Category defaults config with emojis and colors
+- [x] Timer uses new ontology (type: timed, category: mindfulness, etc.)
+- [x] Add page uses new ontology (tada, journal with subcategories)
+- [x] Timeline displays emoji badges with category colors
+- [x] Normalize type values (meditation → timed + mindfulness)
+- [x] API endpoints accept and save category/subcategory/emoji
+- [x] Robust error handling with fallbacks for missing data
+- [x] Derived category lists (getTimedCategories) instead of hardcoding
+
 **What Users Can Do:**
 
 - ✅ Create account with password
@@ -49,11 +61,31 @@ _Status: In Progress - January 2026_
 - ⚠️ No offline sync (PWA works but doesn't cache data locally)
 - ⚠️ Single-user per instance (no multi-tenant support)
 
+**Technical Debt & Future Improvements:**
+
+- 🔧 **HIGH PRIORITY: Dedicated Ta-Da! add page** — Currently uses generic add form with dream/note options, losing the celebration magic (v0.2.0)
+- 🔧 Error messages use `alert()` — should use toast/notification system (v0.2.0)
+- 🔧 Legacy data migration — no automatic backfill of category/subcategory for pre-v0.1.0 entries
+- 🔧 Journal filter options hardcoded — should derive from category/subcategory data
+- 🔧 Subcategory collision (e.g., "walking" in mindfulness + movement) — flat lookup returns first match
+- 🔧 No user customization of categories yet — defaults work but editing deferred to v0.2.0
+
 ---
 
 ## v0.2.0: Core Features — The Essential Experience
 
 _Target: Q1 2026_
+
+**Ontology & Customization:**
+
+- [ ] Category/subcategory emoji editing in Settings
+- [ ] Category color customization
+- [ ] Subcategory auto-complete (remember user additions like "metta")
+- [ ] Multi-category support for entries (e.g., concert → creative + events)
+- [ ] Toast/notification system to replace alert() dialogs
+- [ ] Legacy data backfill tool for pre-v0.1.0 entries without categories
+- [ ] Context-aware subcategory resolution (fix "walking" collision between categories)
+- [ ] Dynamic journal filter generation from actual entry data
 
 **Habit Tracking:**
 

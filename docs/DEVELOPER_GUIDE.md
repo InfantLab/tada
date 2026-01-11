@@ -2,6 +2,15 @@
 
 Welcome to Tada development! This guide covers everything you need to build, test, and contribute to Tada.
 
+**Quick Links:**
+
+- 🏗️ [Project Structure](PROJECT_STRUCTURE.md) — Codebase organization
+- 🎯 [Design Philosophy](../design/philosophy.md) — Vision and principles
+- 📊 [Entry Ontology](../design/ontology.md) — Classification system
+- 🗺️ [Roadmap](../design/roadmap.md) — Version planning
+- 📝 [Changelog](../CHANGELOG.md) — Release history
+- 🤖 [Agent Instructions](../AGENTS.md) — AI-assisted development
+
 ## Getting Started
 
 ### Prerequisites
@@ -38,6 +47,7 @@ cd tada
 **Git & GitHub in Dev Container**
 
 Git operations (push, pull, clone) work frictionlessly:
+
 - **SSH Agent Forwarding** — VS Code automatically forwards your host's SSH agent to the container, so `git push` to GitHub works without additional setup
 - **HTTPS Fallback** — Even HTTPS `git` URLs are automatically redirected to SSH for added reliability
 - **CA Certificates** — Both the dev container and production image include CA certificates for HTTPS operations
@@ -62,6 +72,26 @@ docker compose --profile dev up tada-dev
 ```
 
 The app runs on `http://localhost:3000`
+
+## Architecture Overview
+
+Tada uses a **unified Entry model** where everything is an entry:
+
+```
+Type (behavior)  →  Category (domain)  →  Subcategory (specific)
+    ↓                     ↓                        ↓
+  "timed"          "mindfulness"              "sitting"
+  "tada"          "accomplishment"              "work"
+  "journal"          "journal"                 "dream"
+```
+
+- **Types** define behavior (how it's recorded): timed activities, instant captures, journal entries
+- **Categories** enable grouping (life domains): mindfulness, movement, creative, learning, journal, accomplishment, events
+- **Subcategories** provide specificity: sitting meditation, running, piano practice, dream, work accomplishment
+
+No separate tables for different activity types — just one `entries` table with flexible classification. Add new types/categories/subcategories without schema changes.
+
+**Read more:** [design/ontology.md](../design/ontology.md) and [docs/PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md)
 
 ## Development Commands
 
@@ -89,85 +119,142 @@ bun run test:ui       # Visual test UI
 bun run test:coverage # Generate coverage report
 ```
 
+**Note:** Testing framework is partially configured. See roadmap for test strategy development.
+
 ## Project Structure
 
-```
-tada/
-├── app/                      # Nuxt 3 application
-│   ├── pages/                # Vue pages (Timeline, Timer, Habits, Journal)
-│   │   ├── index.vue         # Timeline (home)
-│   │   ├── timer.vue         # Meditation timer
-│   │   ├── habits.vue        # Habit tracking
-│   │   ├── journal.vue       # Journal view
-│   │   ├── settings.vue      # Settings
-│   │   └── add.vue           # Quick add entry
-│   ├── layouts/
-│   │   └── default.vue       # Main layout with navigation
-│   ├── components/           # Vue components (none yet)
-│   ├── composables/          # Vue composables (none yet)
-│   ├── server/
-│   │   ├── api/              # REST API endpoints
-│   │   │   └── health.get.ts # Health check endpoint
-│   │   └── db/               # Database layer
-│   │       ├── index.ts      # Drizzle client
-│   │       └── schema.ts     # Database schema
-│   ├── assets/css/           # Global CSS
-│   └── public/               # Static assets (icons, sounds)
-├── design/                   # Design documents
-│   ├── SDR.md                # Software Design Requirements
-│   ├── philosophy.md         # Vision and principles
-│   ├── decisions.md          # Technical decisions with rationale
-│   ├── roadmap.md            # Feature phases
-│   └── alternatives.md       # Competitive analysis
-├── docs/                     # Documentation
-│   └── DEVELOPER_GUIDE.md    # This file
-├── old_data/                 # Sample import data
-├── AGENTS.md                 # Instructions for AI agents
-├── Dockerfile                # Production container
-└── docker-compose.yml        # Container orchestration
-```
+See [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) for complete codebase organization.
+
+**Quick reference:**
+
+- `app/pages/` — Vue pages (file-based routing)
+- `app/components/` — Reusable Vue components
+- `app/server/api/` — REST API endpoints
+- `app/server/db/` — Database schema and migrations
+- `app/utils/categoryDefaults.ts` — Entry ontology configuration
+- `design/` — Design documents (SDR, philosophy, ontology, roadmap)
+- `docs/` — Developer documentation
 
 ## Architecture Overview
 
 ### Tech Stack
 
-- **Framework**: [Nuxt 3](https://nuxt.com/) + Vue 3
-- **Language**: TypeScript (strict mode)
-- **Database**: SQLite via [Drizzle ORM](https://orm.drizzle.team/)
-- **PWA**: [@vite-pwa/nuxt](https://vite-pwa-org.netlify.app/frameworks/nuxt.html)
-- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
-- **Auth**: [Lucia](https://lucia-auth.com/) (planned)
-- **Runtime**: Bun (not Node.js!)
+- **Framework**: Nuxt 3.15.1 + Vue 3
+- **Language**: TypeScript (strict mode enabled)
+- **Database**: SQLite via Drizzle ORM
+- **Authentication**: Lucia Auth v3
+- **PWA**: @vite-pwa/nuxt
+- **Styling**: Tailwind CSS
+- **Runtime**: Bun 1.3.5 (not Node.js!)
 
 ### Unified Entry Model
 
-**Core concept:** Everything is an `Entry` — meditation sessions, dreams, todos, journal notes, workouts, books read, etc.
+**Core concept:** Everything is an `Entry` — meditations, dreams, tadas, journal notes, workouts, etc.
 
 ```typescript
 interface Entry {
   id: string; // nanoid
   userId: string; // FK to users
-  type: string; // 'meditation', 'dream', 'tada', 'journal', etc.
-  occurredAt: Date; // When it happened
-  durationSeconds?: number;
-  title?: string;
-  notes?: string;
-  data?: object; // Type-specific metadata (JSONB)
+  type: string; // "timed", "tada", "journal"
+  category: string; // "mindfulness", "accomplishment", "journal"
+  subcategory: string; // "sitting", "work", "dream"
+  emoji: string; // Custom or default emoji
+  name: string; // Display name
+  timestamp: string; // When it occurred
+  durationSeconds: number | null;
+  notes: string | null;
+  data: object; // Type-specific metadata (JSON)
+  tags: string[]; // Searchable tags
 }
 ```
 
 **Key insight:** Habits are NOT separate records — they're aggregation queries over entries using matchers.
 
-### Database Details
+See [design/ontology.md](../design/ontology.md) for the three-level classification system.
 
-- **Engine**: SQLite (self-hosted) / PostgreSQL (cloud)
-- **ORM**: Drizzle with TypeScript types
-- **Location**: `app/data/db.sqlite` (gitignored)
+### Database Schema
+
+- **Engine**: SQLite (file-based, perfect for self-hosting)
+- **ORM**: Drizzle with full TypeScript types
+- **Location**: `app/data/db.sqlite` (auto-created, gitignored)
 - **Schema**: `app/server/db/schema.ts`
 
-The schema defines:
+**Tables:**
 
-- `users` — User accounts
+- `users` — User accounts (Lucia Auth)
+- `sessions` — Authentication sessions
+- `entries` — Unified entry model with ontology fields
+- `habits` — Habit definitions and matchers
+- `timer_presets` — Saved timer configurations
+- `category_settings` — User category customization (v0.2.0)
+- `attachments` — Entry attachments (v0.2.0)
+
+**Migrations:** Managed by Drizzle Kit. Always commit generated migration files.
+
+## Development Workflow
+
+### Conventional Commits
+
+We use **conventional commits** for clear, semantic history:
+
+```bash
+feat: add emoji picker component
+fix: correct timer countdown calculation
+docs: update README with ontology section
+refactor: extract category logic to utils
+test: add unit tests for getEntryDisplayProps
+chore: upgrade emoji-picker-element to v1.28
+```
+
+**Types:**
+
+- `feat:` — New feature
+- `fix:` — Bug fix
+- `docs:` — Documentation only
+- `refactor:` — Code restructure (no behavior change)
+- `test:` — Add/update tests
+- `chore:` — Maintenance (deps, config, etc.)
+
+### Git Workflow
+
+**Branch Strategy:**
+
+- `main` — Always deployable, protected
+- `feature/description` — Human-authored features
+- `copilot/description` — AI agent-authored changes
+
+**Pull Request Process:**
+
+1. Create feature branch from `main`
+2. Make changes with conventional commits
+3. Run `bun run lint:fix` and `bun run typecheck`
+4. Push and open PR (CI runs automatically)
+5. Get code review (or self-review for small changes)
+6. Merge to `main` (squash merge preferred)
+
+### Testing Strategy
+
+**Current State (v0.1.0):**
+
+- Testing framework (Vitest) configured but tests not yet written
+- Manual testing performed for all v0.1.0 features
+
+**Planned (v0.2.0+):**
+
+- **Unit tests:** 80%+ coverage target
+- **E2E tests:** Critical user flows (timer, entry creation, habits)
+- **Co-located tests:** `*.test.ts` next to source files
+
+**Test Structure (when implemented):**
+
+```
+app/
+├── server/api/
+│   ├── entries/
+│   │   ├── index.get.ts
+│   │   └── index.get.test.ts     # API tests
+```
+
 - `sessions` — Lucia auth sessions
 - `entries` — Main data table (all activities)
 - `habits` — Habit definitions (query patterns)

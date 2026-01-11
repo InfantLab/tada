@@ -2,8 +2,9 @@
 const navigation = [
   { name: "Timeline", href: "/", icon: "i-heroicons-clock" },
   { name: "Timer", href: "/timer", icon: "i-heroicons-play-circle" },
-  { name: "Habits", href: "/habits", icon: "i-heroicons-chart-bar" },
+  { name: "Ta-Da!", href: "/tada", icon: "i-heroicons-bolt" },
   { name: "Journal", href: "/journal", icon: "i-heroicons-book-open" },
+  { name: "Habits", href: "/habits", icon: "i-heroicons-chart-bar" },
 ];
 
 const route = useRoute();
@@ -33,7 +34,7 @@ const route = useRoute();
             :to="item.href"
             class="px-3 py-2 rounded-lg text-sm font-medium transition-colors"
             :class="
-              route.path === item.href
+              route.path === item.href || (item.href === '/tada' && route.path === '/add' && route.query.type === 'tada')
                 ? 'bg-gold-highlight/30 text-gold-light dark:bg-gold-dark/20 dark:text-gold-dark'
                 : 'text-text-light-secondary hover:bg-pearl-mist dark:text-text-dark-secondary dark:hover:bg-cosmic-indigo'
             "
@@ -81,14 +82,14 @@ const route = useRoute();
     <nav
       class="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-pearl-cream/90 dark:bg-cosmic-void/90 backdrop-blur-sm border-t border-text-light-muted/20 dark:border-text-dark-muted/20 safe-area-bottom"
     >
-      <div class="grid grid-cols-4 h-16">
+      <div class="grid grid-cols-5 h-16">
         <NuxtLink
           v-for="item in navigation"
           :key="item.name"
           :to="item.href"
           class="flex flex-col items-center justify-center gap-1 transition-colors"
           :class="
-            route.path === item.href
+            route.path === item.href || (item.href === '/tada' && route.path === '/add' && route.query.type === 'tada')
               ? 'text-gold-light dark:text-gold-dark'
               : 'text-text-light-muted dark:text-text-dark-muted'
           "
@@ -130,7 +131,7 @@ const route = useRoute();
             />
           </svg>
           <svg
-            v-else-if="item.name === 'Habits'"
+            v-else-if="item.name === 'Ta-Da!'"
             xmlns="http://www.w3.org/2000/svg"
             class="h-6 w-6"
             fill="none"
@@ -141,7 +142,7 @@ const route = useRoute();
               stroke-linecap="round"
               stroke-linejoin="round"
               stroke-width="2"
-              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+              d="M13 10V3L4 14h7v7l9-11h-7z"
             />
           </svg>
           <svg
@@ -157,6 +158,21 @@ const route = useRoute();
               stroke-linejoin="round"
               stroke-width="2"
               d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+            />
+          </svg>
+          <svg
+            v-else-if="item.name === 'Habits'"
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
             />
           </svg>
           <span class="text-xs font-medium">{{ item.name }}</span>

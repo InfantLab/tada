@@ -101,7 +101,7 @@ async function handleSubmit() {
           src="/icons/tada-logotype.png"
           alt="TA-DA"
           class="h-24 w-auto mx-auto mb-4"
-        />
+        >
         <p class="text-text-light-secondary dark:text-text-dark-secondary">
           {{ mode === "login" ? "Welcome back" : "Create your account" }}
         </p>
@@ -132,7 +132,7 @@ async function handleSubmit() {
                   ? 'Choose a username'
                   : 'Enter your username'
               "
-            />
+            >
           </div>
 
           <!-- Password -->
@@ -155,7 +155,7 @@ async function handleSubmit() {
                   ? 'Choose a password (min 6 characters)'
                   : 'Enter your password'
               "
-            />
+            >
           </div>
 
           <!-- Confirm Password (register only) -->
@@ -174,7 +174,7 @@ async function handleSubmit() {
               required
               class="w-full px-4 py-3 rounded-lg border border-text-light-muted/30 dark:border-text-dark-muted/30 bg-pearl-base dark:bg-cosmic-void text-text-light-primary dark:text-text-dark-primary focus:outline-none focus:ring-2 focus:ring-gold-light dark:focus:ring-gold-dark focus:border-transparent"
               placeholder="Confirm your password"
-            />
+            >
           </div>
 
           <!-- Error Message -->

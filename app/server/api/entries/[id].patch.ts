@@ -9,6 +9,9 @@ const logger = createLogger("api:entries:patch");
 interface UpdateEntryBody {
   type?: string;
   name?: string;
+  category?: string | null;
+  subcategory?: string | null;
+  emoji?: string | null;
   timestamp?: string;
   startedAt?: string | null;
   endedAt?: string | null;
@@ -64,6 +67,10 @@ export default defineEventHandler(async (event) => {
     // Only update provided fields
     if (body.type !== undefined) updateData["type"] = body.type;
     if (body.name !== undefined) updateData["name"] = body.name;
+    if (body.category !== undefined) updateData["category"] = body.category;
+    if (body.subcategory !== undefined)
+      updateData["subcategory"] = body.subcategory;
+    if (body.emoji !== undefined) updateData["emoji"] = body.emoji;
     if (body.timestamp !== undefined) updateData["timestamp"] = body.timestamp;
     if (body.startedAt !== undefined) updateData["startedAt"] = body.startedAt;
     if (body.endedAt !== undefined) updateData["endedAt"] = body.endedAt;

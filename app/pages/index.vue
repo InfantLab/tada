@@ -1,6 +1,11 @@
 <script setup lang="ts">
 // Timeline page - the main view showing all entries chronologically
 import type { Entry } from "~/server/db/schema";
+import {
+  getEntryDisplayProps,
+  CATEGORY_DEFAULTS,
+  getEntryTimestamp,
+} from "~/utils/categoryDefaults";
 
 definePageMeta({
   layout: "default",
@@ -10,6 +15,11 @@ definePageMeta({
 const entries = ref<Entry[]>([]);
 const isLoading = ref(true);
 const error = ref<string | null>(null);
+
+// Emoji picker state
+const showEmojiPicker = ref(false);
+const emojiPickerEntry = ref<Entry | null>(null);
+const isUpdating = ref(false);
 
 async function fetchEntries() {
   try {
@@ -50,28 +60,33 @@ function formatDuration(seconds: number): string {
   return `${mins}m ${secs}s`;
 }
 
-// Get icon for entry type
-function getTypeIcon(type: string): string {
-  const icons: Record<string, string> = {
-    timed: "🧘",
-    meditation: "🧘",
-    dream: "🌙",
-    tada: "⚡",
-    journal: "📝",
-    note: "📝",
-    reps: "💪",
-    gps_tracked: "🏃",
-    measurement: "📊",
-  };
-  return icons[type] || "📌";
+// Get display properties for an entry (emoji, color, label)
+function getDisplayProps(entry: Entry) {
+  return getEntryDisplayProps({
+    emoji: entry.emoji,
+    category: entry.category,
+    subcategory: entry.subcategory,
+  });
+}
+
+// Get category/subcategory label for display
+function getCategoryLabel(entry: Entry): string {
+  const parts: string[] = [];
+  if (entry.category) {
+    const cat = CATEGORY_DEFAULTS[entry.category];
+    parts.push(cat?.label || entry.category);
+  }
+  if (entry.subcategory && entry.subcategory !== entry.category) {
+    parts.push(entry.subcategory);
+  }
+  return parts.join(" • ");
 }
 
 // Group entries by date
 function groupByDate(entries: Entry[]): Map<string, Entry[]> {
   const groups = new Map<string, Entry[]>();
   for (const entry of entries) {
-    const timestamp =
-      entry.timestamp || entry.startedAt || entry.date || entry.createdAt;
+    const timestamp = getEntryTimestamp(entry);
     const date = new Date(timestamp).toLocaleDateString();
     if (!groups.has(date)) {
       groups.set(date, []);
@@ -79,6 +94,39 @@ function groupByDate(entries: Entry[]): Map<string, Entry[]> {
     groups.get(date)!.push(entry);
   }
   return groups;
+}
+
+// Show emoji picker for an entry
+function openEmojiPicker(entry: Entry, event: Event) {
+  event.preventDefault();
+  event.stopPropagation();
+  emojiPickerEntry.value = entry;
+  showEmojiPicker.value = true;
+}
+
+// Update entry emoji
+async function updateEmoji(emoji: string) {
+  if (!emojiPickerEntry.value) return;
+
+  const entry = emojiPickerEntry.value;
+  isUpdating.value = true;
+
+  try {
+    await $fetch(`/api/entries/${entry.id}`, {
+      method: "PATCH",
+      body: { emoji },
+    });
+
+    // Update local state
+    entry.emoji = emoji;
+  } catch (err: unknown) {
+    console.error("Failed to update emoji:", err);
+    const message = err instanceof Error ? err.message : "Unknown error";
+    alert(`Failed to update emoji: ${message}`);
+  } finally {
+    isUpdating.value = false;
+    emojiPickerEntry.value = null;
+  }
 }
 </script>
 
@@ -149,7 +197,7 @@ function groupByDate(entries: Entry[]): Map<string, Entry[]> {
     <div v-else-if="entries.length === 0" class="text-center py-12">
       <div class="text-6xl mb-4">⚡</div>
       <h2 class="text-xl font-semibold text-stone-700 dark:text-stone-200 mb-2">
-        Welcome to Tada!
+        Welcome to Ta-Da!
       </h2>
       <p class="text-stone-500 dark:text-stone-400 max-w-md mx-auto mb-6">
         Start capturing moments from your life. Meditations, accomplishments,
@@ -219,12 +267,17 @@ function groupByDate(entries: Entry[]): Map<string, Entry[]> {
             class="block bg-white dark:bg-stone-800 rounded-lg p-4 shadow-sm border border-stone-200 dark:border-stone-700 hover:border-tada-400 dark:hover:border-tada-500 hover:shadow-md transition-all cursor-pointer"
           >
             <div class="flex items-start gap-3">
-              <!-- Entry type icon -->
-              <div
-                class="flex-shrink-0 w-10 h-10 rounded-full bg-tada-100 dark:bg-tada-900/50 flex items-center justify-center"
+              <!-- Entry emoji badge with category color (clickable) -->
+              <button
+                class="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center hover:scale-110 transition-transform"
+                :style="{
+                  backgroundColor: getDisplayProps(entry).color + '20',
+                }"
+                @click="openEmojiPicker(entry, $event)"
+                title="Change emoji"
               >
-                <span class="text-lg">{{ getTypeIcon(entry.type) }}</span>
-              </div>
+                <span class="text-xl">{{ getDisplayProps(entry).emoji }}</span>
+              </button>
 
               <!-- Entry content -->
               <div class="flex-1 min-w-0">
@@ -246,10 +299,20 @@ function groupByDate(entries: Entry[]): Map<string, Entry[]> {
                   </span>
                 </div>
 
-                <!-- Entry metadata -->
+                <!-- Category and duration -->
                 <div
                   class="flex items-center gap-3 text-sm text-stone-600 dark:text-stone-300 mb-2"
                 >
+                  <span
+                    v-if="getCategoryLabel(entry)"
+                    class="text-xs px-2 py-0.5 rounded"
+                    :style="{
+                      backgroundColor: getDisplayProps(entry).color + '15',
+                      color: getDisplayProps(entry).color,
+                    }"
+                  >
+                    {{ getCategoryLabel(entry) }}
+                  </span>
                   <span
                     v-if="entry.durationSeconds"
                     class="flex items-center gap-1"
@@ -270,18 +333,6 @@ function groupByDate(entries: Entry[]): Map<string, Entry[]> {
                     </svg>
                     {{ formatDuration(entry.durationSeconds) }}
                   </span>
-                  <span
-                    v-if="entry.tags && entry.tags.length > 0"
-                    class="flex items-center gap-1"
-                  >
-                    <span
-                      v-for="tag in entry.tags"
-                      :key="tag"
-                      class="text-xs bg-stone-100 dark:bg-stone-700 px-2 py-0.5 rounded"
-                    >
-                      {{ tag }}
-                    </span>
-                  </span>
                 </div>
 
                 <!-- Notes -->
@@ -297,5 +348,12 @@ function groupByDate(entries: Entry[]): Map<string, Entry[]> {
         </div>
       </div>
     </div>
+
+    <!-- Emoji Picker Component -->
+    <EmojiPicker
+      v-model="showEmojiPicker"
+      :entry-name="emojiPickerEntry?.name"
+      @select="updateEmoji"
+    />
   </div>
 </template>

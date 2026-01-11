@@ -14,6 +14,8 @@
 ## Don't
 
 - ❌ Launch dev server (user has it on :3000)
+- ❌ Run `bun run dev` during interactive debugging/fixing - user already has it running
+- ❌ Start background dev processes when helping with live issues
 - ❌ Use `any` type - use `unknown` + type narrowing (`error instanceof Error`)
 - ❌ Hard-code values that should be in config/env
 - ❌ Create large speculative changes without confirmation
@@ -26,8 +28,18 @@
 
 - **Stack:** Nuxt 3, Vue 3, TypeScript, Bun, SQLite + Drizzle ORM
 - **Architecture:** Unified Entry model (everything is an entry)
+- **Ontology:** Three-level classification (type → category → subcategory)
 - **Directory:** Always `cd app` before commands
 - **Ports:** 3000 (dev server), 4983 (Drizzle Studio)
+- **Current Version:** v0.1.0 (feature complete)
+
+**Key Files:**
+
+- `app/utils/categoryDefaults.ts` — Entry ontology configuration
+- `app/server/db/schema.ts` — Database schema
+- `design/SDR.md` — Software requirements (THE source of truth)
+- `design/ontology.md` — Entry classification system
+- `docs/PROJECT_STRUCTURE.md` — Complete project layout
 
 ## Commands (File-Scoped)
 
@@ -91,12 +103,29 @@ bun run db:studio         # DB UI on :4983
 
 **Unified Entry Model:** Everything is an entry (meditation, dream, note, tada). Entry types are open strings, type-specific data goes in `data` JSON field.
 
+**Three-Level Ontology:**
+
+- `type` — Behavior/structure (`"timed"`, `"tada"`, `"journal"`)
+- `category` — Life domain (`"mindfulness"`, `"accomplishment"`, etc.)
+- `subcategory` — Specific activity (`"sitting"`, `"work"`, `"dream"`, etc.)
+
+**Entry Emoji System:**
+
+1. `entry.emoji` (custom override)
+2. Subcategory default (`SUBCATEGORY_DEFAULTS`)
+3. Category default (`CATEGORY_DEFAULTS`)
+4. Fallback (📌)
+
 **File locations:**
 
 - `app/pages/*.vue` — Routes (auto-generated)
+- `app/components/*.vue` — Reusable components
 - `app/server/api/**/*.ts` — API endpoints
 - `app/server/db/schema.ts` — Database schema
-- `design/SDR.md` — Full architecture (read this for details!)
+- `app/utils/categoryDefaults.ts` — Ontology config
+- `design/SDR.md` — Full architecture
+- `design/ontology.md` — Category/emoji system
+- `docs/PROJECT_STRUCTURE.md` — Complete project layout
 
 ## Testing Instructions
 

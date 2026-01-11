@@ -195,7 +195,7 @@ function getTypeIcon(type: string): string {
             type="text"
             class="w-full px-4 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-900 text-stone-900 dark:text-white focus:ring-2 focus:ring-tada-500 focus:border-transparent"
             placeholder="Entry title"
-          />
+          >
         </div>
 
         <!-- Timestamp -->
@@ -209,7 +209,7 @@ function getTypeIcon(type: string): string {
             v-model="timestamp"
             type="datetime-local"
             class="w-full px-4 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-900 text-stone-900 dark:text-white focus:ring-2 focus:ring-tada-500 focus:border-transparent"
-          />
+          >
         </div>
 
         <!-- Notes -->

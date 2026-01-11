@@ -1,5 +1,11 @@
 <script setup lang="ts">
 // Timer page - meditation and timed activity timer
+import {
+  CATEGORY_DEFAULTS,
+  getSubcategoriesForCategory,
+  getSubcategoryEmoji,
+  getTimedCategories,
+} from "~/utils/categoryDefaults";
 
 definePageMeta({
   layout: "default",
@@ -12,7 +18,11 @@ const elapsedSeconds = ref(0);
 const isRunning = ref(false);
 const isPaused = ref(false);
 const timerInterval = ref<ReturnType<typeof setInterval> | null>(null);
-const category = ref("sitting");
+
+// Category hierarchy - parent category and subcategory
+const selectedCategory = ref("mindfulness");
+const selectedSubcategory = ref("sitting");
+
 const isSaving = ref(false);
 const customMinutes = ref<string>("");
 const loopCount = ref(1);
@@ -21,6 +31,47 @@ const startBell = ref("bell");
 const endBell = ref("bell");
 const showSettings = ref(false);
 const wakeLock = ref<WakeLockSentinel | null>(null);
+
+// Derive subcategory options from selected category
+const subcategoryOptions = computed(() => {
+  return getSubcategoriesForCategory(selectedCategory.value).map((s) => ({
+    value: s.slug,
+    label: s.label,
+    icon: s.emoji,
+  }));
+});
+
+// Get current emoji for display
+const currentEmoji = computed(() => {
+  return getSubcategoryEmoji(selectedCategory.value, selectedSubcategory.value);
+});
+
+// Category options for parent category selection
+const categoryOptions = computed(() => {
+  // Only show categories that make sense for timed activities
+  const timedCategories = getTimedCategories();
+  return timedCategories.map((slug) => {
+    const category = CATEGORY_DEFAULTS[slug]!;
+    return {
+      value: slug,
+      label: category.label,
+      icon: category.emoji,
+      color: category.color,
+    };
+  });
+});
+
+// When category changes, reset subcategory to first option
+watch(selectedCategory, (newCategory) => {
+  const subs = getSubcategoriesForCategory(newCategory);
+  if (subs.length > 0 && subs[0]) {
+    selectedSubcategory.value = subs[0].slug;
+  } else {
+    // Fallback if category has no subcategories
+    console.warn(`Category ${newCategory} has no subcategories defined`);
+    selectedSubcategory.value = newCategory; // Use category slug as fallback
+  }
+});
 
 // Load settings from localStorage
 onMounted(() => {
@@ -77,17 +128,6 @@ const bellSounds = [
   { value: "gong2", label: "Gong 2" },
   { value: "cymbal", label: "Cymbal" },
   { value: "silence", label: "None" },
-];
-
-// Activity categories
-const categories = [
-  { value: "sitting", label: "Sitting", icon: "🧘" },
-  { value: "breathing", label: "Breathing", icon: "🫁" },
-  { value: "walking", label: "Walking", icon: "🚶" },
-  { value: "tai_chi", label: "Tai Chi", icon: "🥋" },
-  { value: "music", label: "Music", icon: "🎵" },
-  { value: "lesson", label: "Lesson", icon: "📚" },
-  { value: "other", label: "Other", icon: "⏱️" },
 ];
 
 // Computed display values
@@ -151,15 +191,16 @@ function startTimer() {
   }, 1000);
 }
 
-function handleLoopOrComplete() {
+async function handleLoopOrComplete() {
   loopsCompleted.value++;
   if (loopsCompleted.value < loopCount.value) {
     // Loop: reset and continue
     elapsedSeconds.value = 0;
   } else {
-    // All loops complete
+    // All loops complete - auto-save
     showSettings.value = true; // Show settings again when complete
     stopTimer();
+    await saveSession();
   }
 }
 
@@ -233,21 +274,25 @@ async function saveSession() {
   isSaving.value = true;
 
   try {
+    // Get the subcategory label for the name
+    const subcatOption = subcategoryOptions.value.find(
+      (s) => s.value === selectedSubcategory.value
+    );
+    const subcatLabel = subcatOption?.label || selectedSubcategory.value;
+
     const entry = {
       type: "timed",
-      name: `${
-        categories.find((c) => c.value === category.value)?.label ||
-        "Meditation"
-      } (${Math.floor(elapsedSeconds.value / 60)}m)`,
+      name: `${subcatLabel} (${Math.floor(elapsedSeconds.value / 60)}m)`,
+      category: selectedCategory.value,
+      subcategory: selectedSubcategory.value,
       timestamp: new Date().toISOString(),
       durationSeconds: elapsedSeconds.value,
       data: {
         mode: timerMode.value,
-        category: category.value,
         targetMinutes:
           timerMode.value === "countdown" ? targetMinutes.value : null,
       },
-      tags: ["meditation", category.value],
+      tags: [selectedCategory.value, selectedSubcategory.value],
     };
 
     await $fetch("/api/entries", {
@@ -302,7 +347,46 @@ onUnmounted(() => {
 
 <template>
   <div class="flex flex-col items-center justify-center min-h-[70vh]">
+    <!-- Large emoji display during timer -->
+    <div v-if="isRunning" class="text-6xl mb-4 animate-pulse">
+      {{ currentEmoji }}
+    </div>
+
     <!-- Category selector (only when not running) -->
+    <div v-if="!isRunning" class="mb-4">
+      <label
+        class="block text-sm font-medium text-stone-600 dark:text-stone-300 mb-2 text-center"
+      >
+        Category
+      </label>
+      <div class="flex flex-wrap gap-2 justify-center max-w-md">
+        <button
+          v-for="cat in categoryOptions"
+          :key="cat.value"
+          class="px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
+          :class="
+            selectedCategory === cat.value
+              ? 'ring-2 ring-offset-2 dark:ring-offset-stone-900'
+              : 'bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600'
+          "
+          :style="
+            selectedCategory === cat.value
+              ? {
+                  backgroundColor: cat.color + '20',
+                  color: cat.color,
+                  borderColor: cat.color,
+                }
+              : {}
+          "
+          @click="selectedCategory = cat.value"
+        >
+          <span>{{ cat.icon }}</span>
+          <span>{{ cat.label }}</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Subcategory selector (only when not running) -->
     <div v-if="!isRunning" class="mb-6">
       <label
         class="block text-sm font-medium text-stone-600 dark:text-stone-300 mb-2 text-center"
@@ -311,15 +395,15 @@ onUnmounted(() => {
       </label>
       <div class="flex flex-wrap gap-2 justify-center max-w-md">
         <button
-          v-for="cat in categories"
+          v-for="cat in subcategoryOptions"
           :key="cat.value"
           class="px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
           :class="
-            category === cat.value
+            selectedSubcategory === cat.value
               ? 'bg-tada-100 dark:bg-tada-900/50 text-tada-700 dark:text-tada-300 ring-2 ring-tada-500'
               : 'bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600'
           "
-          @click="category = cat.value"
+          @click="selectedSubcategory = cat.value"
         >
           <span>{{ cat.icon }}</span>
           <span>{{ cat.label }}</span>
@@ -364,8 +448,9 @@ onUnmounted(() => {
         class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
         :class="
           (preset.seconds === -1 && customMinutes) ||
-          (preset.seconds === 0 && timerMode.value === 'unlimited') ||
-          (preset.seconds > 0 && targetMinutes.value === preset.seconds)
+          (preset.seconds > 0 &&
+            targetMinutes === preset.seconds &&
+            !customMinutes)
             ? 'bg-tada-100 dark:bg-tada-900/50 text-tada-700 dark:text-tada-300'
             : 'bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600'
         "

@@ -59,11 +59,11 @@ See [philosophy.md](philosophy.md) for the full vision.
 
 Optional managed hosting with subscription tiers:
 
-| Tier | Price | Features |
-|------|-------|----------|
-| **Free** | $0/month | 1 user, 1 year history, community support |
-| **Personal** | $5/month | 1 user, unlimited history, priority sync, backups |
-| **Family** | $12/month | Up to 5 users, shared dashboards |
+| Tier         | Price     | Features                                          |
+| ------------ | --------- | ------------------------------------------------- |
+| **Free**     | $0/month  | 1 user, 1 year history, community support         |
+| **Personal** | $5/month  | 1 user, unlimited history, priority sync, backups |
+| **Family**   | $12/month | Up to 5 users, shared dashboards                  |
 
 ### 2.3 Monetization Boundaries
 
@@ -89,49 +89,67 @@ Everything in Tada is an **Entry**—a moment worth recording. The schema is del
 
 #### Built-in Entry Types
 
-These are examples, not a closed set:
+Types define **how an entry is recorded** (data structure and behavior). These are examples, not a closed set:
 
-| Type | Description | Example |
-|------|-------------|----------|
-| `timed` | Duration-based activities | Meditation, music practice, tai chi |
-| `reps` | Count-based activities | 20 press-ups, 3 sets of squats |
-| `gps_tracked` | Activities with GPS route | Running, cycling, walking |
-| `measurement` | Point-in-time values | Weight, heart rate, blood pressure |
-| `journal` | Text entries | Dream journal, gratitude, reflection |
-| `tada` | Accomplishments | "Fixed the leaky tap", "Called mum" |
-| `experience` | Events attended | Film, concert, play, exhibition |
-| `consumption` | Media consumed | Book, album, podcast, article |
+| Type          | Description                           | Example                              |
+| ------------- | ------------------------------------- | ------------------------------------ |
+| `timed`       | Duration-based activities             | Meditation, music practice, tai chi  |
+| `tada`        | Accomplishments (the app's namesake!) | "Fixed the leaky tap", "Called mum"  |
+| `journal`     | Reflective text entries               | Dream journal, gratitude, reflection |
+| `reps`        | Count-based activities                | 20 press-ups, 3 sets of squats       |
+| `gps_tracked` | Activities with GPS route             | Running, cycling, walking            |
+| `measurement` | Point-in-time values                  | Weight, heart rate, blood pressure   |
+| `experience`  | Events attended                       | Film, concert, play, exhibition      |
+| `consumption` | Media consumed                        | Book, album, podcast, article        |
+
+#### Category Hierarchy
+
+In addition to type, entries have **category** (life domain) and **subcategory** (specific activity) for cross-type grouping and visual consistency. See [ontology.md](ontology.md) for the full hierarchy.
+
+| Field         | Purpose                 | Examples                                    |
+| ------------- | ----------------------- | ------------------------------------------- |
+| `type`        | Data structure/behavior | `timed`, `tada`, `journal`                  |
+| `category`    | Life domain             | `mindfulness`, `accomplishment`, `creative` |
+| `subcategory` | Specific activity       | `sitting`, `work`, `piano`                  |
+| `emoji`       | Per-entry override      | 🎹 (optional)                               |
+
+Default categories: `mindfulness`, `movement`, `creative`, `learning`, `journal`, `accomplishment`, `events`
 
 #### Core Entry Schema
 
 ```typescript
 interface Entry {
-  id: string;                    // UUID
-  type: string;                  // Open-ended: "timed", "journal", "experience", etc.
-  name: string;                  // Human label: "meditation", "The Matrix", "press-ups"
-  
+  id: string; // UUID
+  type: string; // Behavior: "timed", "tada", "journal", etc.
+  name: string; // Human label: "Morning Sit", "Fixed tap"
+
+  // Category hierarchy (see ontology.md)
+  category?: string; // Life domain: "mindfulness", "accomplishment"
+  subcategory?: string; // Specific activity: "sitting", "work"
+  emoji?: string; // Per-entry override for display
+
   // Time handling (use whichever fits)
-  timestamp?: string;            // ISO 8601 - instant events
-  startedAt?: string;            // ISO 8601 - duration start
-  endedAt?: string;              // ISO 8601 - duration end
-  durationSeconds?: number;      // Computed or manual
-  date?: string;                 // YYYY-MM-DD - date-only events
-  
+  timestamp?: string; // ISO 8601 - instant events
+  startedAt?: string; // ISO 8601 - duration start
+  endedAt?: string; // ISO 8601 - duration end
+  durationSeconds?: number; // Computed or manual
+  date?: string; // YYYY-MM-DD - date-only events
+
   // Type-specific payload (JSONB) - schema varies by type
   data: Record<string, unknown>;
-  
+
   // Metadata
-  tags: string[];                // Freeform tags
-  notes?: string;                // Markdown supported
-  
+  tags: string[]; // Freeform tags
+  notes?: string; // Markdown supported
+
   // Import tracking
-  source: string;                // "manual", "import", "strava", etc.
-  externalId?: string;           // ID from source for deduplication
-  
+  source: string; // "manual", "import", "strava", etc.
+  externalId?: string; // ID from source for deduplication
+
   // Sync support
   createdAt: string;
   updatedAt: string;
-  deletedAt?: string;            // Soft delete for sync
+  deletedAt?: string; // Soft delete for sync
 }
 ```
 
@@ -145,21 +163,21 @@ interface EntryLink {
   id: string;
   fromEntryId: string;
   toEntryId: string;
-  linkType: string;              // "thread", "related", "follow-up"
-  threadName?: string;           // e.g., "Learning Spanish"
+  linkType: string; // "thread", "related", "follow-up"
+  threadName?: string; // e.g., "Learning Spanish"
 }
 
 // Links to reusable entities (people, places, media)
 interface EntryEntity {
   entryId: string;
   entityId: string;
-  role?: string;                 // "with", "at", "about"
+  role?: string; // "with", "at", "about"
 }
 
 // Reusable entities (optional, plugin-managed)
 interface Entity {
   id: string;
-  type: string;                  // "person", "place", "book", "film"
+  type: string; // "person", "place", "book", "film"
   name: string;
   data: Record<string, unknown>; // Type-specific: ISBN, TMDB ID, etc.
 }
@@ -173,15 +191,16 @@ interface Entity {
 interface Attachment {
   id: string;
   entryId: string;
-  type: string;                  // "photo", "audio", "gpx", "file"
+  type: string; // "photo", "audio", "gpx", "file"
   filename: string;
   mimeType: string;
-  storagePath: string;           // Filesystem path or blob reference
-  metadata?: Record<string, unknown>;  // Dimensions, duration, etc.
+  storagePath: string; // Filesystem path or blob reference
+  metadata?: Record<string, unknown>; // Dimensions, duration, etc.
 }
 ```
 
 Storage strategy:
+
 - **Self-hosted**: Filesystem (`./data/attachments/{id}/{filename}`)
 - **Cloud**: S3-compatible blob storage
 - **Sync**: Attachments sync separately from entries (bandwidth consideration)
@@ -191,20 +210,22 @@ Storage strategy:
 ```typescript
 // Timed activities (meditation, music practice)
 interface TimedData {
-  category?: string;             // "sitting", "breathing", "tai_chi"
+  targetDuration?: number; // Planned duration in seconds
   bellConfig?: {
-    startBell?: string;          // Audio file reference
+    startBell?: string; // Audio file reference
     endBell?: string;
     intervalBells?: { minutes: number; sound: string }[];
   };
-  qualityRating?: number;        // 1-5
+  qualityRating?: number; // 1-5
 }
+
+// Note: category/subcategory are now top-level Entry fields, not in TimedData
 
 // Rep-based activities
 interface RepsData {
   count: number;
   sets?: number;
-  exercise: string;              // "press-up", "squat", "pull-up"
+  exercise: string; // "press-up", "squat", "pull-up"
   weightKg?: number;
   resistanceBand?: string;
 }
@@ -217,68 +238,67 @@ interface GpsData {
   averageHeartRateBpm?: number;
   maxHeartRateBpm?: number;
   calories?: number;
-  summaryPolyline?: string;      // Encoded for map preview
+  summaryPolyline?: string; // Encoded for map preview
 }
 
 // Measurements
 interface MeasurementData {
-  metric: string;                // "body_weight", "heart_rate", "blood_pressure"
+  metric: string; // "body_weight", "heart_rate", "blood_pressure"
   value: number;
-  unit: string;                  // UCUM code preferred
-  components?: Record<string, number>;  // e.g., {systolic: 120, diastolic: 80}
+  unit: string; // UCUM code preferred
+  components?: Record<string, number>; // e.g., {systolic: 120, diastolic: 80}
 }
 
 // Journal entries
 interface JournalData {
-  content: string;               // Markdown supported
-  journalType: string;           // "dream", "gratitude", "reflection"
-  mood?: number;                 // 1-5
-  customTags?: Record<string, boolean>;  // {lucid: true, flying: true}
+  content: string; // Markdown supported
+  mood?: number; // 1-5
+  themes?: string[]; // e.g., ["lucid", "flying"] for dreams
 }
 
-// Tada (accomplishments)
+// Note: journalType (dream/gratitude/reflection) is now the subcategory field
+
+// Tada (accomplishments) — the app's namesake!
 interface TadaData {
   content: string;
-  category?: string;             // "home", "work", "personal"
-  voiceTranscription?: string;   // Original voice input
-  significance?: 'minor' | 'normal' | 'major';
+  voiceTranscription?: string; // Original voice input
+  significance?: "minor" | "normal" | "major";
 }
+
+// Note: category (home/work/personal) is now a top-level subcategory field
 ```
 
 ### 3.2 Habit Tracking (Seinfeld Method)
 
-Habits are **definitions** that aggregate underlying activities:
+Habits are **definitions** that aggregate underlying entries:
 
 ```typescript
 interface Habit {
   id: string;
-  name: string;                          // "Daily Meditation"
+  name: string; // "Daily Meditation"
   description?: string;
-  
-  // What counts toward this habit
-  activityMatchers: ActivityMatcher[];   // Match by name, tags, or type
-  
+
+  // What counts toward this habit (matches on top-level Entry fields)
+  matchType?: string; // e.g., "timed"
+  matchCategory?: string; // e.g., "mindfulness"
+  matchSubcategory?: string; // e.g., "sitting"
+  matchName?: string; // e.g., "meditation"
+
   // Goal definition
-  goalType: 'boolean' | 'duration' | 'count' | 'measurement';
-  goalValue: number;                     // e.g., 6 (minutes), 1 (completion), 20 (reps)
-  goalUnit?: string;                     // "minutes", "reps", "kg"
-  
+  goalType: "boolean" | "duration" | "count" | "measurement";
+  goalValue: number; // e.g., 6 (minutes), 1 (completion), 20 (reps)
+  goalUnit?: string; // "minutes", "reps", "kg"
+
   // Frequency
-  frequency: 'daily' | 'weekly' | 'monthly';
-  frequencyTarget?: number;              // For weekly: 3 = 3 days per week
-  
+  frequency: "daily" | "weekly" | "monthly";
+  frequencyTarget?: number; // For weekly: 3 = 3 days per week
+
   // Streak tracking
   currentStreak: number;
   longestStreak: number;
   lastCompletedDate?: string;
-  
-  createdAt: string;
-}
 
-interface ActivityMatcher {
-  field: 'name' | 'type' | 'tag' | 'category';
-  operator: 'equals' | 'contains' | 'in';
-  value: string | string[];
+  createdAt: string;
 }
 ```
 
@@ -294,8 +314,9 @@ interface ActivityMatcher {
 A specialized activity capture UI for timed mindfulness:
 
 #### Features
+
 - Configurable countdown OR open-ended timer
-- Category selection (sitting, breathing, walking, tai chi, music, lesson, other)
+- Category/subcategory selection with emoji display (sitting 🧘, breathing 🫁, walking 🚶, etc.)
 - Bell configuration:
   - Start bell (optional)
   - End bell (optional)
@@ -312,9 +333,10 @@ Users can save timer configurations as presets:
 ```typescript
 interface TimerPreset {
   id: string;
-  name: string;                  // "Morning Sit"
-  durationSeconds?: number;      // null = open-ended
-  category: string;
+  name: string; // "Morning Sit"
+  durationSeconds?: number; // null = open-ended
+  category: string; // "mindfulness", "creative", etc.
+  subcategory: string; // "sitting", "piano", etc.
   bellConfig: BellConfig;
   backgroundAudio?: string;
 }
@@ -325,6 +347,7 @@ interface TimerPreset {
 Integration with existing Obsidian workflow:
 
 #### Features
+
 - Text entry with Markdown support
 - Voice-to-text capture (Web Speech API)
 - Tag system: `lucid`, `flying`, `nightmare`, `recurring`, custom tags
@@ -353,6 +376,7 @@ I was soaring over snow-capped peaks...
 Capture accomplishments after completion:
 
 #### Features
+
 - Quick text entry
 - Voice capture with LLM transcription/enhancement
 - Category tagging
@@ -361,6 +385,7 @@ Capture accomplishments after completion:
 - Weekly/monthly summaries
 
 #### LLM Integration
+
 - Voice → Whisper transcription → LLM cleanup
 - Optional: LLM categorization suggestions
 - Optional: Weekly reflection generation
@@ -369,14 +394,14 @@ Capture accomplishments after completion:
 
 Priority import sources based on user's existing data:
 
-| Source | Format | Priority |
-|--------|--------|----------|
-| Insight Timer | CSV export | High |
-| Meditation Helper | SQLite database | High |
-| Strava | GPX/FIT files, API | Medium |
-| Apple Health | XML export | Medium |
-| Garmin | FIT files | Medium |
-| Obsidian (dreams) | Markdown + frontmatter | High |
+| Source            | Format                 | Priority |
+| ----------------- | ---------------------- | -------- |
+| Insight Timer     | CSV export             | High     |
+| Meditation Helper | SQLite database        | High     |
+| Strava            | GPX/FIT files, API     | Medium   |
+| Apple Health      | XML export             | Medium   |
+| Garmin            | FIT files              | Medium   |
+| Obsidian (dreams) | Markdown + frontmatter | High     |
 
 #### Import Pipeline
 
@@ -385,9 +410,9 @@ interface DataImporter {
   id: string;
   name: string;
   supportedFormats: string[];
-  
+
   parseFile(file: File): Promise<Activity[]>;
-  deduplicateKey(activity: Activity): string;  // For upsert logic
+  deduplicateKey(activity: Activity): string; // For upsert logic
 }
 ```
 
@@ -407,14 +432,14 @@ Full data portability:
 
 ### 4.1 Platform & Deployment
 
-| Requirement | Specification |
-|-------------|---------------|
-| **Primary Platform** | Progressive Web App (PWA) |
-| **Mobile Support** | iOS Safari, Android Chrome (PWA install) |
-| **Desktop Support** | Any modern browser |
-| **Offline** | Full functionality offline, sync when connected |
-| **Self-Hosting** | Single Docker container, CapRover compatible |
-| **Database** | SQLite (self-hosted), PostgreSQL (cloud) |
+| Requirement          | Specification                                   |
+| -------------------- | ----------------------------------------------- |
+| **Primary Platform** | Progressive Web App (PWA)                       |
+| **Mobile Support**   | iOS Safari, Android Chrome (PWA install)        |
+| **Desktop Support**  | Any modern browser                              |
+| **Offline**          | Full functionality offline, sync when connected |
+| **Self-Hosting**     | Single Docker container, CapRover compatible    |
+| **Database**         | SQLite (self-hosted), PostgreSQL (cloud)        |
 
 ### 4.2 Technology Stack
 
@@ -457,11 +482,11 @@ Container:    Docker → CapRover deployment
 
 ### 4.4 Notifications
 
-| Method | Use Case | Requirement |
-|--------|----------|-------------|
-| **Web Push** | Habit reminders, streak warnings | HTTPS, VAPID keys, user opt-in |
-| **PWA Badge** | Unread notifications count | Supported browsers |
-| **Email** | Weekly summaries (cloud only) | SMTP integration |
+| Method        | Use Case                         | Requirement                    |
+| ------------- | -------------------------------- | ------------------------------ |
+| **Web Push**  | Habit reminders, streak warnings | HTTPS, VAPID keys, user opt-in |
+| **PWA Badge** | Unread notifications count       | Supported browsers             |
+| **Email**     | Weekly summaries (cloud only)    | SMTP integration               |
 
 ### 4.5 Performance Targets
 
@@ -483,63 +508,66 @@ interface TadaPlugin {
   name: string;
   version: string;
   description?: string;
-  
+
   // Lifecycle
   onLoad(app: TadaApp): Promise<void>;
   onUnload(): Promise<void>;
-  
+
   // Extension points (all optional)
-  registerEntryTypes?(): EntryTypeDefinition[];   // New types with schemas
+  registerEntryTypes?(): EntryTypeDefinition[]; // New types with schemas
   registerEntityTypes?(): EntityTypeDefinition[]; // People, places, media
   registerTimerPresets?(): TimerPreset[];
   registerImporters?(): DataImporter[];
   registerExporters?(): DataExporter[];
-  registerInsights?(): InsightGenerator[];        // Pattern recognition
-  registerViews?(): ViewDefinition[];             // Custom UI pages
-  registerCommands?(): Command[];                 // Keyboard shortcuts, actions
-  
+  registerInsights?(): InsightGenerator[]; // Pattern recognition
+  registerViews?(): ViewDefinition[]; // Custom UI pages
+  registerCommands?(): Command[]; // Keyboard shortcuts, actions
+
   // Settings
   getSettings?(): PluginSettings;
 }
 
 // Entry type definition (for UI and validation)
 interface EntryTypeDefinition {
-  type: string;                    // e.g., "book", "film", "concert"
-  label: string;                   // Human-readable name
-  icon?: string;                   // Emoji or icon reference
-  dataSchema?: object;             // JSON Schema for the data field (optional)
-  quickEntryFields?: string[];     // Fields to show in quick-add UI
+  type: string; // e.g., "book", "film", "concert"
+  label: string; // Human-readable name
+  icon?: string; // Emoji or icon reference
+  dataSchema?: object; // JSON Schema for the data field (optional)
+  quickEntryFields?: string[]; // Fields to show in quick-add UI
 }
 ```
 
 ### 5.2 Example Plugins
 
 #### Import/Sync
-| Plugin | Function |
-|--------|----------|
-| **Insight Timer Import** | Parse Insight Timer CSV exports |
-| **Meditation Helper Import** | Parse SQLite database |
-| **Strava Sync** | OAuth + API sync for runs/rides |
-| **Apple Health Sync** | Import from Apple Health XML exports |
-| **Goodreads Import** | Import book history |
-| **Letterboxd Import** | Import film diary |
+
+| Plugin                       | Function                             |
+| ---------------------------- | ------------------------------------ |
+| **Insight Timer Import**     | Parse Insight Timer CSV exports      |
+| **Meditation Helper Import** | Parse SQLite database                |
+| **Strava Sync**              | OAuth + API sync for runs/rides      |
+| **Apple Health Sync**        | Import from Apple Health XML exports |
+| **Goodreads Import**         | Import book history                  |
+| **Letterboxd Import**        | Import film diary                    |
 
 #### Entities & Media
-| Plugin | Function |
-|--------|----------|
-| **Books** | ISBN lookup, cover images, reading progress |
-| **Films** | TMDB integration, cinema tracking |
-| **Music** | Albums, concerts, practice sessions |
-| **People** | "Last seen" tracking, relationship context |
-| **Places** | Location tagging, venue memory |
+
+| Plugin     | Function                                    |
+| ---------- | ------------------------------------------- |
+| **Books**  | ISBN lookup, cover images, reading progress |
+| **Films**  | TMDB integration, cinema tracking           |
+| **Music**  | Albums, concerts, practice sessions         |
+| **People** | "Last seen" tracking, relationship context  |
+| **Places** | Location tagging, venue memory              |
 
 #### Insights & Export
-| Plugin | Function |
-|--------|----------|
-| **Weekly Digest** | LLM-powered weekly reflections |
-| **Year in Review** | Annual statistics and highlights |
-| **Obsidian Export** | Auto-export to Obsidian vault |
-| **On This Day** | Random memory surfacing |
+
+| Plugin                 | Function                             |
+| ---------------------- | ------------------------------------ |
+| **Weekly Digest**      | LLM-powered weekly reflections       |
+| **Year in Review**     | Annual statistics and highlights     |
+| **Obsidian Export**    | Auto-export to Obsidian vault        |
+| **On This Day**        | Random memory surfacing              |
 | **Correlation Finder** | Discover patterns across entry types |
 
 ### 5.3 Plugin Discovery
@@ -563,13 +591,13 @@ Activity data payloads follow [Open mHealth schemas](https://www.openmhealth.org
 
 ### 6.2 Interoperability
 
-| Standard | Usage |
-|----------|-------|
-| **GPX 1.1** | GPS track import/export |
-| **ISO 8601** | All timestamps |
-| **UCUM** | Unit codes where applicable |
-| **Markdown** | Journal content, notes |
-| **YAML** | Obsidian frontmatter |
+| Standard     | Usage                       |
+| ------------ | --------------------------- |
+| **GPX 1.1**  | GPS track import/export     |
+| **ISO 8601** | All timestamps              |
+| **UCUM**     | Unit codes where applicable |
+| **Markdown** | Journal content, notes      |
+| **YAML**     | Obsidian frontmatter        |
 
 ---
 
@@ -597,6 +625,7 @@ Activity data payloads follow [Open mHealth schemas](https://www.openmhealth.org
 **Guiding principle**: Each phase should produce something usable. Don't build infrastructure for features we might not need.
 
 ### Phase 1: Foundation (MVP)
+
 - [ ] Project scaffolding (Nuxt 3, TypeScript, Docker)
 - [ ] Entry model + database schema (SQLite)
 - [ ] Basic entry CRUD UI (timeline view)
@@ -606,12 +635,14 @@ Activity data payloads follow [Open mHealth schemas](https://www.openmhealth.org
 - [ ] Simple auth (optional password for self-hosted)
 
 ### Phase 2: Habits & Streaks
+
 - [ ] Habit definitions (matchers, goals, frequency)
 - [ ] Streak calculation engine
 - [ ] Calendar heatmap visualization
 - [ ] Basic data export (JSON, CSV)
 
 ### Phase 3: Import & Voice
+
 - [ ] Plugin architecture foundation
 - [ ] Insight Timer import plugin
 - [ ] Tada list with voice input
@@ -619,18 +650,21 @@ Activity data payloads follow [Open mHealth schemas](https://www.openmhealth.org
 - [ ] Tags and search
 
 ### Phase 4: Connections & Insights
+
 - [ ] Entry linking (threads)
 - [ ] Entity support (people, books, films via plugins)
 - [ ] "On This Day" random surfacing
 - [ ] Obsidian export plugin
 
 ### Phase 5: External Sync
+
 - [ ] GPX import/display
 - [ ] Strava sync plugin
 - [ ] LLM integration (transcription, insights)
 - [ ] Weekly digest generation
 
 ### Phase 6: Cloud & Polish
+
 - [ ] Multi-tenant authentication
 - [ ] Subscription billing
 - [ ] Managed push notifications
@@ -660,6 +694,7 @@ Activity data payloads follow [Open mHealth schemas](https://www.openmhealth.org
 ## 10. References
 
 ### Open Source Projects
+
 - [beaverhabits](https://github.com/daya0576/beaverhabits) - Self-hosted habit tracker
 - [benji6/meditation-timer](https://github.com/benji6/meditation-timer) - PWA timer reference
 - [HPI](https://github.com/karlicoss/HPI) - Human Programming Interface
@@ -667,10 +702,11 @@ Activity data payloads follow [Open mHealth schemas](https://www.openmhealth.org
 - [obsidian-oneirometrics](https://github.com/banisterious/obsidian-oneirometrics) - Dream tracking
 
 ### Standards
+
 - [Open mHealth Schemas](https://github.com/openmhealth/schemas)
 - [GPX 1.1 Specification](https://www.topografix.com/GPX/1/1/)
 - [FHIR Observation](https://www.hl7.org/fhir/observation.html)
 
 ---
 
-*This document is a living draft. Update version and date with each revision.*
+_This document is a living draft. Update version and date with each revision._

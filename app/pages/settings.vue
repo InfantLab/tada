@@ -466,7 +466,7 @@ async function exportData() {
               src="/icons/tada-logotype.png"
               alt="TA-DA"
               class="h-16 w-auto"
-            />
+            >
           </div>
           <div class="flex items-start gap-3">
             <span class="text-3xl">⚡</span>
