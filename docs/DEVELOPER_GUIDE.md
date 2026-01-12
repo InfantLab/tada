@@ -119,7 +119,7 @@ bun run test:ui       # Visual test UI
 bun run test:coverage # Generate coverage report
 ```
 
-**Note:** Testing framework is partially configured. See roadmap for test strategy development.
+**See [dev/TESTING.md](dev/TESTING.md) for complete testing documentation.**
 
 ## Project Structure
 
@@ -236,16 +236,12 @@ chore: upgrade emoji-picker-element to v1.28
 
 **Current State (v0.1.0):**
 
-- Testing framework (Vitest) configured but tests not yet written
-- Manual testing performed for all v0.1.0 features
+- ✅ **50+ tests** with ~80% coverage
+- ✅ **CI integrated** - tests run on every push/PR
+- ✅ **Co-located tests** - next to source files
+- ✅ See [dev/TESTING.md](dev/TESTING.md) for complete guide
 
-**Planned (v0.2.0+):**
-
-- **Unit tests:** 80%+ coverage target
-- **E2E tests:** Critical user flows (timer, entry creation, habits)
-- **Co-located tests:** `*.test.ts` next to source files
-
-**Test Structure (when implemented):**
+**Test Structure:**
 
 ```
 app/

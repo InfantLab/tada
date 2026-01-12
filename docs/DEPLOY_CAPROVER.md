@@ -26,10 +26,27 @@ Guide for deploying Ta-Da! to a CapRover instance.
 
 The SQLite database must persist across container restarts.
 
-1. Go to the app's **"App Configs"** tab
-2. Scroll to **"Persistent Directories"**
-3. Add path: `/app/data`
-4. Click **"Save & Update"**
+1. **SSH into your server and create the data directory:**
+   ```bash
+   sudo mkdir -p /var/lib/caprover/appsdata/tadata
+   sudo chown 1001:1001 /var/lib/caprover/appsdata/tadata
+   sudo chmod 775 /var/lib/caprover/appsdata/tadata
+   ```
+   *(UID 1001 is the `nuxt` user in the container)*
+
+2. **In CapRover Dashboard → Apps → tada → "App Configs" tab:**
+   - Scroll to **"Persistent Directories"**
+   - **Path in App:** `/app/data` (must be absolute path with leading slash)
+   - **Host Path:** `/var/lib/caprover/appsdata/tadata`
+   - Click **"+"** to add
+   - Click **"Save & Update"**
+
+3. **Configure Container HTTP Port:**
+   - Go to **"HTTP Settings"** tab
+   - **Container HTTP Port:** `3000`
+   - Click **"Save & Update"**
+   
+   ⚠️ **Critical:** Even though `captain-definition` specifies port 3000, you must set this manually in the UI if the app was created before the first deployment.
 
 ---
 
@@ -124,8 +141,41 @@ caprover deploy -a tada
 
 ## Troubleshooting
 
+### 502 Bad Gateway
+
+If the app builds successfully but shows 502:
+
+1. **Check service status:**
+   ```bash
+   docker service ps srv-captain--tada --no-trunc
+   ```
+
+2. **If you see "invalid mount target":**
+   - Verify persistent directory uses absolute path: `/app/data`
+   - Check host directory exists and has correct permissions (see Step 2)
+
+3. **If container is running but still 502:**
+   - Verify **Container HTTP Port** is set to `3000` in HTTP Settings tab
+   - Test from inside container:
+     ```bash
+     CID=$(docker ps -q -f name=srv-captain--tada)
+     docker exec -it "$CID" sh -c "wget -qO- http://localhost:3000/api/health"
+     ```
+   - If health check succeeds but external access fails, the port configuration is missing
+
+4. **Check nginx routing:**
+   ```bash
+   docker logs $(docker ps -q -f name=captain-nginx) --tail 200 | grep tada
+   ```
+
 ### View Logs
-- CapRover Dashboard → App → **"Deployment"** tab → **"View App Logs"**
+```bash
+# Container logs
+docker service logs --tail 100 srv-captain--tada
+
+# Or via CapRover Dashboard
+# Apps → tada → "Deployment" tab → "View App Logs"
+```
 
 ### Build Fails
 1. Check logs for specific error
@@ -136,13 +186,10 @@ caprover deploy -a tada
    ```
 
 ### Database Issues
-- Ensure `/app/data` is in Persistent Directories
-- Check that the volume wasn't accidentally deleted
+- Ensure `/app/data` is in Persistent Directories with **absolute path**
+- Verify host directory exists: `/var/lib/caprover/appsdata/tadata`
+- Check permissions: should be owned by UID 1001
 - SQLite file location: `/app/data/db.sqlite`
-
-### App Won't Start
-- Check if port 3000 is exposed in Dockerfile ✅
-- Check health endpoint: `curl https://tada.yourdomain.com/api/health`
 
 ### Reset Everything
 If you need a fresh start:
@@ -180,17 +227,17 @@ Or use the in-app JSON export: **Settings** → **Export Data**
 │  │     tada container               │    │
 │  │  ┌─────────────────────────┐    │    │
 │  │  │   Nuxt 3 SSR Server     │    │    │
-│  │  │   (Bun runtime)         │    │    │
+│  │  │   (Node 20 runtime)     │    │    │
 │  │  │   Port 3000             │    │    │
 │  │  └─────────────────────────┘    │    │
 │  │              │                   │    │
 │  │  ┌─────────────────────────┐    │    │
-│  │  │  /app/data/db.sqlite    │◄───┼────┼── Persistent Volume
+│  │  │  /app/data/db.sqlite    │◄───┼────┼── /var/lib/caprover/appsdata/tadata
 │  │  └─────────────────────────┘    │    │
 │  └─────────────────────────────────┘    │
 │                 │                        │
 │         nginx reverse proxy              │
-│         (HTTPS termination)              │
+│         (HTTPS + port routing)           │
 └─────────────────────────────────────────┘
                   │
                   ▼

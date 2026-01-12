@@ -5,6 +5,28 @@ All notable changes to Tada will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Test suite with working utility tests
+  - Unit tests for categoryDefaults (13 tests, 100% coverage)
+  - Unit tests for client & server logging (21 tests combined)
+  - Test infrastructure with Vitest
+  - CI integration - tests run automatically
+  - Test stubs for v0.2.0 features (habits, auth, E2E)
+  - Test documentation and guides
+
+### Changed
+
+- GitHub CI now runs test suite (utils passing, API tests skipped)
+- AGENTS.md updated to reflect testing setup
+
+### Known Issues
+
+- API endpoint tests temporarily skipped (need proper @nuxt/test-utils setup)
+- See `app/tests/KNOWN_ISSUES.md` for details
+
 ## [0.1.0] - 2026-01-11
 
 ### Added

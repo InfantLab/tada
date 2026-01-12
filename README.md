@@ -136,6 +136,7 @@ See [design/roadmap.md](design/roadmap.md) and [CHANGELOG.md](CHANGELOG.md) for 
 ## Resources
 
 - **📖 Documentation:** [docs/DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md)
+- **🧪 Testing Guide:** [docs/dev/TESTING.md](docs/dev/TESTING.md)
 - **🏗️ Architecture:** [docs/PROJECT_STRUCTURE.md](docs/PROJECT_STRUCTURE.md)
 - **🎯 Design Philosophy:** [design/philosophy.md](design/philosophy.md)
 - **🎨 Visual Design:** [design/visual design.md](design/visual%20design.md)
@@ -164,5 +165,3 @@ See [docs/DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) for detailed contribution
 ---
 
 _Ta-Da! is an anagram of "data" — your life's data belongs to you._ ⚡
-
-

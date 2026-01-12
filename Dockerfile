@@ -30,8 +30,8 @@ FROM node:20-alpine AS production
 
 WORKDIR /app
 
-# Install CA certificates, bash, and git for HTTPS operations and dev tooling
-RUN apk add --no-cache ca-certificates bash git openssh-client
+# Install CA certificates, bash, git, and sqlite3 for migrations
+RUN apk add --no-cache ca-certificates bash git openssh-client sqlite
 
 # Create non-root user
 RUN addgroup --system --gid 1001 nodejs

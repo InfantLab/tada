@@ -131,9 +131,9 @@ bun run db:studio         # DB UI on :4983
 
 ### Current State
 
-⚠️ **Testing framework not yet installed** — You may need to set this up first!
+✅ **Testing framework is setup and ready!** — Tests run automatically in CI.
 
-### When Testing is Setup
+### Running Tests
 
 ```bash
 cd app
