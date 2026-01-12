@@ -211,6 +211,107 @@ export const timerPresets = sqliteTable("timer_presets", {
 });
 
 // ============================================================================
+// Import Recipes - Saved CSV column mappings for reuse
+// ============================================================================
+
+export const importRecipes = sqliteTable("import_recipes", {
+  id: text("id").primaryKey(), // UUID
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+
+  name: text("name").notNull(), // "Insight Timer Import"
+  description: text("description"),
+
+  // Column mapping configuration (JSON)
+  columnMapping: text("column_mapping", { mode: "json" }).$type<{
+    timestamp?: string; // CSV column name
+    startedAt?: string;
+    endedAt?: string;
+    duration?: string;
+    name?: string;
+    category?: string;
+    subcategory?: string;
+    notes?: string;
+    tags?: string;
+  }>(),
+
+  // Transformation rules (JSON)
+  transforms: text("transforms", { mode: "json" }).$type<{
+    dateFormat?: string; // e.g., "MM/DD/YYYY HH:mm:ss"
+    timezone?: string; // e.g., "America/New_York"
+    durationFormat?: string; // e.g., "H:mm:ss"
+    defaultCategory?: string;
+    defaultSubcategory?: string;
+    tagDelimiter?: string; // e.g., "," for comma-separated tags
+  }>(),
+
+  // Metadata
+  isBuiltIn: integer("is_built_in", { mode: "boolean" }).default(false), // Insight Timer, etc.
+  lastUsedAt: text("last_used_at"),
+  useCount: integer("use_count").notNull().default(0),
+
+  // Version history for rollback (stores last 3 versions)
+  previousVersions: text("previous_versions", { mode: "json" }).$type<
+    Array<{
+      savedAt: string;
+      columnMapping: Record<string, unknown>;
+      transforms: Record<string, unknown>;
+    }>
+  >().default([]),
+
+  createdAt: text("created_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
+});
+
+// ============================================================================
+// Import Logs - Audit trail for data imports
+// ============================================================================
+
+export const importLogs = sqliteTable("import_logs", {
+  id: text("id").primaryKey(), // UUID
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+
+  recipeId: text("recipe_id").references(() => importRecipes.id, {
+    onDelete: "set null",
+  }),
+  recipeName: text("recipe_name").notNull(), // Snapshot at import time
+
+  filename: text("filename").notNull(),
+  source: text("source").notNull(), // 'insight-timer', 'strava', 'custom', etc.
+
+  // Import results
+  status: text("status").notNull(), // 'success', 'partial', 'failed'
+  totalRows: integer("total_rows").notNull(),
+  successfulRows: integer("successful_rows").notNull(),
+  failedRows: integer("failed_rows").notNull(),
+  skippedRows: integer("skipped_rows").notNull().default(0), // Duplicates
+
+  // Error tracking (JSON)
+  errors: text("errors", { mode: "json" }).$type<
+    Array<{
+      row: number;
+      field?: string;
+      message: string;
+    }>
+  >().default([]),
+
+  // Performance metrics
+  durationMs: integer("duration_ms"),
+
+  startedAt: text("started_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
+  completedAt: text("completed_at"),
+});
+
+// ============================================================================
 // Type exports for use in application code
 // ============================================================================
 
@@ -234,3 +335,9 @@ export type NewCategorySetting = typeof categorySettings.$inferInsert;
 
 export type TimerPreset = typeof timerPresets.$inferSelect;
 export type NewTimerPreset = typeof timerPresets.$inferInsert;
+
+export type ImportRecipe = typeof importRecipes.$inferSelect;
+export type NewImportRecipe = typeof importRecipes.$inferInsert;
+
+export type ImportLog = typeof importLogs.$inferSelect;
+export type NewImportLog = typeof importLogs.$inferInsert;

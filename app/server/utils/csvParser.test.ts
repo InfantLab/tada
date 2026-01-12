@@ -1,0 +1,203 @@
+import { describe, it, expect } from "vitest";
+import {
+  parseCSV,
+  parseDuration,
+  parseDateTime,
+  validateEntryData,
+} from "./csvParser";
+
+describe("csvParser", () => {
+  describe("parseCSV", () => {
+    it("should parse basic CSV with headers", () => {
+      const csv = `name,age,city
+Alice,30,NYC
+Bob,25,LA`;
+
+      const result = parseCSV(csv);
+
+      expect(result.data).toHaveLength(2);
+      expect(result.data[0]).toEqual({ name: "Alice", age: "30", city: "NYC" });
+      expect(result.data[1]).toEqual({ name: "Bob", age: "25", city: "LA" });
+      expect(result.errors).toHaveLength(0);
+      expect(result.meta.totalRows).toBe(2);
+      expect(result.meta.fields).toEqual(["name", "age", "city"]);
+    });
+
+    it("should skip empty lines", () => {
+      const csv = `name,age
+
+Alice,30
+
+Bob,25`;
+
+      const result = parseCSV(csv, { skipEmptyLines: true });
+
+      expect(result.data).toHaveLength(2);
+      expect(result.errors).toHaveLength(0);
+    });
+
+    it("should trim whitespace from headers and values", () => {
+      const csv = ` name , age 
+ Alice , 30 
+ Bob , 25 `;
+
+      const result = parseCSV(csv);
+
+      expect(result.meta.fields).toEqual(["name", "age"]);
+      expect(result.data[0]).toEqual({ name: "Alice", age: "30" });
+    });
+
+    it("should validate expected fields", () => {
+      const csv = `name,age
+Alice,30`;
+
+      const result = parseCSV(csv, {
+        expectedFields: ["name", "age", "city"],
+      });
+
+      expect(result.errors).toHaveLength(1);
+      expect(result.errors[0].message).toContain("Missing expected columns");
+      expect(result.errors[0].message).toContain("city");
+    });
+
+    it("should handle malformed CSV", () => {
+      const csv = `name,age
+Alice,30
+Bob,25,extra,columns`;
+
+      const result = parseCSV(csv);
+
+      // Papa Parse is lenient, so this might still parse
+      expect(result.data.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe("parseDuration", () => {
+    it("should parse H:MM:SS format", () => {
+      expect(parseDuration("1:30:45")).toBe(5445); // 1h 30m 45s
+      expect(parseDuration("0:06:00")).toBe(360); // 6 minutes
+      expect(parseDuration("23:50:00")).toBe(85800); // 23h 50m
+    });
+
+    it("should parse H:M:S format (single digits)", () => {
+      expect(parseDuration("0:6:0")).toBe(360); // 6 minutes
+      expect(parseDuration("1:2:3")).toBe(3723); // 1h 2m 3s
+      expect(parseDuration("23:50:0")).toBe(85800); // 23h 50m
+    });
+
+    it("should parse MM:SS format", () => {
+      expect(parseDuration("30:45")).toBe(1845); // 30m 45s
+      expect(parseDuration("6:0")).toBe(360); // 6 minutes
+    });
+
+    it("should parse seconds only", () => {
+      expect(parseDuration("120")).toBe(120);
+      expect(parseDuration("60")).toBe(60);
+    });
+
+    it("should handle invalid input", () => {
+      expect(parseDuration("")).toBeNull();
+      expect(parseDuration("abc")).toBeNull();
+      expect(parseDuration("1:2:3:4")).toBeNull();
+      expect(parseDuration("1:a:3")).toBeNull();
+    });
+
+    it("should handle null and undefined", () => {
+      expect(parseDuration(null as unknown as string)).toBeNull();
+      expect(parseDuration(undefined as unknown as string)).toBeNull();
+    });
+  });
+
+  describe("parseDateTime", () => {
+    it("should parse MM/DD/YYYY HH:mm:ss format", () => {
+      const result = parseDateTime("01/15/2025 14:30:00");
+      
+      expect(result).not.toBeNull();
+      expect(result).toMatch(/^2025-01-15T/);
+    });
+
+    it("should parse single-digit month and day", () => {
+      const result = parseDateTime("1/5/2025 14:30:00");
+      
+      expect(result).not.toBeNull();
+      expect(result).toMatch(/^2025-01-05T/);
+    });
+
+    it("should handle invalid dates", () => {
+      expect(parseDateTime("")).toBeNull();
+      expect(parseDateTime("invalid")).toBeNull();
+      expect(parseDateTime("13/32/2025 25:99:99")).toBeNull();
+    });
+
+    it("should handle null and undefined", () => {
+      expect(parseDateTime(null as unknown as string)).toBeNull();
+      expect(parseDateTime(undefined as unknown as string)).toBeNull();
+    });
+
+    it("should fallback to native Date parsing", () => {
+      const result = parseDateTime("2025-01-15T14:30:00Z", "ISO");
+      
+      expect(result).not.toBeNull();
+      expect(result).toMatch(/2025-01-15/);
+    });
+  });
+
+  describe("validateEntryData", () => {
+    it("should warn about long durations", () => {
+      const warnings = validateEntryData({
+        durationSeconds: 86400, // 24 hours
+      });
+
+      expect(warnings).toHaveLength(1);
+      expect(warnings[0]).toContain("24 hours");
+      expect(warnings[0]).toContain("unusually long");
+    });
+
+    it("should warn about short durations", () => {
+      const warnings = validateEntryData({
+        durationSeconds: 15, // 15 seconds
+      });
+
+      expect(warnings).toHaveLength(1);
+      expect(warnings[0]).toContain("15 seconds");
+      expect(warnings[0]).toContain("unusually short");
+    });
+
+    it("should warn about future dates", () => {
+      const futureDate = new Date();
+      futureDate.setFullYear(futureDate.getFullYear() + 1);
+
+      const warnings = validateEntryData({
+        timestamp: futureDate.toISOString(),
+      });
+
+      expect(warnings).toHaveLength(1);
+      expect(warnings[0]).toContain("future");
+    });
+
+    it("should not warn about valid durations", () => {
+      const warnings = validateEntryData({
+        durationSeconds: 1800, // 30 minutes
+      });
+
+      expect(warnings).toHaveLength(0);
+    });
+
+    it("should handle multiple warnings", () => {
+      const futureDate = new Date();
+      futureDate.setFullYear(futureDate.getFullYear() + 1);
+
+      const warnings = validateEntryData({
+        durationSeconds: 15,
+        timestamp: futureDate.toISOString(),
+      });
+
+      expect(warnings.length).toBeGreaterThan(1);
+    });
+
+    it("should handle entries with no data", () => {
+      const warnings = validateEntryData({});
+      expect(warnings).toHaveLength(0);
+    });
+  });
+});
