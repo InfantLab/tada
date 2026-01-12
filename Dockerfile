@@ -22,13 +22,16 @@ COPY app/ ./
 # Build the application (skip type check - generated files cause issues)
 RUN bun run build:docker
 
+# Install production dependencies for the server bundle
+RUN cd .output/server && bun install --production
+
 # Production stage
-FROM oven/bun:1-alpine AS production
+FROM node:20-alpine AS production
 
 WORKDIR /app
 
 # Install CA certificates, bash, and git for HTTPS operations and dev tooling
-RUN apk add ca-certificates bash git openssh-client
+RUN apk add --no-cache ca-certificates bash git openssh-client
 
 # Create non-root user
 RUN addgroup --system --gid 1001 nodejs
@@ -54,7 +57,7 @@ EXPOSE 3000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD bun --eval "fetch('http://localhost:3000/api/health').then(r => process.exit(r.ok ? 0 : 1))" || exit 1
+  CMD node -e "fetch('http://localhost:3000/api/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))" || exit 1
 
 # Start the application
-CMD ["bun", "run", ".output/server/index.mjs"]
+CMD ["node", ".output/server/index.mjs"]
