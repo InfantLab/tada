@@ -40,6 +40,17 @@ RUN adduser --system --uid 1001 nuxt
 # Copy built application
 COPY --from=builder /app/.output ./.output
 
+# Copy migrations and drizzle config
+COPY --from=builder /app/server/db/migrations ./server/db/migrations
+COPY --from=builder /app/drizzle.config.ts ./drizzle.config.ts
+
+# Copy startup script
+COPY app/migrate-and-start.sh ./migrate-and-start.sh
+RUN chmod +x ./migrate-and-start.sh
+
+# Install drizzle-kit for migrations
+RUN npm install -g drizzle-kit
+
 # Create data directory for SQLite
 RUN mkdir -p /app/data && chown -R nuxt:nodejs /app/data
 
@@ -59,5 +70,5 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node -e "fetch('http://localhost:3000/api/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))" || exit 1
 
-# Start the application
-CMD ["node", ".output/server/index.mjs"]
+# Start the application (migrations run first)
+CMD ["./migrate-and-start.sh"]
