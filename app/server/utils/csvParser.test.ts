@@ -111,14 +111,14 @@ Bob,25,extra,columns`;
   describe("parseDateTime", () => {
     it("should parse MM/DD/YYYY HH:mm:ss format", () => {
       const result = parseDateTime("01/15/2025 14:30:00");
-      
+
       expect(result).not.toBeNull();
       expect(result).toMatch(/^2025-01-15T/);
     });
 
     it("should parse single-digit month and day", () => {
       const result = parseDateTime("1/5/2025 14:30:00");
-      
+
       expect(result).not.toBeNull();
       expect(result).toMatch(/^2025-01-05T/);
     });
@@ -136,7 +136,7 @@ Bob,25,extra,columns`;
 
     it("should fallback to native Date parsing", () => {
       const result = parseDateTime("2025-01-15T14:30:00Z", "ISO");
-      
+
       expect(result).not.toBeNull();
       expect(result).toMatch(/2025-01-15/);
     });

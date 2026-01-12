@@ -38,7 +38,7 @@ export default defineEventHandler(async (event) => {
 
   const startTime = Date.now();
   const importLogId = randomUUID();
-  
+
   const results = {
     successful: 0,
     failed: 0,
@@ -61,7 +61,7 @@ export default defineEventHandler(async (event) => {
     // Process in batches to avoid overwhelming the database
     for (let i = 0; i < entriesToImport.length; i += BATCH_SIZE) {
       const batch = entriesToImport.slice(i, i + BATCH_SIZE);
-      
+
       for (let j = 0; j < batch.length; j++) {
         const rowIndex = i + j;
         const entryData = batch[j];
@@ -121,7 +121,7 @@ export default defineEventHandler(async (event) => {
             row: rowIndex,
             error: error instanceof Error ? error.message : String(error),
           });
-          
+
           results.failed++;
           results.errors.push({
             row: rowIndex,
@@ -143,7 +143,12 @@ export default defineEventHandler(async (event) => {
       recipeName,
       filename,
       source,
-      status: results.failed === 0 ? "success" : results.failed < entriesToImport.length ? "partial" : "failed",
+      status:
+        results.failed === 0
+          ? "success"
+          : results.failed < entriesToImport.length
+          ? "partial"
+          : "failed",
       totalRows: entriesToImport.length,
       successfulRows: results.successful,
       failedRows: results.failed,

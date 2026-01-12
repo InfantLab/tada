@@ -14,7 +14,7 @@ if (typeof Bun !== "undefined") {
   const dbModule = await import("./server/db/index.ts");
   const schemaModule = await import("./server/db/schema.ts");
   const drizzleModule = await import("drizzle-orm");
-  
+
   db = dbModule.db;
   importRecipes = schemaModule.importRecipes;
   users = schemaModule.users;
@@ -24,7 +24,7 @@ if (typeof Bun !== "undefined") {
   const dbModule = await import("./server/db/index.ts");
   const schemaModule = await import("./server/db/schema.ts");
   const drizzleModule = await import("drizzle-orm");
-  
+
   db = dbModule.db;
   importRecipes = schemaModule.importRecipes;
   users = schemaModule.users;
@@ -36,7 +36,7 @@ async function seedInsightTimerRecipe() {
 
   // Get the first user (or create a system user)
   const allUsers = await db.select().from(users).limit(1);
-  
+
   if (allUsers.length === 0) {
     console.log("❌ No users found. Please create a user first.");
     process.exit(1);
@@ -58,13 +58,14 @@ async function seedInsightTimerRecipe() {
 
   // Create Insight Timer recipe
   const recipeId = randomUUID();
-  
+
   await db.insert(importRecipes).values({
     id: recipeId,
     userId,
     name: "Insight Timer",
-    description: "Import meditation sessions from Insight Timer CSV export. All activities are mapped to mindfulness category with their original activity type preserved.",
-    
+    description:
+      "Import meditation sessions from Insight Timer CSV export. All activities are mapped to mindfulness category with their original activity type preserved.",
+
     columnMapping: {
       startedAt: "Started At",
       duration: "Duration",

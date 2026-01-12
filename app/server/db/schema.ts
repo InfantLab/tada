@@ -252,13 +252,15 @@ export const importRecipes = sqliteTable("import_recipes", {
   useCount: integer("use_count").notNull().default(0),
 
   // Version history for rollback (stores last 3 versions)
-  previousVersions: text("previous_versions", { mode: "json" }).$type<
-    Array<{
-      savedAt: string;
-      columnMapping: Record<string, unknown>;
-      transforms: Record<string, unknown>;
-    }>
-  >().default([]),
+  previousVersions: text("previous_versions", { mode: "json" })
+    .$type<
+      Array<{
+        savedAt: string;
+        columnMapping: Record<string, unknown>;
+        transforms: Record<string, unknown>;
+      }>
+    >()
+    .default([]),
 
   createdAt: text("created_at")
     .notNull()
@@ -294,13 +296,15 @@ export const importLogs = sqliteTable("import_logs", {
   skippedRows: integer("skipped_rows").notNull().default(0), // Duplicates
 
   // Error tracking (JSON)
-  errors: text("errors", { mode: "json" }).$type<
-    Array<{
-      row: number;
-      field?: string;
-      message: string;
-    }>
-  >().default([]),
+  errors: text("errors", { mode: "json" })
+    .$type<
+      Array<{
+        row: number;
+        field?: string;
+        message: string;
+      }>
+    >()
+    .default([]),
 
   // Performance metrics
   durationMs: integer("duration_ms"),

@@ -3,7 +3,9 @@
     <div class="max-w-4xl mx-auto">
       <!-- Header -->
       <div class="mb-8">
-        <h1 class="text-3xl font-semibold text-text-light dark:text-text-dark mb-2">
+        <h1
+          class="text-3xl font-semibold text-text-light dark:text-text-dark mb-2"
+        >
           Import Data
         </h1>
         <p class="text-text-light-secondary dark:text-text-dark-secondary">
@@ -13,10 +15,7 @@
       </div>
 
       <!-- Import wizard or recipe selector -->
-      <div
-        v-if="!selectedRecipe && !showCustomImport"
-        class="space-y-6"
-      >
+      <div v-if="!selectedRecipe && !showCustomImport" class="space-y-6">
         <!-- Built-in recipes -->
         <div>
           <h2
@@ -148,19 +147,15 @@ const selectedRecipe = ref<ImportRecipe | null>(null);
 const showCustomImport = ref(false);
 const recipes = ref<ImportRecipe[]>([]);
 
-const builtInRecipes = computed(() =>
-  recipes.value.filter((r) => r.isBuiltIn),
-);
+const builtInRecipes = computed(() => recipes.value.filter((r) => r.isBuiltIn));
 
-const customRecipes = computed(() =>
-  recipes.value.filter((r) => !r.isBuiltIn),
-);
+const customRecipes = computed(() => recipes.value.filter((r) => !r.isBuiltIn));
 
 // Load recipes on mount
 onMounted(async () => {
   try {
     const response = await $fetch<{ recipes: ImportRecipe[] }>(
-      "/api/import/recipes",
+      "/api/import/recipes"
     );
     recipes.value = response.recipes;
   } catch (error) {
@@ -176,7 +171,7 @@ function handleImportComplete() {
   // Reset state
   selectedRecipe.value = null;
   showCustomImport.value = false;
-  
+
   // Navigate to history or entries
   navigateTo("/");
 }
@@ -190,7 +185,7 @@ function formatDate(dateStr: string) {
   const date = new Date(dateStr);
   const now = new Date();
   const diffDays = Math.floor(
-    (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24),
+    (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24)
   );
 
   if (diffDays === 0) return "Today";
