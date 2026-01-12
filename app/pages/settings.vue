@@ -414,10 +414,10 @@ async function exportData() {
             </svg>
           </button>
 
-          <!-- Import (Phase 2) -->
-          <button
-            disabled
-            class="w-full p-4 flex items-center justify-between opacity-50 cursor-not-allowed"
+          <!-- Import -->
+          <NuxtLink
+            to="/import"
+            class="block w-full p-4 flex items-center justify-between hover:bg-stone-50 dark:hover:bg-stone-700/50 transition-colors"
           >
             <div class="flex items-center gap-3">
               <span class="text-xl">📥</span>
@@ -428,7 +428,7 @@ async function exportData() {
                   Import data
                 </span>
                 <span class="text-xs text-stone-500 dark:text-stone-400">
-                  Coming in v0.2.0
+                  Import from CSV files (Insight Timer, etc.)
                 </span>
               </div>
             </div>
@@ -446,7 +446,7 @@ async function exportData() {
                 d="M9 5l7 7-7 7"
               />
             </svg>
-          </button>
+          </NuxtLink>
         </div>
       </section>
 
