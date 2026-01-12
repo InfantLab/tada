@@ -229,6 +229,13 @@
           ← Back
         </button>
         <button
+          v-if="!props.recipe"
+          class="px-6 py-3 border border-mindfulness-light dark:border-mindfulness-dark text-mindfulness-light dark:text-mindfulness-dark rounded-lg hover:bg-mindfulness-light/10 dark:hover:bg-mindfulness-dark/10"
+          @click="showSaveRecipeDialog = true"
+        >
+          💾 Save as Recipe
+        </button>
+        <button
           class="px-6 py-3 bg-mindfulness-light dark:bg-mindfulness-dark text-white rounded-lg hover:opacity-90"
           @click="generatePreview(); currentStep++"
         >
@@ -368,6 +375,67 @@
         </button>
       </div>
     </div>
+
+    <!-- Save Recipe Dialog -->
+    <div
+      v-if="showSaveRecipeDialog"
+      class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+      @click="showSaveRecipeDialog = false"
+    >
+      <div
+        class="bg-white dark:bg-cosmic-indigo rounded-lg p-6 max-w-md w-full mx-4"
+        @click.stop
+      >
+        <h3
+          class="text-xl font-semibold text-text-light dark:text-text-dark mb-4"
+        >
+          Save Import Recipe
+        </h3>
+        <div class="space-y-4">
+          <div>
+            <label
+              class="block text-sm font-medium text-text-light dark:text-text-dark mb-2"
+            >
+              Recipe Name *
+            </label>
+            <input
+              v-model="recipeName"
+              type="text"
+              placeholder="My Custom Import"
+              class="w-full px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-cosmic-black text-text-light dark:text-text-dark"
+            />
+          </div>
+          <div>
+            <label
+              class="block text-sm font-medium text-text-light dark:text-text-dark mb-2"
+            >
+              Description
+            </label>
+            <textarea
+              v-model="recipeDescription"
+              rows="3"
+              placeholder="Describe what this import recipe is for..."
+              class="w-full px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-cosmic-black text-text-light dark:text-text-dark"
+            ></textarea>
+          </div>
+        </div>
+        <div class="flex gap-3 mt-6">
+          <button
+            class="flex-1 px-4 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg hover:bg-pearl-mist dark:hover:bg-cosmic-indigo"
+            @click="showSaveRecipeDialog = false"
+          >
+            Cancel
+          </button>
+          <button
+            class="flex-1 px-4 py-2 bg-mindfulness-light dark:bg-mindfulness-dark text-white rounded-lg hover:opacity-90"
+            :disabled="isSavingRecipe"
+            @click="saveRecipe"
+          >
+            {{ isSavingRecipe ? "Saving..." : "Save Recipe" }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -419,6 +487,12 @@ const importResults = ref<{
   skipped: number;
   errors: any[];
 } | null>(null);
+
+// Recipe save
+const showSaveRecipeDialog = ref(false);
+const recipeName = ref("");
+const recipeDescription = ref("");
+const isSavingRecipe = ref(false);
 
 // Initialize from recipe if provided
 watchEffect(() => {
@@ -635,4 +709,37 @@ function formatDuration(seconds: number): string {
   const minutes = Math.floor((seconds % 3600) / 60);
   if (hours > 0) return `${hours}h ${minutes}m`;
   return `${minutes}m`;
+}
+
+async function saveRecipe() {
+  if (!recipeName.value.trim()) {
+    alert("Please enter a recipe name");
+    return;
+  }
+
+  isSavingRecipe.value = true;
+
+  try {
+    await $fetch("/api/import/recipes", {
+      method: "POST",
+      body: {
+        name: recipeName.value,
+        description: recipeDescription.value,
+        columnMapping: columnMapping.value,
+        transforms: transforms.value,
+      },
+    });
+
+    showSaveRecipeDialog.value = false;
+    recipeName.value = "";
+    recipeDescription.value = "";
+    
+    alert("Recipe saved successfully! You can use it for future imports.");
+  } catch (error) {
+    console.error("Failed to save recipe:", error);
+    alert("Failed to save recipe. Please try again.");
+  } finally {
+    isSavingRecipe.value = false;
+  }
+}
 </script>

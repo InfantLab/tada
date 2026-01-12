@@ -5,6 +5,13 @@
  */
 
 import { randomUUID } from "crypto";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
+
+// Set DATABASE_URL to local path
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+process.env.DATABASE_URL = `file:${join(__dirname, "data", "db.sqlite")}`;
 
 // Database setup
 let db, importRecipes, users, eq;
