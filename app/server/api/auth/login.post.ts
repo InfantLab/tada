@@ -49,7 +49,10 @@ export default defineEventHandler(async (event) => {
     }
 
     // Verify password
-    const validPassword = await verifyPassword(body.password, user.passwordHash);
+    const validPassword = await verifyPassword(
+      body.password,
+      user.passwordHash
+    );
 
     if (!validPassword) {
       throw createError({

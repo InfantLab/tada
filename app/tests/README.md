@@ -1,195 +1,88 @@
-# Tada Test Suite
+# Tada Testing
 
-This directory contains the test suite for Tada v0.1.0.
+## Current Coverage (v0.1.0)
 
-## Test Structure
+**60 tests passing:**
 
-```
-app/
-├── utils/
-│   ├── categoryDefaults.ts
-│   ├── categoryDefaults.test.ts      ← Unit tests
-│   ├── logger.ts
-│   └── logger.test.ts                ← Unit tests
-├── server/
-│   ├── api/
-│   │   ├── health.get.ts
-│   │   ├── health.get.test.ts        ← Integration tests
-│   │   └── entries/
-│   │       ├── index.get.ts
-│   │       ├── index.get.test.ts     ← Integration tests
-│   │       ├── index.post.ts
-│   │       ├── index.post.test.ts    ← Integration tests
-│   │       ├── [id].patch.ts
-│   │       ├── [id].patch.test.ts    ← Integration tests
-│   │       ├── [id].delete.ts
-│   │       └── [id].delete.test.ts   ← Integration tests
-│   └── utils/
-│       ├── logger.ts
-│       └── logger.test.ts            ← Unit tests
-└── tests/
-    ├── README.md (this file)
-    └── e2e/                          ← E2E tests (future)
-```
+- `utils/categoryDefaults.test.ts` (22 tests) - Category/emoji resolution
+- `utils/logger.test.ts` (11 tests) - Client-side logging
+- `server/utils/logger.test.ts` (13 tests) - Server-side logging
+- `server/utils/password.test.ts` (14 tests) - Password hashing/verification
+
+**Missing coverage:**
+
+- ❌ API endpoints (entries CRUD, auth, health) - e2e environment broken
+- ❌ Auth middleware and session management - requires HTTP context
+- ❌ Database operations - no direct tests yet
+- ❌ E2E user flows - blocked on @nuxt/test-utils/e2e
+
+**Integration tests blocked:** `@nuxt/test-utils/e2e` fails with port timeout. Cannot test HTTP layer until environment is fixed.
+
+**Coverage tool blocked:** `@vitest/coverage-v8` requires `node:inspector` which Bun doesn't implement yet.
 
 ## Running Tests
 
 ```bash
 cd app
-
-# Run all tests
-bun run test
-
-# Watch mode (auto-rerun on changes)
-bun run test --watch
-
-# Run specific test file
-bun run test categoryDefaults.test.ts
-
-# Run with coverage
-bun run test:coverage
-
-# Visual UI
-bun run test:ui
+bun run test              # Run all tests (60 passing, 1 integration blocked)
+bun run test --watch      # Watch mode
 ```
 
-## Test Coverage
+## Writing Tests
 
-Current target: **80%+ coverage**
+### Unit Tests (co-located)
 
-Coverage includes:
-
-- ✅ Utils (categoryDefaults, logger)
-- ✅ Server utils (logger)
-- ✅ API endpoints (entries CRUD, health)
-- ⏳ Auth endpoints (TODO)
-- ⏳ Components (TODO - if needed)
-
-## Writing New Tests
-
-### Unit Test Example
+Test pure functions with no external dependencies:
 
 ```typescript
+// utils/myUtil.test.ts
 import { describe, it, expect } from "vitest";
-import { myFunction } from "./myFunction";
+import { myFunction } from "./myUtil";
 
 describe("myFunction", () => {
-  it("should do something", () => {
-    const result = myFunction(input);
-    expect(result).toBe(expected);
+  it("should handle normal input", () => {
+    expect(myFunction("input")).toBe("output");
+  });
+
+  it("should handle edge cases", () => {
+    expect(myFunction(null)).toBe("default");
+    expect(myFunction("")).toBe("default");
   });
 });
 ```
 
-### API Integration Test Example
+### Integration Tests (tests/api/)
+
+Test API endpoints via HTTP (requires @nuxt/test-utils/e2e setup):
 
 ```typescript
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { db } from "~/server/db";
-import { myTable } from "~/server/db/schema";
-import myHandler from "./my-endpoint.ts";
+// tests/api/entries.test.ts
+import { setup, $fetch } from "@nuxt/test-utils/e2e";
 
-describe("/api/my-endpoint", () => {
-  beforeEach(async () => {
-    // Setup test data
+await setup({ server: true });
+
+it("should create entry", async () => {
+  const response = await $fetch("/api/entries", {
+    method: "POST",
+    body: { type: "tada", title: "Test" },
+    headers: { Cookie: authCookie },
   });
 
-  afterEach(async () => {
-    // Cleanup test data
-  });
-
-  it("should return data", async () => {
-    const event = {
-      context: { user: mockUser, session: {} },
-      node: { req: {}, res: {} },
-    } as any;
-
-    const result = await myHandler(event);
-    expect(result).toBeTruthy();
-  });
+  expect(response.id).toBeDefined();
 });
 ```
 
-## Test Philosophy
+## Test Principles
 
-- **Test behavior, not implementation** - Focus on what the code does, not how
-- **Keep tests simple** - One assertion per test when possible
-- **Use descriptive names** - `it("should X when Y")`
-- **Test edge cases** - null, empty arrays, boundary conditions
-- **Mock external dependencies** - APIs, timers, file system
-- **Clean up after yourself** - Always reset state in afterEach
+1. **Test behavior, not implementation**
+2. **One assertion per test** (when practical)
+3. **Descriptive test names** - `it("should X when Y")`
+4. **Test edge cases** - null, empty, invalid input
+5. **Clean up test data** in `afterEach`
 
-## Common Patterns
+## Next Steps
 
-### Mocking Database
-
-Tests use the real SQLite database with proper cleanup. Each test:
-
-1. Creates test users/entries in `beforeEach`
-2. Runs the test
-3. Cleans up in `afterEach`
-
-### Mocking Timers
-
-```typescript
-import { vi } from "vitest";
-
-beforeEach(() => {
-  vi.useFakeTimers();
-});
-
-afterEach(() => {
-  vi.restoreAllMocks();
-});
-
-it("should wait", () => {
-  const callback = vi.fn();
-  setTimeout(callback, 1000);
-  vi.advanceTimersByTime(1000);
-  expect(callback).toHaveBeenCalled();
-});
-```
-
-### Testing Async Code
-
-```typescript
-it("should fetch data", async () => {
-  const result = await fetchData();
-  expect(result).toBeTruthy();
-});
-```
-
-### Testing Error Conditions
-
-```typescript
-it("should throw on invalid input", async () => {
-  await expect(myFunction(invalidInput)).rejects.toThrow();
-});
-```
-
-## CI Integration
-
-Tests run automatically on:
-
-- Push to main
-- Pull requests
-
-CI workflow runs:
-
-1. `bun run lint` - Must pass
-2. `bun run typecheck` - Must pass
-3. `bun run test` - Must pass ✅
-4. `bun run build` - Must succeed
-
-## Future Additions
-
-- [ ] Auth endpoint tests (login, register, logout)
-- [ ] E2E tests for critical flows (timer, entry creation)
-- [ ] Component tests (if complex components are added)
-- [ ] Performance tests for large datasets
-
-## Resources
-
-- [Vitest Documentation](https://vitest.dev/)
-- [Nuxt Test Utils](https://nuxt.com/docs/getting-started/testing)
-- [Testing Best Practices](https://testingjavascript.com/)
+1. Fix e2e environment for integration tests
+2. Add auth endpoint tests
+3. Add entry CRUD integration tests
+4. Add E2E tests for critical workflows

@@ -23,8 +23,7 @@ describe("logger (client-side)", () => {
     logger.info("test message");
 
     expect(consoleInfoSpy).toHaveBeenCalledWith(
-      expect.stringContaining("[test-module]"),
-      expect.anything()
+      expect.stringContaining("[tada:test-module]")
     );
   });
 
@@ -33,8 +32,7 @@ describe("logger (client-side)", () => {
     logger.info("test message");
 
     expect(consoleInfoSpy).toHaveBeenCalledWith(
-      expect.stringContaining("[tada]"),
-      expect.anything()
+      expect.stringContaining("[tada:test]")
     );
   });
 

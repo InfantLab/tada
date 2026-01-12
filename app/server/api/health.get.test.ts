@@ -1,48 +1,34 @@
 import { describe, it, expect } from "vitest";
+import handler from "./health.get";
 
 describe("GET /api/health", () => {
-  it("should return ok status", () => {
-    const result = {
+  it("should return ok status", async () => {
+    const result = await handler();
+
+    expect(result).toMatchObject({
       status: "ok",
-      timestamp: new Date().toISOString(),
-    };
-
-    expect(result.status).toBe("ok");
-    expect(result.timestamp).toBeTruthy();
+    });
   });
 
-  it("should return valid ISO timestamp", () => {
-    const timestamp = new Date().toISOString();
+  it("should include timestamp", async () => {
+    const result = handler();
 
-    expect(() => new Date(timestamp)).not.toThrow();
-    expect(new Date(timestamp).toISOString()).toBe(timestamp);
+    expect(result.timestamp).toBeDefined();
+    expect(() => new Date(result.timestamp)).not.toThrow();
+
+    const timestamp = new Date(result.timestamp);
+    const now = new Date();
+    const diff = Math.abs(now.getTime() - timestamp.getTime());
+
+    // Timestamp should be within 5 seconds of now
+    expect(diff).toBeLessThan(5000);
   });
 
-  it("should have timestamp close to current time", () => {
-    const before = Date.now();
-    const timestamp = new Date().toISOString();
-    const after = Date.now();
+  it("should return object with status and timestamp", async () => {
+    const result = handler();
 
-    const timestampMs = new Date(timestamp).getTime();
-    expect(timestampMs).toBeGreaterThanOrEqual(before);
-    expect(timestampMs).toBeLessThanOrEqual(after);
-  });
-
-  it("should format timestamp with correct precision", () => {
-    const timestamp = new Date().toISOString();
-
-    // ISO format: YYYY-MM-DDTHH:mm:ss.sssZ
-    expect(timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
-  });
-
-  it("should return consistent response structure", () => {
-    const response = {
-      status: "ok",
-      timestamp: new Date().toISOString(),
-    };
-
-    expect(response).toHaveProperty("status");
-    expect(response).toHaveProperty("timestamp");
-    expect(Object.keys(response)).toHaveLength(2);
+    expect(result).toHaveProperty("status");
+    expect(result).toHaveProperty("timestamp");
+    expect(Object.keys(result)).toHaveLength(2);
   });
 });

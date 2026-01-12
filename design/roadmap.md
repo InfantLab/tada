@@ -41,6 +41,31 @@ See [CHANGELOG.md](../CHANGELOG.md) and [RELEASE_NOTES_v0.1.0.md](../RELEASE_NOT
 
 _Target: Q1 2026_
 
+### 🔐 User Email & Password Recovery
+
+Critical auth improvements for self-hosted and future cloud deployment.
+
+- [ ] **Email field** added to user schema (optional for now, required for cloud)
+- [ ] **Password reset flow:**
+  - User requests reset via email
+  - Time-limited reset token (6 hours expiry)
+  - Email with reset link
+  - Secure password update endpoint
+- [ ] **Email verification** (optional for self-hosted, required for cloud)
+- [ ] **SMTP configuration** in settings (supports standard providers)
+- [ ] **Email templates:** password reset, welcome email
+- [ ] **Rate limiting** on reset requests (prevent abuse)
+- [ ] **Audit logging** for auth events (login, password change, reset)
+- [ ] **"Change password"** feature for logged-in users
+
+**Implementation notes:**
+
+- Use Nodemailer for SMTP (works with Gmail, SendGrid, Postmark, etc.)
+- Self-hosted: optional email config, gracefully degrades without SMTP
+- Reset tokens stored in database with expiry and single-use flag
+- Password recovery requires email field populated
+- Future: magic link authentication (passwordless)
+
 ### 🎯 Timer Philosophy: Count Up
 
 All timers count up, never down. We celebrate what you did, not what you "should" do.
@@ -50,12 +75,52 @@ All timers count up, never down. We celebrate what you did, not what you "should
 - [ ] Optional gentle milestones (chime at 10, 20, 30 min) — celebration, not pressure
 - [ ] Timer profiles: save/load named configurations (duration hint, category, bells)
 
+### 📥 Generic CSV Import Framework
+
+Build flexible import system with user-mappable columns and reusable recipes.
+
+- [ ] **CSV Mapper UI:**
+  - Upload any CSV file
+  - Preview first 10 rows with column headers
+  - Drag-and-drop or dropdown to map CSV columns → Tada fields
+  - Required mappings: timestamp/date, activity/name
+  - Optional mappings: duration, category, subcategory, notes, tags
+- [ ] **Import Recipes** (saved to database):
+  - Save column mappings as named recipe
+  - Share recipes between users (future)
+  - Built-in recipes: Insight Timer, Strava, Apple Health (future)
+- [ ] **Data Transformation:**
+  - Date/time format detection and parsing (MM/DD/YYYY, ISO, Unix timestamps)
+  - Duration parsing (H:MM:SS, seconds, minutes)
+  - Timezone selector for imports
+  - Category/subcategory creation or mapping to existing
+  - Custom emoji picker for new subcategories
+- [ ] **Data Validation:**
+  - Flag suspicious durations (>3 hours, <30 seconds)
+  - Preview transformed entries before import
+  - Duplicate detection (timestamp + duration matching)
+  - User chooses: skip, update, or import duplicates
+- [ ] **Robust Import:**
+  - Streaming CSV parser for large files (10,000+ rows)
+  - Batched database inserts (500 at a time)
+  - Progress bar with success/skip/error counts
+  - Downloadable error log for failed rows
+  - Transaction safety (rollback on critical errors)
+- [ ] **Insight Timer Recipe** (first built-in):
+  - Pre-configured mapping for Insight Timer CSV format
+  - In-app instructions: Settings → Features & Preferences → Sessions → Export Data
+  - All activities → mindfulness category
+  - Activities: Meditation, Breathing, Manifesting, Walking, Tai Chi (preserve capitalization)
+  - User sets custom emojis during import preview
+  - Flag new subcategories created during import
+
 ### 🎨 Custom Activities
 
 - [ ] User-defined activities beyond defaults
 - [ ] Custom emoji picker for any activity
 - [ ] Subcategory auto-complete (remember user additions like "metta", "walking")
 - [ ] Context-aware subcategory resolution (fix "walking" collision between categories)
+- [ ] **Category/Subcategory renaming tool** (batch update existing entries)
 
 ### 📉 Graceful Habit Chains
 

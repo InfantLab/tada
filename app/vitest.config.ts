@@ -6,11 +6,18 @@ const testDir = fileURLToPath(new URL(".", import.meta.url));
 
 export default defineVitestConfig({
   test: {
-    environment: "happy-dom",
+    environment: "nuxt",
     globals: true,
     setupFiles: ["./tests/setup.ts"],
+    pool: "forks",
+    poolOptions: {
+      forks: {
+        singleFork: true,
+      },
+    },
     env: {
       DATABASE_URL: `file:${join(testDir, "data", "test.db")}`,
+      NUXT_PUBLIC_SITE_URL: "http://localhost:3000",
     },
     exclude: [
       "**/node_modules/**",

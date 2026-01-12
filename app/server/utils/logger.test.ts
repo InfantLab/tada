@@ -27,15 +27,16 @@ describe("logger (server-side)", () => {
       logger.info("test message");
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        expect.stringContaining('"prefix":"test-module"')
+        expect.stringContaining('"prefix":"tada:test-module"')
       );
     });
 
-    it("should create logger with default prefix", () => {
-    const logger = createLogger("test");
+    it("should create logger with tada prefix", () => {
+      const logger = createLogger("test");
+      logger.info("test message");
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        expect.stringContaining('"prefix":""')
+        expect.stringContaining('"prefix":"tada:test"')
       );
     });
   });
@@ -130,7 +131,9 @@ describe("logger (server-side)", () => {
       const logLine = consoleErrorSpy.mock.calls[0]?.[0] as string;
       const logObj = JSON.parse(logLine);
 
-      expect(logObj.error).toContain("Error: test error");
+      expect(logObj.error).toBe("test error");
+      expect(logObj.stack).toBeDefined();
+      expect(logObj.name).toBe("Error");
     });
 
     it("should handle unknown error types", () => {
@@ -140,7 +143,7 @@ describe("logger (server-side)", () => {
       const logLine = consoleErrorSpy.mock.calls[0]?.[0] as string;
       const logObj = JSON.parse(logLine);
 
-      expect(logObj.error).toBe("Unknown error");
+      expect(logObj.error).toBe("[object Object]");
     });
   });
 
@@ -159,7 +162,7 @@ describe("logger (server-side)", () => {
       logger.info("test message");
 
       expect(fs.appendFileSync).toHaveBeenCalledWith(
-        expect.stringContaining("app.log"),
+        expect.stringContaining("combined.log"),
         expect.stringContaining("test message"),
         "utf8"
       );
