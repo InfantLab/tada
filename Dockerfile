@@ -40,16 +40,13 @@ RUN adduser --system --uid 1001 nuxt
 # Copy built application
 COPY --from=builder /app/.output ./.output
 
-# Copy migrations and drizzle config
+# Copy migrations and migration runner
 COPY --from=builder /app/server/db/migrations ./server/db/migrations
-COPY --from=builder /app/drizzle.config.ts ./drizzle.config.ts
+COPY app/migrate.js ./migrate.js
 
 # Copy startup script
 COPY app/migrate-and-start.sh ./migrate-and-start.sh
 RUN chmod +x ./migrate-and-start.sh
-
-# Install drizzle-kit for migrations
-RUN npm install -g drizzle-kit
 
 # Create data directory for SQLite
 RUN mkdir -p /app/data && chown -R nuxt:nodejs /app/data
