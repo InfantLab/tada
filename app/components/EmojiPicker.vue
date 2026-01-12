@@ -102,7 +102,10 @@ onMounted(() => {
 onUnmounted(() => {
   document.removeEventListener("keydown", handleKeydown);
   if (pickerInstance.value) {
-    pickerInstance.value.removeEventListener("emoji-click", handleEmojiSelect as EventListener);
+    pickerInstance.value.removeEventListener(
+      "emoji-click",
+      handleEmojiSelect as EventListener
+    );
   }
 });
 </script>
