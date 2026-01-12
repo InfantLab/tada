@@ -38,7 +38,9 @@ async function runMigrations() {
   console.log("✓ Tracking table created");
 
   console.log("\n📋 Checking for applied migrations...");
-  const appliedJSON = runSQL("SELECT json_group_array(hash) FROM __drizzle_migrations;");
+  const appliedJSON = runSQL(
+    "SELECT json_group_array(hash) FROM __drizzle_migrations;"
+  );
   const appliedHashes = new Set(JSON.parse(appliedJSON.trim() || "[]"));
   console.log(`   Found ${appliedHashes.size} previously applied migrations`);
 
@@ -75,7 +77,9 @@ async function runMigrations() {
     }
 
     const now = Date.now();
-    runSQL(`INSERT INTO __drizzle_migrations (hash, created_at) VALUES ('${hash}', ${now});`);
+    runSQL(
+      `INSERT INTO __drizzle_migrations (hash, created_at) VALUES ('${hash}', ${now});`
+    );
 
     console.log(`  ✅ ${file} applied successfully\n`);
   }
@@ -92,7 +96,9 @@ const tables = runSQL(".tables");
 console.log(tables);
 
 console.log("\nMigrations applied:");
-const migrations = runSQL("SELECT hash, datetime(created_at/1000, 'unixepoch') as applied_at FROM __drizzle_migrations;");
+const migrations = runSQL(
+  "SELECT hash, datetime(created_at/1000, 'unixepoch') as applied_at FROM __drizzle_migrations;"
+);
 console.log(migrations);
 
 console.log("\nUsers table schema:");
@@ -101,4 +107,6 @@ console.log(schema);
 
 console.log(`\n✅ Test complete! Database at: ${TEST_DB}`);
 console.log(`\nTo inspect: sqlite3 ${TEST_DB}`);
-console.log(`\nRun this test again to verify idempotency (should show "already applied")`);
+console.log(
+  `\nRun this test again to verify idempotency (should show "already applied")`
+);

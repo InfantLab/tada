@@ -81,7 +81,9 @@ async function runMigrations() {
     }
 
     const now = Date.now();
-    runSQL(`INSERT INTO __drizzle_migrations (hash, created_at) VALUES ('${hash}', ${now})`);
+    runSQL(
+      `INSERT INTO __drizzle_migrations (hash, created_at) VALUES ('${hash}', ${now})`
+    );
 
     console.log(`  ✅ ${file} applied successfully\n`);
   }
@@ -95,15 +97,21 @@ await runMigrations();
 console.log("🔍 Verifying database...\n");
 
 console.log("Tables created:");
-const tables = querySQL("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name");
+const tables = querySQL(
+  "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
+);
 tables.forEach((t) => console.log(`  - ${t.name}`));
 
 console.log("\nMigrations applied:");
-const migrations = querySQL("SELECT hash, datetime(created_at/1000, 'unixepoch') as applied_at FROM __drizzle_migrations");
+const migrations = querySQL(
+  "SELECT hash, datetime(created_at/1000, 'unixepoch') as applied_at FROM __drizzle_migrations"
+);
 migrations.forEach((m) => console.log(`  - ${m.hash} (${m.applied_at})`));
 
 console.log("\nUsers table exists:");
-const userSchema = querySQL("SELECT sql FROM sqlite_master WHERE type='table' AND name='users'");
+const userSchema = querySQL(
+  "SELECT sql FROM sqlite_master WHERE type='table' AND name='users'"
+);
 if (userSchema[0]) {
   console.log("  ✓ Yes");
   const cols = querySQL("PRAGMA table_info(users)");
@@ -115,7 +123,9 @@ if (userSchema[0]) {
 db.close();
 
 console.log(`\n✅ Test complete! Database at: ${TEST_DB}`);
-console.log(`\nTo inspect: bun run check-db.mjs (after copying to data/db.sqlite)`);
+console.log(
+  `\nTo inspect: bun run check-db.mjs (after copying to data/db.sqlite)`
+);
 console.log(`Or: sqlite3 ${TEST_DB}`);
 console.log(`\nRun again to test idempotency (should show "already applied"):`);
 console.log(`  bun run /workspaces/tada/test-migrate-bun.mjs`);

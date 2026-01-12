@@ -4,6 +4,7 @@ import { db } from "~/server/db";
 import { users } from "~/server/db/schema";
 import { eq } from "drizzle-orm";
 import { createLogger } from "~/server/utils/logger";
+import { verifyPassword } from "~/server/utils/password";
 
 const logger = createLogger("api:auth:login");
 
@@ -48,13 +49,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // Verify password
-    const validPassword = await (
-      Bun as unknown as {
-        password: {
-          verify: (password: string, hash: string) => Promise<boolean>;
-        };
-      }
-    ).password.verify(body.password, user.passwordHash);
+    const validPassword = await verifyPassword(body.password, user.passwordHash);
 
     if (!validPassword) {
       throw createError({

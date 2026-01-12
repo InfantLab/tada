@@ -5,6 +5,7 @@ import { users } from "~/server/db/schema";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { createLogger } from "~/server/utils/logger";
+import { hashPassword } from "~/server/utils/password";
 
 const logger = createLogger("api:auth:register");
 
@@ -55,20 +56,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // Hash password
-    const passwordHash = await (
-      Bun as unknown as {
-        password: {
-          hash: (
-            password: string,
-            options: { algorithm: string; memoryCost: number; timeCost: number }
-          ) => Promise<string>;
-        };
-      }
-    ).password.hash(body.password, {
-      algorithm: "argon2id",
-      memoryCost: 19456,
-      timeCost: 2,
-    });
+    const passwordHash = await hashPassword(body.password);
 
     // Create user
     const userId = nanoid();

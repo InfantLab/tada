@@ -32,7 +32,7 @@ Key principles that resonate with Ta-Da!:
 
 - We celebrate completion, not perfection
 - Every small win counts — even 30 seconds of meditation
-- The app exists to notice what you've *done*, not to plan what you should do
+- The app exists to notice what you've _done_, not to plan what you should do
 - Failure counts. Trying counts. Showing up counts.
 
 ---
