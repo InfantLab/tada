@@ -51,7 +51,7 @@ describe("POST /api/auth/register", () => {
 
     expect(dbUsers[0]!.passwordHash).toBeDefined();
     expect(dbUsers[0]!.passwordHash).not.toBe("mypassword");
-    expect(dbUsers[0]!.passwordHash.length).toBeGreaterThan(20);
+    expect(dbUsers[0]!.passwordHash!.length).toBeGreaterThan(20);
   });
 
   it("should set session cookie", async () => {

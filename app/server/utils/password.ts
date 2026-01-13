@@ -25,7 +25,7 @@ export async function hashPassword(password: string): Promise<string> {
     password,
     salt,
     KEY_LENGTH,
-    SCRYPT_OPTIONS
+    SCRYPT_OPTIONS as Parameters<typeof scrypt>[3]
   )) as Buffer;
 
   // Store as: algorithm$N$r$p$salt$hash (all in hex)
@@ -57,17 +57,17 @@ export async function verifyPassword(
       throw new Error("Invalid hash format");
     }
 
-    const N = parseInt(parts[1], 10);
-    const r = parseInt(parts[2], 10);
-    const p = parseInt(parts[3], 10);
-    const salt = Buffer.from(parts[4], "hex");
-    const storedKey = Buffer.from(parts[5], "hex");
+    const N = parseInt(parts[1]!, 10);
+    const r = parseInt(parts[2]!, 10);
+    const p = parseInt(parts[3]!, 10);
+    const salt = Buffer.from(parts[4]!, "hex");
+    const storedKey = Buffer.from(parts[5]!, "hex");
 
     const derivedKey = (await scryptAsync(password, salt, KEY_LENGTH, {
       N,
       r,
       p,
-    })) as Buffer;
+    } as Parameters<typeof scrypt>[3])) as Buffer;
 
     // Use timing-safe comparison to prevent timing attacks
     return timingSafeEqual(storedKey, derivedKey);

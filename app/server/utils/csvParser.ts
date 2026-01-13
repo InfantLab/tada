@@ -54,7 +54,7 @@ export function parseCSV<T = Record<string, unknown>>(
         message: error.message,
       });
     },
-  });
+  }) as Papa.ParseResult<T>;
 
   // Extract parsed data and errors
   if (result.data) {

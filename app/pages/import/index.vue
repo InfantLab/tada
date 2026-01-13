@@ -140,7 +140,7 @@
 import type { ImportRecipe } from "~/server/db/schema";
 
 definePageMeta({
-  middleware: "auth",
+  middleware: ["auth"],
 });
 
 const selectedRecipe = ref<ImportRecipe | null>(null);

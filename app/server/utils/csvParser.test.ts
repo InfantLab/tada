@@ -56,8 +56,8 @@ Alice,30`;
       });
 
       expect(result.errors).toHaveLength(1);
-      expect(result.errors[0].message).toContain("Missing expected columns");
-      expect(result.errors[0].message).toContain("city");
+      expect(result.errors[0]?.message).toContain("Missing expected columns");
+      expect(result.errors[0]?.message).toContain("city");
     });
 
     it("should handle malformed CSV", () => {

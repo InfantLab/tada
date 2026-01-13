@@ -3,7 +3,7 @@ import handler from "./health.get";
 
 describe("GET /api/health", () => {
   it("should return ok status", async () => {
-    const result = await handler();
+    const result = await handler({} as any);
 
     expect(result).toMatchObject({
       status: "ok",
@@ -11,7 +11,7 @@ describe("GET /api/health", () => {
   });
 
   it("should include timestamp", async () => {
-    const result = handler();
+    const result = handler({} as any);
 
     expect(result.timestamp).toBeDefined();
     expect(() => new Date(result.timestamp)).not.toThrow();
@@ -25,7 +25,7 @@ describe("GET /api/health", () => {
   });
 
   it("should return object with status and timestamp", async () => {
-    const result = handler();
+    const result = handler({} as any);
 
     expect(result).toHaveProperty("status");
     expect(result).toHaveProperty("timestamp");

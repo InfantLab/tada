@@ -253,7 +253,7 @@ async function submitEntry() {
           @click="openEmojiPicker"
         >
           <span class="text-2xl">{{
-            customEmoji || currentEntryType.emoji
+            customEmoji || currentEntryType?.emoji
           }}</span>
           <span class="text-stone-500 dark:text-stone-400"
             >Click to change emoji</span

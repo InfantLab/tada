@@ -48,7 +48,7 @@ export default defineEventHandler(async (event) => {
       const recipe = existing[0];
 
       // Check ownership
-      if (recipe.userId !== user.id) {
+      if (!recipe || recipe.userId !== user.id) {
         throw createError({
           statusCode: 403,
           message: "Forbidden",
@@ -56,14 +56,20 @@ export default defineEventHandler(async (event) => {
       }
 
       // Check if built-in (can't be modified)
-      if (recipe.isBuiltIn) {
+      if (!recipe || recipe.isBuiltIn) {
         throw createError({
           statusCode: 403,
           message: "Built-in recipes cannot be modified",
         });
       }
 
-      // Store current version in history
+      // Store current version in history (recipe is guaranteed non-null here)
+      if (!recipe) {
+        throw createError({
+          statusCode: 404,
+          message: "Recipe not found",
+        });
+      }
       const previousVersions = recipe.previousVersions || [];
       previousVersions.unshift({
         savedAt: new Date().toISOString(),

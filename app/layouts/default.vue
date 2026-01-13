@@ -37,7 +37,7 @@ const route = useRoute();
               route.path === item.href ||
               (item.href === '/tada' &&
                 route.path === '/add' &&
-                route.query.type === 'tada')
+                route.query['type'] === 'tada')
                 ? 'bg-gold-highlight/30 text-gold-light dark:bg-gold-dark/20 dark:text-gold-dark'
                 : 'text-text-light-secondary hover:bg-pearl-mist dark:text-text-dark-secondary dark:hover:bg-cosmic-indigo'
             "
@@ -95,7 +95,7 @@ const route = useRoute();
             route.path === item.href ||
             (item.href === '/tada' &&
               route.path === '/add' &&
-              route.query.type === 'tada')
+              route.query['type'] === 'tada')
               ? 'text-gold-light dark:text-gold-dark'
               : 'text-text-light-muted dark:text-text-dark-muted'
           "

@@ -40,11 +40,11 @@ describe("Entries API Integration", async () => {
       updatedAt: new Date().toISOString(),
     });
 
-    const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30); // 30 days
+    const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 60 * 24 * 30); // 30 days
     await db.insert(sessions).values({
       id: testSessionId,
       userId: testUserId,
-      expiresAt: expiresAt.toISOString(),
+      expiresAt: Math.floor(expiresAt.getTime() / 1000), // Unix timestamp in seconds
     });
 
     authCookie = `auth_session=${testSessionId}`;

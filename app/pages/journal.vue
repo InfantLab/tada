@@ -29,7 +29,6 @@ const filterOptions = [
 onMounted(async () => {
   try {
     // Fetch journal-type entries (type: journal only, not tada)
-    // @ts-expect-error - Nuxt's $fetch typing causes excessive stack depth with complex routes
     const data: Entry[] = await $fetch("/api/entries");
     entries.value = data.filter(
       (e) =>
