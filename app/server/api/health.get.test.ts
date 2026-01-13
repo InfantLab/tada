@@ -1,9 +1,10 @@
 import { describe, it, expect } from "vitest";
 import handler from "./health.get";
+import type { H3Event } from "h3";
 
 describe("GET /api/health", () => {
   it("should return ok status", async () => {
-    const result = await handler({} as any);
+    const result = await handler({} as H3Event);
 
     expect(result).toMatchObject({
       status: "ok",
@@ -25,7 +26,7 @@ describe("GET /api/health", () => {
   });
 
   it("should return object with status and timestamp", async () => {
-    const result = handler({} as any);
+    const result = handler({} as H3Event);
 
     expect(result).toHaveProperty("status");
     expect(result).toHaveProperty("timestamp");

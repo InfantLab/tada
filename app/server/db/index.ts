@@ -10,13 +10,11 @@ import * as schema from "./schema";
 // But in production, CapRover volume is at /data, so we need special handling
 const isProduction = process.env.NODE_ENV === "production";
 const isDockerProduction = process.cwd() === "/app";
-const defaultPath = isDockerProduction 
-  ? "/data/db.sqlite"  // CapRover persistent volume
-  : join(process.cwd(), "data", "db.sqlite");  // Dev workspace
+const defaultPath = isDockerProduction
+  ? "/data/db.sqlite" // CapRover persistent volume
+  : join(process.cwd(), "data", "db.sqlite"); // Dev workspace
 
-const databaseUrl =
-  process.env["DATABASE_URL"] ||
-  `file:${defaultPath}`;
+const databaseUrl = process.env["DATABASE_URL"] || `file:${defaultPath}`;
 
 // Ensure data directory exists before trying to open database
 const dataDir = isDockerProduction ? "/data" : join(process.cwd(), "data");

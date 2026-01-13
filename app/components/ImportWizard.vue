@@ -92,7 +92,7 @@
             Started At *
           </label>
           <select
-            v-model="columnMapping.startedAt"
+            v-model="columnMapping['startedAt']"
             class="px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-cosmic-black text-text-light dark:text-text-dark"
           >
             <option value="">-- Select Column --</option>
@@ -108,7 +108,7 @@
             Duration *
           </label>
           <select
-            v-model="columnMapping.duration"
+            v-model="columnMapping['duration']"
             class="px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-cosmic-black text-text-light dark:text-text-dark"
           >
             <option value="">-- Select Column --</option>
@@ -705,7 +705,10 @@ async function startImport() {
 
     importResults.value = {
       ...response.results,
-      total: response.results.successful + response.results.failed + response.results.skipped,
+      total:
+        response.results.successful +
+        response.results.failed +
+        response.results.skipped,
     };
     importProgress.value = 100;
     currentStep.value = 5;

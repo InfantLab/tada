@@ -73,8 +73,8 @@ export default defineEventHandler(async (event) => {
       const previousVersions = recipe.previousVersions || [];
       previousVersions.unshift({
         savedAt: new Date().toISOString(),
-        columnMapping: recipe.columnMapping,
-        transforms: recipe.transforms,
+        columnMapping: recipe.columnMapping ?? {},
+        transforms: recipe.transforms ?? {},
       });
 
       // Keep only last N versions

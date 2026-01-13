@@ -150,7 +150,7 @@ export function parseDuration(duration: string): number | null {
 export function parseDateTime(
   dateStr: string,
   format: string = "MM/DD/YYYY HH:mm:ss",
-  timezone: string = "UTC"
+  _timezone: string = "UTC"
 ): string | null {
   if (!dateStr || typeof dateStr !== "string") {
     return null;
