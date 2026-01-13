@@ -50,7 +50,6 @@ RUN chmod +x ./migrate-and-start.sh
 
 # Set environment variables
 ENV NODE_ENV=production
-ENV DATABASE_URL=file:/data/db.sqlite
 ENV HOST=0.0.0.0
 ENV PORT=3000
 

@@ -9,8 +9,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // Default database path
-// Check if we're in the Docker production environment (file is at /app/migrate.js)
-// or dev environment (file is at /workspaces/tada/app/migrate.js or similar)
+// Production: /data/db.sqlite (CapRover persistent volume at /data)
+// Dev: /workspaces/tada/app/data/db.sqlite (workspace-relative)
 const isDockerProduction = __dirname === "/app";
 const defaultDbPath = isDockerProduction
   ? "/data/db.sqlite"

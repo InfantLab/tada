@@ -1,9 +1,7 @@
 {
   "name": "Tada Dev Container",
-  "build": {
-    "dockerfile": "../Dockerfile",
-    "target": "production"
-  },
+  "image": "oven/bun:1",
+  "workspaceFolder": "/workspaces/tada",
   "forwardPorts": [3000, 4983],
   "postCreateCommand": "cd app && bun install",
   "customizations": {

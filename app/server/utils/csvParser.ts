@@ -115,9 +115,9 @@ export function parseDuration(duration: string): number | null {
 
   if (parts.length === 3) {
     // H:M:S or HH:MM:SS
-    const hours = parseInt(parts[0], 10);
-    const minutes = parseInt(parts[1], 10);
-    const seconds = parseInt(parts[2], 10);
+    const hours = parseInt(parts[0]!, 10);
+    const minutes = parseInt(parts[1]!, 10);
+    const seconds = parseInt(parts[2]!, 10);
 
     if (isNaN(hours) || isNaN(minutes) || isNaN(seconds)) {
       return null;
@@ -126,8 +126,8 @@ export function parseDuration(duration: string): number | null {
     return hours * 3600 + minutes * 60 + seconds;
   } else if (parts.length === 2) {
     // M:S or MM:SS
-    const minutes = parseInt(parts[0], 10);
-    const seconds = parseInt(parts[1], 10);
+    const minutes = parseInt(parts[0]!, 10);
+    const seconds = parseInt(parts[1]!, 10);
 
     if (isNaN(minutes) || isNaN(seconds)) {
       return null;
@@ -136,7 +136,7 @@ export function parseDuration(duration: string): number | null {
     return minutes * 60 + seconds;
   } else if (parts.length === 1) {
     // Just seconds
-    const seconds = parseInt(parts[0], 10);
+    const seconds = parseInt(parts[0]!, 10);
     return isNaN(seconds) ? null : seconds;
   }
 
@@ -178,10 +178,10 @@ export function parseDateTime(
       // Note: This is a simplified approach. For production, consider using
       // a library like date-fns-tz or luxon for proper timezone handling
       const date = new Date(
-        `${year}-${month.padStart(2, "0")}-${day.padStart(
+        `${year}-${month!.padStart(2, "0")}-${day!.padStart(
           2,
           "0"
-        )}T${hour.padStart(2, "0")}:${minute}:${second}`
+        )}T${hour!.padStart(2, "0")}:${minute}:${second}`
       );
 
       if (isNaN(date.getTime())) {

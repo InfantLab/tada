@@ -5,13 +5,21 @@ import { existsSync, mkdirSync } from "node:fs";
 import * as schema from "./schema";
 
 // Get database path from runtime config or environment
-// Use absolute path to avoid issues with working directory in different environments
+// Production (Docker at /app): Falls back to /app/data/db.sqlite
+// Dev (devcontainer at /workspaces/tada): Falls back to /workspaces/tada/app/data/db.sqlite
+// But in production, CapRover volume is at /data, so we need special handling
+const isProduction = process.env.NODE_ENV === "production";
+const isDockerProduction = process.cwd() === "/app";
+const defaultPath = isDockerProduction 
+  ? "/data/db.sqlite"  // CapRover persistent volume
+  : join(process.cwd(), "data", "db.sqlite");  // Dev workspace
+
 const databaseUrl =
   process.env["DATABASE_URL"] ||
-  `file:${join(process.cwd(), "data", "db.sqlite")}`;
+  `file:${defaultPath}`;
 
 // Ensure data directory exists before trying to open database
-const dataDir = join(process.cwd(), "data");
+const dataDir = isDockerProduction ? "/data" : join(process.cwd(), "data");
 if (!existsSync(dataDir)) {
   try {
     mkdirSync(dataDir, { recursive: true });

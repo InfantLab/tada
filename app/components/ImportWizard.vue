@@ -124,7 +124,7 @@
             Activity Name
           </label>
           <select
-            v-model="columnMapping.name"
+            v-model="columnMapping['name']"
             class="px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-cosmic-black text-text-light dark:text-text-dark"
           >
             <option value="">-- Select Column --</option>
@@ -140,7 +140,7 @@
             Notes
           </label>
           <select
-            v-model="columnMapping.notes"
+            v-model="columnMapping['notes']"
             class="px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-cosmic-black text-text-light dark:text-text-dark"
           >
             <option value="">-- Select Column --</option>
@@ -159,7 +159,7 @@
         </button>
         <button
           class="px-6 py-3 bg-mindfulness-light dark:bg-mindfulness-dark text-white rounded-lg hover:opacity-90"
-          :disabled="!columnMapping.startedAt || !columnMapping.duration"
+          :disabled="!columnMapping['startedAt'] || !columnMapping['duration']"
           @click="currentStep++"
         >
           Continue →
@@ -290,7 +290,7 @@
                     v-if="validationWarnings[entry._rowIndex]"
                     class="text-xs text-gold-light dark:text-gold-dark"
                   >
-                    ⚠️ {{ validationWarnings[entry._rowIndex].join(", ") }}
+                    ⚠️ {{ validationWarnings[entry._rowIndex]?.join(", ") }}
                   </span>
                   <span
                     v-else
@@ -599,7 +599,7 @@ function generatePreview() {
     for (const [targetField, csvColumn] of Object.entries(
       columnMapping.value
     )) {
-      if (csvColumn && row[csvColumn]) {
+      if (csvColumn && row && row[csvColumn]) {
         entry[targetField] = row[csvColumn];
       }
     }
@@ -703,7 +703,10 @@ async function startImport() {
       },
     });
 
-    importResults.value = response.results;
+    importResults.value = {
+      ...response.results,
+      total: response.results.successful + response.results.failed + response.results.skipped,
+    };
     importProgress.value = 100;
     currentStep.value = 5;
   } catch (error) {
