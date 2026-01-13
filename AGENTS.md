@@ -1,5 +1,10 @@
 # Tada - Agent Instructions
 
+## 🚫 CRITICAL - NEVER DO THIS
+
+- **❌ NEVER run `bun run dev`** — The user controls the dev server. It runs on :3000. Don't start, restart, or modify it.
+- **❌ NEVER run `bun run test`** — It blocks the terminal. Use VS Code Test Explorer or `runTests` tool instead.
+
 ## Code Style
 
 - **Quotes:** `"` not `'`
