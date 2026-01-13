@@ -4,6 +4,7 @@
 
 - **❌ NEVER run `bun run dev`** — The user controls the dev server. It runs on :3000. Don't start, restart, or modify it.
 - **❌ NEVER run `bun run test`** — It blocks the terminal. Use VS Code Test Explorer or `runTests` tool instead.
+- **❌ NEVER run `sqlite3`** — sqlite3 CLI is not installed. Use `bun run db:studio` for DB UI or inspect via drizzle migrations.
 
 ## Code Style
 
