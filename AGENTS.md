@@ -116,28 +116,7 @@ docs: update testing guide
 
 **New entry type:** Just use it! Types are open strings. Put type-specific data in `data` field.
 
-## CSV Import System
-
-**Location:** `/import` page (linked from Settings > Data)
-
-**Features:**
-- Built-in recipe for Insight Timer CSV exports (auto-created per user)
-- Custom CSV mapping with save-as-recipe functionality
-- 50MB file limit, Papa Parse for parsing
-- Batch imports (500 rows/transaction) with duplicate detection
-- Preview with validation warnings before import
-
-**API Endpoints:**
-- `GET /api/import/recipes` — List recipes (auto-creates built-ins)
-- `POST /api/import/recipes` — Save custom recipe
-- `POST /api/import/entries` — Bulk import with batching
-- `GET /api/import/logs` — Import audit trail
-
-**Database Tables:**
-- `import_recipes` — Saved column mappings and transforms
-- `import_logs` — Audit trail (status, counts, errors)
-
-**Test Data:** `/app/data/test-import.csv` (sample Insight Timer format)
+**CSV import:** `/import` page. Built-in Insight Timer recipe auto-created. Custom recipes saved in `import_recipes` table. 50MB limit, 500 rows/batch.
 
 ## Quick Troubleshooting
 

@@ -4,7 +4,7 @@ set -e
 echo "Running database migrations..."
 
 # Ensure data directory exists
-mkdir -p /app/data
+mkdir -p /data
 
 # Run migrations using Node script
 node /app/migrate.js

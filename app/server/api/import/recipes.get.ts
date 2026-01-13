@@ -10,7 +10,8 @@ const logger = createLogger("api:import-recipes");
 const BUILTIN_RECIPES = [
   {
     name: "Insight Timer",
-    description: "Import meditation sessions from Insight Timer CSV export. All activities are mapped to mindfulness category with their original activity type preserved.",
+    description:
+      "Import meditation sessions from Insight Timer CSV export. All activities are mapped to mindfulness category with their original activity type preserved.",
     columnMapping: {
       startedAt: "Started At",
       duration: "Duration",
@@ -45,7 +46,7 @@ export default defineEventHandler(async (event) => {
     // Ensure built-in recipes exist
     for (const builtinDef of BUILTIN_RECIPES) {
       const exists = recipes.find(
-        (r) => r.isBuiltIn && r.name === builtinDef.name,
+        (r) => r.isBuiltIn && r.name === builtinDef.name
       );
 
       if (!exists) {
@@ -73,7 +74,10 @@ export default defineEventHandler(async (event) => {
           .select()
           .from(importRecipes)
           .where(eq(importRecipes.userId, user.id))
-          .orderBy(desc(importRecipes.lastUsedAt), desc(importRecipes.createdAt));
+          .orderBy(
+            desc(importRecipes.lastUsedAt),
+            desc(importRecipes.createdAt)
+          );
       }
     }
 

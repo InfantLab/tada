@@ -81,11 +81,10 @@
         Map Columns
       </h2>
       <p class="text-text-light-secondary dark:text-text-dark-secondary mb-6">
-        Match your CSV columns to entry fields. Fields marked with * are recommended.
+        Match your CSV columns to entry fields. Fields marked with * are
+        recommended.
       </p>
-      <div
-        class="bg-white dark:bg-cosmic-indigo rounded-lg p-6 space-y-4"
-      >
+      <div class="bg-white dark:bg-cosmic-indigo rounded-lg p-6 space-y-4">
         <div class="grid grid-cols-2 gap-4 items-center">
           <label
             class="text-sm font-medium text-text-light dark:text-text-dark"
@@ -178,9 +177,7 @@
       <p class="text-text-light-secondary dark:text-text-dark-secondary mb-6">
         Configure how your data should be transformed
       </p>
-      <div
-        class="bg-white dark:bg-cosmic-indigo rounded-lg p-6 space-y-4"
-      >
+      <div class="bg-white dark:bg-cosmic-indigo rounded-lg p-6 space-y-4">
         <div>
           <label
             class="block text-sm font-medium text-text-light dark:text-text-dark mb-2"
@@ -237,7 +234,10 @@
         </button>
         <button
           class="px-6 py-3 bg-mindfulness-light dark:bg-mindfulness-dark text-white rounded-lg hover:opacity-90"
-          @click="generatePreview(); currentStep++"
+          @click="
+            generatePreview();
+            currentStep++;
+          "
         >
           Preview →
         </button>
@@ -252,7 +252,8 @@
         Preview Import
       </h2>
       <p class="text-text-light-secondary dark:text-text-dark-secondary mb-4">
-        Review the first 10 rows. {{ csvData.length }} total rows will be imported.
+        Review the first 10 rows. {{ csvData.length }} total rows will be
+        imported.
       </p>
       <div class="bg-white dark:bg-cosmic-indigo rounded-lg overflow-hidden">
         <div class="overflow-x-auto">
@@ -278,8 +279,12 @@
                 <td class="px-4 py-2">{{ entry._rowIndex + 1 }}</td>
                 <td class="px-4 py-2">{{ entry.startedAt || "—" }}</td>
                 <td class="px-4 py-2">{{ entry.duration || "—" }}</td>
-                <td class="px-4 py-2">{{ entry.name || entry.subcategory || "—" }}</td>
-                <td class="px-4 py-2">{{ entry.category }}/{{ entry.subcategory }}</td>
+                <td class="px-4 py-2">
+                  {{ entry.name || entry.subcategory || "—" }}
+                </td>
+                <td class="px-4 py-2">
+                  {{ entry.category }}/{{ entry.subcategory }}
+                </td>
                 <td class="px-4 py-2">
                   <span
                     v-if="validationWarnings[entry._rowIndex]"
@@ -287,7 +292,11 @@
                   >
                     ⚠️ {{ validationWarnings[entry._rowIndex].join(", ") }}
                   </span>
-                  <span v-else class="text-xs text-mindfulness-light dark:text-mindfulness-dark">✓</span>
+                  <span
+                    v-else
+                    class="text-xs text-mindfulness-light dark:text-mindfulness-dark"
+                    >✓</span
+                  >
                 </td>
               </tr>
             </tbody>
@@ -306,7 +315,9 @@
           :disabled="isImporting"
           @click="startImport"
         >
-          {{ isImporting ? "Importing..." : `Import ${csvData.length} Entries` }}
+          {{
+            isImporting ? "Importing..." : `Import ${csvData.length} Entries`
+          }}
         </button>
       </div>
     </div>
@@ -337,12 +348,8 @@
               Imported Successfully
             </div>
           </div>
-          <div
-            class="p-4 bg-gold-light/10 dark:bg-gold-dark/10 rounded-lg"
-          >
-            <div
-              class="text-3xl font-bold text-gold-light dark:text-gold-dark"
-            >
+          <div class="p-4 bg-gold-light/10 dark:bg-gold-dark/10 rounded-lg">
+            <div class="text-3xl font-bold text-gold-light dark:text-gold-dark">
               {{ importResults.skipped }}
             </div>
             <div
@@ -352,7 +359,10 @@
             </div>
           </div>
         </div>
-        <div v-if="importResults.failed > 0" class="p-4 bg-red-500/10 rounded-lg">
+        <div
+          v-if="importResults.failed > 0"
+          class="p-4 bg-red-500/10 rounded-lg"
+        >
           <div class="text-3xl font-bold text-red-500">
             {{ importResults.failed }}
           </div>
@@ -362,7 +372,9 @@
             Failed to Import
           </div>
         </div>
-        <div class="pt-4 text-sm text-text-light-secondary dark:text-text-dark-secondary">
+        <div
+          class="pt-4 text-sm text-text-light-secondary dark:text-text-dark-secondary"
+        >
           Total rows processed: {{ importResults.total }}
         </div>
       </div>
@@ -508,19 +520,19 @@ watchEffect(() => {
 async function handleFileUpload(event: Event) {
   const input = event.target as HTMLInputElement;
   const file = input.files?.[0];
-  
+
   if (!file) return;
-  
+
   // Check file size (50MB limit)
   const maxSize = 50 * 1024 * 1024;
   if (file.size > maxSize) {
     parseError.value = "File size exceeds 50MB limit";
     return;
   }
-  
+
   selectedFile.value = file;
   parseError.value = null;
-  
+
   // Parse CSV with Papa Parse
   Papa.parse<Record<string, string>>(file, {
     header: true,
@@ -531,7 +543,7 @@ async function handleFileUpload(event: Event) {
     complete: (results) => {
       csvData.value = results.data;
       csvFields.value = results.meta.fields || [];
-      
+
       // Auto-detect column mappings if recipe not provided
       if (!props.recipe) {
         autoDetectMappings();
@@ -545,7 +557,7 @@ async function handleFileUpload(event: Event) {
 
 function autoDetectMappings() {
   const mapping: Record<string, string> = {};
-  
+
   // Common column name patterns
   const patterns: Record<string, string[]> = {
     startedAt: ["started at", "start", "date", "datetime", "timestamp"],
@@ -555,10 +567,10 @@ function autoDetectMappings() {
     subcategory: ["subcategory", "subcat", "sub"],
     notes: ["notes", "note", "description", "desc"],
   };
-  
+
   for (const field of csvFields.value) {
     const fieldLower = field.toLowerCase();
-    
+
     for (const [targetField, keywords] of Object.entries(patterns)) {
       if (keywords.some((kw) => fieldLower.includes(kw))) {
         mapping[targetField] = field;
@@ -566,41 +578,43 @@ function autoDetectMappings() {
       }
     }
   }
-  
+
   columnMapping.value = mapping;
 }
 
 function generatePreview() {
   const preview: any[] = [];
   const warnings: Record<number, string[]> = {};
-  
+
   // Preview first 10 rows
   const previewCount = Math.min(10, csvData.value.length);
-  
+
   for (let i = 0; i < previewCount; i++) {
     const row = csvData.value[i];
     const entry: any = {
       _rowIndex: i,
     };
-    
+
     // Apply column mappings
-    for (const [targetField, csvColumn] of Object.entries(columnMapping.value)) {
+    for (const [targetField, csvColumn] of Object.entries(
+      columnMapping.value
+    )) {
       if (csvColumn && row[csvColumn]) {
         entry[targetField] = row[csvColumn];
       }
     }
-    
+
     // Apply transforms
     if (entry.startedAt) {
       // Parse date (simplified - use csvParser utility in production)
       entry._startedAtParsed = entry.startedAt;
     }
-    
+
     if (entry.duration) {
       // Parse duration (simplified - use csvParser utility in production)
       entry._durationParsed = entry.duration;
     }
-    
+
     // Set defaults
     entry.category = transforms.value.defaultCategory;
     if (transforms.value.defaultSubcategory) {
@@ -609,25 +623,25 @@ function generatePreview() {
       // Use name as subcategory if not specified
       entry.subcategory = entry.name;
     }
-    
+
     // Validate and collect warnings
     const rowWarnings: string[] = [];
-    
+
     if (!entry.startedAt && !entry.timestamp) {
       rowWarnings.push("Missing date/time");
     }
-    
+
     if (!entry.duration && !entry.durationSeconds) {
       rowWarnings.push("Missing duration");
     }
-    
+
     if (rowWarnings.length > 0) {
       warnings[i] = rowWarnings;
     }
-    
+
     preview.push(entry);
   }
-  
+
   previewEntries.value = preview;
   validationWarnings.value = warnings;
 }
@@ -635,32 +649,34 @@ function generatePreview() {
 async function startImport() {
   isImporting.value = true;
   importProgress.value = 0;
-  
+
   try {
     // Transform all CSV rows to entry format
     const entries = csvData.value.map((row, index) => {
       const entry: any = {
         type: "timed",
       };
-      
+
       // Apply column mappings
-      for (const [targetField, csvColumn] of Object.entries(columnMapping.value)) {
+      for (const [targetField, csvColumn] of Object.entries(
+        columnMapping.value
+      )) {
         if (csvColumn && row[csvColumn]) {
           entry[targetField] = row[csvColumn];
         }
       }
-      
+
       // Apply transforms
       if (entry.startedAt) {
         // TODO: Use csvParser utility for proper parsing
         entry.startedAt = entry.startedAt;
       }
-      
+
       if (entry.duration) {
         // TODO: Use csvParser utility for proper parsing
         entry.durationSeconds = 0; // Parse duration string
       }
-      
+
       // Set defaults
       entry.category = transforms.value.defaultCategory;
       if (transforms.value.defaultSubcategory) {
@@ -668,13 +684,13 @@ async function startImport() {
       } else if (entry.name) {
         entry.subcategory = entry.name;
       }
-      
+
       entry.source = props.recipe?.name || "csv-import";
       entry.externalId = `${selectedFile.value?.name}-${index}`;
-      
+
       return entry;
     });
-    
+
     // Call import API
     const response = await $fetch("/api/import/entries", {
       method: "POST",
@@ -686,7 +702,7 @@ async function startImport() {
         filename: selectedFile.value?.name || "unknown.csv",
       },
     });
-    
+
     importResults.value = response.results;
     importProgress.value = 100;
     currentStep.value = 5;
@@ -733,7 +749,7 @@ async function saveRecipe() {
     showSaveRecipeDialog.value = false;
     recipeName.value = "";
     recipeDescription.value = "";
-    
+
     alert("Recipe saved successfully! You can use it for future imports.");
   } catch (error) {
     console.error("Failed to save recipe:", error);

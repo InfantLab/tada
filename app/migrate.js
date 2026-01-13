@@ -13,7 +13,7 @@ const __dirname = dirname(__filename);
 // or dev environment (file is at /workspaces/tada/app/migrate.js or similar)
 const isDockerProduction = __dirname === "/app";
 const defaultDbPath = isDockerProduction
-  ? "/app/data/db.sqlite"
+  ? "/data/db.sqlite"
   : join(__dirname, "data", "db.sqlite");
 
 const DB_PATH = process.env.DATABASE_URL?.replace("file:", "") || defaultDbPath;

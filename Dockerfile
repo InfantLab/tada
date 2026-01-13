@@ -48,12 +48,9 @@ COPY app/migrate.js ./migrate.js
 COPY app/migrate-and-start.sh ./migrate-and-start.sh
 RUN chmod +x ./migrate-and-start.sh
 
-# Create data directory for SQLite
-RUN mkdir -p /app/data && chown -R nuxt:nodejs /app/data
-
 # Set environment variables
 ENV NODE_ENV=production
-ENV DATABASE_URL=file:/app/data/db.sqlite
+ENV DATABASE_URL=file:/data/db.sqlite
 ENV HOST=0.0.0.0
 ENV PORT=3000
 
