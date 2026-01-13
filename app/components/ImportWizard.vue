@@ -691,7 +691,11 @@ async function startImport() {
       }
 
       entry.source = props.recipe?.name || "csv-import";
-      entry.externalId = `${selectedFile.value?.name}-${index}`;
+      
+      // Generate externalId from content hash (startedAt + type + name)
+      // This ensures duplicates are based on actual data, not filename
+      const hashInput = `${entry.startedAt}-${entry.type}-${entry.name || ''}`;
+      entry.externalId = `import-${btoa(hashInput).replace(/[^a-zA-Z0-9]/g, '').substring(0, 32)}`;
 
       return entry;
     });
