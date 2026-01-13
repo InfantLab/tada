@@ -14,11 +14,11 @@ export default defineNuxtRouteMiddleware(async (to) => {
       user: { id: string; username: string; timezone: string } | null;
     }>("/api/auth/session");
     if (!response.user) {
-      return navigateTo("/login");
+      return navigateTo(`/login?redirect=${encodeURIComponent(to.path)}`);
     }
   } catch (error) {
     // If session check fails, redirect to login
     console.error("Auth middleware error:", error);
-    return navigateTo("/login");
+    return navigateTo(`/login?redirect=${encodeURIComponent(to.path)}`);
   }
 });

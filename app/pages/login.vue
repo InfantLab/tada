@@ -74,8 +74,9 @@ async function handleSubmit() {
       },
     });
 
-    // Redirect to home page
-    navigateTo("/");
+    // Redirect to intended page or home
+    const redirect = useRoute().query.redirect as string | undefined;
+    navigateTo(redirect || "/");
   } catch (err: unknown) {
     console.error("Auth failed:", err);
     if (err && typeof err === "object" && "data" in err) {
