@@ -56,7 +56,7 @@ function getTypeIcon(type: string): string {
     timed: "🧘",
     meditation: "🧘",
     dream: "🌙",
-    tada: "🎉",
+    tada: "⚡",
     journal: "📝",
     note: "📝",
     reps: "💪",
@@ -151,9 +151,9 @@ function groupByDate(entries: Entry[]): Map<string, Entry[]> {
 
     <!-- Empty state -->
     <div v-else-if="entries.length === 0" class="text-center py-12">
-      <div class="text-6xl mb-4">🎉</div>
+      <div class="text-6xl mb-4">⚡</div>
       <h2 class="text-xl font-semibold text-stone-700 dark:text-stone-200 mb-2">
-        Welcome to Tada!
+        Welcome to Ta-Da!
       </h2>
       <p class="text-stone-500 dark:text-stone-400 max-w-md mx-auto mb-6">
         Start capturing moments from your life. Meditations, accomplishments,

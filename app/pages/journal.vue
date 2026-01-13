@@ -48,7 +48,7 @@ function getTypeIcon(type: string): string {
     case "dream":
       return "🌙";
     case "tada":
-      return "🎉";
+      return "⚡";
     case "note":
       return "📝";
     default:
@@ -108,7 +108,7 @@ function getTypeIcon(type: string): string {
       >
         <span v-if="type === 'all'">All</span>
         <span v-else-if="type === 'dream'">🌙 Dreams</span>
-        <span v-else-if="type === 'tada'">🎉 Tada</span>
+        <span v-else-if="type === 'tada'">⚡ Ta-Da!</span>
         <span v-else>📝 Notes</span>
       </button>
     </div>
@@ -139,7 +139,7 @@ function getTypeIcon(type: string): string {
         <button
           class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-tada-600 hover:opacity-90 text-black dark:bg-tada-600 dark:text-white rounded-lg font-medium transition-colors"
         >
-          🎉 Celebrate a win
+          ⚡ Celebrate a win
         </button>
       </div>
     </div>

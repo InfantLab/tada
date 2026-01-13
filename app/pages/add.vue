@@ -17,8 +17,8 @@ const isSubmitting = ref(false);
 const entryTypes = [
   {
     value: "tada",
-    label: "Tada!",
-    emoji: "🎉",
+    label: "Ta-Da!",
+    emoji: "⚡",
     description: "Celebrate an accomplishment",
   },
   {
@@ -137,7 +137,7 @@ async function submitEntry() {
             class="p-3 rounded-xl border-2 text-left transition-colors"
             :class="
               entryType === type.value
-                ? 'border-tada-300 bg-tada-100/20 dark:border-tada-600 dark:bg-tada-600/10'
+                ? 'border-gold-light bg-gold-highlight/20 dark:border-gold-dark dark:bg-gold-dark/10'
                 : 'border-stone-200 dark:border-stone-700 hover:border-stone-300 dark:hover:border-stone-600'
             "
             @click="entryType = type.value"
@@ -174,8 +174,8 @@ async function submitEntry() {
               ? 'What was the dream about?'
               : 'Give it a title...'
           "
-          class="w-full px-4 py-3 rounded-xl border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 text-stone-800 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-tada-500 dark:focus:ring-tada-500 focus:border-transparent"
-        >
+          class="w-full px-4 py-3 rounded-xl border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 text-stone-800 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-gold-light dark:focus:ring-gold-dark focus:border-transparent"
+        />
       </div>
 
       <!-- Notes -->
@@ -195,7 +195,7 @@ async function submitEntry() {
               ? 'Describe the dream in detail...'
               : 'Add more details...'
           "
-          class="w-full px-4 py-3 rounded-xl border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 text-stone-800 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-tada-500 dark:focus:ring-tada-500 focus:border-transparent resize-none"
+          class="w-full px-4 py-3 rounded-xl border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 text-stone-800 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-gold-light dark:focus:ring-gold-dark focus:border-transparent resize-none"
         />
       </div>
 
@@ -213,7 +213,9 @@ async function submitEntry() {
             type="button"
             class="relative w-12 h-7 rounded-full transition-colors"
             :class="
-              dreamData.lucid ? 'bg-tada-600 dark:bg-tada-600' : 'bg-stone-300 dark:bg-stone-600'
+              dreamData.lucid
+                ? 'bg-gold-light dark:bg-gold-dark'
+                : 'bg-stone-300 dark:bg-stone-600'
             "
             role="switch"
             :aria-checked="dreamData.lucid"
@@ -239,8 +241,8 @@ async function submitEntry() {
             type="range"
             min="1"
             max="5"
-            class="w-full accent-tada-500 dark:accent-tada-500"
-          >
+            class="w-full accent-gold-light dark:accent-gold-dark"
+          />
         </div>
 
         <!-- Emotions -->
@@ -258,7 +260,7 @@ async function submitEntry() {
               class="px-3 py-1.5 rounded-full text-sm font-medium transition-colors"
               :class="
                 dreamData.emotions.includes(emotion)
-                  ? 'bg-tada-600 text-black dark:bg-tada-600 dark:text-white'
+                  ? 'bg-gold-light text-black dark:bg-gold-dark dark:text-white'
                   : 'bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600'
               "
               @click="
@@ -279,10 +281,12 @@ async function submitEntry() {
       <button
         type="submit"
         :disabled="isSubmitting || (!title.trim() && !notes.trim())"
-        class="w-full py-3 px-4 bg-tada-600 hover:opacity-90 text-black dark:bg-tada-600 dark:text-white dark:hover:opacity-90 disabled:bg-stone-300 dark:disabled:bg-stone-600 font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
+        class="w-full py-3 px-4 bg-gold-light hover:opacity-90 text-black dark:bg-gold-dark dark:text-white dark:hover:opacity-90 disabled:bg-stone-300 dark:disabled:bg-stone-600 font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
       >
         <span v-if="isSubmitting">Saving...</span>
-        <span v-else>{{ entryType === "tada" ? "🎉 Tada!" : "Save Entry" }}</span>
+        <span v-else>{{
+          entryType === "tada" ? "⚡ Ta-Da!" : "Save Entry"
+        }}</span>
       </button>
     </form>
   </div>

@@ -7,13 +7,14 @@
     "noPropertyAccessFromIndexSignature": true,
     "exactOptionalPropertyTypes": false,
     "moduleResolution": "bundler",
+    "baseUrl": ".",
     "paths": {
       "~/*": ["./*"],
       "@/*": ["./*"],
       "~~/*": ["./*"],
       "@@/*": ["./*"],
-      "#build/*": [".nuxt/build/*"],
-      "#imports": [".nuxt/imports.d.ts"]
+      "#build/*": ["./.nuxt/build/*"],
+      "#imports": ["./.nuxt/imports.d.ts"]
     }
   },
   "include": [

@@ -1,7 +1,7 @@
 import { defineEventHandler, getQuery, createError } from "h3";
 import { db } from "~/server/db";
 import { entries } from "~/server/db/schema";
-import { eq, and, desc, isNull } from "drizzle-orm";
+import { eq, and, desc, isNull, sql } from "drizzle-orm";
 import { createLogger } from "~/server/utils/logger";
 
 const logger = createLogger("api:entries:get");

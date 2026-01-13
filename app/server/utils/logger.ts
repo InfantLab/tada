@@ -95,8 +95,12 @@ class Logger {
 
     const logLine = JSON.stringify(logEntry);
 
-    // Always output to stderr (for Docker/systemd logs)
-    console.error(logLine);
+    // Output to appropriate console method based on log level
+    if (level === "error" || level === "warn") {
+      console.error(logLine);
+    } else {
+      console.log(logLine);
+    }
 
     // Write to rotating log files
     this.writeToFile("combined.log", logLine);

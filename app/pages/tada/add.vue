@@ -207,7 +207,6 @@ async function submitEntry() {
         <template v-else>
           <span class="text-2xl">⚡</span>
           <span>Ta-Da!</span>
-          <span class="text-2xl">🎉</span>
         </template>
       </button>
     </form>
