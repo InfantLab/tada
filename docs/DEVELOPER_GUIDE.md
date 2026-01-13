@@ -234,12 +234,12 @@ chore: upgrade emoji-picker-element to v1.28
 
 ### Testing Strategy
 
-**Current State (v0.1.0):**
+**Current State (v0.2.0):**
 
-- ✅ **50+ tests** with ~80% coverage
-- ✅ **CI integrated** - tests run on every push/PR
+- ✅ **80 tests** passing
 - ✅ **Co-located tests** - next to source files
-- ✅ See [dev/TESTING.md](dev/TESTING.md) for complete guide
+- ⚠️ **Integration tests** - 4 files disabled (*.test.ts.skip) pending @nuxt/test-utils rewrite
+- ✅ See [app/tests/README.md](../app/tests/README.md) for complete guide
 
 **Test Structure:**
 

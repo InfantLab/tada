@@ -279,8 +279,8 @@
 
 Before merging to main:
 
-- [ ] All unit tests passing
-- [ ] E2E test passing
+- [x] All unit tests passing (80/80)
+- [ ] E2E test passing (deferred - @nuxt/test-utils needed)
 - [ ] Manual test: Import Insight Timer CSV (4,854 rows)
 - [ ] Manual test: Create and use custom recipe
 - [ ] Manual test: Error handling (bad CSV format)

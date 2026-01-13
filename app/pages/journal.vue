@@ -15,7 +15,7 @@ const selectedType = ref<"all" | "dream" | "journal" | "tada">("all");
 onMounted(async () => {
   try {
     // Fetch journal-type entries (dream, journal, tada)
-    const data: Entry[] = await $fetch("/api/entries");
+    const data = await $fetch("/api/entries") as Entry[];
     entries.value = data.filter((e) =>
       ["dream", "journal", "tada", "note"].includes(e.type)
     );

@@ -186,6 +186,7 @@ const route = useRoute();
       </div>
     </nav>
     <ToastContainer />
+    <ErrorTrackerPanel />
   </div>
 </template>
 

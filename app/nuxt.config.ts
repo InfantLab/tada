@@ -1,6 +1,11 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  devtools: { enabled: true },
+  devtools: { 
+    enabled: true,
+    timeline: {
+      enabled: true,
+    },
+  },
 
   // Global CSS
   css: ["~/assets/css/main.css"],
@@ -10,8 +15,18 @@ export default defineNuxtConfig({
   // TypeScript strict mode
   typescript: {
     strict: true,
-    // Allow disabling typecheck via env in container builds
-    typeCheck: process.env["NUXT_TYPESCRIPT_TYPECHECK"] !== "false",
+    // Disable typecheck in dev - vue-tsc doesn't respect skipLibCheck for node_modules
+    // Run `bun run typecheck` manually to check types
+    typeCheck: false,
+    tsConfig: {
+      compilerOptions: {
+        // Reduce noise in error panel
+        skipLibCheck: true,
+        // These are already in tsconfig.json but ensure they're applied
+        noUncheckedIndexedAccess: true,
+        noPropertyAccessFromIndexSignature: true,
+      },
+    },
   },
 
   // Runtime config (environment variables)

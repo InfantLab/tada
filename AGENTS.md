@@ -5,6 +5,8 @@
 - **❌ NEVER run `bun run dev`** — The user controls the dev server. It runs on :3000. Don't start, restart, or modify it.
 - **❌ NEVER run `bun run test`** — It blocks the terminal. Use VS Code Test Explorer or `runTests` tool instead.
 - **❌ NEVER run `sqlite3`** — sqlite3 CLI is not installed. Use `bun run db:studio` for DB UI or inspect via drizzle migrations.
+- **❌ NEVER commit automatically** — Wait for the user to explicitly say "commit" or "commit this" before running git commit.
+- **❌ Create documentation sparingly** — Only create documentation when there are major changes in function. Strongly favour updating existing files in /docs folder.
 
 ## Code Style
 
@@ -21,12 +23,15 @@
 - ❌ Use Bun APIs in server code (production is Node 20)
 - ❌ Create test scripts in root - use `scripts/`
 - ❌ Create excessive documentation
+- ❌ Auto-commit changes (wait for explicit instruction)
+- ❌ Create markdown summary files in root
 
 ## Project
 
 - **Stack:** Nuxt 3 + Vue 3 + TypeScript + Bun + SQLite/Drizzle
 - **Dir:** Always `cd app` before commands
 - **Docs:** `design/SDR.md` (requirements), `design/ontology.md` (entry types)
+- **New docs:** If explicitly requested, put in `docs/` folder, not root
 
 ## Commands (File-Scoped)
 
@@ -49,12 +54,38 @@ bun run db:studio         # DB UI on :4983
 # Use VS Code Test Explorer or runTests tool with limits instead
 ```
 
+## Error Management
+
+The VS Code Problems panel has been configured for clarity:
+- **Errors** (❌) block compilation - fix these first
+- **Warnings** (⚠️) are suggestions - fix when convenient  
+- **Info** (ℹ️) are hints - optional improvements
+
+**Filtering noise:**
+- `skipLibCheck: true` suppresses third-party module errors
+- PWA modules have type stubs in `types/pwa-icons.d.ts`
+- Node modules excluded from diagnostics
+
+**Using the Problems panel:**
+- Click error to jump to location
+- Right-click → "Copy" to copy error text
+- Right-click → "Copy Message" for just the message
+- Filter by severity using the toolbar icons
+- Use search box to filter by keyword
+- `Cmd/Ctrl+Shift+M` to toggle panel
+
+**When errors are overwhelming:**
+1. Run `bun run typecheck` to see actual TS errors
+2. Fix errors in production code first (not node_modules)
+3. Use `// @ts-expect-error` with explanation for unavoidable issues
+
 ## Testing
 
-**Current status:** 46 unit tests passing (utils only). Integration tests blocked on e2e setup.
+**Current status:** 133 unit tests passing (7 logger tests failing - pre-existing issue with JSON format assertions). Integration tests (4 files) disabled pending @nuxt/test-utils rewrite.
 
 - Unit tests: Co-locate with source (`utils/*.test.ts`)
 - Integration tests: `tests/api/*.test.ts` (use @nuxt/test-utils/e2e)
+- Disabled tests: `*.test.ts.skip` - need database/server setup
 - Never create test scripts in root
 - See `app/tests/README.md` for examples
 

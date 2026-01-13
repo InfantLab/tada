@@ -75,44 +75,42 @@ All timers count up, never down. We celebrate what you did, not what you "should
 - [ ] Optional gentle milestones (chime at 10, 20, 30 min) — celebration, not pressure
 - [ ] Timer profiles: save/load named configurations (duration hint, category, bells)
 
-### 📥 Generic CSV Import Framework
+### 📥 Generic CSV Import Framework ✅
 
 Build flexible import system with user-mappable columns and reusable recipes.
 
-- [ ] **CSV Mapper UI:**
+- [x] **CSV Mapper UI:**
   - Upload any CSV file
   - Preview first 10 rows with column headers
   - Drag-and-drop or dropdown to map CSV columns → Tada fields
   - Required mappings: timestamp/date, activity/name
   - Optional mappings: duration, category, subcategory, notes, tags
-- [ ] **Import Recipes** (saved to database):
+- [x] **Import Recipes** (saved to database):
   - Save column mappings as named recipe
   - Share recipes between users (future)
-  - Built-in recipes: Insight Timer, Strava, Apple Health (future)
-- [ ] **Data Transformation:**
+  - Built-in recipes: Insight Timer ✅
+- [x] **Data Transformation:**
   - Date/time format detection and parsing (MM/DD/YYYY, ISO, Unix timestamps)
   - Duration parsing (H:MM:SS, seconds, minutes)
-  - Timezone selector for imports
+  - Timezone selector for imports (backend ready, UI pending)
   - Category/subcategory creation or mapping to existing
-  - Custom emoji picker for new subcategories
-- [ ] **Data Validation:**
+  - Custom emoji picker for new subcategories (pending)
+- [x] **Data Validation:**
   - Flag suspicious durations (>3 hours, <30 seconds)
   - Preview transformed entries before import
-  - Duplicate detection (timestamp + duration matching)
-  - User chooses: skip, update, or import duplicates
-- [ ] **Robust Import:**
+  - Duplicate detection (externalId hash matching)
+  - Skip duplicates automatically (count returned)
+- [x] **Robust Import:**
   - Streaming CSV parser for large files (10,000+ rows)
   - Batched database inserts (500 at a time)
   - Progress bar with success/skip/error counts
   - Downloadable error log for failed rows
   - Transaction safety (rollback on critical errors)
-- [ ] **Insight Timer Recipe** (first built-in):
+- [x] **Insight Timer Recipe** (first built-in):
   - Pre-configured mapping for Insight Timer CSV format
   - In-app instructions: Settings → Features & Preferences → Sessions → Export Data
   - All activities → mindfulness category
   - Activities: Meditation, Breathing, Manifesting, Walking, Tai Chi (preserve capitalization)
-  - User sets custom emojis during import preview
-  - Flag new subcategories created during import
 - [ ] **View Import History:**
   - Browse past imports with success/skip/error counts
   - Re-run or delete previous imports
@@ -155,10 +153,14 @@ Chains that bend, not break. When struggling, suggest easier tier instead of bro
 
 ### 🔧 Polish
 
+- [x] Developer error tracking panel (browser, dev mode only)
+- [x] Column auto-detection for CSV import with confidence scoring
 - [ ] Toast/notification system (replace `alert()` dialogs)
 - [ ] Dedicated Ta-Da! add page with celebration magic
 - [ ] Category/subcategory emoji editing in Settings
 - [ ] Legacy data backfill tool for pre-v0.1.0 entries
+- [ ] Fix pre-existing logger test failures (7 tests, JSON format assertions)
+- [ ] Rewrite integration tests with @nuxt/test-utils/e2e
 
 ---
 

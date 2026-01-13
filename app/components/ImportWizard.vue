@@ -545,7 +545,9 @@
         <div class="flex flex-col items-end gap-2">
           <button
             class="px-6 py-3 bg-mindfulness-light dark:bg-mindfulness-dark text-white rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-            :disabled="!columnMapping['startedAt'] || !columnMapping['duration']"
+            :disabled="
+              !columnMapping['startedAt'] || !columnMapping['duration']
+            "
             @click="
               generatePreview();
               currentStep++;
@@ -613,11 +615,11 @@
             </thead>
             <tbody class="divide-y divide-pearl-mist dark:divide-cosmic-indigo">
               <tr
-                v-for="entry in previewEntries"
-                :key="entry._rowIndex"
+                v-for="(entry, index) in previewEntries"
+                :key="index"
                 class="hover:bg-pearl-mist/50 dark:hover:bg-cosmic-black/50"
               >
-                <td class="px-4 py-2">{{ entry._rowIndex + 1 }}</td>
+                <td class="px-4 py-2">{{ index + 1 }}</td>
                 <td class="px-4 py-2">{{ entry.startedAt || "—" }}</td>
                 <td class="px-4 py-2">{{ entry.duration || "—" }}</td>
                 <td class="px-4 py-2">
@@ -628,10 +630,10 @@
                 </td>
                 <td class="px-4 py-2">
                   <span
-                    v-if="validationWarnings[entry._rowIndex]"
+                    v-if="validationWarnings[index]"
                     class="text-xs text-tada-700 dark:text-tada-300"
                   >
-                    ⚠️ {{ validationWarnings[entry._rowIndex]?.join(", ") }}
+                    ⚠️ {{ validationWarnings[index]?.join(", ") }}
                   </span>
                   <span v-else class="text-xs text-gray-500 dark:text-gray-500"
                     >None</span
@@ -830,6 +832,45 @@ const _emit = defineEmits<{
 const toast = useToast();
 const { parseCSVFile, performImport, transformCSVData } = useCSVImport();
 
+// Helper functions for import wizard
+async function importCSV(config: {
+  csvData: Record<string, string>[];
+  columnMapping: Record<string, string>;
+  transforms: typeof transforms.value;
+  recipe: ImportRecipe | null;
+  filename?: string;
+}) {
+  const transformedEntries = transformCSVData({
+    csvData: config.csvData,
+    columnMapping: config.columnMapping,
+    transforms: config.transforms,
+    recipe: config.recipe,
+  });
+
+  return performImport({
+    entries: transformedEntries,
+    source: config.recipe?.name || "csv-import",
+    recipeName: config.recipe?.name || "Custom Import",
+    recipeId: config.recipe?.id || null,
+    filename: config.filename,
+  });
+}
+
+async function saveRecipe(config: {
+  name: string;
+  description: string;
+  columnMapping: Record<string, string>;
+  transforms: typeof transforms.value;
+}) {
+  await $fetch("/api/import/recipes", {
+    method: "POST",
+    body: config,
+  });
+
+  toast.success(`Recipe "${config.name}" saved successfully`);
+  await loadUserRecipes();
+}
+
 // Load user recipes on mount
 onMounted(() => {
   loadUserRecipes();
@@ -860,7 +901,13 @@ const transforms = ref({
 
 // Preview data
 const previewEntries = ref<
-  Array<Partial<typeof entries.$inferInsert> & { warnings?: string[] }>
+  Array<
+    Partial<typeof entries.$inferInsert> & {
+      warnings?: string[];
+      _rowIndex?: number;
+      duration?: string;
+    }
+  >
 >([]);
 const validationWarnings = ref<Record<number, string[]>>({});
 
@@ -977,16 +1024,16 @@ function validateEntry(entry: Record<string, unknown>): string[] {
   const warnings: string[] = [];
 
   // Required fields check
-  if (!entry.startedAt) {
+  if (!entry["startedAt"]) {
     warnings.push("Missing start time");
   }
-  if (!entry.duration) {
+  if (!entry["duration"]) {
     warnings.push("Missing duration");
   }
 
   // Validate duration format if present
-  if (entry.duration && typeof entry.duration === "string") {
-    const duration = entry.duration as string;
+  if (entry["duration"] && typeof entry["duration"] === "string") {
+    const duration = entry["duration"] as string;
     if (!/^\d+:\d{2}:\d{2}$/.test(duration) && !/^\d+$/.test(duration)) {
       warnings.push("Invalid duration format (expected H:mm:ss or seconds)");
     }
@@ -1004,14 +1051,16 @@ function generatePreview() {
 
   for (let i = 0; i < previewCount; i++) {
     const row = csvData.value[i];
+    if (!row) continue;
     const entry: Record<string, unknown> = { _rowIndex: i };
 
     Object.entries(columnMapping.value).forEach(([field, csvCol]) => {
       if (csvCol && row[csvCol]) entry[field] = row[csvCol];
     });
 
-    entry.category = transforms.value.defaultCategory;
-    entry.subcategory = transforms.value.defaultSubcategory || entry.name || "";
+    entry["category"] = transforms.value.defaultCategory;
+    entry["subcategory"] =
+      transforms.value.defaultSubcategory || entry["name"] || "";
 
     const entryWarnings = validateEntry(entry);
     if (entryWarnings.length > 0) warnings[i] = entryWarnings;

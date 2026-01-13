@@ -1,22 +1,26 @@
 # Tada Testing
 
-## Current Coverage (v0.1.0)
+## Current Coverage (v0.2.0)
 
-**60 tests passing:**
+**133 tests passing (7 logger tests failing - pre-existing issue):**
 
 - `utils/categoryDefaults.test.ts` (22 tests) - Category/emoji resolution
-- `utils/logger.test.ts` (11 tests) - Client-side logging
-- `server/utils/logger.test.ts` (13 tests) - Server-side logging
+- `utils/columnDetection.test.ts` (20 tests) - CSV column auto-detection
+- `utils/logger.test.ts` (10 tests) - Client-side logging
+- `composables/useErrorTracker.test.ts` (26 tests) - Error tracking composable
+- `server/utils/logger.test.ts` (13 tests, 7 failing) - Server-side logging
 - `server/utils/password.test.ts` (14 tests) - Password hashing/verification
+- `server/utils/csvParser.test.ts` (20 tests) - CSV parsing, date/duration detection
+- `server/api/health.get.test.ts` (1 test) - Health check endpoint
 
-**Missing coverage:**
+**Disabled integration tests (*.test.ts.skip):**
 
-- ❌ API endpoints (entries CRUD, auth, health) - e2e environment broken
-- ❌ Auth middleware and session management - requires HTTP context
-- ❌ Database operations - no direct tests yet
-- ❌ E2E user flows - blocked on @nuxt/test-utils/e2e
+- `server/api/auth/login.post.test.ts.skip` - Needs @nuxt/test-utils
+- `server/api/auth/register.post.test.ts.skip` - Needs @nuxt/test-utils
+- `server/api/auth/has-users.get.test.ts.skip` - Needs running server
+- `server/api/import/entries.post.test.ts.skip` - Needs HTTP context
 
-**Integration tests blocked:** `@nuxt/test-utils/e2e` fails with port timeout. Cannot test HTTP layer until environment is fixed.
+**Why disabled?** These tests use `$fetch` which requires a running Nuxt server. They'll be rewritten with proper `@nuxt/test-utils/e2e` setup.
 
 **Coverage tool blocked:** `@vitest/coverage-v8` requires `node:inspector` which Bun doesn't implement yet.
 
@@ -24,7 +28,7 @@
 
 ```bash
 cd app
-bun run test              # Run all tests (60 passing, 1 integration blocked)
+bun run test              # Run all tests (133 passing)
 bun run test --watch      # Watch mode
 ```
 
