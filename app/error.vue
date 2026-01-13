@@ -15,7 +15,7 @@ const props = defineProps<{
 const showDetails = ref(false);
 const copied = ref(false);
 
-const isDevMode = process.dev;
+const isDevMode = import.meta.dev;
 
 const errorSummary = computed(() => {
   return `${props.error.statusCode}: ${props.error.message}`;
@@ -71,7 +71,9 @@ function goBack() {
   <div
     class="min-h-screen bg-pearl-white dark:bg-cosmic-black flex items-center justify-center p-4"
   >
-    <div class="max-w-lg w-full bg-white dark:bg-cosmic-indigo rounded-xl shadow-lg p-8">
+    <div
+      class="max-w-lg w-full bg-white dark:bg-cosmic-indigo rounded-xl shadow-lg p-8"
+    >
       <!-- Error Icon -->
       <div class="text-center mb-6">
         <div
@@ -80,7 +82,9 @@ function goBack() {
           ⚠️
         </div>
         <h1 class="text-2xl font-bold text-text-light dark:text-text-dark">
-          {{ error.statusCode === 404 ? "Page Not Found" : "Something Went Wrong" }}
+          {{
+            error.statusCode === 404 ? "Page Not Found" : "Something Went Wrong"
+          }}
         </h1>
       </div>
 
@@ -110,7 +114,10 @@ function goBack() {
       </div>
 
       <!-- Developer Details (dev mode only) -->
-      <div v-if="isDevMode" class="mt-6 pt-6 border-t border-pearl-mist dark:border-cosmic-indigo-light">
+      <div
+        v-if="isDevMode"
+        class="mt-6 pt-6 border-t border-pearl-mist dark:border-cosmic-indigo-light"
+      >
         <button
           class="flex items-center justify-between w-full text-sm text-text-light-muted dark:text-text-dark-muted hover:text-text-light dark:hover:text-text-dark"
           @click="showDetails = !showDetails"
@@ -130,12 +137,15 @@ function goBack() {
           </div>
           <pre
             class="text-xs bg-gray-900 text-green-400 rounded-lg p-4 overflow-x-auto max-h-64 overflow-y-auto"
-          >{{ errorDetails }}</pre>
+            >{{ errorDetails }}</pre
+          >
         </div>
       </div>
 
       <!-- Error Code Footer -->
-      <p class="text-center text-xs text-text-light-muted dark:text-text-dark-muted mt-6">
+      <p
+        class="text-center text-xs text-text-light-muted dark:text-text-dark-muted mt-6"
+      >
         Error {{ error.statusCode }}
       </p>
     </div>

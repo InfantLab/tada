@@ -82,7 +82,7 @@ function formatTime(date: Date) {
 
 // Only show in dev mode
 const showPanel = computed(() => {
-  return process.dev && totalCount.value > 0;
+  return import.meta.dev && totalCount.value > 0;
 });
 </script>
 
@@ -116,7 +116,9 @@ const showPanel = computed(() => {
         class="w-[400px] max-h-[60vh] bg-gray-900/95 text-white rounded-lg shadow-2xl overflow-hidden flex flex-col backdrop-blur-sm"
       >
         <!-- Header -->
-        <div class="flex items-center justify-between px-4 py-3 border-b border-gray-700">
+        <div
+          class="flex items-center justify-between px-4 py-3 border-b border-gray-700"
+        >
           <div class="flex items-center gap-3">
             <span class="font-semibold">Errors</span>
             <div class="flex items-center gap-2 text-xs">
@@ -172,7 +174,15 @@ const showPanel = computed(() => {
             "
             @click="filter = f"
           >
-            {{ f === "all" ? `All (${totalCount})` : f === "error" ? `Errors (${errorCount})` : f === "warning" ? `Warnings (${warningCount})` : `Info (${infoCount})` }}
+            {{
+              f === "all"
+                ? `All (${totalCount})`
+                : f === "error"
+                ? `Errors (${errorCount})`
+                : f === "warning"
+                ? `Warnings (${warningCount})`
+                : `Info (${infoCount})`
+            }}
           </button>
         </div>
 

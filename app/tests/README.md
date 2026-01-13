@@ -13,7 +13,7 @@
 - `server/utils/csvParser.test.ts` (20 tests) - CSV parsing, date/duration detection
 - `server/api/health.get.test.ts` (1 test) - Health check endpoint
 
-**Disabled integration tests (*.test.ts.skip):**
+**Disabled integration tests (\*.test.ts.skip):**
 
 - `server/api/auth/login.post.test.ts.skip` - Needs @nuxt/test-utils
 - `server/api/auth/register.post.test.ts.skip` - Needs @nuxt/test-utils

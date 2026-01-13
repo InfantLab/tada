@@ -46,7 +46,9 @@ declare module "#build/pwa-icons/PwaTransparentImage" {
 
 declare module "#pwa" {
   export function useApplePwaIcon(props?: unknown): { icon: unknown };
-  export function useAppleSplashScreenPwaIcon(props?: unknown): { icon: unknown };
+  export function useAppleSplashScreenPwaIcon(props?: unknown): {
+    icon: unknown;
+  };
   export function useFaviconPwaIcon(props?: unknown): { icon: unknown };
   export function useMaskablePwaIcon(props?: unknown): { icon: unknown };
   export function useTransparentPwaIcon(props?: unknown): { icon: unknown };

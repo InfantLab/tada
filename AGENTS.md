@@ -57,16 +57,19 @@ bun run db:studio         # DB UI on :4983
 ## Error Management
 
 The VS Code Problems panel has been configured for clarity:
+
 - **Errors** (❌) block compilation - fix these first
-- **Warnings** (⚠️) are suggestions - fix when convenient  
+- **Warnings** (⚠️) are suggestions - fix when convenient
 - **Info** (ℹ️) are hints - optional improvements
 
 **Filtering noise:**
+
 - `skipLibCheck: true` suppresses third-party module errors
 - PWA modules have type stubs in `types/pwa-icons.d.ts`
 - Node modules excluded from diagnostics
 
 **Using the Problems panel:**
+
 - Click error to jump to location
 - Right-click → "Copy" to copy error text
 - Right-click → "Copy Message" for just the message
@@ -75,6 +78,7 @@ The VS Code Problems panel has been configured for clarity:
 - `Cmd/Ctrl+Shift+M` to toggle panel
 
 **When errors are overwhelming:**
+
 1. Run `bun run typecheck` to see actual TS errors
 2. Fix errors in production code first (not node_modules)
 3. Use `// @ts-expect-error` with explanation for unavoidable issues

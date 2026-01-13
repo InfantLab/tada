@@ -66,9 +66,11 @@ export function useErrorTracker() {
     const text = errors.value
       .map(
         (e) =>
-          `[${e.type.toUpperCase()}] ${e.timestamp.toISOString()}\n${e.message}${
-            e.details ? `\n${e.details}` : ""
-          }${e.stack ? `\n${e.stack}` : ""}\n`
+          `[${e.type.toUpperCase()}] ${e.timestamp.toISOString()}\n${
+            e.message
+          }${e.details ? `\n${e.details}` : ""}${
+            e.stack ? `\n${e.stack}` : ""
+          }\n`
       )
       .join("\n---\n\n");
 

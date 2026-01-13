@@ -238,7 +238,7 @@ chore: upgrade emoji-picker-element to v1.28
 
 - ✅ **80 tests** passing
 - ✅ **Co-located tests** - next to source files
-- ⚠️ **Integration tests** - 4 files disabled (*.test.ts.skip) pending @nuxt/test-utils rewrite
+- ⚠️ **Integration tests** - 4 files disabled (\*.test.ts.skip) pending @nuxt/test-utils rewrite
 - ✅ See [app/tests/README.md](../app/tests/README.md) for complete guide
 
 **Test Structure:**
