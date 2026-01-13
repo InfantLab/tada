@@ -3,13 +3,9 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
 
   // Global CSS
-  css: ['~/assets/css/main.css'],
+  css: ["~/assets/css/main.css"],
 
-  modules: [
-    '@nuxtjs/tailwindcss',
-    '@vite-pwa/nuxt',
-    '@nuxt/eslint',
-  ],
+  modules: ["@nuxtjs/tailwindcss", "@vite-pwa/nuxt", "@nuxt/eslint"],
 
   // TypeScript strict mode
   typescript: {
@@ -21,42 +17,43 @@ export default defineNuxtConfig({
   // Runtime config (environment variables)
   runtimeConfig: {
     // Server-only (not exposed to client)
-    databaseUrl: 'file:./data/db.sqlite',
-    
+    databaseUrl: "file:./data/db.sqlite",
+
     // Public (exposed to client)
     public: {
-      appName: 'Tada',
-      appVersion: '0.1.0',
+      appName: "Tada",
+      appVersion: "0.1.0",
     },
   },
 
   // PWA configuration
   pwa: {
-    registerType: 'autoUpdate',
+    registerType: "autoUpdate",
     manifest: {
-      name: 'Tada - Life Tracker',
-      short_name: 'Tada',
-      description: 'Personal lifelogger - Track Activities, Discover Achievements',
-      theme_color: '#10b981',
-      background_color: '#ffffff',
-      display: 'standalone',
-      orientation: 'portrait',
+      name: "Tada - Life Tracker",
+      short_name: "Tada",
+      description:
+        "Personal lifelogger - Track Activities, Discover Achievements",
+      theme_color: "#10b981",
+      background_color: "#ffffff",
+      display: "standalone",
+      orientation: "portrait",
       icons: [
         {
-          src: '/icons/icon-192.png',
-          sizes: '192x192',
-          type: 'image/png',
+          src: "/icons/icon-192.png",
+          sizes: "192x192",
+          type: "image/png",
         },
         {
-          src: '/icons/icon-512.png',
-          sizes: '512x512',
-          type: 'image/png',
+          src: "/icons/icon-512.png",
+          sizes: "512x512",
+          type: "image/png",
         },
         {
-          src: '/icons/icon-512.png',
-          sizes: '512x512',
-          type: 'image/png',
-          purpose: 'maskable',
+          src: "/icons/icon-512.png",
+          sizes: "512x512",
+          type: "image/png",
+          purpose: "maskable",
         },
       ],
     },
@@ -65,9 +62,9 @@ export default defineNuxtConfig({
       runtimeCaching: [
         {
           urlPattern: /^https:\/\/.*\.(mp3|wav|ogg|m4a)$/,
-          handler: 'CacheFirst',
+          handler: "CacheFirst",
           options: {
-            cacheName: 'audio-cache',
+            cacheName: "audio-cache",
             expiration: {
               maxEntries: 20,
               maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
@@ -84,16 +81,20 @@ export default defineNuxtConfig({
   // App configuration
   app: {
     head: {
-      title: 'Tada',
+      title: "Tada",
       meta: [
-        { name: 'description', content: 'Personal lifelogger - Track Activities, Discover Achievements' },
-        { name: 'theme-color', content: '#10b981' },
-        { name: 'apple-mobile-web-app-capable', content: 'yes' },
-        { name: 'apple-mobile-web-app-status-bar-style', content: 'default' },
+        {
+          name: "description",
+          content:
+            "Personal lifelogger - Track Activities, Discover Achievements",
+        },
+        { name: "theme-color", content: "#10b981" },
+        { name: "apple-mobile-web-app-capable", content: "yes" },
+        { name: "apple-mobile-web-app-status-bar-style", content: "default" },
       ],
       link: [
-        { rel: 'icon', type: 'image/png', href: '/favicon.png' },
-        { rel: 'apple-touch-icon', href: '/icons/icon-192.png' },
+        { rel: "icon", type: "image/png", href: "/favicon.png" },
+        { rel: "apple-touch-icon", href: "/icons/icon-192.png" },
       ],
     },
   },
@@ -106,5 +107,5 @@ export default defineNuxtConfig({
     },
   },
 
-  compatibilityDate: '2026-01-10',
-})
+  compatibilityDate: "2026-01-10",
+});

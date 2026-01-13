@@ -542,16 +542,24 @@
         >
           💾 Save as Recipe
         </button>
-        <button
-          class="px-6 py-3 bg-mindfulness-light dark:bg-mindfulness-dark text-white rounded-lg hover:opacity-90"
-          :disabled="!columnMapping['startedAt'] || !columnMapping['duration']"
-          @click="
-            generatePreview();
-            currentStep++;
-          "
-        >
-          Preview →
-        </button>
+        <div class="flex flex-col items-end gap-2">
+          <button
+            class="px-6 py-3 bg-mindfulness-light dark:bg-mindfulness-dark text-white rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+            :disabled="!columnMapping['startedAt'] || !columnMapping['duration']"
+            @click="
+              generatePreview();
+              currentStep++;
+            "
+          >
+            Preview →
+          </button>
+          <p
+            v-if="!columnMapping['startedAt'] || !columnMapping['duration']"
+            class="text-xs text-text-light-muted dark:text-text-dark-muted"
+          >
+            Map "Started At" and "Duration" to continue
+          </p>
+        </div>
       </div>
     </div>
 
@@ -963,6 +971,28 @@ function autoDetectMappings() {
   }
 
   columnMapping.value = mapping;
+}
+
+function validateEntry(entry: Record<string, unknown>): string[] {
+  const warnings: string[] = [];
+
+  // Required fields check
+  if (!entry.startedAt) {
+    warnings.push("Missing start time");
+  }
+  if (!entry.duration) {
+    warnings.push("Missing duration");
+  }
+
+  // Validate duration format if present
+  if (entry.duration && typeof entry.duration === "string") {
+    const duration = entry.duration as string;
+    if (!/^\d+:\d{2}:\d{2}$/.test(duration) && !/^\d+$/.test(duration)) {
+      warnings.push("Invalid duration format (expected H:mm:ss or seconds)");
+    }
+  }
+
+  return warnings;
 }
 
 function generatePreview() {

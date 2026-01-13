@@ -166,19 +166,22 @@ export function parseDateTime(
         /^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2}):(\d{2})$/
       );
       if (!match) return null;
-      [, day = "", month = "", year = "", hour = "", minute = "", second = ""] = match;
+      [, day = "", month = "", year = "", hour = "", minute = "", second = ""] =
+        match;
     } else if (format === "MM/DD/YYYY HH:mm:ss") {
       match = trimmed.match(
         /^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2}):(\d{2})$/
       );
       if (!match) return null;
-      [, month = "", day = "", year = "", hour = "", minute = "", second = ""] = match;
+      [, month = "", day = "", year = "", hour = "", minute = "", second = ""] =
+        match;
     } else if (format === "YYYY-MM-DD HH:mm:ss") {
       match = trimmed.match(
         /^(\d{4})-(\d{1,2})-(\d{1,2})\s+(\d{1,2}):(\d{2}):(\d{2})$/
       );
       if (!match) return null;
-      [, year = "", month = "", day = "", hour = "", minute = "", second = ""] = match;
+      [, year = "", month = "", day = "", hour = "", minute = "", second = ""] =
+        match;
     } else {
       // Fallback: try native Date parsing
       const date = new Date(trimmed);

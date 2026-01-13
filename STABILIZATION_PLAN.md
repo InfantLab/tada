@@ -8,12 +8,14 @@
 ### 1. **Slow Startup (~1 minute)**
 
 **Root Causes:**
+
 - Database indexes just added (should help)
 - TypeScript compilation errors blocking hot reload
 - Nuxt dev server overhead
 
 **Actions:**
 ✅ Added database indexes (commit 8c55c8c)
+
 - [ ] Verify indexes are applied (`bun run db:studio` to check)
 - [ ] Profile startup time after fixes
 - [ ] Consider lazy-loading heavy dependencies
@@ -21,6 +23,7 @@
 ### 2. **TypeScript Strict Mode Violations** (48 errors)
 
 **Problem Files:**
+
 - ✅ `server/api/import/entries.post.test.ts` - DISABLED (needs rewrite with proper mocks)
 - ✅ `server/api/auth/login.post.test.ts` - DISABLED (same issue)
 - ⚠️ `server/utils/csvParser.ts` - Type safety issues with `string | undefined`
@@ -29,6 +32,7 @@
 - ⚠️ `.nuxt/pwa-icons-plugin.ts` - Missing type definitions
 
 **Priority Actions:**
+
 1. Fix `password.ts` Argon2 calls (CRITICAL - auth broken)
 2. Add proper null checks to `csvParser.ts`
 3. Fix `restore.post.ts` undefined handling
@@ -41,6 +45,7 @@
 ✅ Duplicate `tada` color definition in tailwind.config.ts
 
 **Still Need:**
+
 - [ ] Review `nuxt.config.ts` for unnecessary modules
 - [ ] Check `tsconfig.json` strictness settings
 - [ ] Verify Vite optimization settings
@@ -54,17 +59,20 @@
 ✅ Fixed null check to `result.error || result.data.length === 0`
 
 **Test:**
+
 - [ ] Upload a CSV and verify "Continue" button appears
 - [ ] Complete full import flow
 
 ### 5. **Hot Reload Not Working Reliably**
 
 **Hypothesis:**
+
 - TypeScript errors preventing recompilation
 - Browser cache issues
 - Vite HMR boundaries broken by errors
 
 **Actions:**
+
 - [ ] Clear all TypeScript errors first
 - [ ] Test hot reload after stabilization
 - [ ] Add `.env` with `VITE_HMR_ENABLED=true` if needed
