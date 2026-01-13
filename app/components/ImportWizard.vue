@@ -29,7 +29,7 @@
     <!-- Step 1: Upload File -->
     <div v-if="currentStep === 1">
       <h2
-        class="text-2xl font-semibold text-stone-900 dark:text-stone-100 mb-4"
+        class="text-2xl font-semibold text-text-light dark:text-text-dark mb-4"
       >
         Upload CSV File
       </h2>
@@ -45,7 +45,7 @@
         />
         <button
           class="inline-block px-6 py-3 bg-mindfulness-light dark:bg-mindfulness-dark text-white rounded-lg hover:opacity-90 transition-opacity"
-          @click="$refs.fileInput?.click()"
+          @click="() => fileInput?.click()"
         >
           Choose CSV File
         </button>
@@ -56,7 +56,7 @@
         </p>
         <p
           v-if="selectedFile"
-          class="mt-2 text-sm text-stone-900 dark:text-stone-100 font-medium"
+          class="mt-2 text-sm text-text-light dark:text-text-dark font-medium"
         >
           Selected: {{ selectedFile.name }} ({{
             formatFileSize(selectedFile.size)
@@ -76,7 +76,7 @@
     <!-- Step 2: Map Columns -->
     <div v-if="currentStep === 2">
       <h2
-        class="text-2xl font-semibold text-stone-900 dark:text-stone-100 mb-4"
+        class="text-2xl font-semibold text-text-light dark:text-text-dark mb-4"
       >
         Map Columns
       </h2>
@@ -87,13 +87,13 @@
       <div class="bg-white dark:bg-cosmic-indigo rounded-lg p-6 space-y-4">
         <div class="grid grid-cols-2 gap-4 items-center">
           <label
-            class="text-sm font-medium text-stone-900 dark:text-stone-100"
+            class="text-sm font-medium text-text-light dark:text-text-dark"
           >
             Started At *
           </label>
           <select
             v-model="columnMapping['startedAt']"
-            class="px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-cosmic-black text-stone-900 dark:text-stone-100"
+            class="px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-cosmic-black text-text-light-primary dark:text-text-dark-primary"
           >
             <option value="">-- Select Column --</option>
             <option v-for="field in csvFields" :key="field" :value="field">
@@ -103,13 +103,13 @@
         </div>
         <div class="grid grid-cols-2 gap-4 items-center">
           <label
-            class="text-sm font-medium text-stone-900 dark:text-stone-100"
+            class="text-sm font-medium text-text-light dark:text-text-dark"
           >
             Duration *
           </label>
           <select
             v-model="columnMapping['duration']"
-            class="px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-cosmic-black text-stone-900 dark:text-stone-100"
+            class="px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-cosmic-black text-text-light dark:text-text-dark"
           >
             <option value="">-- Select Column --</option>
             <option v-for="field in csvFields" :key="field" :value="field">
@@ -119,13 +119,13 @@
         </div>
         <div class="grid grid-cols-2 gap-4 items-center">
           <label
-            class="text-sm font-medium text-stone-900 dark:text-stone-100"
+            class="text-sm font-medium text-text-light dark:text-text-dark"
           >
             Activity Name
           </label>
           <select
             v-model="columnMapping['name']"
-            class="px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-cosmic-black text-stone-900 dark:text-stone-100"
+            class="px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-cosmic-black text-text-light dark:text-text-dark"
           >
             <option value="">-- Select Column --</option>
             <option v-for="field in csvFields" :key="field" :value="field">
@@ -135,13 +135,13 @@
         </div>
         <div class="grid grid-cols-2 gap-4 items-center">
           <label
-            class="text-sm font-medium text-stone-900 dark:text-stone-100"
+            class="text-sm font-medium text-text-light dark:text-text-dark"
           >
             Notes
           </label>
           <select
             v-model="columnMapping['notes']"
-            class="px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-cosmic-black text-stone-900 dark:text-stone-100"
+            class="px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-cosmic-black text-text-light dark:text-text-dark"
           >
             <option value="">-- Select Column --</option>
             <option v-for="field in csvFields" :key="field" :value="field">
@@ -170,7 +170,7 @@
     <!-- Step 3: Configure Transforms -->
     <div v-if="currentStep === 3">
       <h2
-        class="text-2xl font-semibold text-stone-900 dark:text-stone-100 mb-4"
+        class="text-2xl font-semibold text-text-light dark:text-text-dark mb-4"
       >
         Configure Transforms
       </h2>
@@ -180,40 +180,40 @@
       <div class="bg-white dark:bg-cosmic-indigo rounded-lg p-6 space-y-4">
         <div>
           <label
-            class="block text-sm font-medium text-stone-900 dark:text-stone-100 mb-2"
+            class="block text-sm font-medium text-text-light dark:text-text-dark mb-2"
           >
             Date Format
           </label>
           <input
             v-model="transforms.dateFormat"
             type="text"
-            class="w-full px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-cosmic-black text-stone-900 dark:text-stone-100"
+            class="w-full px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-cosmic-black text-text-light dark:text-text-dark"
             placeholder="MM/DD/YYYY HH:mm:ss"
           />
         </div>
         <div>
           <label
-            class="block text-sm font-medium text-stone-900 dark:text-stone-100 mb-2"
+            class="block text-sm font-medium text-text-light dark:text-text-dark mb-2"
           >
             Timezone
           </label>
           <input
             v-model="transforms.timezone"
             type="text"
-            class="w-full px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-cosmic-black text-stone-900 dark:text-stone-100"
+            class="w-full px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-cosmic-black text-text-light dark:text-text-dark"
             placeholder="America/New_York"
           />
         </div>
         <div>
           <label
-            class="block text-sm font-medium text-stone-900 dark:text-stone-100 mb-2"
+            class="block text-sm font-medium text-text-light dark:text-text-dark mb-2"
           >
             Default Category
           </label>
           <input
             v-model="transforms.defaultCategory"
             type="text"
-            class="w-full px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-cosmic-black text-stone-900 dark:text-stone-100"
+            class="w-full px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-cosmic-black text-text-light dark:text-text-dark"
             placeholder="mindfulness"
           />
         </div>
@@ -247,7 +247,7 @@
     <!-- Step 4: Preview -->
     <div v-if="currentStep === 4">
       <h2
-        class="text-2xl font-semibold text-stone-900 dark:text-stone-100 mb-4"
+        class="text-2xl font-semibold text-text-light dark:text-text-dark mb-4"
       >
         Preview Import
       </h2>
@@ -259,7 +259,7 @@
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead
-              class="bg-pearl-mist dark:bg-cosmic-black text-stone-900 dark:text-stone-100"
+              class="bg-pearl-mist dark:bg-cosmic-black text-text-light dark:text-text-dark"
             >
               <tr>
                 <th class="px-4 py-2 text-left">Row</th>
@@ -325,7 +325,7 @@
     <!-- Step 5: Results -->
     <div v-if="currentStep === 5">
       <h2
-        class="text-2xl font-semibold text-stone-900 dark:text-stone-100 mb-4"
+        class="text-2xl font-semibold text-text-light dark:text-text-dark mb-4"
       >
         Import Complete ✅
       </h2>
@@ -399,14 +399,14 @@
         @click.stop
       >
         <h3
-          class="text-xl font-semibold text-stone-900 dark:text-stone-100 mb-4"
+          class="text-xl font-semibold text-text-light dark:text-text-dark mb-4"
         >
           Save Import Recipe
         </h3>
         <div class="space-y-4">
           <div>
             <label
-              class="block text-sm font-medium text-stone-900 dark:text-stone-100 mb-2"
+              class="block text-sm font-medium text-text-light dark:text-text-dark mb-2"
             >
               Recipe Name *
             </label>
@@ -414,12 +414,12 @@
               v-model="recipeName"
               type="text"
               placeholder="My Custom Import"
-              class="w-full px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-cosmic-black text-stone-900 dark:text-stone-100"
+              class="w-full px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-cosmic-black text-text-light dark:text-text-dark"
             />
           </div>
           <div>
             <label
-              class="block text-sm font-medium text-stone-900 dark:text-stone-100 mb-2"
+              class="block text-sm font-medium text-text-light dark:text-text-dark mb-2"
             >
               Description
             </label>
@@ -427,7 +427,7 @@
               v-model="recipeDescription"
               rows="3"
               placeholder="Describe what this import recipe is for..."
-              class="w-full px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-cosmic-black text-stone-900 dark:text-stone-100"
+              class="w-full px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-cosmic-black text-text-light dark:text-text-dark"
             ></textarea>
           </div>
         </div>
@@ -467,7 +467,7 @@ const emit = defineEmits<{
 const currentStep = ref(1);
 const totalSteps = 5;
 
-const fileInput = ref<HTMLInputElement | null>(null);
+const fileInput = ref<HTMLInputElement>();
 const selectedFile = ref<File | null>(null);
 const csvData = ref<Record<string, string>[]>([]);
 const csvFields = ref<string[]>([]);

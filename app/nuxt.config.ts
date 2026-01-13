@@ -12,6 +12,9 @@ export default defineNuxtConfig({
     strict: true,
     // Allow disabling typecheck via env in container builds
     typeCheck: process.env["NUXT_TYPESCRIPT_TYPECHECK"] !== "false",
+    tsConfig: {
+      exclude: ["node_modules/@vite-pwa", ".nuxt/pwa-icons-plugin.ts"],
+    },
   },
 
   // Runtime config (environment variables)
