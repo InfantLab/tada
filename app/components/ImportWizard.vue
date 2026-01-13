@@ -265,15 +265,15 @@
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead
-              class="bg-pearl-mist dark:bg-cosmic-black text-gray-900 dark:text-gray-100"
+              class="bg-gray-100 dark:bg-gray-800"
             >
               <tr>
-                <th class="px-4 py-2 text-left">Row</th>
-                <th class="px-4 py-2 text-left">Date/Time</th>
-                <th class="px-4 py-2 text-left">Duration</th>
-                <th class="px-4 py-2 text-left">Activity</th>
-                <th class="px-4 py-2 text-left">Category</th>
-                <th class="px-4 py-2 text-left">Warnings</th>
+                <th class="px-4 py-2 text-left font-semibold text-gray-900 dark:text-gray-100">Row</th>
+                <th class="px-4 py-2 text-left font-semibold text-gray-900 dark:text-gray-100">Date/Time</th>
+                <th class="px-4 py-2 text-left font-semibold text-gray-900 dark:text-gray-100">Duration</th>
+                <th class="px-4 py-2 text-left font-semibold text-gray-900 dark:text-gray-100">Activity</th>
+                <th class="px-4 py-2 text-left font-semibold text-gray-900 dark:text-gray-100">Category</th>
+                <th class="px-4 py-2 text-left font-semibold text-gray-900 dark:text-gray-100">Warnings</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-pearl-mist dark:divide-cosmic-indigo">
@@ -641,6 +641,17 @@ function generatePreview() {
       rowWarnings.push("Missing duration");
     }
 
+    // Check for unusually long durations (>3 hours)
+    if (entry.duration) {
+      const parts = entry.duration.split(':');
+      if (parts.length >= 2) {
+        const hours = parseInt(parts[0] || '0', 10);
+        if (hours >= 3) {
+          rowWarnings.push(`Duration >3 hours (${entry.duration})`);
+        }
+      }
+    }
+
     if (rowWarnings.length > 0) {
       warnings[i] = rowWarnings;
     }
@@ -721,7 +732,7 @@ async function startImport() {
         response.results.skipped,
     };
     importProgress.value = 100;
-    currentStep.value = 5;
+    currentStep.value = 4;
   } catch (error) {
     console.error("Import failed:", error);
     parseError.value = "Import failed. Please try again.";
