@@ -139,9 +139,7 @@
 <script setup lang="ts">
 import type { ImportRecipe } from "~/server/db/schema";
 
-definePageMeta({
-  middleware: "auth" as const,
-});
+// Auth is handled by global middleware
 
 const selectedRecipe = ref<ImportRecipe | null>(null);
 const showCustomImport = ref(false);
