@@ -19,7 +19,6 @@ const BUILTIN_RECIPES = [
     },
     transforms: {
       dateFormat: "MM/DD/YYYY HH:mm:ss",
-      timezone: "America/New_York",
       durationFormat: "H:mm:ss",
       defaultCategory: "mindfulness",
     },

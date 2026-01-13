@@ -251,7 +251,7 @@
     </div>
 
     <!-- Step 3: Preview -->
-    <div v-if="currentStep === 4">
+    <div v-if="currentStep === 3">
       <h2
         class="text-2xl font-semibold text-text-light dark:text-text-dark mb-4"
       >
