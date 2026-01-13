@@ -84,6 +84,32 @@
         Match your CSV columns to entry fields and configure data transformation. Fields marked with * are required.
       </p>
       
+      <!-- Data Preview -->
+      <div class="bg-white dark:bg-cosmic-indigo rounded-lg p-6 mb-6">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Data Preview</h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead class="bg-gray-100 dark:bg-gray-800">
+              <tr>
+                <th class="px-4 py-2 text-left font-semibold text-gray-900 dark:text-gray-100" v-for="field in csvFields" :key="field">{{ field }}</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-pearl-mist dark:divide-cosmic-indigo">
+              <tr
+                v-for="(row, idx) in csvData.slice(0, 5)"
+                :key="idx"
+                class="hover:bg-pearl-mist/50 dark:hover:bg-cosmic-black/50"
+              >
+                <td class="px-4 py-2 text-gray-900 dark:text-gray-100" v-for="field in csvFields" :key="field">
+                  {{ row[field] || '—' }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="text-xs text-gray-500 dark:text-gray-500 mt-2">Showing first 5 of {{ csvData.length }} rows</p>
+      </div>
+
       <!-- Column Mapping -->
       <div class="bg-white dark:bg-cosmic-indigo rounded-lg p-6 space-y-4 mb-6">
         <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Column Mapping</h3>
@@ -153,32 +179,6 @@
         </div>
       </div>
 
-      <!-- Data Preview -->
-      <div class="bg-white dark:bg-cosmic-indigo rounded-lg p-6 mb-6">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Data Preview</h3>
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm">
-            <thead class="bg-pearl-mist dark:bg-cosmic-black text-gray-900 dark:text-gray-100">
-              <tr>
-                <th class="px-4 py-2 text-left" v-for="field in csvFields" :key="field">{{ field }}</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-pearl-mist dark:divide-cosmic-indigo">
-              <tr
-                v-for="(row, idx) in csvData.slice(0, 5)"
-                :key="idx"
-                class="hover:bg-pearl-mist/50 dark:hover:bg-cosmic-black/50"
-              >
-                <td class="px-4 py-2 text-gray-900 dark:text-gray-100" v-for="field in csvFields" :key="field">
-                  {{ row[field] || '—' }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <p class="text-xs text-gray-500 dark:text-gray-500 mt-2">Showing first 5 of {{ csvData.length }} rows</p>
-      </div>
-
       <!-- Configuration -->
       <div class="bg-white dark:bg-cosmic-indigo rounded-lg p-6 space-y-4">
         <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Data Configuration</h3>
@@ -205,8 +205,9 @@
             v-model="transforms.timezone"
             type="text"
             class="w-full px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-            :placeholder="Intl.DateTimeFormat().resolvedOptions().timeZone"
+            placeholder="e.g., America/New_York"
           />
+          <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">Detected: {{ Intl.DateTimeFormat().resolvedOptions().timeZone }}</p>
         </div>
         <div>
           <label
