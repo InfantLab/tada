@@ -93,7 +93,7 @@
           </label>
           <select
             v-model="columnMapping['startedAt']"
-            class="px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-cosmic-black text-stone-900 dark:text-white"
+            class="px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-gray-800 text-stone-900 dark:text-white"
           >
             <option value="">-- Select Column --</option>
             <option v-for="field in csvFields" :key="field" :value="field">
@@ -109,7 +109,7 @@
           </label>
           <select
             v-model="columnMapping['duration']"
-            class="px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-cosmic-black text-stone-900 dark:text-white"
+            class="px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-gray-800 text-stone-900 dark:text-white"
           >
             <option value="">-- Select Column --</option>
             <option v-for="field in csvFields" :key="field" :value="field">
@@ -125,7 +125,7 @@
           </label>
           <select
             v-model="columnMapping['name']"
-            class="px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-cosmic-black text-stone-900 dark:text-white"
+            class="px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-gray-800 text-stone-900 dark:text-white"
           >
             <option value="">-- Select Column --</option>
             <option v-for="field in csvFields" :key="field" :value="field">
@@ -141,7 +141,7 @@
           </label>
           <select
             v-model="columnMapping['notes']"
-            class="px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-cosmic-black text-stone-900 dark:text-white"
+            class="px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-gray-800 text-stone-900 dark:text-white"
           >
             <option value="">-- Select Column --</option>
             <option v-for="field in csvFields" :key="field" :value="field">
@@ -187,7 +187,7 @@
           <input
             v-model="transforms.dateFormat"
             type="text"
-            class="w-full px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-cosmic-black text-stone-900 dark:text-white"
+            class="w-full px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-gray-800 text-stone-900 dark:text-white"
             placeholder="MM/DD/YYYY HH:mm:ss"
           />
         </div>
@@ -200,7 +200,7 @@
           <input
             v-model="transforms.timezone"
             type="text"
-            class="w-full px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-cosmic-black text-stone-900 dark:text-white"
+            class="w-full px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-gray-800 text-stone-900 dark:text-white"
             placeholder="America/New_York"
           />
         </div>
@@ -213,7 +213,7 @@
           <input
             v-model="transforms.defaultCategory"
             type="text"
-            class="w-full px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-cosmic-black text-stone-900 dark:text-white"
+            class="w-full px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-gray-800 text-stone-900 dark:text-white"
             placeholder="mindfulness"
           />
         </div>
@@ -414,7 +414,7 @@
               v-model="recipeName"
               type="text"
               placeholder="My Custom Import"
-              class="w-full px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-cosmic-black text-stone-900 dark:text-white"
+              class="w-full px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-gray-800 text-stone-900 dark:text-white"
             />
           </div>
           <div>
@@ -427,7 +427,7 @@
               v-model="recipeDescription"
               rows="3"
               placeholder="Describe what this import recipe is for..."
-              class="w-full px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-cosmic-black text-stone-900 dark:text-white"
+              class="w-full px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-gray-800 text-stone-900 dark:text-white"
             ></textarea>
           </div>
         </div>
