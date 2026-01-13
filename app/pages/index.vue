@@ -1,11 +1,6 @@
 <script setup lang="ts">
 // Timeline page - the main view showing all entries chronologically
 import type { Entry } from "~/server/db/schema";
-import {
-  getEntryDisplayProps,
-  CATEGORY_DEFAULTS,
-  getEntryTimestamp,
-} from "~/utils/categoryDefaults";
 
 definePageMeta({
   layout: "default",
@@ -15,11 +10,6 @@ definePageMeta({
 const entries = ref<Entry[]>([]);
 const isLoading = ref(true);
 const error = ref<string | null>(null);
-
-// Emoji picker state
-const showEmojiPicker = ref(false);
-const emojiPickerEntry = ref<Entry | null>(null);
-const isUpdating = ref(false);
 
 async function fetchEntries() {
   try {
@@ -60,73 +50,39 @@ function formatDuration(seconds: number): string {
   return `${mins}m ${secs}s`;
 }
 
-// Get display properties for an entry (emoji, color, label)
-function getDisplayProps(entry: Entry) {
-  return getEntryDisplayProps({
-    emoji: entry.emoji,
-    category: entry.category,
-    subcategory: entry.subcategory,
-  });
-}
-
-// Get category/subcategory label for display
-function getCategoryLabel(entry: Entry): string {
-  const parts: string[] = [];
-  if (entry.category) {
-    const cat = CATEGORY_DEFAULTS[entry.category];
-    parts.push(cat?.label || entry.category);
-  }
-  if (entry.subcategory && entry.subcategory !== entry.category) {
-    parts.push(entry.subcategory);
-  }
-  return parts.join(" • ");
+// Get icon for entry type
+function getTypeIcon(type: string): string {
+  const icons: Record<string, string> = {
+    timed: "🧘",
+    meditation: "🧘",
+    dream: "🌙",
+    tada: "🎉",
+    journal: "📝",
+    note: "📝",
+    reps: "💪",
+    gps_tracked: "🏃",
+    measurement: "📊",
+  };
+  return icons[type] || "📌";
 }
 
 // Group entries by date
 function groupByDate(entries: Entry[]): Map<string, Entry[]> {
   const groups = new Map<string, Entry[]>();
   for (const entry of entries) {
-    const timestamp = getEntryTimestamp(entry);
-    const date = new Date(timestamp).toLocaleDateString();
+    // Use timestamp as the source of truth (should always be present now)
+    const ts = entry.timestamp;
+    if (!ts) {
+      console.warn("Entry missing timestamp:", entry);
+      continue; // Skip entries without timestamp
+    }
+    const date = new Date(ts).toLocaleDateString();
     if (!groups.has(date)) {
       groups.set(date, []);
     }
     groups.get(date)!.push(entry);
   }
   return groups;
-}
-
-// Show emoji picker for an entry
-function openEmojiPicker(entry: Entry, event: Event) {
-  event.preventDefault();
-  event.stopPropagation();
-  emojiPickerEntry.value = entry;
-  showEmojiPicker.value = true;
-}
-
-// Update entry emoji
-async function updateEmoji(emoji: string) {
-  if (!emojiPickerEntry.value) return;
-
-  const entry = emojiPickerEntry.value;
-  isUpdating.value = true;
-
-  try {
-    await $fetch(`/api/entries/${entry.id}`, {
-      method: "PATCH",
-      body: { emoji },
-    });
-
-    // Update local state
-    entry.emoji = emoji;
-  } catch (err: unknown) {
-    console.error("Failed to update emoji:", err);
-    const message = err instanceof Error ? err.message : "Unknown error";
-    alert(`Failed to update emoji: ${message}`);
-  } finally {
-    isUpdating.value = false;
-    emojiPickerEntry.value = null;
-  }
 }
 </script>
 
@@ -146,7 +102,7 @@ async function updateEmoji(emoji: string) {
       <!-- Quick add button -->
       <NuxtLink
         to="/add"
-        class="flex items-center gap-2 px-4 py-2 bg-tada-600 hover:bg-tada-700 text-white rounded-lg font-medium transition-colors shadow-sm"
+        class="flex items-center gap-2 px-4 py-2 bg-tada-600 hover:opacity-90 text-black rounded-lg font-medium transition-colors shadow-sm dark:bg-tada-600 dark:text-white"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -169,7 +125,7 @@ async function updateEmoji(emoji: string) {
     <!-- Loading state -->
     <div v-if="isLoading" class="flex items-center justify-center py-12">
       <div
-        class="animate-spin rounded-full h-8 w-8 border-2 border-tada-600 border-t-transparent"
+        class="animate-spin rounded-full h-8 w-8 border-2 border-tada-300 border-t-transparent dark:border-tada-600"
       />
     </div>
 
@@ -181,7 +137,7 @@ async function updateEmoji(emoji: string) {
       </h2>
       <p class="text-stone-500 dark:text-stone-400 mb-4">{{ error }}</p>
       <button
-        class="px-4 py-2 bg-tada-600 hover:bg-tada-700 text-white rounded-lg font-medium transition-colors"
+        class="px-4 py-2 bg-tada-600 hover:opacity-90 text-black rounded-lg font-medium transition-colors dark:bg-tada-600 dark:text-white"
         @click="
           () => {
             isLoading = true;
@@ -195,9 +151,9 @@ async function updateEmoji(emoji: string) {
 
     <!-- Empty state -->
     <div v-else-if="entries.length === 0" class="text-center py-12">
-      <div class="text-6xl mb-4">⚡</div>
+      <div class="text-6xl mb-4">🎉</div>
       <h2 class="text-xl font-semibold text-stone-700 dark:text-stone-200 mb-2">
-        Welcome to Ta-Da!
+        Welcome to Tada!
       </h2>
       <p class="text-stone-500 dark:text-stone-400 max-w-md mx-auto mb-6">
         Start capturing moments from your life. Meditations, accomplishments,
@@ -206,7 +162,7 @@ async function updateEmoji(emoji: string) {
       <div class="flex flex-col sm:flex-row gap-3 justify-center">
         <NuxtLink
           to="/timer"
-          class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-tada-600 hover:bg-tada-700 text-white rounded-lg font-medium transition-colors"
+          class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-tada-600 hover:opacity-90 text-black rounded-lg font-medium transition-colors dark:bg-tada-600 dark:text-white"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -260,24 +216,18 @@ async function updateEmoji(emoji: string) {
           {{ date }}
         </h3>
         <div class="space-y-2">
-          <NuxtLink
+          <div
             v-for="entry in dayEntries"
             :key="entry.id"
-            :to="`/entry/${entry.id}`"
-            class="block bg-white dark:bg-stone-800 rounded-lg p-4 shadow-sm border border-stone-200 dark:border-stone-700 hover:border-tada-400 dark:hover:border-tada-500 hover:shadow-md transition-all cursor-pointer"
+            class="bg-white dark:bg-stone-800 rounded-lg p-4 shadow-sm border border-stone-200 dark:border-stone-700"
           >
             <div class="flex items-start gap-3">
-              <!-- Entry emoji badge with category color (clickable) -->
-              <button
-                class="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center hover:scale-110 transition-transform"
-                :style="{
-                  backgroundColor: getDisplayProps(entry).color + '20',
-                }"
-                title="Change emoji"
-                @click="openEmojiPicker(entry, $event)"
+              <!-- Entry type icon -->
+              <div
+                class="flex-shrink-0 w-10 h-10 rounded-full bg-tada-100/30 dark:bg-tada-600/20 flex items-center justify-center"
               >
-                <span class="text-xl">{{ getDisplayProps(entry).emoji }}</span>
-              </button>
+                <span class="text-lg">{{ getTypeIcon(entry.type) }}</span>
+              </div>
 
               <!-- Entry content -->
               <div class="flex-1 min-w-0">
@@ -299,20 +249,10 @@ async function updateEmoji(emoji: string) {
                   </span>
                 </div>
 
-                <!-- Category and duration -->
+                <!-- Entry metadata -->
                 <div
                   class="flex items-center gap-3 text-sm text-stone-600 dark:text-stone-300 mb-2"
                 >
-                  <span
-                    v-if="getCategoryLabel(entry)"
-                    class="text-xs px-2 py-0.5 rounded"
-                    :style="{
-                      backgroundColor: getDisplayProps(entry).color + '15',
-                      color: getDisplayProps(entry).color,
-                    }"
-                  >
-                    {{ getCategoryLabel(entry) }}
-                  </span>
                   <span
                     v-if="entry.durationSeconds"
                     class="flex items-center gap-1"
@@ -333,6 +273,18 @@ async function updateEmoji(emoji: string) {
                     </svg>
                     {{ formatDuration(entry.durationSeconds) }}
                   </span>
+                  <span
+                    v-if="entry.tags && entry.tags.length > 0"
+                    class="flex items-center gap-1"
+                  >
+                    <span
+                      v-for="tag in entry.tags"
+                      :key="tag"
+                      class="text-xs bg-stone-100 dark:bg-stone-700 px-2 py-0.5 rounded"
+                    >
+                      {{ tag }}
+                    </span>
+                  </span>
                 </div>
 
                 <!-- Notes -->
@@ -344,16 +296,9 @@ async function updateEmoji(emoji: string) {
                 </p>
               </div>
             </div>
-          </NuxtLink>
+          </div>
         </div>
       </div>
     </div>
-
-    <!-- Emoji Picker Component -->
-    <EmojiPicker
-      v-model="showEmojiPicker"
-      :entry-name="emojiPickerEntry?.name"
-      @select="updateEmoji"
-    />
   </div>
 </template>

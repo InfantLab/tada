@@ -74,7 +74,7 @@
           class="mt-4 text-sm text-text-light dark:text-text-dark font-medium"
         >
           ✓ Selected: {{ selectedFile.name }} ({{
-            formatFileSize(selectedFile.size)
+            formatSize(selectedFile.size)
           }})
         </p>
         <p v-if="parseError" class="mt-4 text-sm text-red-500">
@@ -102,6 +102,74 @@
         Match your CSV columns to entry fields and configure data
         transformation. Fields marked with * are required.
       </p>
+
+      <!-- Recipe Selector -->
+      <div
+        class="mb-6 p-4 bg-mindfulness-light/5 dark:bg-mindfulness-dark/5 rounded-lg border border-mindfulness-light/20 dark:border-mindfulness-dark/20"
+      >
+        <div class="flex items-center gap-4">
+          <label
+            class="text-sm font-medium text-text-light dark:text-text-dark whitespace-nowrap"
+          >
+            Load Recipe:
+          </label>
+          <select
+            v-model="selectedRecipeId"
+            class="flex-1 px-3 py-2 bg-white dark:bg-cosmic-indigo border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg text-text-light dark:text-text-dark"
+            @change="loadSelectedRecipe"
+          >
+            <option :value="null">-- Select a saved recipe --</option>
+            <option
+              v-for="recipe in userRecipes"
+              :key="recipe.id"
+              :value="recipe.id"
+            >
+              {{ recipe.name }}
+            </option>
+          </select>
+          <button
+            v-if="selectedRecipeId && currentRecipePreviousVersions.length > 0"
+            class="px-3 py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors whitespace-nowrap"
+            @click="showVersionHistory = !showVersionHistory"
+          >
+            📜 History ({{ currentRecipePreviousVersions.length }})
+          </button>
+          <button
+            v-if="selectedRecipeId"
+            class="px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+            @click="deleteSelectedRecipe"
+          >
+            🗑 Delete
+          </button>
+        </div>
+
+        <!-- Version History Panel -->
+        <div
+          v-if="showVersionHistory && currentRecipePreviousVersions.length > 0"
+          class="mt-4 p-3 bg-white dark:bg-cosmic-indigo rounded-lg border border-pearl-mist dark:border-cosmic-indigo-light"
+        >
+          <h4 class="text-sm font-semibold text-text-light dark:text-text-dark mb-2">
+            Previous Versions (last {{ Math.min(3, currentRecipePreviousVersions.length) }})
+          </h4>
+          <div class="space-y-2">
+            <div
+              v-for="(version, index) in currentRecipePreviousVersions"
+              :key="index"
+              class="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded"
+            >
+              <span class="text-xs text-text-light-muted dark:text-text-dark-muted">
+                {{ new Date(version.savedAt).toLocaleString() }}
+              </span>
+              <button
+                class="px-2 py-1 text-xs bg-blue-600 dark:bg-blue-500 text-white rounded hover:opacity-90"
+                @click="restoreVersion(index)"
+              >
+                Restore
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <!-- Data Preview -->
       <div class="bg-white dark:bg-cosmic-indigo rounded-lg p-6 mb-6">
@@ -548,7 +616,7 @@
                 <td class="px-4 py-2">
                   <span
                     v-if="validationWarnings[entry._rowIndex]"
-                    class="text-xs text-gold-light dark:text-gold-dark"
+                    class="text-xs text-tada-700 dark:text-tada-300"
                   >
                     ⚠️ {{ validationWarnings[entry._rowIndex]?.join(", ") }}
                   </span>
@@ -561,6 +629,25 @@
           </table>
         </div>
       </div>
+
+      <!-- Live Progress -->
+      <div v-if="isImporting" class="mt-6 space-y-3">
+        <div
+          class="flex justify-between text-sm text-text-light-muted dark:text-text-dark-muted"
+        >
+          <span>{{ progressMessage }}</span>
+          <span>{{ rowsProcessed }} / {{ rowsTotal }}</span>
+        </div>
+        <div
+          class="w-full bg-pearl-mist dark:bg-cosmic-indigo-light rounded-full h-2"
+        >
+          <div
+            class="bg-mindfulness-light dark:bg-mindfulness-dark h-2 rounded-full transition-all duration-300"
+            :style="{ width: `${importProgress}%` }"
+          ></div>
+        </div>
+      </div>
+
       <div class="flex gap-4 mt-6">
         <button
           class="px-6 py-3 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg hover:bg-pearl-mist dark:hover:bg-cosmic-indigo"
@@ -569,7 +656,7 @@
           ← Back
         </button>
         <button
-          class="px-6 py-3 bg-gold-light dark:bg-gold-dark text-white rounded-lg hover:opacity-90"
+          class="px-6 py-3 bg-tada-600 dark:bg-tada-600 text-white rounded-lg hover:opacity-90"
           :disabled="isImporting"
           @click="startImport"
         >
@@ -606,8 +693,8 @@
               Imported Successfully
             </div>
           </div>
-          <div class="p-4 bg-gold-light/10 dark:bg-gold-dark/10 rounded-lg">
-            <div class="text-3xl font-bold text-gold-light dark:text-gold-dark">
+          <div class="p-4 bg-tada-600/10 dark:bg-tada-600/10 rounded-lg">
+            <div class="text-3xl font-bold text-tada-700 dark:text-tada-300">
               {{ importResults.skipped }}
             </div>
             <div
@@ -699,7 +786,7 @@
           <button
             class="flex-1 px-4 py-2 bg-mindfulness-light dark:bg-mindfulness-dark text-white rounded-lg hover:opacity-90"
             :disabled="isSavingRecipe"
-            @click="saveRecipe"
+            @click="handleSaveRecipe"
           >
             {{ isSavingRecipe ? "Saving..." : "Save Recipe" }}
           </button>
@@ -710,9 +797,7 @@
 </template>
 
 <script setup lang="ts">
-import Papa from "papaparse";
-import type { ImportRecipe } from "~/server/db/schema";
-import { entries } from "~/server/db/schema";
+import type { ImportRecipe, entries } from "~/server/db/schema";
 import {
   detectColumnMappings,
   getConfidenceBadge,
@@ -724,10 +809,18 @@ const props = defineProps<{
   recipe: ImportRecipe | null;
 }>();
 
-const emit = defineEmits<{
+const _emit = defineEmits<{
   complete: [];
   cancel: [];
 }>();
+
+const toast = useToast();
+const { parseCSV, importCSV, validateEntry } = useCSVImport();
+
+// Load user recipes on mount
+onMounted(() => {
+  loadUserRecipes();
+});
 
 const currentStep = ref(1);
 const totalSteps = 4;
@@ -761,6 +854,9 @@ const validationWarnings = ref<Record<number, string[]>>({});
 // Import progress
 const isImporting = ref(false);
 const importProgress = ref(0);
+const progressMessage = ref("");
+const rowsProcessed = ref(0);
+const rowsTotal = ref(0);
 const importResults = ref<{
   total: number;
   successful: number;
@@ -774,6 +870,12 @@ const showSaveRecipeDialog = ref(false);
 const recipeName = ref("");
 const recipeDescription = ref("");
 const isSavingRecipe = ref(false);
+const userRecipes = ref<
+  Array<{ id: string; name: string; description: string | null; previousVersions?: Array<{savedAt: string; columnMapping: Record<string, unknown>; transforms: Record<string, unknown>}> }>
+>([]);
+const selectedRecipeId = ref<string | null>(null);
+const showVersionHistory = ref(false);
+const currentRecipePreviousVersions = ref<Array<{savedAt: string; columnMapping: Record<string, unknown>; transforms: Record<string, unknown>}>>([]);
 
 // Initialize from recipe if provided
 watchEffect(() => {
@@ -813,36 +915,19 @@ function handleFileDrop(event: DragEvent) {
 }
 
 async function processFile(file: File) {
-  // Check file size (50MB limit)
-  const maxSize = 50 * 1024 * 1024;
-  if (file.size > maxSize) {
-    parseError.value = "File size exceeds 50MB limit";
-    return;
-  }
-
   selectedFile.value = file;
   parseError.value = null;
 
-  // Parse CSV with Papa Parse
-  Papa.parse<Record<string, string>>(file, {
-    header: true,
-    skipEmptyLines: "greedy",
-    dynamicTyping: false,
-    transformHeader: (header: string) => header.trim(),
-    transform: (value: string) => value.trim(),
-    complete: (results) => {
-      csvData.value = results.data;
-      csvFields.value = results.meta.fields || [];
+  const result = await parseCSV(file);
+  if (!result) {
+    parseError.value = "Failed to parse CSV";
+    return;
+  }
 
-      // Auto-detect column mappings if recipe not provided
-      if (!props.recipe) {
-        autoDetectMappings();
-      }
-    },
-    error: (error: Error) => {
-      parseError.value = `Failed to parse CSV: ${error.message}`;
-    },
-  });
+  csvData.value = result.data;
+  csvFields.value = result.fields;
+
+  if (!props.recipe) autoDetectMappings();
 }
 
 function autoDetectMappings() {
@@ -865,105 +950,21 @@ function generatePreview() {
     Partial<typeof entries.$inferInsert> & { warnings?: string[] }
   > = [];
   const warnings: Record<number, string[]> = {};
-
-  // Preview first 10 rows
   const previewCount = Math.min(10, csvData.value.length);
 
   for (let i = 0; i < previewCount; i++) {
     const row = csvData.value[i];
-    const entry: any = {
-      _rowIndex: i,
-    };
+    const entry: Record<string, unknown> = { _rowIndex: i };
 
-    // Apply column mappings
-    for (const [targetField, csvColumn] of Object.entries(
-      columnMapping.value
-    )) {
-      if (csvColumn && row && row[csvColumn]) {
-        entry[targetField] = row[csvColumn];
-      }
-    }
+    Object.entries(columnMapping.value).forEach(([field, csvCol]) => {
+      if (csvCol && row[csvCol]) entry[field] = row[csvCol];
+    });
 
-    // Apply transforms
-    if (entry.startedAt) {
-      // Parse date (simplified - use csvParser utility in production)
-      entry._startedAtParsed = entry.startedAt;
-    }
-
-    if (entry.duration) {
-      // Parse duration (simplified - use csvParser utility in production)
-      entry._durationParsed = entry.duration;
-    }
-
-    // Set defaults
     entry.category = transforms.value.defaultCategory;
-    if (transforms.value.defaultSubcategory) {
-      entry.subcategory = transforms.value.defaultSubcategory;
-    } else if (entry.name) {
-      // Use name as subcategory if not specified
-      entry.subcategory = entry.name;
-    }
+    entry.subcategory = transforms.value.defaultSubcategory || entry.name || "";
 
-    // Validate and collect warnings
-    const rowWarnings: string[] = [];
-
-    if (!entry.startedAt && !entry.timestamp) {
-      rowWarnings.push("Missing date/time");
-    }
-
-    if (!entry.duration && !entry.durationSeconds) {
-      rowWarnings.push("Missing duration");
-    }
-
-    // Check for unusually long durations (>3 hours)
-    if (entry.duration) {
-      const parts = entry.duration.split(":");
-      if (parts.length >= 2) {
-        const hours = parseInt(parts[0] || "0", 10);
-        const minutes = parseInt(parts[1] || "0", 10);
-        const seconds = parseInt(parts[2] || "0", 10);
-        const totalSeconds = hours * 3600 + minutes * 60 + seconds;
-
-        if (totalSeconds > 10800) {
-          // >3 hours
-          rowWarnings.push(`Duration >3 hours (${entry.duration})`);
-        } else if (totalSeconds < 30) {
-          // <30 seconds
-          rowWarnings.push(`Duration <30 seconds (${entry.duration})`);
-        }
-      }
-    }
-
-    // Check for future dates
-    if (entry.startedAt) {
-      const entryDate = new Date(entry.startedAt);
-      if (entryDate > new Date()) {
-        rowWarnings.push("Date is in the future");
-      }
-    }
-
-    // Check for new categories/subcategories
-    if (
-      entry.category &&
-      ![
-        "mindfulness",
-        "health",
-        "work",
-        "learning",
-        "creative",
-        "social",
-      ].includes(entry.category)
-    ) {
-      rowWarnings.push(`New category: "${entry.category}"`);
-    }
-
-    if (entry.subcategory && entry.name !== entry.subcategory) {
-      rowWarnings.push(`New subcategory: "${entry.subcategory}"`);
-    }
-
-    if (rowWarnings.length > 0) {
-      warnings[i] = rowWarnings;
-    }
+    const entryWarnings = validateEntry(entry);
+    if (entryWarnings.length > 0) warnings[i] = entryWarnings;
 
     preview.push(entry);
   }
@@ -975,125 +976,229 @@ function generatePreview() {
 async function startImport() {
   isImporting.value = true;
   importProgress.value = 0;
+  rowsTotal.value = csvData.value.length;
+  rowsProcessed.value = 0;
+  progressMessage.value = "Starting import...";
 
   try {
-    // Transform all CSV rows to entry format
-    const importEntries: Array<Partial<typeof entries.$inferInsert>> =
-      csvData.value.map((row) => {
-        const entry: Partial<typeof entries.$inferInsert> = {
-          type: "timed",
-        };
-
-        // Map columns from CSV to entry fields
-        Object.keys(columnMapping.value).forEach((targetField) => {
-          const csvColumn = columnMapping.value[targetField];
-          if (csvColumn && row[csvColumn]) {
-            (entry as any)[targetField] = row[csvColumn];
-          }
-        });
-
-        // Apply transforms
-        if (entry.startedAt) {
-          // TODO: Use csvParser utility for proper parsing
-          // startedAt already set above, no need to reassign
-        }
-
-      if (entry.duration) {
-        // TODO: Use csvParser utility for proper parsing
-        entry.durationSeconds = 0; // Parse duration string
+    // Simulate progress updates (since API call is atomic)
+    const progressInterval = setInterval(() => {
+      if (rowsProcessed.value < rowsTotal.value) {
+        rowsProcessed.value = Math.min(rowsProcessed.value + Math.ceil(rowsTotal.value / 20), rowsTotal.value);
+        importProgress.value = Math.floor((rowsProcessed.value / rowsTotal.value) * 95);
+        progressMessage.value = "Processing entries...";
       }
+    }, 100);
 
-      // Set defaults
-      entry.category = transforms.value.defaultCategory;
-      if (transforms.value.defaultSubcategory) {
-        entry.subcategory = transforms.value.defaultSubcategory;
-      } else if (entry.name) {
-        entry.subcategory = entry.name;
-      }
-
-      entry.source = props.recipe?.name || "csv-import";
-
-      // Generate externalId from content hash (startedAt + type + name)
-      // This ensures duplicates are based on actual data, not filename
-      const hashInput = `${entry.startedAt}-${entry.type}-${entry.name || ""}`;
-      entry.externalId = `import-${btoa(hashInput)
-        .replace(/[^a-zA-Z0-9]/g, "")
-        .substring(0, 32)}`;
-
-      return entry;
+    const results = await importCSV({
+      csvData: csvData.value,
+      columnMapping: columnMapping.value,
+      transforms: transforms.value,
+      recipe: props.recipe,
+      filename: selectedFile.value?.name,
     });
 
-    // Call import API
-    const response = await $fetch("/api/import/entries", {
-      method: "POST",
-      body: {
-        entries,
-        source: props.recipe?.name || "csv-import",
-        recipeName: props.recipe?.name || "Custom Import",
-        recipeId: props.recipe?.id || null,
-        filename: selectedFile.value?.name || "unknown.csv",
-      },
-    });
-
-    importResults.value = {
-      ...response.results,
-      total:
-        response.results.successful +
-        response.results.failed +
-        response.results.skipped,
-    };
+    clearInterval(progressInterval);
+    rowsProcessed.value = rowsTotal.value;
     importProgress.value = 100;
+    progressMessage.value = "Import complete!";
+    
+    importResults.value = results;
     currentStep.value = 4;
-  } catch (error) {
-    console.error("Import failed:", error);
+  } catch {
     parseError.value = "Import failed. Please try again.";
   } finally {
     isImporting.value = false;
   }
 }
 
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+function downloadErrorLog() {
+  if (!importResults.value?.errors || importResults.value.errors.length === 0) return;
+
+  const csvContent = [
+    ["Row", "Error Message"],
+    ...importResults.value.errors.map((err) => [
+      err.row?.toString() || "Unknown",
+      err.message.replace(/"/g, '""'),
+    ]),
+  ]
+    .map((row) => row.map((cell) => `"${cell}"`).join(","))
+    .join("\n");
+
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `import-errors-${new Date().toISOString().split("T")[0]}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+  
+  toast.info("Error log downloaded");
 }
 
-function _formatDuration(seconds: number): string {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  if (hours > 0) return `${hours}h ${minutes}m`;
-  return `${minutes}m`;
-}
-
-async function saveRecipe() {
-  if (!recipeName.value.trim()) {
-    alert("Please enter a recipe name");
-    return;
-  }
-
+async function handleSaveRecipe() {
   isSavingRecipe.value = true;
 
   try {
-    await $fetch("/api/import/recipes", {
-      method: "POST",
-      body: {
-        name: recipeName.value,
-        description: recipeDescription.value,
-        columnMapping: columnMapping.value,
-        transforms: transforms.value,
-      },
+    await saveRecipe({
+      name: recipeName.value,
+      description: recipeDescription.value,
+      columnMapping: columnMapping.value,
+      transforms: transforms.value,
     });
 
+    toast.success(`Recipe "${recipeName.value}" saved!`);
     showSaveRecipeDialog.value = false;
     recipeName.value = "";
     recipeDescription.value = "";
 
-    alert("Recipe saved successfully! You can use it for future imports.");
-  } catch (error) {
-    console.error("Failed to save recipe:", error);
-    alert("Failed to save recipe. Please try again.");
+    // Reload recipes list
+    await loadUserRecipes();
+  } catch {
+    toast.error("Failed to save recipe");
   } finally {
     isSavingRecipe.value = false;
   }
 }
+
+async function loadUserRecipes() {
+  try {
+    const response = await $fetch<{
+      success: boolean;
+      recipes: Array<{
+        id: string;
+        name: string;
+        description: string | null;
+        previousVersions?: Array<{savedAt: string; columnMapping: Record<string, unknown>; transforms: Record<string, unknown>}>;
+      }>;
+    }>("/api/import/recipes");
+    if (response.success) {
+      userRecipes.value = response.recipes;
+    }
+  } catch (error) {
+    console.error("Failed to load recipes:", error);
+  }
+}
+
+async function loadSelectedRecipe() {
+  if (!selectedRecipeId.value) {
+    showVersionHistory.value = false;
+    currentRecipePreviousVersions.value = [];
+    return;
+  }
+
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const recipe: any = await $fetch(
+      `/api/import/recipes/${selectedRecipeId.value}`
+    );
+
+    if (recipe.columnMapping) {
+      columnMapping.value = recipe.columnMapping;
+    }
+
+    if (recipe.transforms) {
+      transforms.value = {
+        ...transforms.value,
+        ...recipe.transforms,
+      };
+    }
+
+    // Store version history for this recipe
+    currentRecipePreviousVersions.value = recipe.previousVersions || [];
+    showVersionHistory.value = false;
+
+    toast.success(`Recipe "${recipe.name}" loaded`);
+    generatePreview();
+  } catch {
+    toast.error("Failed to load recipe");
+  }
+}
+
+async function restoreVersion(versionIndex: number) {
+  if (!selectedRecipeId.value) return;
+
+  if (!confirm("Restore this previous version? Current configuration will be saved to history.")) return;
+
+  try {
+    const response = await $fetch<{ success: boolean; recipe: any }>(
+      `/api/import/recipes/${selectedRecipeId.value}/restore`,
+      {
+        method: "POST",
+        body: { versionIndex },
+      }
+    );
+
+    if (response.success && response.recipe) {
+      // Update local state with restored recipe
+      columnMapping.value = response.recipe.columnMapping;
+      transforms.value = {
+        ...transforms.value,
+        ...response.recipe.transforms,
+      };
+      currentRecipePreviousVersions.value = response.recipe.previousVersions || [];
+
+      toast.success("Version restored successfully");
+      generatePreview();
+      showVersionHistory.value = false;
+    }
+  } catch {
+    toast.error("Failed to restore version");
+  }
+}
+
+async function deleteSelectedRecipe() {
+  if (!selectedRecipeId.value) return;
+
+  const recipe = userRecipes.value.find((r) => r.id === selectedRecipeId.value);
+  if (!recipe) return;
+
+  if (!confirm(`Delete recipe "${recipe.name}"?`)) return;
+
+  try {
+    await $fetch(`/api/import/recipes/${selectedRecipeId.value}`, {
+      method: "DELETE",
+    });
+
+    toast.success(`Recipe "${recipe.name}" deleted`);
+    selectedRecipeId.value = null;
+    await loadUserRecipes();
+  } catch {
+    toast.error("Failed to delete recipe");
+  }
+}
+
+function downloadErrorLog() {
+  if (!importResults.value?.errors || importResults.value.errors.length === 0)
+    return;
+
+  const csvContent = [
+    ["Row", "Error Message"],
+    ...importResults.value.errors.map((err) => [
+      err.row?.toString() || "Unknown",
+      err.message.replace(/"/g, '""'),
+    ]),
+  ]
+    .map((row) => row.map((cell) => `"${cell}"`).join(","))
+    .join("\n");
+
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `import-errors-${new Date().toISOString().split("T")[0]}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+
+  toast.info("Error log downloaded");
+}
+
+function formatSize(bytes: number): string {
+  if (bytes === 0) return "0 Bytes";
+  const k = 1024;
+  const sizes = ["Bytes", "KB", "MB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+}
 </script>
+</template>

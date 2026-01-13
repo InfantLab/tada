@@ -1,24 +1,24 @@
 import { defineEventHandler, getQuery, createError } from "h3";
 import { db } from "~/server/db";
 import { entries } from "~/server/db/schema";
-import { eq, and, desc, isNull, sql } from "drizzle-orm";
+import { eq, and, desc, isNull } from "drizzle-orm";
 import { createLogger } from "~/server/utils/logger";
 
 const logger = createLogger("api:entries:get");
 
 export default defineEventHandler(async (event) => {
   try {
-    const query = getQuery(event);
-
-    // Require authentication
-    if (!event.context.user) {
+    // Get authenticated user from context
+    const user = event.context.user;
+    if (!user) {
       throw createError({
         statusCode: 401,
         statusMessage: "Unauthorized",
       });
     }
 
-    const userId = event.context.user.id;
+    const query = getQuery(event);
+    const userId = user.id;
 
     logger.debug("Fetching entries", { userId, query });
 
@@ -33,14 +33,15 @@ export default defineEventHandler(async (event) => {
       conditions.push(eq(entries.type, query["type"]));
     }
 
-    // Query entries - sort by whichever timestamp field is populated
+    // Query entries - order by most relevant timestamp field (prefer startedAt, then timestamp, then createdAt)
     const userEntries = await db
       .select()
       .from(entries)
       .where(and(...conditions))
       .orderBy(
         desc(
-          sql`COALESCE(${entries.timestamp}, ${entries.startedAt}, ${entries.date}, ${entries.createdAt})`
+          // Use COALESCE to try fields in order: startedAt > timestamp > createdAt
+          sql`COALESCE(${entries.startedAt}, ${entries.timestamp}, ${entries.createdAt})`
         )
       )
       .limit(query["limit"] ? parseInt(query["limit"] as string) : 100);

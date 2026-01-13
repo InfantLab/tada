@@ -24,8 +24,6 @@
 
 ## Commands (File-Scoped)
 
-## Commands (File-Scoped)
-
 ```bash
 # Always start here
 cd app
@@ -40,6 +38,9 @@ bun run typecheck         # Full type check
 bun run db:generate       # After schema change
 bun run db:migrate        # Apply migrations
 bun run db:studio         # DB UI on :4983
+
+# ⚠️ IMPORTANT: Never run `bun run test` in CLI - it blocks terminal!
+# Use VS Code Test Explorer or runTests tool with limits instead
 ```
 
 ## Testing
@@ -107,6 +108,45 @@ docs: update testing guide
 - `design/decisions.md` — Technical decisions
 - `design/roadmap.md` — Feature roadmap
 
+## CSV Import Feature (v0.2.0+)
+
+**Status:** 73% complete. See [`docs/CSV_IMPORT_COMPLETION_REVIEW.md`](docs/CSV_IMPORT_COMPLETION_REVIEW.md) for detailed analysis.
+
+**Quick Reference:**
+
+- **User Entry:** Visit `/import` or Settings → Import Data
+- **Built-in Recipe:** Insight Timer automatically configured, just upload your CSV export
+- **Custom Recipe:** Save your column mappings to reuse on future imports
+- **Workflow:** File Upload → Column Mapping → Data Validation → Import
+
+**API Endpoints:**
+
+```
+POST   /api/import/entries               # Perform bulk import (rate limited)
+GET    /api/import/recipes               # List recipes (auto-creates Insight Timer)
+POST   /api/import/recipes               # Save new recipe
+GET    /api/import/recipes/[id]          # Get recipe details
+DELETE /api/import/recipes/[id]          # Delete recipe
+POST   /api/import/recipes/[id]/restore  # Restore previous version
+GET    /api/import/logs                  # Import audit trail
+```
+
+**Parser Utilities:**
+
+- `csvParser.ts`: parseCSV, detectDateFormat, parseDuration, parseDateTime, generateExternalId
+- `columnDetection.ts`: Auto-detect entry fields with confidence scoring
+
+**Database Tables:**
+
+- `import_recipes` (id, userId, name, columnMapping, isBuiltIn, previousVersions)
+- `import_logs` (id, userId, recipeId, status, totalRows, successfulRows, errors)
+
+**Known Limitations:**
+
+- ⚠️ Task 3.5: Timezone/date format selector UI not yet implemented (backend ready)
+- ⚠️ Task 4.4: Recipe rollback UI controls missing (backend supports it)
+- ⚠️ Task 5.4: E2E tests not yet written (recommend `@nuxt/test-utils`)
+
 ## Trust the Instructions
 
 **New API endpoint:** Create `app/server/api/path.{get|post}.ts`, import `createLogger`, use types from `~/server/db/schema`
@@ -117,7 +157,16 @@ docs: update testing guide
 
 **New entry type:** Just use it! Types are open strings. Put type-specific data in `data` field.
 
-**CSV import:** `/import` page. Built-in Insight Timer recipe auto-created. Custom recipes saved in `import_recipes` table. 50MB limit, 500 rows/batch.
+**CSV import (v0.2.0+):** See `docs/CSV_IMPORT_COMPLETION_REVIEW.md` for full feature status. Quick facts:
+
+- Page: `/import` with recipe selector and wizard
+- Built-in Insight Timer recipe auto-created on first access
+- Custom recipes saved with version history (up to 3 rollbacks)
+- API: `POST /api/import/entries` with batching (500 rows/txn)
+- Limits: 50MB files, 1 import/10 seconds per user, auto-deduplication
+- Auto-detection: Date formats, durations, column mapping with confidence scoring
+- Database: `import_recipes` and `import_logs` tables for recipes and audit trail
+- See Task 3.5 status: Timezone/format selectors UI still needed
 
 ## Quick Troubleshooting
 

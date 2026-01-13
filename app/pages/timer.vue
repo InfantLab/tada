@@ -400,7 +400,7 @@ onUnmounted(() => {
           class="px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
           :class="
             selectedSubcategory === cat.value
-              ? 'bg-tada-100 dark:bg-tada-900/50 text-tada-700 dark:text-tada-300 ring-2 ring-tada-500'
+              ? 'bg-tada-100/30 dark:bg-tada-600/20 text-tada-700 dark:text-tada-300 ring-2 ring-tada-500 dark:ring-tada-500'
               : 'bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600'
           "
           @click="selectedSubcategory = cat.value"
@@ -417,7 +417,7 @@ onUnmounted(() => {
         class="px-4 py-2 rounded-lg font-medium transition-colors"
         :class="
           timerMode === 'countdown'
-            ? 'bg-tada-600 text-white'
+            ? 'bg-tada-600 text-black dark:bg-tada-600 dark:text-white'
             : 'bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600'
         "
         @click="timerMode = 'countdown'"
@@ -428,7 +428,7 @@ onUnmounted(() => {
         class="px-4 py-2 rounded-lg font-medium transition-colors"
         :class="
           timerMode === 'unlimited'
-            ? 'bg-tada-600 text-white'
+            ? 'bg-tada-600 text-black dark:bg-tada-600 dark:text-white'
             : 'bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600'
         "
         @click="timerMode = 'unlimited'"
@@ -451,7 +451,7 @@ onUnmounted(() => {
           (preset.seconds > 0 &&
             targetMinutes === preset.seconds &&
             !customMinutes)
-            ? 'bg-tada-100 dark:bg-tada-900/50 text-tada-700 dark:text-tada-300'
+            ? 'bg-tada-100/30 dark:bg-tada-600/20 text-tada-700 dark:text-tada-300'
             : 'bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600'
         "
         @click="
@@ -527,7 +527,7 @@ onUnmounted(() => {
               class="px-2 py-1 rounded text-xs font-medium transition-colors"
               :class="
                 loopCount === loop
-                  ? 'bg-tada-100 dark:bg-tada-900/50 text-tada-700 dark:text-tada-300'
+                  ? 'bg-tada-100/30 dark:bg-tada-600/20 text-tada-700 dark:text-tada-300'
                   : 'bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600'
               "
               @click="loopCount = loop"
@@ -551,7 +551,7 @@ onUnmounted(() => {
               class="px-2 py-1 rounded text-xs font-medium transition-colors"
               :class="
                 startBell === sound.value
-                  ? 'bg-tada-100 dark:bg-tada-900/50 text-tada-700 dark:text-tada-300'
+                  ? 'bg-tada-100/30 dark:bg-tada-600/20 text-tada-700 dark:text-tada-300'
                   : 'bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600'
               "
               @click="startBell = sound.value"
@@ -575,7 +575,7 @@ onUnmounted(() => {
               class="px-2 py-1 rounded text-xs font-medium transition-colors"
               :class="
                 endBell === sound.value
-                  ? 'bg-tada-100 dark:bg-tada-900/50 text-tada-700 dark:text-tada-300'
+                  ? 'bg-tada-100/30 dark:bg-tada-600/20 text-tada-700 dark:text-tada-300'
                   : 'bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600'
               "
               @click="endBell = sound.value"
@@ -605,7 +605,7 @@ onUnmounted(() => {
           cy="50"
         />
         <circle
-          class="text-tada-500 transition-all duration-1000"
+          class="text-tada-700 dark:text-tada-300 transition-all duration-1000"
           stroke="currentColor"
           stroke-width="4"
           stroke-linecap="round"
@@ -647,7 +647,7 @@ onUnmounted(() => {
       <!-- Not running state -->
       <template v-if="!isRunning">
         <button
-          class="w-20 h-20 rounded-full bg-tada-600 hover:bg-tada-700 text-white flex items-center justify-center shadow-lg transition-colors"
+          class="w-20 h-20 rounded-full bg-tada-600 hover:opacity-90 text-black dark:bg-tada-600 dark:text-white dark:hover:opacity-90 flex items-center justify-center shadow-lg transition-colors"
           @click="startTimer"
         >
           <svg
@@ -691,7 +691,7 @@ onUnmounted(() => {
         <!-- Stop / Save -->
         <button
           :disabled="isSaving"
-          class="w-20 h-20 rounded-full bg-tada-600 hover:bg-tada-700 disabled:bg-stone-300 disabled:cursor-not-allowed text-white flex items-center justify-center shadow-lg transition-colors"
+          class="w-20 h-20 rounded-full bg-tada-600 hover:opacity-90 text-black dark:bg-tada-600 dark:text-white dark:hover:opacity-90 disabled:bg-stone-300 disabled:cursor-not-allowed flex items-center justify-center shadow-lg transition-colors"
           @click="saveSession"
         >
           <svg
@@ -742,7 +742,7 @@ onUnmounted(() => {
     <div v-if="isComplete && !isRunning" class="mt-8">
       <button
         :disabled="isSaving"
-        class="px-6 py-3 rounded-lg bg-tada-600 hover:bg-tada-700 disabled:bg-stone-300 disabled:cursor-not-allowed text-white font-medium transition-colors flex items-center gap-2"
+        class="px-6 py-3 rounded-lg bg-tada-600 hover:opacity-90 text-black dark:bg-tada-600 dark:text-white dark:hover:opacity-90 disabled:bg-stone-300 disabled:cursor-not-allowed font-medium transition-colors flex items-center gap-2"
         @click="saveSession"
       >
         <svg

@@ -27,7 +27,7 @@
             <button
               v-for="recipe in builtInRecipes"
               :key="recipe.id"
-              class="text-left p-6 bg-white dark:bg-cosmic-indigo rounded-lg border border-pearl-mist dark:border-cosmic-indigo-light hover:border-gold-light dark:hover:border-gold-dark transition-colors"
+              class="text-left p-6 bg-white dark:bg-cosmic-indigo rounded-lg border border-pearl-mist dark:border-cosmic-indigo-light hover:border-tada-300 dark:hover:border-tada-600 transition-colors"
               @click="selectRecipe(recipe)"
             >
               <div class="flex items-start justify-between mb-2">
@@ -37,7 +37,7 @@
                   {{ recipe.name }}
                 </h3>
                 <span
-                  class="text-xs px-2 py-1 rounded bg-gold-highlight/20 text-gold-light dark:bg-gold-dark/20 dark:text-gold-dark"
+                  class="text-xs px-2 py-1 rounded bg-tada-100/20 text-tada-700 dark:bg-tada-600/20 dark:text-tada-300"
                   >Built-in</span
                 >
               </div>

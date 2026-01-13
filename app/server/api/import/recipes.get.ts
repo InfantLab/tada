@@ -1,7 +1,7 @@
 import { randomUUID } from "crypto";
 import { db } from "~/server/db";
 import { importRecipes } from "~/server/db/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { createLogger } from "~/server/utils/logger";
 
 const logger = createLogger("api:import-recipes");

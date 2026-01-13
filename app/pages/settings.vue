@@ -181,7 +181,7 @@ async function exportData() {
           <div class="p-4">
             <div class="flex items-center gap-3">
               <div
-                class="w-12 h-12 rounded-full bg-tada-100 dark:bg-tada-900/30 flex items-center justify-center"
+                class="w-12 h-12 rounded-full bg-tada-100/30 dark:bg-tada-600/20 flex items-center justify-center"
               >
                 <span class="text-xl">👤</span>
               </div>
@@ -251,7 +251,7 @@ async function exportData() {
                 class="flex flex-col items-center gap-1 p-3 rounded-lg border-2 transition-colors"
                 :class="
                   settings.theme === theme.id
-                    ? 'border-tada-500 bg-tada-50 dark:bg-tada-900/20'
+                    ? 'border-tada-300 bg-tada-100/20 dark:border-tada-600 dark:bg-tada-600/10'
                     : 'border-stone-200 dark:border-stone-600 hover:border-stone-300'
                 "
                 @click="settings.theme = theme.id as any"
@@ -351,7 +351,7 @@ async function exportData() {
                 class="relative w-12 h-7 rounded-full transition-colors"
                 :class="
                   settings.notifications
-                    ? 'bg-tada-500'
+                    ? 'bg-tada-600 dark:bg-tada-600'
                     : 'bg-stone-300 dark:bg-stone-600'
                 "
                 role="switch"
@@ -487,21 +487,21 @@ async function exportData() {
                 <a
                   href="https://github.com/InfantLab/tada"
                   target="_blank"
-                  class="text-xs text-tada-600 dark:text-tada-400 hover:underline"
+                  class="text-xs text-tada-700 dark:text-tada-300 hover:underline"
                 >
                   GitHub
                 </a>
                 <a
                   href="/docs/DEVELOPER_GUIDE.md"
                   target="_blank"
-                  class="text-xs text-tada-600 dark:text-tada-400 hover:underline"
+                  class="text-xs text-tada-700 dark:text-tada-300 hover:underline"
                 >
                   Docs
                 </a>
                 <a
                   href="https://github.com/InfantLab/tada/blob/main/LICENSE"
                   target="_blank"
-                  class="text-xs text-tada-600 dark:text-tada-400 hover:underline"
+                  class="text-xs text-tada-700 dark:text-tada-300 hover:underline"
                 >
                   License (AGPL-3.0)
                 </a>
@@ -514,7 +514,7 @@ async function exportData() {
       <!-- Save button -->
       <button
         :disabled="isSaving"
-        class="w-full py-3 bg-tada-600 hover:bg-tada-700 disabled:bg-stone-300 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
+        class="w-full py-3 bg-tada-600 hover:opacity-90 text-black dark:bg-tada-600 dark:text-white dark:hover:opacity-90 disabled:bg-stone-300 disabled:cursor-not-allowed font-medium rounded-lg transition-colors"
         @click="saveSettings"
       >
         {{ isSaving ? "Saving..." : "Save Settings" }}

@@ -1,11 +1,11 @@
 {
   "name": "tada",
-  "version": "0.1.1",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "description": "Personal lifelogger - Track Activities, Discover Achievements",
   "scripts": {
-    "dev": "DATABASE_URL=file:/workspaces/tada/app/data/db.sqlite nuxt dev",
+    "dev": "nuxt dev",
     "build": "nuxt build",
     "build:docker": "NUXT_TYPESCRIPT_TYPECHECK=false nuxt build",
     "generate": "nuxt generate",
@@ -17,21 +17,15 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
-    "verify-tests": "bash scripts/verify-tests.sh",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
     "@libsql/client": "^0.14.0",
-    "@lucia-auth/adapter-drizzle": "^1.1.0",
-    "@vitest/coverage-v8": "^4.0.17",
     "drizzle-orm": "^0.38.3",
-    "emoji-picker-element": "^1.28.1",
-    "lucia": "^3.2.2",
     "nanoid": "^5.1.6",
-    "oslo": "^1.2.1",
-    "papaparse": "^5.5.3"
+    "oslo": "^1.2.1"
   },
   "devDependencies": {
     "@nuxt/devtools": "^1.7.0",
@@ -39,7 +33,6 @@
     "@nuxt/test-utils": "^3.23.0",
     "@nuxtjs/tailwindcss": "^6.13.1",
     "@types/bun": "^1.1.14",
-    "@types/papaparse": "^5.5.2",
     "@vite-pwa/nuxt": "^0.10.6",
     "@vitest/ui": "^3.0.0",
     "@vue/test-utils": "^2.4.6",

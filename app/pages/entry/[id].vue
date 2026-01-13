@@ -127,7 +127,7 @@ function getTypeIcon(type: string): string {
     <!-- Loading state -->
     <div v-if="isLoading" class="flex items-center justify-center py-12">
       <div
-        class="animate-spin rounded-full h-8 w-8 border-2 border-tada-600 border-t-transparent"
+        class="animate-spin rounded-full h-8 w-8 border-2 border-tada-300 border-t-transparent dark:border-tada-600"
       />
     </div>
 
@@ -140,7 +140,7 @@ function getTypeIcon(type: string): string {
       <p class="text-stone-500 dark:text-stone-400 mb-4">{{ error }}</p>
       <NuxtLink
         to="/"
-        class="inline-block px-4 py-2 bg-tada-600 hover:bg-tada-700 text-white rounded-lg font-medium transition-colors"
+        class="inline-block px-4 py-2 bg-tada-600 hover:opacity-90 text-black dark:bg-tada-600 dark:text-white rounded-lg font-medium transition-colors"
       >
         Back to timeline
       </NuxtLink>
@@ -193,9 +193,9 @@ function getTypeIcon(type: string): string {
           <input
             v-model="name"
             type="text"
-            class="w-full px-4 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-900 text-stone-900 dark:text-white focus:ring-2 focus:ring-tada-500 focus:border-transparent"
+            class="w-full px-4 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-900 text-stone-900 dark:text-white focus:ring-2 focus:ring-tada-500 dark:focus:ring-tada-500 focus:border-transparent"
             placeholder="Entry title"
-          >
+          />
         </div>
 
         <!-- Timestamp -->
@@ -208,8 +208,8 @@ function getTypeIcon(type: string): string {
           <input
             v-model="timestamp"
             type="datetime-local"
-            class="w-full px-4 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-900 text-stone-900 dark:text-white focus:ring-2 focus:ring-tada-500 focus:border-transparent"
-          >
+            class="w-full px-4 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-900 text-stone-900 dark:text-white focus:ring-2 focus:ring-tada-500 dark:focus:ring-tada-500 focus:border-transparent"
+          />
         </div>
 
         <!-- Notes -->
@@ -222,7 +222,7 @@ function getTypeIcon(type: string): string {
           <textarea
             v-model="notes"
             rows="6"
-            class="w-full px-4 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-900 text-stone-900 dark:text-white focus:ring-2 focus:ring-tada-500 focus:border-transparent resize-none"
+            class="w-full px-4 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-900 text-stone-900 dark:text-white focus:ring-2 focus:ring-tada-500 dark:focus:ring-tada-500 focus:border-transparent resize-none"
             placeholder="Add notes or details..."
           />
         </div>
@@ -250,7 +250,7 @@ function getTypeIcon(type: string): string {
         <div class="flex gap-3 pt-4">
           <button
             :disabled="isSaving"
-            class="flex-1 px-4 py-2 bg-tada-600 hover:bg-tada-700 disabled:bg-stone-300 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors"
+            class="flex-1 px-4 py-2 bg-tada-600 hover:opacity-90 text-black dark:bg-tada-600 dark:text-white dark:hover:opacity-90 disabled:bg-stone-300 disabled:cursor-not-allowed rounded-lg font-medium transition-colors"
             @click="saveEntry"
           >
             <span v-if="!isSaving">Save Changes</span>

@@ -1,16 +1,12 @@
 {
-  // PWA icon type warnings are expected during dev - icons generated at build time
   "extends": "./.nuxt/tsconfig.json",
-  "exclude": ["node_modules/@vite-pwa", ".nuxt/pwa-icons-plugin.ts"],
   "compilerOptions": {
-    "baseUrl": ".",
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,
     "exactOptionalPropertyTypes": false,
     "moduleResolution": "bundler",
-    "types": ["bun-types"],
     "paths": {
       "~/*": ["./*"],
       "@/*": ["./*"],
@@ -20,6 +16,13 @@
       "#imports": [".nuxt/imports.d.ts"]
     }
   },
-  "include": [".nuxt/nuxt.d.ts", "**/*.ts", "**/*.vue"],
-  "exclude": ["node_modules", "dist"]
+  "include": [
+    ".nuxt/nuxt.d.ts",
+    "**/*.ts",
+    "**/*.vue"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }

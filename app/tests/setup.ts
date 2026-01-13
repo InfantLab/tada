@@ -1,6 +1,12 @@
 import { beforeAll, afterAll, beforeEach } from "vitest";
 import { db } from "~/server/db";
-import { users, entries, sessions } from "~/server/db/schema";
+import {
+  users,
+  entries,
+  sessions,
+  importLogs,
+  importRecipes,
+} from "~/server/db/schema";
 import { eq, sql } from "drizzle-orm";
 
 /**
@@ -13,6 +19,8 @@ import { eq, sql } from "drizzle-orm";
 beforeAll(async () => {
   // Clean all test data before starting
   try {
+    await db.delete(importLogs).execute();
+    await db.delete(importRecipes).execute();
     await db.delete(entries).execute();
     await db.delete(sessions).execute();
     await db.delete(users).execute();
@@ -25,6 +33,8 @@ beforeAll(async () => {
 afterAll(async () => {
   // Clean up all test data
   try {
+    await db.delete(importLogs).execute();
+    await db.delete(importRecipes).execute();
     await db.delete(entries).execute();
     await db.delete(sessions).execute();
     await db.delete(users).execute();

@@ -3,6 +3,9 @@
   "image": "oven/bun:1",
   "workspaceFolder": "/workspaces/tada",
   "forwardPorts": [3000, 4983],
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {}
+  },
   "postCreateCommand": "cd app && bun install",
   "customizations": {
     "vscode": {

@@ -127,7 +127,7 @@ async function handleSubmit() {
               type="text"
               autocomplete="username"
               required
-              class="w-full px-4 py-3 rounded-lg border border-text-light-muted/30 dark:border-text-dark-muted/30 bg-pearl-base dark:bg-cosmic-void text-text-light-primary dark:text-text-dark-primary focus:outline-none focus:ring-2 focus:ring-gold-light dark:focus:ring-gold-dark focus:border-transparent"
+              class="w-full px-4 py-3 rounded-lg border border-text-light-muted/30 dark:border-text-dark-muted/30 bg-pearl-base dark:bg-cosmic-void text-text-light-primary dark:text-text-dark-primary focus:outline-none focus:ring-2 focus:ring-tada-500 dark:focus:ring-tada-500 focus:border-transparent"
               :placeholder="
                 mode === 'register'
                   ? 'Choose a username'
@@ -150,7 +150,7 @@ async function handleSubmit() {
               type="password"
               autocomplete="current-password"
               required
-              class="w-full px-4 py-3 rounded-lg border border-text-light-muted/30 dark:border-text-dark-muted/30 bg-pearl-base dark:bg-cosmic-void text-text-light-primary dark:text-text-dark-primary focus:outline-none focus:ring-2 focus:ring-gold-light dark:focus:ring-gold-dark focus:border-transparent"
+              class="w-full px-4 py-3 rounded-lg border border-text-light-muted/30 dark:border-text-dark-muted/30 bg-pearl-base dark:bg-cosmic-void text-text-light-primary dark:text-text-dark-primary focus:outline-none focus:ring-2 focus:ring-tada-500 dark:focus:ring-tada-500 focus:border-transparent"
               :placeholder="
                 mode === 'register'
                   ? 'Choose a password (min 6 characters)'
@@ -173,7 +173,7 @@ async function handleSubmit() {
               type="password"
               autocomplete="new-password"
               required
-              class="w-full px-4 py-3 rounded-lg border border-text-light-muted/30 dark:border-text-dark-muted/30 bg-pearl-base dark:bg-cosmic-void text-text-light-primary dark:text-text-dark-primary focus:outline-none focus:ring-2 focus:ring-gold-light dark:focus:ring-gold-dark focus:border-transparent"
+              class="w-full px-4 py-3 rounded-lg border border-text-light-muted/30 dark:border-text-dark-muted/30 bg-pearl-base dark:bg-cosmic-void text-text-light-primary dark:text-text-dark-primary focus:outline-none focus:ring-2 focus:ring-tada-500 dark:focus:ring-tada-500 focus:border-transparent"
               placeholder="Confirm your password"
             />
           </div>
@@ -194,7 +194,7 @@ async function handleSubmit() {
           <button
             type="submit"
             :disabled="isLoading"
-            class="w-full py-3 px-4 bg-gold-light hover:bg-gold-line disabled:bg-text-light-muted dark:bg-gold-dark dark:hover:bg-gold-amber dark:disabled:bg-text-dark-muted text-text-light-primary dark:text-cosmic-void font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+            class="w-full py-3 px-4 bg-tada-600 hover:bg-gold-line disabled:bg-text-light-muted dark:bg-tada-600 dark:hover:bg-gold-amber dark:disabled:bg-text-dark-muted text-text-light-primary dark:text-cosmic-void font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
           >
             <span v-if="!isLoading">{{
               mode === "login" ? "Sign In" : "Create Account"
@@ -211,7 +211,7 @@ async function handleSubmit() {
         <div v-if="hasUsers" class="mt-6 text-center">
           <button
             type="button"
-            class="text-sm text-gold-light hover:text-gold-line dark:text-gold-dark dark:hover:text-gold-amber transition-colors"
+            class="text-sm text-tada-700 hover:text-gold-line dark:text-tada-300 dark:hover:text-gold-amber transition-colors"
             @click="mode = mode === 'login' ? 'register' : 'login'"
           >
             {{
@@ -225,7 +225,7 @@ async function handleSubmit() {
         <!-- First User Message -->
         <div
           v-if="!hasUsers"
-          class="mt-6 p-3 rounded-lg bg-gold-highlight/20 dark:bg-gold-dark/20 border border-gold-line dark:border-gold-dark"
+          class="mt-6 p-3 rounded-lg bg-tada-100/20 dark:bg-tada-600/20 border border-gold-line dark:border-tada-600"
         >
           <p
             class="text-sm text-text-light-primary dark:text-text-dark-primary text-center"

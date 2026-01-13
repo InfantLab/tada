@@ -10,9 +10,6 @@ const logger = createLogger("api:entries:post");
 interface CreateEntryBody {
   type: string;
   name: string;
-  category?: string | null;
-  subcategory?: string | null;
-  emoji?: string | null;
   timestamp?: string;
   startedAt?: string | null;
   endedAt?: string | null;
@@ -63,15 +60,16 @@ export default defineEventHandler(async (event) => {
 
     // Prepare entry data
     const now = new Date().toISOString();
+
+    // Ensure at least ONE timestamp field is set (prefer explicit timestamp, then startedAt, then now)
+    const timestamp = typedBody.timestamp || typedBody.startedAt || now;
+
     const newEntry: NewEntry = {
       id: nanoid(),
       userId,
       type: typedBody.type,
       name: typedBody.name,
-      category: typedBody.category || null,
-      subcategory: typedBody.subcategory || null,
-      emoji: typedBody.emoji || null,
-      timestamp: typedBody.timestamp || now,
+      timestamp,
       startedAt: typedBody.startedAt || null,
       endedAt: typedBody.endedAt || null,
       durationSeconds: typedBody.durationSeconds || null,

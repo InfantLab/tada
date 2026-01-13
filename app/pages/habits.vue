@@ -63,9 +63,8 @@ const last7Days = getLast7Days();
       </div>
 
       <!-- Add habit button -->
-      <div
-        class="flex items-center gap-2 px-4 py-2 bg-stone-200 dark:bg-stone-700 text-stone-500 dark:text-stone-400 rounded-lg font-medium cursor-not-allowed"
-        title="Coming in v0.2"
+      <button
+        class="flex items-center gap-2 px-4 py-2 bg-tada-600 hover:opacity-90 text-black dark:bg-tada-600 dark:text-white rounded-lg font-medium transition-colors shadow-sm"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -82,13 +81,13 @@ const last7Days = getLast7Days();
           />
         </svg>
         <span class="hidden sm:inline">New Habit</span>
-      </div>
+      </button>
     </div>
 
     <!-- Loading state -->
     <div v-if="isLoading" class="flex items-center justify-center py-12">
       <div
-        class="animate-spin rounded-full h-8 w-8 border-2 border-tada-600 border-t-transparent"
+        class="animate-spin rounded-full h-8 w-8 border-2 border-tada-300 border-t-transparent dark:border-tada-600"
       />
     </div>
 
@@ -96,15 +95,14 @@ const last7Days = getLast7Days();
     <div v-else-if="habits.length === 0" class="text-center py-12">
       <div class="text-6xl mb-4">📊</div>
       <h2 class="text-xl font-semibold text-stone-700 dark:text-stone-200 mb-2">
-        Habit tracking coming in v0.2
+        No habits yet
       </h2>
       <p class="text-stone-500 dark:text-stone-400 max-w-md mx-auto mb-6">
-        Habits will let you track streaks using the Seinfeld method. Each day
-        you complete a habit, you add a link to your chain. This feature is
-        currently in development.
+        Create habits to track with the Seinfeld method. Each day you complete
+        the habit, you add a link to your chain.
       </p>
-      <div
-        class="inline-flex items-center gap-2 px-4 py-2 bg-stone-200 dark:bg-stone-700 text-stone-500 dark:text-stone-400 rounded-lg font-medium cursor-not-allowed"
+      <button
+        class="inline-flex items-center gap-2 px-4 py-2 bg-tada-600 hover:opacity-90 text-black dark:bg-tada-600 dark:text-white rounded-lg font-medium transition-colors"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -117,11 +115,11 @@ const last7Days = getLast7Days();
             stroke-linecap="round"
             stroke-linejoin="round"
             stroke-width="2"
-            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+            d="M12 4v16m8-8H4"
           />
         </svg>
-        Coming soon
-      </div>
+        Create your first habit
+      </button>
     </div>
 
     <!-- Habits list -->
@@ -137,7 +135,7 @@ const last7Days = getLast7Days();
             class="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center text-2xl transition-colors"
             :class="
               habit.completedToday
-                ? 'bg-tada-100 dark:bg-tada-900/50'
+                ? 'bg-tada-100/30 dark:bg-tada-600/20'
                 : 'bg-stone-100 dark:bg-stone-700'
             "
           >
@@ -152,7 +150,7 @@ const last7Days = getLast7Days();
               </h3>
               <span
                 v-if="habit.completedToday"
-                class="text-xs px-2 py-0.5 rounded-full bg-tada-100 dark:bg-tada-900/50 text-tada-700 dark:text-tada-300"
+                class="text-xs px-2 py-0.5 rounded-full bg-tada-100/30 text-tada-700 dark:bg-tada-600/20 dark:text-tada-300"
               >
                 Done
               </span>
@@ -183,11 +181,13 @@ const last7Days = getLast7Days();
                 <div
                   class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-medium transition-colors"
                   :class="[
-                    day.isToday ? 'ring-2 ring-tada-500' : '',
+                    day.isToday
+                      ? 'ring-2 ring-tada-500 dark:ring-tada-500'
+                      : '',
                     habit.completedToday && day.isToday
-                      ? 'bg-tada-500 text-white'
+                      ? 'bg-tada-600 text-black dark:bg-tada-600 dark:text-white'
                       : Math.random() > 0.3 && !day.isToday
-                      ? 'bg-tada-500 text-white'
+                      ? 'bg-tada-600 text-black dark:bg-tada-600 dark:text-white'
                       : 'bg-stone-100 dark:bg-stone-700 text-stone-500 dark:text-stone-400',
                   ]"
                 >
@@ -202,8 +202,8 @@ const last7Days = getLast7Days();
             class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-colors"
             :class="
               habit.completedToday
-                ? 'bg-tada-500 text-white'
-                : 'bg-stone-100 dark:bg-stone-700 text-stone-500 dark:text-stone-400 hover:bg-tada-100 dark:hover:bg-tada-900/50 hover:text-tada-600'
+                ? 'bg-tada-600 text-black dark:bg-tada-600 dark:text-white'
+                : 'bg-stone-100 dark:bg-stone-700 text-stone-500 dark:text-stone-400 hover:bg-tada-100/20 dark:hover:bg-tada-600/20 hover:text-tada-700 dark:hover:text-tada-300'
             "
           >
             <svg

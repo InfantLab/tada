@@ -1,7 +1,6 @@
 <script setup lang="ts">
 // Journal page - dream journaling and free-form entries
 import type { Entry } from "~/server/db/schema";
-import { getEntryDisplayProps } from "~/utils/categoryDefaults";
 
 definePageMeta({
   layout: "default",
@@ -11,30 +10,14 @@ definePageMeta({
 const entries = ref<Entry[]>([]);
 const isLoading = ref(true);
 const error = ref<string | null>(null);
-const selectedFilter = ref<string>("all");
-
-// Emoji picker state
-const showEmojiPicker = ref(false);
-const emojiPickerEntry = ref<Entry | null>(null);
-const isUpdating = ref(false);
-
-// Filter options based on subcategory (journals only - tada has its own page)
-const filterOptions = [
-  { value: "all", label: "All", emoji: "📖" },
-  { value: "dream", label: "Dreams", emoji: "🌙" },
-  { value: "gratitude", label: "Gratitude", emoji: "🙏" },
-  { value: "note", label: "Notes", emoji: "📝" },
-];
+const selectedType = ref<"all" | "dream" | "journal" | "tada">("all");
 
 onMounted(async () => {
   try {
-    // Fetch journal-type entries (type: journal only, not tada)
+    // Fetch journal-type entries (dream, journal, tada)
     const data: Entry[] = await $fetch("/api/entries");
-    entries.value = data.filter(
-      (e) =>
-        e.type === "journal" ||
-        // Legacy support for old type values
-        ["dream", "note", "gratitude"].includes(e.type)
+    entries.value = data.filter((e) =>
+      ["dream", "journal", "tada", "note"].includes(e.type)
     );
   } catch (err: unknown) {
     console.error("Failed to fetch journal entries:", err);
@@ -45,15 +28,8 @@ onMounted(async () => {
 });
 
 const filteredEntries = computed(() => {
-  if (selectedFilter.value === "all") return entries.value;
-
-  // Filter by subcategory (dream, note, gratitude, etc.)
-  return entries.value.filter(
-    (e) =>
-      e.subcategory === selectedFilter.value ||
-      // Legacy support
-      e.type === selectedFilter.value
-  );
+  if (selectedType.value === "all") return entries.value;
+  return entries.value.filter((e) => e.type === selectedType.value);
 });
 
 function formatDate(dateStr: string): string {
@@ -67,45 +43,16 @@ function formatDate(dateStr: string): string {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-// Get display properties for an entry
-function getDisplayProps(entry: Entry) {
-  return getEntryDisplayProps({
-    emoji: entry.emoji,
-    category: entry.category,
-    subcategory: entry.subcategory,
-  });
-}
-
-// Show emoji picker for an entry
-function openEmojiPicker(entry: Entry, event: Event) {
-  event.preventDefault();
-  event.stopPropagation();
-  emojiPickerEntry.value = entry;
-  showEmojiPicker.value = true;
-}
-
-// Update entry emoji
-async function updateEmoji(emoji: string) {
-  if (!emojiPickerEntry.value) return;
-
-  const entry = emojiPickerEntry.value;
-  isUpdating.value = true;
-
-  try {
-    await $fetch(`/api/entries/${entry.id}`, {
-      method: "PATCH",
-      body: { emoji },
-    });
-
-    // Update local state
-    entry.emoji = emoji;
-  } catch (err: unknown) {
-    console.error("Failed to update emoji:", err);
-    const message = err instanceof Error ? err.message : "Unknown error";
-    alert(`Failed to update emoji: ${message}`);
-  } finally {
-    isUpdating.value = false;
-    emojiPickerEntry.value = null;
+function getTypeIcon(type: string): string {
+  switch (type) {
+    case "dream":
+      return "🌙";
+    case "tada":
+      return "🎉";
+    case "note":
+      return "📝";
+    default:
+      return "💭";
   }
 }
 </script>
@@ -126,7 +73,7 @@ async function updateEmoji(emoji: string) {
       <!-- Add entry button -->
       <NuxtLink
         to="/add?type=journal"
-        class="flex items-center gap-2 px-4 py-2 bg-tada-600 hover:bg-tada-700 text-white rounded-lg font-medium transition-colors shadow-sm"
+        class="flex items-center gap-2 px-4 py-2 bg-tada-600 hover:opacity-90 text-black dark:bg-tada-600 dark:text-white rounded-lg font-medium transition-colors shadow-sm"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -149,24 +96,27 @@ async function updateEmoji(emoji: string) {
     <!-- Type filter -->
     <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
       <button
-        v-for="option in filterOptions"
-        :key="option.value"
+        v-for="type in ['all', 'dream', 'tada', 'note']"
+        :key="type"
         class="px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors"
         :class="
-          selectedFilter === option.value
-            ? 'bg-tada-600 text-white'
+          selectedType === type
+            ? 'bg-tada-600 text-black dark:bg-tada-600 dark:text-white'
             : 'bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600'
         "
-        @click="selectedFilter = option.value"
+        @click="selectedType = type as any"
       >
-        {{ option.emoji }} {{ option.label }}
+        <span v-if="type === 'all'">All</span>
+        <span v-else-if="type === 'dream'">🌙 Dreams</span>
+        <span v-else-if="type === 'tada'">🎉 Tada</span>
+        <span v-else>📝 Notes</span>
       </button>
     </div>
 
     <!-- Loading state -->
     <div v-if="isLoading" class="flex items-center justify-center py-12">
       <div
-        class="animate-spin rounded-full h-8 w-8 border-2 border-tada-600 border-t-transparent"
+        class="animate-spin rounded-full h-8 w-8 border-2 border-tada-300 border-t-transparent dark:border-tada-600"
       />
     </div>
 
@@ -181,18 +131,16 @@ async function updateEmoji(emoji: string) {
         thoughts.
       </p>
       <div class="flex flex-col sm:flex-row gap-3 justify-center">
-        <NuxtLink
-          to="/add?type=dream"
+        <button
           class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg font-medium transition-colors"
         >
           🌙 Record a dream
-        </NuxtLink>
-        <NuxtLink
-          to="/add?type=note"
-          class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-tada-600 hover:bg-tada-700 text-white rounded-lg font-medium transition-colors"
+        </button>
+        <button
+          class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-tada-600 hover:opacity-90 text-black dark:bg-tada-600 dark:text-white rounded-lg font-medium transition-colors"
         >
-          📝 Write a note
-        </NuxtLink>
+          🎉 Celebrate a win
+        </button>
       </div>
     </div>
 
@@ -205,18 +153,12 @@ async function updateEmoji(emoji: string) {
         class="block bg-white dark:bg-stone-800 rounded-xl p-4 shadow-sm border border-stone-200 dark:border-stone-700 hover:border-tada-300 dark:hover:border-tada-600 transition-colors"
       >
         <div class="flex items-start gap-3">
-          <!-- Entry emoji with category color (clickable) -->
-          <button
-            class="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center text-xl hover:scale-110 transition-transform cursor-pointer"
-            :style="{
-              backgroundColor: getDisplayProps(entry).color + '20',
-              color: getDisplayProps(entry).color,
-            }"
-            title="Change emoji"
-            @click="openEmojiPicker(entry, $event)"
+          <!-- Type icon -->
+          <div
+            class="flex-shrink-0 w-10 h-10 rounded-lg bg-stone-100 dark:bg-stone-700 flex items-center justify-center text-xl"
           >
-            {{ getDisplayProps(entry).emoji }}
-          </button>
+            {{ getTypeIcon(entry.type) }}
+          </div>
 
           <!-- Content -->
           <div class="flex-1 min-w-0">
@@ -288,12 +230,5 @@ async function updateEmoji(emoji: string) {
         </div>
       </NuxtLink>
     </div>
-
-    <!-- Emoji Picker Component -->
-    <EmojiPicker
-      v-model="showEmojiPicker"
-      :entry-name="emojiPickerEntry?.name"
-      @select="updateEmoji"
-    />
   </div>
 </template>

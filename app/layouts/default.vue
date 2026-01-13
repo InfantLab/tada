@@ -185,6 +185,7 @@ const route = useRoute();
         </NuxtLink>
       </div>
     </nav>
+    <ToastContainer />
   </div>
 </template>
 

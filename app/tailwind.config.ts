@@ -45,6 +45,18 @@ export default {
           line: "#FFB703", // accent.secondary (light)
           highlight: "#FFD966", // accent.spark (light)
         },
+        // TA-DA accent colors (alias to gold for backward compatibility)
+        tada: {
+          50: "#FFD966", // gold-highlight
+          100: "#FFD966",
+          300: "#FFB703",
+          400: "#FF9F1C",
+          500: "#E6A800", // gold-light
+          600: "#E6A800",
+          700: "#D49700",
+          900: "rgba(230, 168, 0, 0.2)",
+          "900/50": "rgba(230, 168, 0, 0.2)",
+        },
         // Brand - Lotus colors (gradients/illustrations)
         lotus: {
           teal: "#3FB7A5",
@@ -56,6 +68,17 @@ export default {
           "jade-soft": "#9BE3B8",
           "sky-soft": "#9ED3F5",
           "lilac-soft": "#D6B9F5",
+        },
+        // Legacy alias for `tada` colors (maps to gold theme)
+        tada: {
+          50: "#FFD966", // gold-highlight
+          100: "#FFD966",
+          300: "#FFB703",
+          400: "#FF9F1C",
+          500: "#E6A800", // gold-light
+          600: "#E6A800",
+          700: "#CC8F00", // darker gold-light
+          900: "rgba(230, 168, 0, 0.1)", // semi-transparent
         },
       },
       fontFamily: {
