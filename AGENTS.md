@@ -5,6 +5,7 @@
 - **Quotes:** `"` not `'`
 - **Semicolons:** Required
 - **Types:** Never `any` (use `unknown` + guards)
+- **Strictness:** All code must pass TypeScript strict mode (no ts-ignore, proper null checks)
 - **Logging:** `createLogger()` not `console.log`
 
 ## Don't
