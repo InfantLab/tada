@@ -145,12 +145,12 @@ export function parseDuration(duration: string): number | null {
 
 /**
  * Parse date string with timezone awareness
- * Converts to ISO 8601 string in UTC
+ * Supports multiple common formats and converts to ISO 8601 string
  */
 export function parseDateTime(
   dateStr: string,
-  format: string = "MM/DD/YYYY HH:mm:ss",
-  _timezone: string = "UTC"
+  format: string = "DD/MM/YYYY HH:mm:ss",
+  timezone: string = "UTC"
 ): string | null {
   if (!dateStr || typeof dateStr !== "string") {
     return null;
@@ -162,37 +162,50 @@ export function parseDateTime(
   }
 
   try {
-    // For now, support the most common format: MM/DD/YYYY HH:mm:ss
-    // Can be extended with a date parsing library if needed
-    if (format === "MM/DD/YYYY HH:mm:ss") {
-      const match = trimmed.match(
+    // Support multiple date formats
+    let match: RegExpMatchArray | null;
+    let month: string,
+      day: string,
+      year: string,
+      hour: string,
+      minute: string,
+      second: string;
+
+    if (format === "DD/MM/YYYY HH:mm:ss") {
+      match = trimmed.match(
         /^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2}):(\d{2})$/
       );
-      if (!match) {
-        return null;
-      }
-
-      const [, month, day, year, hour, minute, second] = match;
-
-      // Create date in specified timezone
-      // Note: This is a simplified approach. For production, consider using
-      // a library like date-fns-tz or luxon for proper timezone handling
-      const date = new Date(
-        `${year}-${month!.padStart(2, "0")}-${day!.padStart(
-          2,
-          "0"
-        )}T${hour!.padStart(2, "0")}:${minute}:${second}`
+      if (!match) return null;
+      [, day, month, year, hour, minute, second] = match;
+    } else if (format === "MM/DD/YYYY HH:mm:ss") {
+      match = trimmed.match(
+        /^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2}):(\d{2})$/
       );
-
+      if (!match) return null;
+      [, month, day, year, hour, minute, second] = match;
+    } else if (format === "YYYY-MM-DD HH:mm:ss") {
+      match = trimmed.match(
+        /^(\d{4})-(\d{1,2})-(\d{1,2})\s+(\d{1,2}):(\d{2}):(\d{2})$/
+      );
+      if (!match) return null;
+      [, year, month, day, hour, minute, second] = match;
+    } else {
+      // Fallback: try native Date parsing
+      const date = new Date(trimmed);
       if (isNaN(date.getTime())) {
         return null;
       }
-
       return date.toISOString();
     }
 
-    // Fallback: try native Date parsing
-    const date = new Date(trimmed);
+    // Create date in ISO format
+    const date = new Date(
+      `${year}-${month!.padStart(2, "0")}-${day!.padStart(
+        2,
+        "0"
+      )}T${hour!.padStart(2, "0")}:${minute}:${second}`
+    );
+
     if (isNaN(date.getTime())) {
       return null;
     }
@@ -251,4 +264,79 @@ export function validateEntryData(entry: {
   }
 
   return warnings;
+}
+
+/**
+ * Detect date format from sample date strings
+ */
+export function detectDateFormat(samples: string[]): {
+  format: string;
+  confidence: "high" | "medium" | "low";
+} {
+  if (!samples || samples.length === 0) {
+    return { format: "DD/MM/YYYY HH:mm:ss", confidence: "low" };
+  }
+  const validSamples = samples.filter((s) => s && s.trim()).slice(0, 10);
+  if (validSamples.length === 0) {
+    return { format: "DD/MM/YYYY HH:mm:ss", confidence: "low" };
+  }
+  let mmddMatches = 0;
+  let ddmmMatches = 0;
+  let isoMatches = 0;
+  for (const sample of validSamples) {
+    const trimmed = sample.trim();
+    if (/^\d{4}-\d{1,2}-\d{1,2}/.test(trimmed)) {
+      isoMatches++;
+      continue;
+    }
+    const match = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if (match) {
+      const first = parseInt(match[1]!, 10);
+      const second = parseInt(match[2]!, 10);
+      if (first > 12) {
+        ddmmMatches++;
+      } else if (second > 12) {
+        mmddMatches++;
+      } else {
+        mmddMatches += 0.5;
+        ddmmMatches += 0.5;
+      }
+    }
+  }
+  if (isoMatches > mmddMatches && isoMatches > ddmmMatches) {
+    const confidence =
+      isoMatches / validSamples.length > 0.8 ? "high" : "medium";
+    return { format: "YYYY-MM-DD HH:mm:ss", confidence };
+  } else if (mmddMatches > ddmmMatches) {
+    const confidence =
+      mmddMatches / validSamples.length > 0.8 ? "high" : "medium";
+    return { format: "MM/DD/YYYY HH:mm:ss", confidence };
+  } else if (ddmmMatches > 0) {
+    const confidence =
+      ddmmMatches / validSamples.length > 0.8 ? "high" : "medium";
+    return { format: "DD/MM/YYYY HH:mm:ss", confidence };
+  }
+  return { format: "DD/MM/YYYY HH:mm:ss", confidence: "low" };
+}
+
+/**
+ * Generate stable external ID for import deduplication
+ */
+export async function generateExternalId(entry: {
+  startedAt?: string;
+  timestamp?: string;
+  name?: string;
+  type?: string;
+  durationSeconds?: number;
+}): Promise<string> {
+  const crypto = await import("crypto");
+  const parts = [
+    entry.startedAt || entry.timestamp || "",
+    entry.type || "timed",
+    entry.name || "",
+    entry.durationSeconds?.toString() || "",
+  ];
+  const input = parts.join("|");
+  const hash = crypto.createHash("sha256").update(input).digest("hex");
+  return `import-${hash.substring(0, 32)}`;
 }

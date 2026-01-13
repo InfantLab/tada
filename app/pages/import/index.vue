@@ -91,6 +91,49 @@
           </div>
         </div>
 
+        <!-- Insight Timer instructions (expandable) -->
+        <div
+          v-if="builtInRecipes.length > 0 && builtInRecipes[0]!.name === 'Insight Timer'"
+          class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4"
+        >
+          <button
+            class="w-full flex items-center justify-between text-left"
+            @click="
+              showInsightTimerInstructions = !showInsightTimerInstructions
+            "
+          >
+            <div class="flex items-center gap-2">
+              <span class="text-lg">ℹ️</span>
+              <span class="font-medium text-gray-900 dark:text-gray-100">
+                How to export from Insight Timer
+              </span>
+            </div>
+            <span class="text-gray-500">{{
+              showInsightTimerInstructions ? "▼" : "▶"
+            }}</span>
+          </button>
+
+          <div
+            v-if="showInsightTimerInstructions"
+            class="mt-4 space-y-3 text-sm text-gray-700 dark:text-gray-300"
+          >
+            <ol class="list-decimal list-inside space-y-2 pl-2">
+              <li>Open the Insight Timer app</li>
+              <li>Go to <strong>Settings</strong> (gear icon)</li>
+              <li>Select <strong>Features & Preferences</strong></li>
+              <li>Tap <strong>Sessions</strong></li>
+              <li>Select <strong>Export Data</strong></li>
+              <li>Choose export format: <strong>CSV</strong></li>
+              <li>Share or save the CSV file</li>
+              <li>Upload the file using the Insight Timer recipe above</li>
+            </ol>
+            <p class="text-xs text-gray-500 dark:text-gray-500 italic mt-3">
+              Note: Export includes all meditation sessions with dates,
+              durations, and activity types.
+            </p>
+          </div>
+        </div>
+
         <!-- Custom import button -->
         <div>
           <button
@@ -143,6 +186,7 @@ import type { ImportRecipe } from "~/server/db/schema";
 
 const selectedRecipe = ref<ImportRecipe | null>(null);
 const showCustomImport = ref(false);
+const showInsightTimerInstructions = ref(false);
 const recipes = ref<ImportRecipe[]>([]);
 
 const builtInRecipes = computed(() => recipes.value.filter((r) => r.isBuiltIn));

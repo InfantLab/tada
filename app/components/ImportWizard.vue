@@ -34,7 +34,15 @@
         Upload CSV File
       </h2>
       <div
-        class="border-2 border-dashed border-pearl-mist dark:border-cosmic-indigo-light rounded-lg p-12 text-center hover:border-mindfulness-light dark:hover:border-mindfulness-dark transition-colors"
+        class="border-2 border-dashed rounded-lg p-12 text-center transition-all"
+        :class="
+          isDragOver
+            ? 'border-mindfulness-light dark:border-mindfulness-dark bg-mindfulness-light/5 dark:bg-mindfulness-dark/5'
+            : 'border-pearl-mist dark:border-cosmic-indigo-light hover:border-mindfulness-light dark:hover:border-mindfulness-dark'
+        "
+        @dragover.prevent="isDragOver = true"
+        @dragleave.prevent="isDragOver = false"
+        @drop.prevent="handleFileDrop"
       >
         <input
           ref="fileInput"
@@ -43,24 +51,34 @@
           class="hidden"
           @change="handleFileUpload"
         />
+        <div
+          v-if="isDragOver"
+          class="text-mindfulness-light dark:text-mindfulness-dark text-lg font-medium mb-4"
+        >
+          📂 Drop CSV file here
+        </div>
         <button
           class="inline-block px-6 py-3 bg-mindfulness-light dark:bg-mindfulness-dark text-white rounded-lg hover:opacity-90 transition-opacity"
           @click="() => fileInput?.click()"
         >
           Choose CSV File
         </button>
-        <p
-          class="mt-4 text-sm text-text-light-secondary dark:text-text-dark-secondary"
-        >
+        <p class="mt-4 text-sm text-gray-500 dark:text-gray-500">
+          or drag and drop here
+        </p>
+        <p class="mt-2 text-xs text-gray-500 dark:text-gray-500">
           Maximum file size: 50MB
         </p>
         <p
           v-if="selectedFile"
-          class="mt-2 text-sm text-text-light dark:text-text-dark font-medium"
+          class="mt-4 text-sm text-text-light dark:text-text-dark font-medium"
         >
-          Selected: {{ selectedFile.name }} ({{
+          ✓ Selected: {{ selectedFile.name }} ({{
             formatFileSize(selectedFile.size)
           }})
+        </p>
+        <p v-if="parseError" class="mt-4 text-sm text-red-500">
+          ⚠️ {{ parseError }}
         </p>
       </div>
       <div v-if="csvData.length > 0" class="mt-6">
@@ -81,17 +99,26 @@
         Map Columns & Configure
       </h2>
       <p class="text-text-light-secondary dark:text-text-dark-secondary mb-6">
-        Match your CSV columns to entry fields and configure data transformation. Fields marked with * are required.
+        Match your CSV columns to entry fields and configure data
+        transformation. Fields marked with * are required.
       </p>
-      
+
       <!-- Data Preview -->
       <div class="bg-white dark:bg-cosmic-indigo rounded-lg p-6 mb-6">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Data Preview</h3>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+          Data Preview
+        </h3>
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead class="bg-gray-100 dark:bg-gray-800">
               <tr>
-                <th class="px-4 py-2 text-left font-semibold text-gray-900 dark:text-gray-100" v-for="field in csvFields" :key="field">{{ field }}</th>
+                <th
+                  v-for="field in csvFields"
+                  :key="field"
+                  class="px-4 py-2 text-left font-semibold text-gray-900 dark:text-gray-100"
+                >
+                  {{ field }}
+                </th>
               </tr>
             </thead>
             <tbody class="divide-y divide-pearl-mist dark:divide-cosmic-indigo">
@@ -100,88 +127,291 @@
                 :key="idx"
                 class="hover:bg-pearl-mist/50 dark:hover:bg-cosmic-black/50"
               >
-                <td class="px-4 py-2 text-gray-900 dark:text-gray-100" v-for="field in csvFields" :key="field">
-                  {{ row[field] || '—' }}
+                <td
+                  v-for="field in csvFields"
+                  :key="field"
+                  class="px-4 py-2 text-gray-900 dark:text-gray-100"
+                >
+                  {{ row[field] || "—" }}
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
-        <p class="text-xs text-gray-500 dark:text-gray-500 mt-2">Showing first 5 of {{ csvData.length }} rows</p>
+        <p class="text-xs text-gray-500 dark:text-gray-500 mt-2">
+          Showing first 5 of {{ csvData.length }} rows
+        </p>
       </div>
 
       <!-- Column Mapping -->
       <div class="bg-white dark:bg-cosmic-indigo rounded-lg p-6 space-y-4 mb-6">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Column Mapping</h3>
-        <div class="grid grid-cols-2 gap-4 items-center">
-          <label
-            class="text-sm font-medium text-text-light dark:text-text-dark"
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+          Column Mapping
+        </h3>
+
+        <!-- Started At -->
+        <div class="space-y-1">
+          <div class="grid grid-cols-2 gap-4 items-center">
+            <label
+              class="text-sm font-medium text-text-light dark:text-text-dark"
+            >
+              Started At <span class="text-red-500">*</span>
+            </label>
+            <select
+              v-model="columnMapping['startedAt']"
+              class="px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+            >
+              <option value="">-- Select Column --</option>
+              <option v-for="field in csvFields" :key="field" :value="field">
+                {{ field }}
+              </option>
+            </select>
+          </div>
+          <div
+            v-if="columnDetections['startedAt']"
+            :class="
+              getConfidenceColor(columnDetections['startedAt'].confidence)
+            "
+            class="text-xs pl-1"
           >
-            Started At *
-          </label>
-          <select
-            v-model="columnMapping['startedAt']"
-            class="px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-          >
-            <option value="">-- Select Column --</option>
-            <option v-for="field in csvFields" :key="field" :value="field">
-              {{ field }}
-            </option>
-          </select>
+            {{ getConfidenceBadge(columnDetections["startedAt"].confidence) }}:
+            {{ columnDetections["startedAt"].reason }}
+          </div>
         </div>
-        <div class="grid grid-cols-2 gap-4 items-center">
-          <label
-            class="text-sm font-medium text-text-light dark:text-text-dark"
+
+        <!-- Duration -->
+        <div class="space-y-1">
+          <div class="grid grid-cols-2 gap-4 items-center">
+            <label
+              class="text-sm font-medium text-text-light dark:text-text-dark"
+            >
+              Duration <span class="text-red-500">*</span>
+            </label>
+            <select
+              v-model="columnMapping['duration']"
+              class="px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+            >
+              <option value="">-- Select Column --</option>
+              <option v-for="field in csvFields" :key="field" :value="field">
+                {{ field }}
+              </option>
+            </select>
+          </div>
+          <div
+            v-if="columnDetections['duration']"
+            :class="getConfidenceColor(columnDetections['duration'].confidence)"
+            class="text-xs pl-1"
           >
-            Duration *
-          </label>
-          <select
-            v-model="columnMapping['duration']"
-            class="px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-          >
-            <option value="">-- Select Column --</option>
-            <option v-for="field in csvFields" :key="field" :value="field">
-              {{ field }}
-            </option>
-          </select>
+            {{ getConfidenceBadge(columnDetections["duration"].confidence) }}:
+            {{ columnDetections["duration"].reason }}
+          </div>
         </div>
-        <div class="grid grid-cols-2 gap-4 items-center">
-          <label
-            class="text-sm font-medium text-text-light dark:text-text-dark"
+
+        <!-- Name -->
+        <div class="space-y-1">
+          <div class="grid grid-cols-2 gap-4 items-center">
+            <label
+              class="text-sm font-medium text-text-light dark:text-text-dark"
+            >
+              Activity Name
+            </label>
+            <select
+              v-model="columnMapping['name']"
+              class="px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+            >
+              <option value="">-- Select Column --</option>
+              <option v-for="field in csvFields" :key="field" :value="field">
+                {{ field }}
+              </option>
+            </select>
+          </div>
+          <div
+            v-if="columnDetections['name']"
+            :class="getConfidenceColor(columnDetections['name'].confidence)"
+            class="text-xs pl-1"
           >
-            Activity Name
-          </label>
-          <select
-            v-model="columnMapping['name']"
-            class="px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-          >
-            <option value="">-- Select Column --</option>
-            <option v-for="field in csvFields" :key="field" :value="field">
-              {{ field }}
-            </option>
-          </select>
+            {{ getConfidenceBadge(columnDetections["name"].confidence) }}:
+            {{ columnDetections["name"].reason }}
+          </div>
         </div>
-        <div class="grid grid-cols-2 gap-4 items-center">
-          <label
-            class="text-sm font-medium text-text-light dark:text-text-dark"
+
+        <!-- Category -->
+        <div class="space-y-1">
+          <div class="grid grid-cols-2 gap-4 items-center">
+            <label
+              class="text-sm font-medium text-text-light dark:text-text-dark"
+            >
+              Category
+            </label>
+            <select
+              v-model="columnMapping['category']"
+              class="px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+            >
+              <option value="">-- Use Default --</option>
+              <option v-for="field in csvFields" :key="field" :value="field">
+                {{ field }}
+              </option>
+            </select>
+          </div>
+          <div
+            v-if="columnDetections['category']"
+            :class="getConfidenceColor(columnDetections['category'].confidence)"
+            class="text-xs pl-1"
           >
-            Notes
-          </label>
-          <select
-            v-model="columnMapping['notes']"
-            class="px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+            {{ getConfidenceBadge(columnDetections["category"].confidence) }}:
+            {{ columnDetections["category"].reason }}
+          </div>
+        </div>
+
+        <!-- Subcategory -->
+        <div class="space-y-1">
+          <div class="grid grid-cols-2 gap-4 items-center">
+            <label
+              class="text-sm font-medium text-text-light dark:text-text-dark"
+            >
+              Subcategory
+            </label>
+            <select
+              v-model="columnMapping['subcategory']"
+              class="px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+            >
+              <option value="">-- Use Name --</option>
+              <option v-for="field in csvFields" :key="field" :value="field">
+                {{ field }}
+              </option>
+            </select>
+          </div>
+          <div
+            v-if="columnDetections['subcategory']"
+            :class="
+              getConfidenceColor(columnDetections['subcategory'].confidence)
+            "
+            class="text-xs pl-1"
           >
-            <option value="">-- Select Column --</option>
-            <option v-for="field in csvFields" :key="field" :value="field">
-              {{ field }}
-            </option>
-          </select>
+            {{
+              getConfidenceBadge(columnDetections["subcategory"].confidence)
+            }}: {{ columnDetections["subcategory"].reason }}
+          </div>
+        </div>
+
+        <!-- Notes -->
+        <div class="space-y-1">
+          <div class="grid grid-cols-2 gap-4 items-center">
+            <label
+              class="text-sm font-medium text-text-light dark:text-text-dark"
+            >
+              Notes
+            </label>
+            <select
+              v-model="columnMapping['notes']"
+              class="px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+            >
+              <option value="">-- Skip --</option>
+              <option v-for="field in csvFields" :key="field" :value="field">
+                {{ field }}
+              </option>
+            </select>
+          </div>
+          <div
+            v-if="columnDetections['notes']"
+            :class="getConfidenceColor(columnDetections['notes'].confidence)"
+            class="text-xs pl-1"
+          >
+            {{ getConfidenceBadge(columnDetections["notes"].confidence) }}:
+            {{ columnDetections["notes"].reason }}
+          </div>
+        </div>
+
+        <!-- Tags -->
+        <div class="space-y-1">
+          <div class="grid grid-cols-2 gap-4 items-center">
+            <label
+              class="text-sm font-medium text-text-light dark:text-text-dark"
+            >
+              Tags
+            </label>
+            <select
+              v-model="columnMapping['tags']"
+              class="px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+            >
+              <option value="">-- Skip --</option>
+              <option v-for="field in csvFields" :key="field" :value="field">
+                {{ field }}
+              </option>
+            </select>
+          </div>
+          <div
+            v-if="columnDetections['tags']"
+            :class="getConfidenceColor(columnDetections['tags'].confidence)"
+            class="text-xs pl-1"
+          >
+            {{ getConfidenceBadge(columnDetections["tags"].confidence) }}:
+            {{ columnDetections["tags"].reason }}
+          </div>
+        </div>
+
+        <!-- Ended At -->
+        <div class="space-y-1">
+          <div class="grid grid-cols-2 gap-4 items-center">
+            <label
+              class="text-sm font-medium text-text-light dark:text-text-dark"
+            >
+              Ended At
+            </label>
+            <select
+              v-model="columnMapping['endedAt']"
+              class="px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+            >
+              <option value="">-- Calculate from Duration --</option>
+              <option v-for="field in csvFields" :key="field" :value="field">
+                {{ field }}
+              </option>
+            </select>
+          </div>
+          <div
+            v-if="columnDetections['endedAt']"
+            :class="getConfidenceColor(columnDetections['endedAt'].confidence)"
+            class="text-xs pl-1"
+          >
+            {{ getConfidenceBadge(columnDetections["endedAt"].confidence) }}:
+            {{ columnDetections["endedAt"].reason }}
+          </div>
+        </div>
+
+        <!-- Emoji -->
+        <div class="space-y-1">
+          <div class="grid grid-cols-2 gap-4 items-center">
+            <label
+              class="text-sm font-medium text-text-light dark:text-text-dark"
+            >
+              Emoji
+            </label>
+            <select
+              v-model="columnMapping['emoji']"
+              class="px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+            >
+              <option value="">-- Skip --</option>
+              <option v-for="field in csvFields" :key="field" :value="field">
+                {{ field }}
+              </option>
+            </select>
+          </div>
+          <div
+            v-if="columnDetections['emoji']"
+            :class="getConfidenceColor(columnDetections['emoji'].confidence)"
+            class="text-xs pl-1"
+          >
+            {{ getConfidenceBadge(columnDetections["emoji"].confidence) }}:
+            {{ columnDetections["emoji"].reason }}
+          </div>
         </div>
       </div>
 
       <!-- Configuration -->
       <div class="bg-white dark:bg-cosmic-indigo rounded-lg p-6 space-y-4">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Data Configuration</h3>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+          Data Configuration
+        </h3>
         <div>
           <label
             class="block text-sm font-medium text-text-light dark:text-text-dark mb-2"
@@ -207,7 +437,9 @@
             class="w-full px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             placeholder="e.g., America/New_York"
           />
-          <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">Detected: {{ Intl.DateTimeFormat().resolvedOptions().timeZone }}</p>
+          <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
+            Detected: {{ Intl.DateTimeFormat().resolvedOptions().timeZone }}
+          </p>
         </div>
         <div>
           <label
@@ -264,16 +496,38 @@
       <div class="bg-white dark:bg-cosmic-indigo rounded-lg overflow-hidden">
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
-            <thead
-              class="bg-gray-100 dark:bg-gray-800"
-            >
+            <thead class="bg-gray-100 dark:bg-gray-800">
               <tr>
-                <th class="px-4 py-2 text-left font-semibold text-gray-900 dark:text-gray-100">Row</th>
-                <th class="px-4 py-2 text-left font-semibold text-gray-900 dark:text-gray-100">Date/Time</th>
-                <th class="px-4 py-2 text-left font-semibold text-gray-900 dark:text-gray-100">Duration</th>
-                <th class="px-4 py-2 text-left font-semibold text-gray-900 dark:text-gray-100">Activity</th>
-                <th class="px-4 py-2 text-left font-semibold text-gray-900 dark:text-gray-100">Category</th>
-                <th class="px-4 py-2 text-left font-semibold text-gray-900 dark:text-gray-100">Warnings</th>
+                <th
+                  class="px-4 py-2 text-left font-semibold text-gray-900 dark:text-gray-100"
+                >
+                  Row
+                </th>
+                <th
+                  class="px-4 py-2 text-left font-semibold text-gray-900 dark:text-gray-100"
+                >
+                  Date/Time
+                </th>
+                <th
+                  class="px-4 py-2 text-left font-semibold text-gray-900 dark:text-gray-100"
+                >
+                  Duration
+                </th>
+                <th
+                  class="px-4 py-2 text-left font-semibold text-gray-900 dark:text-gray-100"
+                >
+                  Activity
+                </th>
+                <th
+                  class="px-4 py-2 text-left font-semibold text-gray-900 dark:text-gray-100"
+                >
+                  Category
+                </th>
+                <th
+                  class="px-4 py-2 text-left font-semibold text-gray-900 dark:text-gray-100"
+                >
+                  Warnings
+                </th>
               </tr>
             </thead>
             <tbody class="divide-y divide-pearl-mist dark:divide-cosmic-indigo">
@@ -298,9 +552,7 @@
                   >
                     ⚠️ {{ validationWarnings[entry._rowIndex]?.join(", ") }}
                   </span>
-                  <span
-                    v-else
-                    class="text-xs text-gray-500 dark:text-gray-500"
+                  <span v-else class="text-xs text-gray-500 dark:text-gray-500"
                     >None</span
                   >
                 </td>
@@ -460,6 +712,13 @@
 <script setup lang="ts">
 import Papa from "papaparse";
 import type { ImportRecipe } from "~/server/db/schema";
+import { entries } from "~/server/db/schema";
+import {
+  detectColumnMappings,
+  getConfidenceBadge,
+  getConfidenceColor,
+  type ColumnDetection,
+} from "~/utils/columnDetection";
 
 const props = defineProps<{
   recipe: ImportRecipe | null;
@@ -478,13 +737,15 @@ const selectedFile = ref<File | null>(null);
 const csvData = ref<Record<string, string>[]>([]);
 const csvFields = ref<string[]>([]);
 const parseError = ref<string | null>(null);
+const isDragOver = ref(false);
 
 // Column mapping: { fieldName: csvColumnName }
 const columnMapping = ref<Record<string, string>>({});
+const columnDetections = ref<Record<string, ColumnDetection>>({});
 
 // Transform configuration
 const transforms = ref({
-  dateFormat: "MM/DD/YYYY HH:mm:ss",
+  dateFormat: "DD/MM/YYYY HH:mm:ss",
   timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
   durationFormat: "H:mm:ss",
   defaultCategory: "mindfulness",
@@ -492,7 +753,9 @@ const transforms = ref({
 });
 
 // Preview data
-const previewEntries = ref<any[]>([]);
+const previewEntries = ref<
+  Array<Partial<typeof entries.$inferInsert> & { warnings?: string[] }>
+>([]);
 const validationWarnings = ref<Record<number, string[]>>({});
 
 // Import progress
@@ -503,7 +766,7 @@ const importResults = ref<{
   successful: number;
   failed: number;
   skipped: number;
-  errors: any[];
+  errors: Array<{ message: string; row?: number }>;
 } | null>(null);
 
 // Recipe save
@@ -516,9 +779,12 @@ const isSavingRecipe = ref(false);
 watchEffect(() => {
   if (props.recipe) {
     columnMapping.value = props.recipe.columnMapping || {};
+    // Load recipe transforms but always use current locale timezone
+    const recipeTransforms = props.recipe.transforms || {};
     transforms.value = {
       ...transforms.value,
-      ...(props.recipe.transforms || {}),
+      ...recipeTransforms,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC", // Always use user's current locale
     };
   }
 });
@@ -529,6 +795,24 @@ async function handleFileUpload(event: Event) {
 
   if (!file) return;
 
+  await processFile(file);
+}
+
+function handleFileDrop(event: DragEvent) {
+  isDragOver.value = false;
+  const file = event.dataTransfer?.files[0];
+
+  if (!file) return;
+
+  if (!file.name.endsWith(".csv")) {
+    parseError.value = "Please upload a CSV file";
+    return;
+  }
+
+  processFile(file);
+}
+
+async function processFile(file: File) {
   // Check file size (50MB limit)
   const maxSize = 50 * 1024 * 1024;
   if (file.size > maxSize) {
@@ -562,34 +846,24 @@ async function handleFileUpload(event: Event) {
 }
 
 function autoDetectMappings() {
+  // Use the new detection utility
+  const detections = detectColumnMappings(csvFields.value);
+
+  columnDetections.value = detections;
+
+  // Apply detected mappings
   const mapping: Record<string, string> = {};
-
-  // Common column name patterns
-  const patterns: Record<string, string[]> = {
-    startedAt: ["started at", "start", "date", "datetime", "timestamp"],
-    duration: ["duration", "time", "length"],
-    name: ["activity", "name", "type", "title"],
-    category: ["category", "cat"],
-    subcategory: ["subcategory", "subcat", "sub"],
-    notes: ["notes", "note", "description", "desc"],
-  };
-
-  for (const field of csvFields.value) {
-    const fieldLower = field.toLowerCase();
-
-    for (const [targetField, keywords] of Object.entries(patterns)) {
-      if (keywords.some((kw) => fieldLower.includes(kw))) {
-        mapping[targetField] = field;
-        break;
-      }
-    }
+  for (const [field, detection] of Object.entries(detections)) {
+    mapping[field] = detection.csvColumn;
   }
 
   columnMapping.value = mapping;
 }
 
 function generatePreview() {
-  const preview: any[] = [];
+  const preview: Array<
+    Partial<typeof entries.$inferInsert> & { warnings?: string[] }
+  > = [];
   const warnings: Record<number, string[]> = {};
 
   // Preview first 10 rows
@@ -643,13 +917,48 @@ function generatePreview() {
 
     // Check for unusually long durations (>3 hours)
     if (entry.duration) {
-      const parts = entry.duration.split(':');
+      const parts = entry.duration.split(":");
       if (parts.length >= 2) {
-        const hours = parseInt(parts[0] || '0', 10);
-        if (hours >= 3) {
+        const hours = parseInt(parts[0] || "0", 10);
+        const minutes = parseInt(parts[1] || "0", 10);
+        const seconds = parseInt(parts[2] || "0", 10);
+        const totalSeconds = hours * 3600 + minutes * 60 + seconds;
+
+        if (totalSeconds > 10800) {
+          // >3 hours
           rowWarnings.push(`Duration >3 hours (${entry.duration})`);
+        } else if (totalSeconds < 30) {
+          // <30 seconds
+          rowWarnings.push(`Duration <30 seconds (${entry.duration})`);
         }
       }
+    }
+
+    // Check for future dates
+    if (entry.startedAt) {
+      const entryDate = new Date(entry.startedAt);
+      if (entryDate > new Date()) {
+        rowWarnings.push("Date is in the future");
+      }
+    }
+
+    // Check for new categories/subcategories
+    if (
+      entry.category &&
+      ![
+        "mindfulness",
+        "health",
+        "work",
+        "learning",
+        "creative",
+        "social",
+      ].includes(entry.category)
+    ) {
+      rowWarnings.push(`New category: "${entry.category}"`);
+    }
+
+    if (entry.subcategory && entry.name !== entry.subcategory) {
+      rowWarnings.push(`New subcategory: "${entry.subcategory}"`);
     }
 
     if (rowWarnings.length > 0) {
@@ -669,25 +978,25 @@ async function startImport() {
 
   try {
     // Transform all CSV rows to entry format
-    const entries = csvData.value.map((row, index) => {
-      const entry: any = {
-        type: "timed",
-      };
+    const importEntries: Array<Partial<typeof entries.$inferInsert>> =
+      csvData.value.map((row) => {
+        const entry: Partial<typeof entries.$inferInsert> = {
+          type: "timed",
+        };
 
-      // Apply column mappings
-      for (const [targetField, csvColumn] of Object.entries(
-        columnMapping.value
-      )) {
-        if (csvColumn && row[csvColumn]) {
-          entry[targetField] = row[csvColumn];
+        // Map columns from CSV to entry fields
+        Object.keys(columnMapping.value).forEach((targetField) => {
+          const csvColumn = columnMapping.value[targetField];
+          if (csvColumn && row[csvColumn]) {
+            (entry as any)[targetField] = row[csvColumn];
+          }
+        });
+
+        // Apply transforms
+        if (entry.startedAt) {
+          // TODO: Use csvParser utility for proper parsing
+          // startedAt already set above, no need to reassign
         }
-      }
-
-      // Apply transforms
-      if (entry.startedAt) {
-        // TODO: Use csvParser utility for proper parsing
-        entry.startedAt = entry.startedAt;
-      }
 
       if (entry.duration) {
         // TODO: Use csvParser utility for proper parsing
@@ -703,11 +1012,13 @@ async function startImport() {
       }
 
       entry.source = props.recipe?.name || "csv-import";
-      
+
       // Generate externalId from content hash (startedAt + type + name)
       // This ensures duplicates are based on actual data, not filename
-      const hashInput = `${entry.startedAt}-${entry.type}-${entry.name || ''}`;
-      entry.externalId = `import-${btoa(hashInput).replace(/[^a-zA-Z0-9]/g, '').substring(0, 32)}`;
+      const hashInput = `${entry.startedAt}-${entry.type}-${entry.name || ""}`;
+      entry.externalId = `import-${btoa(hashInput)
+        .replace(/[^a-zA-Z0-9]/g, "")
+        .substring(0, 32)}`;
 
       return entry;
     });
@@ -747,7 +1058,7 @@ function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function formatDuration(seconds: number): string {
+function _formatDuration(seconds: number): string {
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
   if (hours > 0) return `${hours}h ${minutes}m`;

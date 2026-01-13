@@ -4,6 +4,8 @@ import {
   parseDuration,
   parseDateTime,
   validateEntryData,
+  detectDateFormat,
+  generateExternalId,
 } from "./csvParser";
 
 describe("csvParser", () => {
@@ -109,18 +111,38 @@ Bob,25,extra,columns`;
   });
 
   describe("parseDateTime", () => {
-    it("should parse MM/DD/YYYY HH:mm:ss format", () => {
-      const result = parseDateTime("01/15/2025 14:30:00");
+    it("should parse DD/MM/YYYY HH:mm:ss format (default)", () => {
+      const result = parseDateTime("15/01/2025 14:30:00");
+
+      expect(result).not.toBeNull();
+      expect(result).toMatch(/^2025-01-15T/);
+    });
+
+    it("should parse MM/DD/YYYY format when specified", () => {
+      const result = parseDateTime(
+        "01/15/2025 14:30:00",
+        "MM/DD/YYYY HH:mm:ss"
+      );
 
       expect(result).not.toBeNull();
       expect(result).toMatch(/^2025-01-15T/);
     });
 
     it("should parse single-digit month and day", () => {
-      const result = parseDateTime("1/5/2025 14:30:00");
+      const result = parseDateTime("5/1/2025 14:30:00");
 
       expect(result).not.toBeNull();
       expect(result).toMatch(/^2025-01-05T/);
+    });
+
+    it("should parse YYYY-MM-DD format", () => {
+      const result = parseDateTime(
+        "2025-01-15 14:30:00",
+        "YYYY-MM-DD HH:mm:ss"
+      );
+
+      expect(result).not.toBeNull();
+      expect(result).toMatch(/^2025-01-15T/);
     });
 
     it("should handle invalid dates", () => {
@@ -198,6 +220,121 @@ Bob,25,extra,columns`;
     it("should handle entries with no data", () => {
       const warnings = validateEntryData({});
       expect(warnings).toHaveLength(0);
+    });
+  });
+
+  describe("detectDateFormat", () => {
+    it("should detect MM/DD/YYYY format", () => {
+      const samples = ["01/15/2024 10:30:00", "12/25/2023 14:00:00"];
+      const result = detectDateFormat(samples);
+
+      expect(result.format).toBe("MM/DD/YYYY HH:mm:ss");
+      expect(result.confidence).toBe("high");
+    });
+
+    it("should detect DD/MM/YYYY format", () => {
+      const samples = ["15/01/2024 10:30:00", "25/12/2023 14:00:00"];
+      const result = detectDateFormat(samples);
+
+      expect(result.format).toBe("DD/MM/YYYY HH:mm:ss");
+      expect(result.confidence).toBe("high");
+    });
+
+    it("should detect ISO format", () => {
+      const samples = ["2024-01-15 10:30:00", "2023-12-25 14:00:00"];
+      const result = detectDateFormat(samples);
+
+      expect(result.format).toBe("YYYY-MM-DD HH:mm:ss");
+      expect(result.confidence).toBe("high");
+    });
+
+    it("should handle ambiguous dates with low confidence", () => {
+      const samples = ["01/02/2024 10:30:00", "03/04/2023 14:00:00"];
+      const result = detectDateFormat(samples);
+
+      expect(result.confidence).toBe("medium");
+    });
+
+    it("should handle empty samples", () => {
+      const result = detectDateFormat([]);
+
+      expect(result.format).toBe("DD/MM/YYYY HH:mm:ss");
+      expect(result.confidence).toBe("low");
+    });
+
+    it("should prioritize ISO when majority match", () => {
+      const samples = [
+        "2024-01-15 10:30:00",
+        "2024-01-16 11:00:00",
+        "01/15/2024 10:30:00",
+      ];
+      const result = detectDateFormat(samples);
+
+      expect(result.format).toBe("YYYY-MM-DD HH:mm:ss");
+    });
+  });
+
+  describe("generateExternalId", () => {
+    it("should generate consistent IDs for same data", async () => {
+      const entry = {
+        startedAt: "2024-01-15T10:30:00Z",
+        name: "Meditation",
+        type: "timed",
+        durationSeconds: 600,
+      };
+
+      const id1 = await generateExternalId(entry);
+      const id2 = await generateExternalId(entry);
+
+      expect(id1).toBe(id2);
+      expect(id1).toMatch(/^import-[a-f0-9]{32}$/);
+    });
+
+    it("should generate different IDs for different data", async () => {
+      const entry1 = {
+        startedAt: "2024-01-15T10:30:00Z",
+        name: "Meditation",
+        type: "timed",
+        durationSeconds: 600,
+      };
+
+      const entry2 = {
+        startedAt: "2024-01-15T10:30:00Z",
+        name: "Breathing", // Different name
+        type: "timed",
+        durationSeconds: 600,
+      };
+
+      const id1 = await generateExternalId(entry1);
+      const id2 = await generateExternalId(entry2);
+
+      expect(id1).not.toBe(id2);
+    });
+
+    it("should handle entries with minimal data", async () => {
+      const entry = {
+        timestamp: "2024-01-15T10:30:00Z",
+      };
+
+      const id = await generateExternalId(entry);
+      expect(id).toMatch(/^import-[a-f0-9]{32}$/);
+    });
+
+    it("should use timestamp as fallback for startedAt", async () => {
+      const entry1 = {
+        startedAt: "2024-01-15T10:30:00Z",
+        name: "Test",
+      };
+
+      const entry2 = {
+        timestamp: "2024-01-15T10:30:00Z",
+        name: "Test",
+      };
+
+      const id1 = await generateExternalId(entry1);
+      const id2 = await generateExternalId(entry2);
+
+      expect(id1).toBe(id2);
     });
   });
 });

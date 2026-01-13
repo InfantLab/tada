@@ -187,8 +187,8 @@ async function updateEmoji(emoji: string) {
             :style="{
               color: getDisplayProps(entry).color,
             }"
-            @click="openEmojiPicker(entry, $event)"
             title="Change emoji"
+            @click="openEmojiPicker(entry, $event)"
           >
             {{ getDisplayProps(entry).emoji }}
           </button>

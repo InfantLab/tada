@@ -18,7 +18,7 @@ const BUILTIN_RECIPES = [
       name: "Activity",
     },
     transforms: {
-      dateFormat: "MM/DD/YYYY HH:mm:ss",
+      dateFormat: "DD/MM/YYYY HH:mm:ss",
       durationFormat: "H:mm:ss",
       defaultCategory: "mindfulness",
     },
@@ -42,13 +42,13 @@ export default defineEventHandler(async (event) => {
       .where(eq(importRecipes.userId, user.id))
       .orderBy(desc(importRecipes.lastUsedAt), desc(importRecipes.createdAt));
 
-    // Ensure built-in recipes exist
+    // Ensure built-in recipes exist and are up to date
     for (const builtinDef of BUILTIN_RECIPES) {
-      const exists = recipes.find(
+      const existing = recipes.find(
         (r) => r.isBuiltIn && r.name === builtinDef.name
       );
 
-      if (!exists) {
+      if (!existing) {
         // Create built-in recipe
         const recipeId = randomUUID();
         await db.insert(importRecipes).values({
@@ -67,18 +67,30 @@ export default defineEventHandler(async (event) => {
           recipeId,
           name: builtinDef.name,
         });
+      } else {
+        // Update existing built-in recipe to latest definition
+        await db
+          .update(importRecipes)
+          .set({
+            description: builtinDef.description,
+            columnMapping: builtinDef.columnMapping,
+            transforms: builtinDef.transforms,
+          })
+          .where(eq(importRecipes.id, existing.id));
 
-        // Reload recipes
-        recipes = await db
-          .select()
-          .from(importRecipes)
-          .where(eq(importRecipes.userId, user.id))
-          .orderBy(
-            desc(importRecipes.lastUsedAt),
-            desc(importRecipes.createdAt)
-          );
+        logger.info("Updated built-in recipe", {
+          recipeId: existing.id,
+          name: builtinDef.name,
+        });
       }
     }
+
+    // Reload recipes after updates
+    recipes = await db
+      .select()
+      .from(importRecipes)
+      .where(eq(importRecipes.userId, user.id))
+      .orderBy(desc(importRecipes.lastUsedAt), desc(importRecipes.createdAt));
 
     logger.info("Retrieved import recipes", {
       userId: user.id,

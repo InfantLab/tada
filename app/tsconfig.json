@@ -1,10 +1,7 @@
 {
   // PWA icon type warnings are expected during dev - icons generated at build time
   "extends": "./.nuxt/tsconfig.json",
-  "exclude": [
-    "node_modules/@vite-pwa",
-    ".nuxt/pwa-icons-plugin.ts"
-  ],
+  "exclude": ["node_modules/@vite-pwa", ".nuxt/pwa-icons-plugin.ts"],
   "compilerOptions": {
     "baseUrl": ".",
     "strict": true,

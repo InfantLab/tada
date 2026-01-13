@@ -212,8 +212,8 @@ async function updateEmoji(emoji: string) {
               backgroundColor: getDisplayProps(entry).color + '20',
               color: getDisplayProps(entry).color,
             }"
-            @click="openEmojiPicker(entry, $event)"
             title="Change emoji"
+            @click="openEmojiPicker(entry, $event)"
           >
             {{ getDisplayProps(entry).emoji }}
           </button>

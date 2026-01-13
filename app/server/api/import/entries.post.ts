@@ -2,6 +2,7 @@ import { randomUUID } from "crypto";
 import { db } from "~/server/db";
 import { entries, importLogs } from "~/server/db/schema";
 import { createLogger } from "~/server/utils/logger";
+import { checkRateLimit } from "~/server/utils/rateLimiter";
 import { eq } from "drizzle-orm";
 
 const logger = createLogger("api:import-entries");
@@ -9,12 +10,26 @@ const logger = createLogger("api:import-entries");
 // Batch size for database inserts (500 rows per transaction)
 const BATCH_SIZE = 500;
 
+// Rate limit: 1 import per 10 seconds per user
+const RATE_LIMIT_REQUESTS = 1;
+const RATE_LIMIT_WINDOW_MS = 10000; // 10 seconds
+
 export default defineEventHandler(async (event) => {
   const user = event.context.user;
   if (!user) {
     throw createError({
       statusCode: 401,
       message: "Unauthorized",
+    });
+  }
+
+  // Check rate limit
+  if (!checkRateLimit(user.id, RATE_LIMIT_REQUESTS, RATE_LIMIT_WINDOW_MS)) {
+    logger.warn("Rate limit exceeded", { userId: user.id });
+    throw createError({
+      statusCode: 429,
+      message:
+        "Too many import requests. Please wait 10 seconds before trying again.",
     });
   }
 
