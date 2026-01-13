@@ -417,7 +417,7 @@ async function exportData() {
           <!-- Import -->
           <NuxtLink
             to="/import"
-            class="w-full p-4 flex items-center justify-between hover:bg-stone-50 dark:hover:bg-stone-700/50 transition-colors"
+            class="block w-full p-4 flex items-center justify-between hover:bg-stone-50 dark:hover:bg-stone-700/50 transition-colors rounded-lg"
           >
             <div class="flex items-center gap-3">
               <span class="text-xl">📥</span>
