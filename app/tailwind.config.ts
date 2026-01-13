@@ -69,17 +69,6 @@ export default {
           "sky-soft": "#9ED3F5",
           "lilac-soft": "#D6B9F5",
         },
-        // Legacy alias for `tada` colors (maps to gold theme)
-        tada: {
-          50: "#FFD966", // gold-highlight
-          100: "#FFD966",
-          300: "#FFB703",
-          400: "#FF9F1C",
-          500: "#E6A800", // gold-light
-          600: "#E6A800",
-          700: "#CC8F00", // darker gold-light
-          900: "rgba(230, 168, 0, 0.1)", // semi-transparent
-        },
       },
       fontFamily: {
         sans: ["Inter", "system-ui", "sans-serif"],

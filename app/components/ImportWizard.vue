@@ -148,8 +148,11 @@
           v-if="showVersionHistory && currentRecipePreviousVersions.length > 0"
           class="mt-4 p-3 bg-white dark:bg-cosmic-indigo rounded-lg border border-pearl-mist dark:border-cosmic-indigo-light"
         >
-          <h4 class="text-sm font-semibold text-text-light dark:text-text-dark mb-2">
-            Previous Versions (last {{ Math.min(3, currentRecipePreviousVersions.length) }})
+          <h4
+            class="text-sm font-semibold text-text-light dark:text-text-dark mb-2"
+          >
+            Previous Versions (last
+            {{ Math.min(3, currentRecipePreviousVersions.length) }})
           </h4>
           <div class="space-y-2">
             <div
@@ -157,7 +160,9 @@
               :key="index"
               class="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded"
             >
-              <span class="text-xs text-text-light-muted dark:text-text-dark-muted">
+              <span
+                class="text-xs text-text-light-muted dark:text-text-dark-muted"
+              >
                 {{ new Date(version.savedAt).toLocaleString() }}
               </span>
               <button
@@ -815,7 +820,7 @@ const _emit = defineEmits<{
 }>();
 
 const toast = useToast();
-const { parseCSV, importCSV, validateEntry } = useCSVImport();
+const { parseCSVFile, performImport, transformCSVData } = useCSVImport();
 
 // Load user recipes on mount
 onMounted(() => {
@@ -871,11 +876,26 @@ const recipeName = ref("");
 const recipeDescription = ref("");
 const isSavingRecipe = ref(false);
 const userRecipes = ref<
-  Array<{ id: string; name: string; description: string | null; previousVersions?: Array<{savedAt: string; columnMapping: Record<string, unknown>; transforms: Record<string, unknown>}> }>
+  Array<{
+    id: string;
+    name: string;
+    description: string | null;
+    previousVersions?: Array<{
+      savedAt: string;
+      columnMapping: Record<string, unknown>;
+      transforms: Record<string, unknown>;
+    }>;
+  }>
 >([]);
 const selectedRecipeId = ref<string | null>(null);
 const showVersionHistory = ref(false);
-const currentRecipePreviousVersions = ref<Array<{savedAt: string; columnMapping: Record<string, unknown>; transforms: Record<string, unknown>}>>([]);
+const currentRecipePreviousVersions = ref<
+  Array<{
+    savedAt: string;
+    columnMapping: Record<string, unknown>;
+    transforms: Record<string, unknown>;
+  }>
+>([]);
 
 // Initialize from recipe if provided
 watchEffect(() => {
@@ -918,9 +938,9 @@ async function processFile(file: File) {
   selectedFile.value = file;
   parseError.value = null;
 
-  const result = await parseCSV(file);
-  if (!result) {
-    parseError.value = "Failed to parse CSV";
+  const result = await parseCSVFile(file);
+  if (result.error || result.data.length === 0) {
+    parseError.value = result.error || "No data found in CSV";
     return;
   }
 
@@ -984,8 +1004,13 @@ async function startImport() {
     // Simulate progress updates (since API call is atomic)
     const progressInterval = setInterval(() => {
       if (rowsProcessed.value < rowsTotal.value) {
-        rowsProcessed.value = Math.min(rowsProcessed.value + Math.ceil(rowsTotal.value / 20), rowsTotal.value);
-        importProgress.value = Math.floor((rowsProcessed.value / rowsTotal.value) * 95);
+        rowsProcessed.value = Math.min(
+          rowsProcessed.value + Math.ceil(rowsTotal.value / 20),
+          rowsTotal.value
+        );
+        importProgress.value = Math.floor(
+          (rowsProcessed.value / rowsTotal.value) * 95
+        );
         progressMessage.value = "Processing entries...";
       }
     }, 100);
@@ -1002,7 +1027,7 @@ async function startImport() {
     rowsProcessed.value = rowsTotal.value;
     importProgress.value = 100;
     progressMessage.value = "Import complete!";
-    
+
     importResults.value = results;
     currentStep.value = 4;
   } catch {
@@ -1010,30 +1035,6 @@ async function startImport() {
   } finally {
     isImporting.value = false;
   }
-}
-
-function downloadErrorLog() {
-  if (!importResults.value?.errors || importResults.value.errors.length === 0) return;
-
-  const csvContent = [
-    ["Row", "Error Message"],
-    ...importResults.value.errors.map((err) => [
-      err.row?.toString() || "Unknown",
-      err.message.replace(/"/g, '""'),
-    ]),
-  ]
-    .map((row) => row.map((cell) => `"${cell}"`).join(","))
-    .join("\n");
-
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `import-errors-${new Date().toISOString().split("T")[0]}.csv`;
-  link.click();
-  URL.revokeObjectURL(url);
-  
-  toast.info("Error log downloaded");
 }
 
 async function handleSaveRecipe() {
@@ -1069,7 +1070,11 @@ async function loadUserRecipes() {
         id: string;
         name: string;
         description: string | null;
-        previousVersions?: Array<{savedAt: string; columnMapping: Record<string, unknown>; transforms: Record<string, unknown>}>;
+        previousVersions?: Array<{
+          savedAt: string;
+          columnMapping: Record<string, unknown>;
+          transforms: Record<string, unknown>;
+        }>;
       }>;
     }>("/api/import/recipes");
     if (response.success) {
@@ -1118,7 +1123,12 @@ async function loadSelectedRecipe() {
 async function restoreVersion(versionIndex: number) {
   if (!selectedRecipeId.value) return;
 
-  if (!confirm("Restore this previous version? Current configuration will be saved to history.")) return;
+  if (
+    !confirm(
+      "Restore this previous version? Current configuration will be saved to history."
+    )
+  )
+    return;
 
   try {
     const response = await $fetch<{ success: boolean; recipe: any }>(
@@ -1136,7 +1146,8 @@ async function restoreVersion(versionIndex: number) {
         ...transforms.value,
         ...response.recipe.transforms,
       };
-      currentRecipePreviousVersions.value = response.recipe.previousVersions || [];
+      currentRecipePreviousVersions.value =
+        response.recipe.previousVersions || [];
 
       toast.success("Version restored successfully");
       generatePreview();

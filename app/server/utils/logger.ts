@@ -3,7 +3,13 @@
  * Outputs JSON logs to both stderr and rotating log files
  */
 
-import { appendFileSync, mkdirSync, readFileSync, statSync, unlinkSync } from "node:fs";
+import {
+  appendFileSync,
+  mkdirSync,
+  readFileSync,
+  statSync,
+  unlinkSync,
+} from "node:fs";
 import { join } from "node:path";
 
 type LogLevel = "debug" | "info" | "warn" | "error";
@@ -124,19 +130,22 @@ class Logger {
   }
 
   error(message: string, error?: Error | unknown, context?: LogContext) {
-    const errorContext = error instanceof Error
-      ? {
-          error: error.message,
-          stack: error.stack,
-          name: error.name,
-        }
-      : { error: String(error) };
+    const errorContext =
+      error instanceof Error
+        ? {
+            error: error.message,
+            stack: error.stack,
+            name: error.name,
+          }
+        : { error: String(error) };
 
     this.log("error", message, { ...errorContext, ...context });
   }
 
   child(childPrefix: string): Logger {
-    return new Logger(this.prefix ? `${this.prefix}:${childPrefix}` : childPrefix);
+    return new Logger(
+      this.prefix ? `${this.prefix}:${childPrefix}` : childPrefix
+    );
   }
 }
 

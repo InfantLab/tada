@@ -113,6 +113,11 @@ Build flexible import system with user-mappable columns and reusable recipes.
   - Activities: Meditation, Breathing, Manifesting, Walking, Tai Chi (preserve capitalization)
   - User sets custom emojis during import preview
   - Flag new subcategories created during import
+- [ ] **View Import History:**
+  - Browse past imports with success/skip/error counts
+  - Re-run or delete previous imports
+  - View detailed error logs per import
+  - Filter by recipe/source/date
 
 ### 🎨 Custom Activities
 
