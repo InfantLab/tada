@@ -33,7 +33,6 @@ export function parseCSV<T = Record<string, unknown>>(
   const { expectedFields, skipEmptyLines = true } = options;
 
   const errors: ParseResult["errors"] = [];
-  const data: T[] = [];
 
   const result = Papa.parse<T>(content, {
     header: true,
@@ -41,26 +40,17 @@ export function parseCSV<T = Record<string, unknown>>(
     dynamicTyping: false, // Keep as strings for manual transformation
     transformHeader: (header: string) => header.trim(),
     transform: (value: string) => value.trim(),
-    complete: () => {
-      logger.info("CSV parsing complete", {
-        rows: data.length,
-        errors: errors.length,
-      });
-    },
-    error: (error: Error) => {
-      logger.error("CSV parsing error", { error: error.message });
-      errors.push({
-        row: -1,
-        message: error.message,
-      });
-    },
-  }) as Papa.ParseResult<T>;
+  });
 
-  // Extract parsed data and errors
-  if (result.data) {
-    data.push(...result.data);
-  }
+  logger.info("CSV parsing complete", {
+    rows: result.data.length,
+    errors: result.errors.length,
+  });
 
+  // Extract parsed data
+  const data: T[] = result.data || [];
+
+  // Extract errors
   if (result.errors && result.errors.length > 0) {
     for (const error of result.errors) {
       errors.push({
@@ -176,19 +166,19 @@ export function parseDateTime(
         /^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2}):(\d{2})$/
       );
       if (!match) return null;
-      [, day, month, year, hour, minute, second] = match;
+      [, day = "", month = "", year = "", hour = "", minute = "", second = ""] = match;
     } else if (format === "MM/DD/YYYY HH:mm:ss") {
       match = trimmed.match(
         /^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2}):(\d{2})$/
       );
       if (!match) return null;
-      [, month, day, year, hour, minute, second] = match;
+      [, month = "", day = "", year = "", hour = "", minute = "", second = ""] = match;
     } else if (format === "YYYY-MM-DD HH:mm:ss") {
       match = trimmed.match(
         /^(\d{4})-(\d{1,2})-(\d{1,2})\s+(\d{1,2}):(\d{2}):(\d{2})$/
       );
       if (!match) return null;
-      [, year, month, day, hour, minute, second] = match;
+      [, year = "", month = "", day = "", hour = "", minute = "", second = ""] = match;
     } else {
       // Fallback: try native Date parsing
       const date = new Date(trimmed);

@@ -21,12 +21,12 @@ const SCRYPT_OPTIONS = {
  */
 export async function hashPassword(password: string): Promise<string> {
   const salt = randomBytes(SALT_LENGTH);
-  const derivedKey = (await scryptAsync(
-    password,
-    salt,
-    KEY_LENGTH,
-    SCRYPT_OPTIONS as Parameters<typeof scrypt>[3]
-  )) as Buffer;
+  const derivedKey = await new Promise<Buffer>((resolve, reject) => {
+    scrypt(password, salt, KEY_LENGTH, SCRYPT_OPTIONS, (err, key) => {
+      if (err) reject(err);
+      else resolve(key as Buffer);
+    });
+  });
 
   // Store as: algorithm$N$r$p$salt$hash (all in hex)
   const { N, r, p } = SCRYPT_OPTIONS;
@@ -63,11 +63,12 @@ export async function verifyPassword(
     const salt = Buffer.from(parts[4]!, "hex");
     const storedKey = Buffer.from(parts[5]!, "hex");
 
-    const derivedKey = (await scryptAsync(password, salt, KEY_LENGTH, {
-      N,
-      r,
-      p,
-    } as Parameters<typeof scrypt>[3])) as Buffer;
+    const derivedKey = await new Promise<Buffer>((resolve, reject) => {
+      scrypt(password, salt, KEY_LENGTH, { N, r, p }, (err, key) => {
+        if (err) reject(err);
+        else resolve(key as Buffer);
+      });
+    });
 
     // Use timing-safe comparison to prevent timing attacks
     return timingSafeEqual(storedKey, derivedKey);

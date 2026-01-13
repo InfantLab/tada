@@ -49,8 +49,16 @@ export default defineEventHandler(async (event) => {
       });
     }
 
+    const recipeData = recipe[0];
+    if (!recipeData) {
+      throw createError({
+        statusCode: 404,
+        message: "Recipe not found",
+      });
+    }
+
     const previousVersions =
-      (recipe[0].previousVersions as Array<{
+      (recipeData.previousVersions as Array<{
         savedAt: string;
         columnMapping: Record<string, unknown>;
         transforms: Record<string, unknown>;
@@ -64,12 +72,18 @@ export default defineEventHandler(async (event) => {
     }
 
     const versionToRestore = previousVersions[versionIndex];
+    if (!versionToRestore) {
+      throw createError({
+        statusCode: 400,
+        message: "Invalid version",
+      });
+    }
 
     // Store current version before restoring
     const currentVersion = {
       savedAt: new Date().toISOString(),
-      columnMapping: recipe[0].columnMapping as Record<string, unknown>,
-      transforms: recipe[0].transforms as Record<string, unknown>,
+      columnMapping: recipeData.columnMapping as Record<string, unknown>,
+      transforms: recipeData.transforms as Record<string, unknown>,
     };
 
     // Remove the restored version from history and add current
