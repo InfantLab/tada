@@ -8,6 +8,8 @@ import { sql } from "drizzle-orm";
 export const users = sqliteTable("users", {
   id: text("id").primaryKey(), // UUID
   username: text("username").notNull().unique(),
+  email: text("email").unique(), // Optional for self-hosted, required for cloud
+  emailVerified: integer("email_verified", { mode: "boolean" }).default(false),
   passwordHash: text("password_hash"), // Null if no password set (open access)
   timezone: text("timezone").notNull().default("UTC"),
   createdAt: text("created_at")
@@ -28,6 +30,39 @@ export const sessions = sqliteTable("sessions", {
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   expiresAt: integer("expires_at").notNull(),
+});
+
+// ============================================================================
+// Password Reset Tokens - For email-based password recovery
+// ============================================================================
+
+export const passwordResetTokens = sqliteTable("password_reset_tokens", {
+  id: text("id").primaryKey(), // UUID
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  tokenHash: text("token_hash").notNull(), // SHA-256 hash of the token
+  expiresAt: text("expires_at").notNull(), // ISO 8601 - 6 hours from creation
+  usedAt: text("used_at"), // When token was used (null if unused)
+  createdAt: text("created_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
+});
+
+// ============================================================================
+// Auth Events - Audit trail for authentication activities
+// ============================================================================
+
+export const authEvents = sqliteTable("auth_events", {
+  id: text("id").primaryKey(), // UUID
+  userId: text("user_id").references(() => users.id, { onDelete: "cascade" }), // Nullable for failed attempts
+  eventType: text("event_type").notNull(), // login, logout, password_change, password_reset_request, password_reset_complete, login_failed
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  metadata: text("metadata", { mode: "json" }).$type<Record<string, unknown>>(),
+  createdAt: text("created_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
 });
 
 // ============================================================================
@@ -79,10 +114,10 @@ export const entries = sqliteTable("entries", {
 });
 
 // ============================================================================
-// Habits - Definitions that aggregate entries
+// Rhythms - Definitions that aggregate entries into patterns
 // ============================================================================
 
-export const habits = sqliteTable("habits", {
+export const rhythms = sqliteTable("rhythms", {
   id: text("id").primaryKey(), // UUID
   userId: text("user_id")
     .notNull()
@@ -325,11 +360,17 @@ export type NewUser = typeof users.$inferInsert;
 export type Session = typeof sessions.$inferSelect;
 export type NewSession = typeof sessions.$inferInsert;
 
+export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
+export type NewPasswordResetToken = typeof passwordResetTokens.$inferInsert;
+
+export type AuthEvent = typeof authEvents.$inferSelect;
+export type NewAuthEvent = typeof authEvents.$inferInsert;
+
 export type Entry = typeof entries.$inferSelect;
 export type NewEntry = typeof entries.$inferInsert;
 
-export type Habit = typeof habits.$inferSelect;
-export type NewHabit = typeof habits.$inferInsert;
+export type Rhythm = typeof rhythms.$inferSelect;
+export type NewRhythm = typeof rhythms.$inferInsert;
 
 export type Attachment = typeof attachments.$inferSelect;
 export type NewAttachment = typeof attachments.$inferInsert;

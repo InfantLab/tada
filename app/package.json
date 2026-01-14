@@ -25,6 +25,7 @@
     "@libsql/client": "^0.14.0",
     "drizzle-orm": "^0.38.3",
     "nanoid": "^5.1.6",
+    "nodemailer": "^7.0.12",
     "oslo": "^1.2.1"
   },
   "devDependencies": {
@@ -33,6 +34,7 @@
     "@nuxt/test-utils": "^3.23.0",
     "@nuxtjs/tailwindcss": "^6.13.1",
     "@types/bun": "^1.1.14",
+    "@types/nodemailer": "^7.0.5",
     "@vite-pwa/nuxt": "^0.10.6",
     "@vitest/ui": "^3.0.0",
     "@vue/test-utils": "^2.4.6",

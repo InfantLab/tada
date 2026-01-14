@@ -144,7 +144,7 @@ Users can use any string as a category. The defaults above provide sensible star
 
 ## Subcategory Definitions
 
-Subcategories provide **specific activity identification** within a category. They enable precise filtering, habit matching, and meaningful defaults.
+Subcategories provide **specific activity identification** within a category. They enable precise filtering, rhythm matching, and meaningful defaults.
 
 ### Mindfulness Subcategories
 
@@ -241,7 +241,7 @@ Same activity, different intention and framing.
 
 ## Emoji Conventions
 
-Emojis provide **instant visual recognition** throughout the app. They appear in timelines, timers, calendars, and habit views.
+Emojis provide **instant visual recognition** throughout the app. They appear in timelines, timers, calendars, and rhythm views.
 
 ### Emoji Hierarchy
 
@@ -291,7 +291,7 @@ function getEntryEmoji(entry: Entry): string {
 
 ## Color Palette
 
-Each category has an assigned color for consistent UI treatment across timeline badges, chart segments, and habit calendars.
+Each category has an assigned color for consistent UI treatment across timeline badges, chart segments, and rhythm calendars.
 
 ### Category Colors
 
@@ -309,7 +309,7 @@ Each category has an assigned color for consistent UI treatment across timeline 
 
 - **Timeline badges**: Background color with white/dark text
 - **Chart segments**: Fill color for pie/bar charts
-- **Habit calendars**: Cell background or dot color
+- **Rhythm calendars**: Cell background or dot color
 - **Category pills**: Border or background accent
 
 ### Accessibility
@@ -375,15 +375,15 @@ export const timerPresets = sqliteTable("timer_presets", {
 });
 ```
 
-### Habit Matching Update
+### Rhythm Matching Update
 
-Habits can now match on top-level fields:
+Rhythms can now match on top-level fields:
 
 ```typescript
 // Before: match on data.category (JSON)
 // After: match on category or subcategory directly
 
-export const habits = sqliteTable("habits", {
+export const rhythms = sqliteTable("rhythms", {
   // ...
   matchCategory: text("match_category"), // e.g., "mindfulness"
   matchSubcategory: text("match_subcategory"), // e.g., "sitting"

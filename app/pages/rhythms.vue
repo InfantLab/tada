@@ -1,30 +1,30 @@
 <script setup lang="ts">
-// Habits page - Seinfeld method streak tracking
-import type { Habit } from "~/server/db/schema";
+// Rhythms page - See your natural patterns
+import type { Rhythm } from "~/server/db/schema";
 
 definePageMeta({
   layout: "default",
 });
 
-// Extended habit with UI-specific fields
-interface HabitWithUI extends Habit {
+// Extended rhythm with UI-specific fields
+interface RhythmWithUI extends Rhythm {
   completedToday: boolean;
   emoji: string;
 }
 
-// Fetch habits from API
-const habits = ref<HabitWithUI[]>([]);
+// Fetch rhythms from API
+const rhythms = ref<RhythmWithUI[]>([]);
 const isLoading = ref(true);
 const error = ref<string | null>(null);
 
 onMounted(async () => {
   try {
-    // TODO: Create habits API endpoint in Phase 2
+    // TODO: Create rhythms API endpoint in Phase 2
     // For now, show placeholder that Phase 2 is needed
-    habits.value = [];
+    rhythms.value = [];
   } catch (err: unknown) {
-    console.error("Failed to fetch habits:", err);
-    error.value = err instanceof Error ? err.message : "Failed to load habits";
+    console.error("Failed to fetch rhythms:", err);
+    error.value = err instanceof Error ? err.message : "Failed to load rhythms";
   } finally {
     isLoading.value = false;
   }
@@ -55,14 +55,14 @@ const last7Days = getLast7Days();
     <div class="flex items-center justify-between mb-6">
       <div>
         <h1 class="text-2xl font-bold text-stone-800 dark:text-stone-100">
-          Habits
+          Rhythms
         </h1>
         <p class="text-sm text-stone-500 dark:text-stone-400">
-          Don't break the chain
+          See your natural patterns
         </p>
       </div>
 
-      <!-- Add habit button -->
+      <!-- Add rhythm button -->
       <button
         class="flex items-center gap-2 px-4 py-2 bg-tada-600 hover:opacity-90 text-black dark:bg-tada-600 dark:text-white rounded-lg font-medium transition-colors shadow-sm"
       >
@@ -80,7 +80,7 @@ const last7Days = getLast7Days();
             d="M12 4v16m8-8H4"
           />
         </svg>
-        <span class="hidden sm:inline">New Habit</span>
+        <span class="hidden sm:inline">New Rhythm</span>
       </button>
     </div>
 
@@ -92,14 +92,14 @@ const last7Days = getLast7Days();
     </div>
 
     <!-- Empty state -->
-    <div v-else-if="habits.length === 0" class="text-center py-12">
-      <div class="text-6xl mb-4">📊</div>
+    <div v-else-if="rhythms.length === 0" class="text-center py-12">
+      <div class="text-6xl mb-4">🌊</div>
       <h2 class="text-xl font-semibold text-stone-700 dark:text-stone-200 mb-2">
-        No habits yet
+        No rhythms yet
       </h2>
       <p class="text-stone-500 dark:text-stone-400 max-w-md mx-auto mb-6">
-        Create habits to track with the Seinfeld method. Each day you complete
-        the habit, you add a link to your chain.
+        Create rhythms to discover your natural patterns. Your practice will
+        reveal itself over time.
       </p>
       <button
         class="inline-flex items-center gap-2 px-4 py-2 bg-tada-600 hover:opacity-90 text-black dark:bg-tada-600 dark:text-white rounded-lg font-medium transition-colors"
@@ -118,15 +118,15 @@ const last7Days = getLast7Days();
             d="M12 4v16m8-8H4"
           />
         </svg>
-        Create your first habit
+        Create your first rhythm
       </button>
     </div>
 
-    <!-- Habits list -->
+    <!-- Rhythms list -->
     <div v-else class="space-y-4">
       <div
-        v-for="habit in habits"
-        :key="habit.id"
+        v-for="rhythm in rhythms"
+        :key="rhythm.id"
         class="bg-white dark:bg-stone-800 rounded-xl p-4 shadow-sm border border-stone-200 dark:border-stone-700"
       >
         <div class="flex items-start gap-4">
@@ -134,22 +134,22 @@ const last7Days = getLast7Days();
           <button
             class="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center text-2xl transition-colors"
             :class="
-              habit.completedToday
+              rhythm.completedToday
                 ? 'bg-tada-100/30 dark:bg-tada-600/20'
                 : 'bg-stone-100 dark:bg-stone-700'
             "
           >
-            {{ habit.emoji }}
+            {{ rhythm.emoji }}
           </button>
 
-          <!-- Habit info -->
+          <!-- Rhythm info -->
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2 mb-1">
               <h3 class="font-medium text-stone-800 dark:text-stone-100">
-                {{ habit.name }}
+                {{ rhythm.name }}
               </h3>
               <span
-                v-if="habit.completedToday"
+                v-if="rhythm.completedToday"
                 class="text-xs px-2 py-0.5 rounded-full bg-tada-100/30 text-tada-700 dark:bg-tada-600/20 dark:text-tada-300"
               >
                 Done
@@ -161,10 +161,10 @@ const last7Days = getLast7Days();
               class="flex items-center gap-4 text-sm text-stone-500 dark:text-stone-400"
             >
               <span class="flex items-center gap-1">
-                🔥 {{ habit.currentStreak }} day streak
+                🔥 {{ rhythm.currentStreak }} day streak
               </span>
               <span class="flex items-center gap-1">
-                🏆 Best: {{ habit.longestStreak }}
+                🏆 Best: {{ rhythm.longestStreak }}
               </span>
             </div>
 
@@ -184,7 +184,7 @@ const last7Days = getLast7Days();
                     day.isToday
                       ? 'ring-2 ring-tada-500 dark:ring-tada-500'
                       : '',
-                    habit.completedToday && day.isToday
+                    rhythm.completedToday && day.isToday
                       ? 'bg-tada-600 text-black dark:bg-tada-600 dark:text-white'
                       : Math.random() > 0.3 && !day.isToday
                       ? 'bg-tada-600 text-black dark:bg-tada-600 dark:text-white'
@@ -201,7 +201,7 @@ const last7Days = getLast7Days();
           <button
             class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-colors"
             :class="
-              habit.completedToday
+              rhythm.completedToday
                 ? 'bg-tada-600 text-black dark:bg-tada-600 dark:text-white'
                 : 'bg-stone-100 dark:bg-stone-700 text-stone-500 dark:text-stone-400 hover:bg-tada-100/20 dark:hover:bg-tada-600/20 hover:text-tada-700 dark:hover:text-tada-300'
             "

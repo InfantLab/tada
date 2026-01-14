@@ -1035,7 +1035,11 @@ function validateEntry(entry: Record<string, unknown>): string[] {
   if (entry["duration"] && typeof entry["duration"] === "string") {
     const duration = entry["duration"] as string;
     // Allow H:M:S (single digits) or H:MM:SS (double digits) or seconds-only
-    if (!/^\d+:\d{1,2}:\d{1,2}$/.test(duration) && !/^\d+:\d{1,2}$/.test(duration) && !/^\d+$/.test(duration)) {
+    if (
+      !/^\d+:\d{1,2}:\d{1,2}$/.test(duration) &&
+      !/^\d+:\d{1,2}$/.test(duration) &&
+      !/^\d+$/.test(duration)
+    ) {
       warnings.push("Invalid duration format (expected H:mm:ss or seconds)");
     }
   }
@@ -1096,7 +1100,7 @@ async function startImport() {
         importProgress.value = Math.floor(
           (rowsProcessed.value / rowsTotal.value) * 90
         );
-        
+
         // More informative messages
         if (importProgress.value < 30) {
           progressMessage.value = "Processing entries...";
@@ -1124,7 +1128,10 @@ async function startImport() {
     importResults.value = results;
     currentStep.value = 4;
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Import failed. Please try again.";
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Import failed. Please try again.";
     console.error("Import error:", error);
     parseError.value = message;
     toast.error(message);

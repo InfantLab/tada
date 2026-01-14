@@ -31,7 +31,7 @@ interface TimerInterval {
 }
 
 const intervals = ref<TimerInterval[]>([
-  { durationMinutes: 10, repeats: 0, bellSound: "bell", customDuration: "" }
+  { durationMinutes: 10, repeats: 0, bellSound: "bell", customDuration: "" },
 ]);
 
 // Legacy compat
@@ -189,10 +189,15 @@ const overtimeDisplay = computed(() => {
 // Progress within current interval (0-100%), resets each interval
 const intervalProgress = computed(() => {
   if (timerMode.value === "fixed") {
-    const intrvls = fixedIntervals.value.length > 0 ? fixedIntervals.value : [targetMinutes.value];
+    const intrvls =
+      fixedIntervals.value.length > 0
+        ? fixedIntervals.value
+        : [targetMinutes.value];
     const cumulative = buildCumulativeTargets(intrvls);
-    const prevTarget = nextIntervalIndex.value > 0 ? cumulative[nextIntervalIndex.value - 1] : 0;
-    const currentTarget = cumulative[nextIntervalIndex.value] ?? cumulative[cumulative.length - 1];
+    const prevTarget =
+      nextIntervalIndex.value > 0 ? cumulative[nextIntervalIndex.value - 1] : 0;
+    const currentTarget =
+      cumulative[nextIntervalIndex.value] ?? cumulative[cumulative.length - 1];
     const intervalLength = currentTarget - prevTarget;
     const elapsedInInterval = elapsedSeconds.value - prevTarget;
     if (isOvertime.value) return 100; // Full ring during overtime
@@ -214,7 +219,9 @@ const _isComplete = computed(() => {
 function checkMilestones() {
   if (timerMode.value !== "unlimited") return;
   const currentMinutes = Math.floor(elapsedSeconds.value / 60);
-  const milestone = Math.floor(currentMinutes / milestoneInterval.value) * milestoneInterval.value;
+  const milestone =
+    Math.floor(currentMinutes / milestoneInterval.value) *
+    milestoneInterval.value;
 
   // Only fire if this milestone hasn't fired yet and we're at a real milestone
   if (
@@ -264,7 +271,10 @@ function beginSession() {
 
     // Fixed mode interval boundaries and overtime
     if (timerMode.value === "fixed") {
-      const intrvls = fixedIntervals.value.length > 0 ? fixedIntervals.value : [targetMinutes.value];
+      const intrvls =
+        fixedIntervals.value.length > 0
+          ? fixedIntervals.value
+          : [targetMinutes.value];
       const cumulative = buildCumulativeTargets(intrvls);
 
       if (!isOvertime.value && nextIntervalIndex.value < cumulative.length) {
@@ -299,7 +309,7 @@ function startTimer() {
     // Show running state during warm-up
     isRunning.value = true;
     showSettings.value = false;
-    
+
     // Countdown interval for warm-up display
     timerInterval.value = setInterval(() => {
       warmUpCountdown.value--;
@@ -347,7 +357,10 @@ function resumeTimer() {
     }
 
     if (timerMode.value === "fixed") {
-      const intrvls = fixedIntervals.value.length > 0 ? fixedIntervals.value : [targetMinutes.value];
+      const intrvls =
+        fixedIntervals.value.length > 0
+          ? fixedIntervals.value
+          : [targetMinutes.value];
       const cumulative = buildCumulativeTargets(intrvls);
       if (!isOvertime.value && nextIntervalIndex.value < cumulative.length) {
         const target = cumulative[nextIntervalIndex.value];
@@ -389,12 +402,15 @@ function resetTimer() {
   showPostSessionModal.value = false;
 }
 
-function playBell(bellType: "start" | "interval" = "interval", intervalIndex: number = 0) {
+function playBell(
+  bellType: "start" | "interval" = "interval",
+  intervalIndex: number = 0
+) {
   // Skip interval bells if noIntervalBells is enabled
   if (bellType === "interval" && noIntervalBells.value) return;
-  
+
   let bellToPlay: string;
-  
+
   if (bellType === "start") {
     bellToPlay = startBell.value;
   } else {
@@ -488,7 +504,7 @@ async function saveSession(includeOvertime: boolean = true) {
       durationSeconds: durationToSave,
       data: {
         mode: timerMode.value,
-        intervals: intervals.value.map(int => ({
+        intervals: intervals.value.map((int) => ({
           durationMinutes: int.durationMinutes,
           repeats: int.repeats,
           bellSound: int.bellSound,
@@ -649,18 +665,29 @@ onUnmounted(() => {
       >
         <!-- Mode selector (center aligned) -->
         <div class="text-center">
-          <label class="block text-xs font-medium text-stone-600 dark:text-stone-300 mb-2">Mode</label>
+          <label
+            class="block text-xs font-medium text-stone-600 dark:text-stone-300 mb-2"
+            >Mode</label
+          >
           <div class="inline-flex gap-2">
             <button
               class="px-4 py-1.5 rounded text-sm font-medium transition-colors"
-              :class="timerMode === 'fixed' ? 'bg-tada-100/30 dark:bg-tada-600/20 text-tada-700 dark:text-tada-300' : 'bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600'"
+              :class="
+                timerMode === 'fixed'
+                  ? 'bg-tada-100/30 dark:bg-tada-600/20 text-tada-700 dark:text-tada-300'
+                  : 'bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600'
+              "
               @click="timerMode = 'fixed'"
             >
               Fixed
             </button>
             <button
               class="px-4 py-1.5 rounded text-sm font-medium transition-colors"
-              :class="timerMode === 'unlimited' ? 'bg-tada-100/30 dark:bg-tada-600/20 text-tada-700 dark:text-tada-300' : 'bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600'"
+              :class="
+                timerMode === 'unlimited'
+                  ? 'bg-tada-100/30 dark:bg-tada-600/20 text-tada-700 dark:text-tada-300'
+                  : 'bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600'
+              "
               @click="timerMode = 'unlimited'"
             >
               Unlimited
@@ -670,7 +697,10 @@ onUnmounted(() => {
 
         <!-- Warm-up selector -->
         <div>
-          <label class="block text-xs font-medium text-stone-600 dark:text-stone-300 mb-2">Warm-up</label>
+          <label
+            class="block text-xs font-medium text-stone-600 dark:text-stone-300 mb-2"
+            >Warm-up</label
+          >
           <div class="flex flex-wrap gap-2">
             <button
               v-for="sec in [0, 5, 10, 20]"
@@ -681,9 +711,12 @@ onUnmounted(() => {
                   ? 'bg-tada-100/30 dark:bg-tada-600/20 text-tada-700 dark:text-tada-300'
                   : 'bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600'
               "
-              @click="warmUpSeconds = sec; customWarmUpSeconds = ''"
+              @click="
+                warmUpSeconds = sec;
+                customWarmUpSeconds = '';
+              "
             >
-              {{ sec === 0 ? 'None' : sec + 's' }}
+              {{ sec === 0 ? "None" : sec + "s" }}
             </button>
             <input
               v-model="customWarmUpSeconds"
@@ -698,7 +731,10 @@ onUnmounted(() => {
 
         <!-- Start Bell -->
         <div>
-          <label class="block text-xs font-medium text-stone-600 dark:text-stone-300 mb-2">Start Bell</label>
+          <label
+            class="block text-xs font-medium text-stone-600 dark:text-stone-300 mb-2"
+            >Start Bell</label
+          >
           <div class="flex flex-wrap gap-2">
             <button
               v-for="sound in bellSounds"
@@ -719,36 +755,61 @@ onUnmounted(() => {
         <!-- Intervals section -->
         <div class="space-y-2">
           <div class="flex items-center justify-between">
-            <label class="block text-xs font-medium text-stone-600 dark:text-stone-300">Intervals</label>
+            <label
+              class="block text-xs font-medium text-stone-600 dark:text-stone-300"
+              >Intervals</label
+            >
             <!-- No bells toggle -->
             <button
               class="text-xs transition-colors"
-              :class="noIntervalBells ? 'text-tada-600 dark:text-tada-400' : 'text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300'"
+              :class="
+                noIntervalBells
+                  ? 'text-tada-600 dark:text-tada-400'
+                  : 'text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300'
+              "
               @click="noIntervalBells = !noIntervalBells"
             >
-              {{ noIntervalBells ? '🔕 No bells' : '🔔 With bells' }}
+              {{ noIntervalBells ? "🔕 No bells" : "🔔 With bells" }}
             </button>
           </div>
 
           <!-- Interval accordion rows -->
-          <div class="space-y-2" :class="{ 'opacity-40 pointer-events-none': noIntervalBells }">
+          <div
+            class="space-y-2"
+            :class="{ 'opacity-40 pointer-events-none': noIntervalBells }"
+          >
             <div
               v-for="(int, idx) in intervals"
               :key="idx"
               class="rounded-lg bg-stone-100 dark:bg-stone-700/50 overflow-hidden transition-opacity"
-              :class="{ 'opacity-40 pointer-events-none': isIntervalDisabled(idx) }"
+              :class="{
+                'opacity-40 pointer-events-none': isIntervalDisabled(idx),
+              }"
             >
               <!-- Accordion header (always visible) -->
               <button
                 class="w-full px-3 py-2 flex items-center justify-between text-left"
-                @click="expandedIntervalIndex = expandedIntervalIndex === idx ? -1 : idx"
+                @click="
+                  expandedIntervalIndex =
+                    expandedIntervalIndex === idx ? -1 : idx
+                "
               >
                 <div class="flex items-center gap-2">
-                  <span class="text-xs font-medium text-stone-500 dark:text-stone-400">{{ idx + 1 }}.</span>
-                  <span class="text-xs text-stone-700 dark:text-stone-200">{{ getIntervalSummary(int) }}</span>
+                  <span
+                    class="text-xs font-medium text-stone-500 dark:text-stone-400"
+                    >{{ idx + 1 }}.</span
+                  >
+                  <span class="text-xs text-stone-700 dark:text-stone-200">{{
+                    getIntervalSummary(int)
+                  }}</span>
                 </div>
                 <div class="flex items-center gap-2">
-                  <span v-if="intervals.length > 1" class="text-xs text-stone-400 hover:text-red-500" @click.stop="intervals.splice(idx, 1)">×</span>
+                  <span
+                    v-if="intervals.length > 1"
+                    class="text-xs text-stone-400 hover:text-red-500"
+                    @click.stop="intervals.splice(idx, 1)"
+                    >×</span
+                  >
                   <svg
                     class="w-4 h-4 text-stone-400 transition-transform"
                     :class="{ 'rotate-180': expandedIntervalIndex === idx }"
@@ -756,16 +817,27 @@ onUnmounted(() => {
                     stroke="currentColor"
                     viewBox="0 0 24 24"
                   >
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 9l-7 7-7-7"
+                    />
                   </svg>
                 </div>
               </button>
 
               <!-- Accordion content (expanded) -->
-              <div v-show="expandedIntervalIndex === idx" class="px-3 pb-3 space-y-3 border-t border-stone-200 dark:border-stone-600">
+              <div
+                v-show="expandedIntervalIndex === idx"
+                class="px-3 pb-3 space-y-3 border-t border-stone-200 dark:border-stone-600"
+              >
                 <!-- Duration selector -->
                 <div class="pt-2">
-                  <label class="block text-xs text-stone-500 dark:text-stone-400 mb-1">Duration</label>
+                  <label
+                    class="block text-xs text-stone-500 dark:text-stone-400 mb-1"
+                    >Duration</label
+                  >
                   <div class="flex flex-wrap gap-1.5">
                     <button
                       v-for="mins in [3, 5, 6, 10, 15, 20, 30]"
@@ -776,7 +848,10 @@ onUnmounted(() => {
                           ? 'bg-tada-100/30 dark:bg-tada-600/20 text-tada-700 dark:text-tada-300'
                           : 'bg-white dark:bg-stone-600 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-500'
                       "
-                      @click="int.durationMinutes = mins; int.customDuration = ''"
+                      @click="
+                        int.durationMinutes = mins;
+                        int.customDuration = '';
+                      "
                     >
                       {{ mins }}m
                     </button>
@@ -786,14 +861,20 @@ onUnmounted(() => {
                       placeholder="Custom"
                       min="1"
                       class="w-16 px-2 py-1 rounded text-xs border border-stone-300 dark:border-stone-500 bg-white dark:bg-stone-600 text-stone-800 dark:text-stone-100"
-                      @input="int.durationMinutes = parseInt(int.customDuration) || int.durationMinutes"
+                      @input="
+                        int.durationMinutes =
+                          parseInt(int.customDuration) || int.durationMinutes
+                      "
                     />
                   </div>
                 </div>
 
                 <!-- Repeats selector -->
                 <div>
-                  <label class="block text-xs text-stone-500 dark:text-stone-400 mb-1">Repeats</label>
+                  <label
+                    class="block text-xs text-stone-500 dark:text-stone-400 mb-1"
+                    >Repeats</label
+                  >
                   <div class="flex items-center gap-2">
                     <button
                       class="px-2 py-1 rounded text-xs font-medium transition-colors"
@@ -813,16 +894,26 @@ onUnmounted(() => {
                         min="1"
                         placeholder="×"
                         class="w-12 px-2 py-1 rounded text-xs border border-stone-300 dark:border-stone-500 bg-white dark:bg-stone-600 text-stone-800 dark:text-stone-100 text-center"
-                        @input="int.repeats = parseInt(($event.target as HTMLInputElement).value) || 0"
+                        @input="
+                          int.repeats =
+                            parseInt(
+                              ($event.target as HTMLInputElement).value
+                            ) || 0
+                        "
                       />
-                      <span class="text-xs text-stone-500 dark:text-stone-400">times</span>
+                      <span class="text-xs text-stone-500 dark:text-stone-400"
+                        >times</span
+                      >
                     </div>
                   </div>
                 </div>
 
                 <!-- End Bell -->
                 <div>
-                  <label class="block text-xs text-stone-500 dark:text-stone-400 mb-1">End Bell</label>
+                  <label
+                    class="block text-xs text-stone-500 dark:text-stone-400 mb-1"
+                    >End Bell</label
+                  >
                   <div class="flex flex-wrap gap-1.5">
                     <button
                       v-for="sound in bellSounds"
@@ -844,9 +935,17 @@ onUnmounted(() => {
 
             <!-- Add interval button -->
             <button
-              v-if="!intervals.some(i => i.repeats === 0)"
+              v-if="!intervals.some((i) => i.repeats === 0)"
               class="w-full px-3 py-2 rounded-lg border-2 border-dashed border-stone-300 dark:border-stone-600 text-xs font-medium text-stone-500 dark:text-stone-400 hover:border-tada-500 hover:text-tada-600 dark:hover:border-tada-400 dark:hover:text-tada-400 transition-colors"
-              @click="intervals.push({ durationMinutes: 10, repeats: 1, bellSound: 'bell', customDuration: '' }); expandedIntervalIndex = intervals.length - 1"
+              @click="
+                intervals.push({
+                  durationMinutes: 10,
+                  repeats: 1,
+                  bellSound: 'bell',
+                  customDuration: '',
+                });
+                expandedIntervalIndex = intervals.length - 1;
+              "
             >
               + Add Interval
             </button>
@@ -854,12 +953,20 @@ onUnmounted(() => {
         </div>
 
         <!-- End of session options (styled as toggles) -->
-        <div class="pt-2 border-t border-stone-200 dark:border-stone-700 space-y-3">
+        <div
+          class="pt-2 border-t border-stone-200 dark:border-stone-700 space-y-3"
+        >
           <div class="flex items-center justify-between">
-            <span class="text-xs text-stone-600 dark:text-stone-300">Ending Reflection</span>
+            <span class="text-xs text-stone-600 dark:text-stone-300"
+              >Ending Reflection</span
+            >
             <button
               class="relative w-10 h-5 rounded-full transition-colors"
-              :class="captureReflection ? 'bg-tada-600' : 'bg-stone-300 dark:bg-stone-600'"
+              :class="
+                captureReflection
+                  ? 'bg-tada-600'
+                  : 'bg-stone-300 dark:bg-stone-600'
+              "
               @click="captureReflection = !captureReflection"
             >
               <span
@@ -869,10 +976,14 @@ onUnmounted(() => {
             </button>
           </div>
           <div class="flex items-center justify-between">
-            <span class="text-xs text-stone-600 dark:text-stone-300">Ending Mood</span>
+            <span class="text-xs text-stone-600 dark:text-stone-300"
+              >Ending Mood</span
+            >
             <button
               class="relative w-10 h-5 rounded-full transition-colors"
-              :class="captureMood ? 'bg-tada-600' : 'bg-stone-300 dark:bg-stone-600'"
+              :class="
+                captureMood ? 'bg-tada-600' : 'bg-stone-300 dark:bg-stone-600'
+              "
               @click="captureMood = !captureMood"
             >
               <span
@@ -888,10 +999,7 @@ onUnmounted(() => {
     <!-- Timer display -->
     <div class="relative mb-8 flex flex-col items-center justify-center">
       <!-- Progress ring (fills per interval, resets) -->
-      <svg
-        class="w-64 h-64 transform -rotate-90"
-        viewBox="0 0 100 100"
-      >
+      <svg class="w-64 h-64 transform -rotate-90" viewBox="0 0 100 100">
         <circle
           class="text-stone-200 dark:text-stone-700"
           stroke="currentColor"
@@ -930,13 +1038,25 @@ onUnmounted(() => {
           {{ displayTime }}
         </span>
         <div v-if="!isWarmingUp" class="flex items-center gap-3 mt-1">
-          <span class="text-xs text-stone-500 dark:text-stone-400">elapsed</span>
-          <span v-if="ringsCount > 0" class="text-xs text-stone-500 dark:text-stone-400">🔔 {{ ringsCount }}</span>
+          <span class="text-xs text-stone-500 dark:text-stone-400"
+            >elapsed</span
+          >
+          <span
+            v-if="ringsCount > 0"
+            class="text-xs text-stone-500 dark:text-stone-400"
+            >🔔 {{ ringsCount }}</span
+          >
         </div>
-        <div v-if="isWarmingUp" class="mt-1 text-xs text-stone-500 dark:text-stone-400">
+        <div
+          v-if="isWarmingUp"
+          class="mt-1 text-xs text-stone-500 dark:text-stone-400"
+        >
           settling in…
         </div>
-        <div v-if="isOvertime" class="mt-1 text-xs text-stone-500 dark:text-stone-400">
+        <div
+          v-if="isOvertime"
+          class="mt-1 text-xs text-stone-500 dark:text-stone-400"
+        >
           +{{ overtimeDisplay }} overtime
         </div>
       </div>
@@ -1052,14 +1172,20 @@ onUnmounted(() => {
       v-if="showPostSessionModal"
       class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
     >
-      <div class="bg-white dark:bg-stone-800 rounded-2xl shadow-xl max-w-md w-full p-6 space-y-6">
-        <h2 class="text-xl font-semibold text-stone-800 dark:text-stone-100 text-center">
+      <div
+        class="bg-white dark:bg-stone-800 rounded-2xl shadow-xl max-w-md w-full p-6 space-y-6"
+      >
+        <h2
+          class="text-xl font-semibold text-stone-800 dark:text-stone-100 text-center"
+        >
           How was your session?
         </h2>
 
         <!-- Mood capture -->
         <div v-if="captureMood" class="space-y-2">
-          <label class="block text-sm font-medium text-stone-600 dark:text-stone-300">
+          <label
+            class="block text-sm font-medium text-stone-600 dark:text-stone-300"
+          >
             Mood
           </label>
           <div class="flex justify-center gap-2">
@@ -1081,7 +1207,9 @@ onUnmounted(() => {
 
         <!-- Reflection capture -->
         <div v-if="captureReflection" class="space-y-2">
-          <label class="block text-sm font-medium text-stone-600 dark:text-stone-300">
+          <label
+            class="block text-sm font-medium text-stone-600 dark:text-stone-300"
+          >
             Reflection (optional)
           </label>
           <textarea
@@ -1096,7 +1224,10 @@ onUnmounted(() => {
         <div class="flex gap-3">
           <button
             class="flex-1 px-4 py-2 rounded-lg bg-stone-200 dark:bg-stone-700 hover:bg-stone-300 dark:hover:bg-stone-600 text-stone-700 dark:text-stone-200 font-medium transition-colors"
-            @click="showPostSessionModal = false; saveSession(pendingIncludeOvertime)"
+            @click="
+              showPostSessionModal = false;
+              saveSession(pendingIncludeOvertime);
+            "
           >
             Skip
           </button>
@@ -1110,6 +1241,5 @@ onUnmounted(() => {
         </div>
       </div>
     </div>
-
   </div>
 </template>

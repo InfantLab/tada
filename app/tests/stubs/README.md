@@ -4,14 +4,14 @@ This directory contains test stubs for upcoming v0.2.0 features. These tests are
 
 ## Planned Tests
 
-### Habits API (v0.2.0)
+### Rhythms API (v0.2.0)
 
-- [ ] GET /api/habits - List user habits
-- [ ] POST /api/habits - Create habit
-- [ ] PATCH /api/habits/:id - Update habit
-- [ ] DELETE /api/habits/:id - Delete habit
-- [ ] GET /api/habits/:id/progress - Get habit progress/stats
-- [ ] Habit matching logic - Entry → Habit association
+- [ ] GET /api/rhythms - List user rhythms
+- [ ] POST /api/rhythms - Create rhythm
+- [ ] PATCH /api/rhythms/:id - Update rhythm
+- [ ] DELETE /api/rhythms/:id - Delete rhythm
+- [ ] GET /api/rhythms/:id/progress - Get rhythm progress/stats
+- [ ] Rhythm matching logic - Entry → Rhythm association
 
 ### Streak Calculations (v0.2.0)
 

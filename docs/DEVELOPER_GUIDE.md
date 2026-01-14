@@ -168,7 +168,7 @@ interface Entry {
 }
 ```
 
-**Key insight:** Habits are NOT separate records — they're aggregation queries over entries using matchers.
+**Key insight:** Rhythms are NOT separate records — they're aggregation queries over entries using matchers.
 
 See [design/ontology.md](../design/ontology.md) for the three-level classification system.
 
@@ -184,7 +184,7 @@ See [design/ontology.md](../design/ontology.md) for the three-level classificati
 - `users` — User accounts (Lucia Auth)
 - `sessions` — Authentication sessions
 - `entries` — Unified entry model with ontology fields
-- `habits` — Habit definitions and matchers
+- `rhythms` — Rhythm definitions and matchers
 - `timer_presets` — Saved timer configurations
 - `category_settings` — User category customization (v0.2.0)
 - `attachments` — Entry attachments (v0.2.0)
@@ -253,7 +253,7 @@ app/
 
 - `sessions` — Lucia auth sessions
 - `entries` — Main data table (all activities)
-- `habits` — Habit definitions (query patterns)
+- `rhythms` — Rhythm definitions (query patterns)
 - `tags` — Optional tagging system
 
 ### PWA Configuration

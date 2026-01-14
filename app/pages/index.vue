@@ -157,7 +157,7 @@ function groupByDate(entries: Entry[]): Map<string, Entry[]> {
       </h2>
       <p class="text-stone-500 dark:text-stone-400 max-w-md mx-auto mb-6">
         Start capturing moments from your life. Meditations, accomplishments,
-        dreams, habits — everything in one place.
+        dreams, rhythms — everything in one place.
       </p>
       <div class="flex flex-col sm:flex-row gap-3 justify-center">
         <NuxtLink

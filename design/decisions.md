@@ -288,7 +288,7 @@ See [ontology.md](ontology.md) for full details.
 | `accomplishment` | Yellow (#F59E0B) |
 | `events`         | Pink (#EC4899)   |
 
-**Usage:** Timeline badges, chart segments, habit calendars.
+**Usage:** Timeline badges, chart segments, rhythm calendars.
 
 ---
 
@@ -450,6 +450,40 @@ These will be revisited later:
 2. Meditation Helper SQLite
 3. Strava GPX
 4. Generic CSV
+
+---
+
+## Naming: "Rhythms" not "Habits"
+
+**Decision:** Use "Rhythms" instead of "Habits" throughout the UI and documentation.
+
+**Date:** January 2026
+
+**Rationale:**
+
+"Habits" implies prescription — something you _should_ do. This conflicts with Ta-Da!'s philosophy of observation without judgment.
+
+"Rhythms" is:
+
+- **Natural** — implies cycles, not rigid rules
+- **Zen** — fits the cosmic/lotus aesthetic
+- **Non-judgmental** — a rhythm can ebb and flow; it doesn't "break"
+- **Observational** — "see your rhythms" vs "track your habits"
+- **Personal** — "your rhythms" feels intimate
+
+**Impact:**
+
+- Database table renamed from `habits` to `rhythms`
+- Route changed from `/habits` to `/rhythms`
+- All UI text updated
+- Types renamed: `Habit` → `Rhythm`, `NewHabit` → `NewRhythm`
+
+**Alternatives considered:**
+
+- Practices — still slightly goal-oriented
+- Flows — too abstract
+- Patterns — accurate but analytical/cold
+- Threads — poetic but unclear
 
 ---
 

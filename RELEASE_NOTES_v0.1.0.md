@@ -135,7 +135,7 @@ bun run dev
 
 - **Single-user only:** No multi-tenant support yet
 - **No offline sync:** PWA works but doesn't cache data locally (v0.2.0)
-- **Habits tracking placeholder:** UI exists but not functional (v0.2.0)
+- **Rhythms tracking placeholder:** UI exists but not functional (v0.2.0)
 - **Generic add form for Ta-Da!:** Dedicated celebration form coming in v0.2.0
 - **No category customization UI:** Defaults work, editing deferred to v0.2.0
 
@@ -143,7 +143,7 @@ bun run dev
 
 ## 🔮 What's Next (v0.2.0)
 
-- [ ] Habit tracking with streak counting
+- [ ] Rhythm tracking with streak counting
 - [ ] Category/subcategory customization UI
 - [ ] Dedicated Ta-Da! add form with celebration UX
 - [ ] Data import (CSV, Insight Timer)

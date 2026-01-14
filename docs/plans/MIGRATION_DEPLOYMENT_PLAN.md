@@ -16,7 +16,7 @@
    - ✅ All migrations apply successfully
    - ✅ Idempotency works (skips already-applied migrations)
    - ✅ Database created with correct schema
-   - ✅ All 8 tables present (users, entries, habits, etc.)
+   - ✅ All 8 tables present (users, entries, rhythms, etc.)
 
 3. **Documented everything**:
    - Full test log in `docs/MIGRATION_TESTING.md`

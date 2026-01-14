@@ -4,7 +4,7 @@ const navigation = [
   { name: "Timer", href: "/timer", icon: "i-heroicons-play-circle" },
   { name: "Ta-Da!", href: "/tada", icon: "i-heroicons-bolt" },
   { name: "Journal", href: "/journal", icon: "i-heroicons-book-open" },
-  { name: "Habits", href: "/habits", icon: "i-heroicons-chart-bar" },
+  { name: "Rhythms", href: "/rhythms", icon: "i-heroicons-chart-bar" },
 ];
 
 const route = useRoute();
@@ -167,7 +167,7 @@ const route = useRoute();
             />
           </svg>
           <svg
-            v-else-if="item.name === 'Habits'"
+            v-else-if="item.name === 'Rhythms'"
             xmlns="http://www.w3.org/2000/svg"
             class="h-6 w-6"
             fill="none"

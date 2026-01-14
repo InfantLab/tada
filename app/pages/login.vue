@@ -157,6 +157,14 @@ async function handleSubmit() {
                   : 'Enter your password'
               "
             />
+            <div v-if="mode === 'login'" class="mt-2 text-right">
+              <NuxtLink
+                to="/forgot-password"
+                class="text-sm text-tada-700 hover:text-gold-line dark:text-tada-300 dark:hover:text-gold-amber transition-colors"
+              >
+                Forgot password?
+              </NuxtLink>
+            </div>
           </div>
 
           <!-- Confirm Password (register only) -->

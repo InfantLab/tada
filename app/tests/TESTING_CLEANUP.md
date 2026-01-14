@@ -193,7 +193,7 @@ Test Files  3 passed (3)
 
 When implementing new features, add tests:
 
-- `tests/api/habits.integration.test.ts`
+- `tests/api/rhythms.integration.test.ts`
 - `tests/api/auth.integration.test.ts`
 - `tests/e2e/timer-flow.spec.ts`
 

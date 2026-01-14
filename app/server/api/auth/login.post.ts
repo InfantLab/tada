@@ -5,6 +5,7 @@ import { users } from "~/server/db/schema";
 import { eq } from "drizzle-orm";
 import { createLogger } from "~/server/utils/logger";
 import { verifyPassword } from "~/server/utils/password";
+import { logAuthEvent } from "~/server/utils/authEvents";
 
 const logger = createLogger("api:auth:login");
 
@@ -71,6 +72,13 @@ export default defineEventHandler(async (event) => {
       sessionCookie.value,
       sessionCookie.attributes
     );
+
+    // Log successful login
+    await logAuthEvent({
+      event,
+      userId: user.id,
+      eventType: "login",
+    });
 
     logger.info("User logged in successfully", { username: user.username });
 

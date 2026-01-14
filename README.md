@@ -4,7 +4,7 @@
 
 # ⚡ Ta-da!
 
-**Track Activities, Discover Achievements** — A personal lifelogger for meditation, habits, dreams, and accomplishments.
+**Track Activities, Discover Achievements** — A personal lifelogger for meditation, rhythms, dreams, and accomplishments.
 
 Ta-Da! is an open-source Progressive Web App (PWA) that helps you notice and celebrate your life. Rather than prescribing what you _should_ do, Ta-Da! helps you observe what you actually _did_ — swapping the anxiety-inducing todo list into a celebration of accomplishment.
 
@@ -92,7 +92,7 @@ Read more: [design/ontology.md](design/ontology.md)
 
 ## Architecture
 
-Ta-Da! uses a **unified Entry model** where everything is an entry. No separate tables for meditations, dreams, Ta-Da!s — just one flexible `entries` table with type, category, and subcategory fields. Habits are aggregation queries over entries, not separate data.
+Ta-Da! uses a **unified Entry model** where everything is an entry. No separate tables for meditations, dreams, Ta-Da!s — just one flexible `entries` table with type, category, and subcategory fields. Rhythms are aggregation queries over entries, not separate data.
 
 **Why?** Simplicity. One data model, one API, infinite flexibility. Add new activity types without schema migrations. Your life is different from mine.
 
@@ -127,7 +127,7 @@ See [docs/DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) for full development work
 
 **Current:** v0.1.0 (MVP) ✅ — Feature complete!
 
-**Next:** v0.2.0 (Q1 2026) — Habit tracking, category customization, data import
+**Next:** v0.2.0 (Q1 2026) — Rhythm tracking, category customization, data import
 
 **Future:** v0.3.0+ — Voice input, Obsidian sync, advanced visualizations
 

@@ -69,7 +69,7 @@ pages/
 ├── timer.vue                     # Timer (/timer) — Meditation/activity timer
 ├── add.vue                       # Add Entry (/add) — Quick capture
 ├── journal.vue                   # Journal (/journal) — Journal entries
-├── habits.vue                    # Habits (/habits) — Habit tracking (placeholder)
+├── rhythms.vue                   # Rhythms (/rhythms) — Pattern tracking (placeholder)
 ├── settings.vue                  # Settings (/settings) — Export, bells, auth
 ├── login.vue                     # Login (/login) — Authentication
 └── entry/
@@ -98,7 +98,7 @@ server/
 │       └── [id].patch.ts         # Update entry (PATCH /api/entries/:id)
 ├── db/                           # Database layer
 │   ├── index.ts                  # Database connection (Drizzle client)
-│   ├── schema.ts                 # Database schema (users, entries, habits, etc.)
+│   ├── schema.ts                 # Database schema (users, entries, rhythms, etc.)
 │   └── migrations/               # Drizzle migrations (auto-generated)
 │       ├── 0000_careful_sauron.sql
 │       ├── 0001_cheerful_steve_rogers.sql

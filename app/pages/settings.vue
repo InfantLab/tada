@@ -27,7 +27,27 @@ const currentUser = ref<{
   id: string;
   username: string;
   timezone: string;
+  email?: string;
+  emailVerified?: boolean;
 } | null>(null);
+
+// Password change state
+const passwordForm = ref({
+  currentPassword: "",
+  newPassword: "",
+  confirmPassword: "",
+});
+const isChangingPassword = ref(false);
+const passwordError = ref<string | null>(null);
+const passwordSuccess = ref(false);
+
+// Email state
+const emailForm = ref({
+  email: "",
+});
+const _isUpdatingEmail = ref(false); // TODO: implement email update API
+const emailError = ref<string | null>(null);
+const emailSuccess = ref(false);
 
 // Fetch current user
 onMounted(async () => {
@@ -35,11 +55,70 @@ onMounted(async () => {
     const session = await $fetch("/api/auth/session");
     if (session.user) {
       currentUser.value = session.user;
+      // Pre-fill email form if user has email
+      if (session.user.email) {
+        emailForm.value.email = session.user.email;
+      }
     }
   } catch (error) {
     console.error("Failed to fetch user info:", error);
   }
 });
+
+// Change password function
+async function changePassword() {
+  passwordError.value = null;
+  passwordSuccess.value = false;
+
+  if (!passwordForm.value.currentPassword) {
+    passwordError.value = "Current password is required";
+    return;
+  }
+
+  if (!passwordForm.value.newPassword) {
+    passwordError.value = "New password is required";
+    return;
+  }
+
+  if (passwordForm.value.newPassword.length < 6) {
+    passwordError.value = "New password must be at least 6 characters";
+    return;
+  }
+
+  if (passwordForm.value.newPassword !== passwordForm.value.confirmPassword) {
+    passwordError.value = "Passwords do not match";
+    return;
+  }
+
+  isChangingPassword.value = true;
+
+  try {
+    await $fetch("/api/auth/change-password", {
+      method: "POST",
+      body: {
+        currentPassword: passwordForm.value.currentPassword,
+        newPassword: passwordForm.value.newPassword,
+      },
+    });
+
+    passwordSuccess.value = true;
+    passwordForm.value = {
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    };
+  } catch (err: unknown) {
+    console.error("Password change failed:", err);
+    if (err && typeof err === "object" && "data" in err) {
+      const errorData = err.data as { statusMessage?: string };
+      passwordError.value = errorData.statusMessage || "Password change failed";
+    } else {
+      passwordError.value = "Password change failed. Please try again.";
+    }
+  } finally {
+    isChangingPassword.value = false;
+  }
+}
 
 // Logout function
 async function logout() {
@@ -220,6 +299,104 @@ async function exportData() {
         </div>
       </section>
 
+      <!-- Security -->
+      <section v-if="currentUser">
+        <h2
+          class="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-4"
+        >
+          Security
+        </h2>
+        <div
+          class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 divide-y divide-stone-200 dark:divide-stone-700"
+        >
+          <!-- Email (if available) -->
+          <div class="p-4">
+            <label
+              class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2"
+            >
+              Email Address
+            </label>
+            <p class="text-xs text-stone-500 dark:text-stone-400 mb-3">
+              Used for password recovery. Optional for self-hosted.
+            </p>
+            <div class="flex gap-2">
+              <input
+                v-model="emailForm.email"
+                type="email"
+                placeholder="your@email.com"
+                class="flex-1 px-3 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-700 text-stone-800 dark:text-stone-100 text-sm focus:outline-none focus:ring-2 focus:ring-tada-500"
+              />
+              <span
+                v-if="currentUser.emailVerified"
+                class="px-2 py-2 text-xs text-green-600 dark:text-green-400 flex items-center gap-1"
+              >
+                ✓ Verified
+              </span>
+            </div>
+            <p
+              v-if="emailSuccess"
+              class="mt-2 text-sm text-green-600 dark:text-green-400"
+            >
+              Email updated successfully
+            </p>
+            <p
+              v-if="emailError"
+              class="mt-2 text-sm text-red-600 dark:text-red-400"
+            >
+              {{ emailError }}
+            </p>
+          </div>
+
+          <!-- Change Password -->
+          <div class="p-4">
+            <label
+              class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2"
+            >
+              Change Password
+            </label>
+            <div class="space-y-3">
+              <input
+                v-model="passwordForm.currentPassword"
+                type="password"
+                placeholder="Current password"
+                class="w-full px-3 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-700 text-stone-800 dark:text-stone-100 text-sm focus:outline-none focus:ring-2 focus:ring-tada-500"
+              />
+              <input
+                v-model="passwordForm.newPassword"
+                type="password"
+                placeholder="New password (min 6 characters)"
+                class="w-full px-3 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-700 text-stone-800 dark:text-stone-100 text-sm focus:outline-none focus:ring-2 focus:ring-tada-500"
+              />
+              <input
+                v-model="passwordForm.confirmPassword"
+                type="password"
+                placeholder="Confirm new password"
+                class="w-full px-3 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-700 text-stone-800 dark:text-stone-100 text-sm focus:outline-none focus:ring-2 focus:ring-tada-500"
+              />
+              <button
+                :disabled="isChangingPassword"
+                class="w-full py-2 px-4 bg-tada-600 hover:opacity-90 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                @click="changePassword"
+              >
+                {{ isChangingPassword ? "Changing..." : "Change Password" }}
+              </button>
+              <p
+                v-if="passwordSuccess"
+                class="text-sm text-green-600 dark:text-green-400"
+              >
+                Password changed successfully
+              </p>
+              <p
+                v-if="passwordError"
+                class="text-sm text-red-600 dark:text-red-400"
+              >
+                {{ passwordError }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- Appearance -->
       <section>
         <h2
@@ -343,7 +520,7 @@ async function exportData() {
                   Push notifications
                 </label>
                 <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5">
-                  Reminders for habits and timer completion
+                  Reminders for rhythms and timer completion
                 </p>
               </div>
               <button

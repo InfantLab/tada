@@ -17,6 +17,8 @@ export default defineEventHandler(async (event) => {
             id: user.id,
             username: user.username,
             timezone: user.timezone,
+            email: user.email || null,
+            emailVerified: user.emailVerified || false,
           }
         : null,
       session: session

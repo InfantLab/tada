@@ -16,6 +16,8 @@ export const lucia = new Lucia(adapter, {
     return {
       username: attributes.username,
       timezone: attributes.timezone,
+      email: attributes.email,
+      emailVerified: attributes.emailVerified,
     };
   },
 });
@@ -26,6 +28,8 @@ declare module "lucia" {
     DatabaseUserAttributes: {
       username: string;
       timezone: string;
+      email: string | null;
+      emailVerified: boolean;
     };
   }
 }

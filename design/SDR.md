@@ -25,7 +25,7 @@
 
 ### 1.1 Project Vision
 
-Tada is a personal **lifelogger**—a tool for noticing and collecting the moments that make up a life. It unifies activity tracking, habit building, journaling, and accomplishment capture into a single, open platform.
+Tada is a personal **lifelogger**—a tool for noticing and collecting the moments that make up a life. It unifies activity tracking, rhythm discovery, journaling, and accomplishment capture into a single, open platform.
 
 Unlike commercial apps that monetize attention and data, Tada prioritizes **data ownership**, **open standards**, and **self-hosting**. It's not about productivity or optimization—it's about **remembering what you've done** and **seeing who you're becoming**.
 
@@ -40,7 +40,7 @@ See [philosophy.md](philosophy.md) for the full vision.
 1. **Data Ownership**: Your data belongs to you. Export everything, import from anywhere.
 2. **Open Standards**: Follow quantified-self standards (Open mHealth, GPX) for interoperability.
 3. **Unified Entry Model**: One flexible schema for all entry types—activities, experiences, thoughts.
-4. **Habits as Aggregations**: Habits are views over entries, not separate data.
+4. **Rhythms as Aggregations**: Rhythms are views over entries, not separate data.
 5. **Plugin Architecture**: Core is minimal; richness comes from plugins.
 6. **Mobile-First PWA**: No app store dependency; works offline on any device.
 7. **Simplicity First**: Start simple, extend later. Avoid premature complexity.
@@ -268,17 +268,17 @@ interface TadaData {
 // Note: category (home/work/personal) is now a top-level subcategory field
 ```
 
-### 3.2 Habit Tracking (Seinfeld Method)
+### 3.2 Rhythm Tracking (Seinfeld Method)
 
-Habits are **definitions** that aggregate underlying entries:
+Rhythms are **definitions** that aggregate underlying entries:
 
 ```typescript
-interface Habit {
+interface Rhythm {
   id: string;
   name: string; // "Daily Meditation"
   description?: string;
 
-  // What counts toward this habit (matches on top-level Entry fields)
+  // What counts toward this rhythm (matches on top-level Entry fields)
   matchType?: string; // e.g., "timed"
   matchCategory?: string; // e.g., "mindfulness"
   matchSubcategory?: string; // e.g., "sitting"
@@ -304,10 +304,10 @@ interface Habit {
 
 #### Streak Calculation Rules
 
-- **Daily habits**: Chain continues if goal met every consecutive day
-- **Weekly habits (X of Y)**: Chain continues if target days met each week (Mon-Sun)
-- **Weekly habits (duration/count)**: Chain continues if weekly total meets threshold
-- **Grace period**: Configurable (default: none). Optional 1-day grace for daily habits.
+- **Daily rhythms**: Chain continues if goal met every consecutive day
+- **Weekly rhythms (X of Y)**: Chain continues if target days met each week (Mon-Sun)
+- **Weekly rhythms (duration/count)**: Chain continues if weekly total meets threshold
+- **Grace period**: Configurable (default: none). Optional 1-day grace for daily rhythms.
 
 ### 3.3 Meditation Timer
 
@@ -482,9 +482,9 @@ Container:    Docker → CapRover deployment
 
 ### 4.4 Notifications
 
-| Method        | Use Case                         | Requirement                    |
-| ------------- | -------------------------------- | ------------------------------ |
-| **Web Push**  | Habit reminders, streak warnings | HTTPS, VAPID keys, user opt-in |
+| Method        | Use Case                           | Requirement                    |
+| ------------- | ---------------------------------- | ------------------------------ |
+| **Web Push**  | Rhythm reminders, streak warnings  | HTTPS, VAPID keys, user opt-in |
 | **PWA Badge** | Unread notifications count       | Supported browsers             |
 | **Email**     | Weekly summaries (cloud only)    | SMTP integration               |
 
@@ -634,9 +634,9 @@ Activity data payloads follow [Open mHealth schemas](https://www.openmhealth.org
 - [ ] CapRover deployment
 - [ ] Simple auth (optional password for self-hosted)
 
-### Phase 2: Habits & Streaks
+### Phase 2: Rhythms & Streaks
 
-- [ ] Habit definitions (matchers, goals, frequency)
+- [ ] Rhythm definitions (matchers, goals, frequency)
 - [ ] Streak calculation engine
 - [ ] Calendar heatmap visualization
 - [ ] Basic data export (JSON, CSV)

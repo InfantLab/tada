@@ -59,7 +59,7 @@ Ta-Da! supports this transformation:
 
 - "You're becoming a writer" not "You wrote 5 times"
 - "You're becoming a meditator" not "47 sessions logged"
-- The habit page celebrates identity, not just streaks
+- The rhythms page celebrates identity, not just streaks
 
 ### 📉 Chains That Bend, Not Break
 
@@ -202,7 +202,7 @@ Not "rate your mood 1-10"—instead, pick a weather metaphor. Sunny, overcast, s
 The core stays minimal:
 
 - **Activities** (the unified model)
-- **Habits** (aggregations with streaks)
+- **Rhythms** (aggregations with streaks)
 - **Timeline** (chronological view of everything)
 
 Everything else is a **plugin**:

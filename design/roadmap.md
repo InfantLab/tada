@@ -131,7 +131,7 @@ Build flexible import system with user-mappable columns and reusable recipes.
 - [ ] Context-aware subcategory resolution (fix "walking" collision between categories)
 - [ ] **Category/Subcategory renaming tool** (batch update existing entries)
 
-### 📉 Graceful Habit Chains
+### 📉 Graceful Rhythm Chains
 
 Chains that bend, not break. When struggling, suggest easier tier instead of broken chain.
 
@@ -167,7 +167,6 @@ Chains that bend, not break. When struggling, suggest easier tier instead of bro
 - [ ] Toast/notification system (replace `alert()` dialogs)
 - [ ] Dedicated Ta-Da! add page with celebration magic
 - [ ] Category/subcategory emoji editing in Settings
-- [ ] Legacy data backfill tool for pre-v0.1.0 entries
 - [ ] Fix pre-existing logger test failures (7 tests, JSON format assertions)
 - [ ] Rewrite integration tests with @nuxt/test-utils/e2e
 
@@ -248,7 +247,7 @@ In-app guidance that feels like a wise friend, not a manual.
 **Help Center (`/help`):**
 
 - [ ] Beautiful, zen-like FAQ page matching app aesthetic
-- [ ] Categories: Getting Started, Timer, Entries, Habits, Import, Privacy
+- [ ] Categories: Getting Started, Timer, Entries, Rhythms, Import, Privacy
 - [ ] Searchable with fuzzy matching
 - [ ] Expandable questions (accordion style)
 - [ ] Direct links from relevant pages ("Need help? →")
@@ -258,7 +257,7 @@ In-app guidance that feels like a wise friend, not a manual.
 - [ ] `?` icon in header (subtle, consistent location)
 - [ ] Page-specific help panels (slide in, don't navigate away)
 - [ ] Timer help: "Why does the timer count up?"
-- [ ] Habit help: "How do graceful chains work?"
+- [ ] Rhythm help: "How do graceful chains work?"
 - [ ] Import help: "Where do I get my Insight Timer data?"
 
 **FAQ Philosophy:**
@@ -272,7 +271,7 @@ In-app guidance that feels like a wise friend, not a manual.
 
 - "Why don't timers count down?"
 - "What happens if I miss a day?"
-- "How is Ta-Da different from other habit trackers?"
+- "How is Ta-Da different from other rhythm trackers?"
 - "Is my data private?"
 - "How do I import from Insight Timer?"
 - "Can I use Ta-Da offline?"
@@ -337,7 +336,7 @@ Transform self-hosted app into hosted service at tada.living.
 - [ ] Landing page with philosophy messaging
 - [ ] Blog with science/philosophy content:
   - Benefits of mindfulness tracking
-  - Psychology of habit formation
+  - Psychology of rhythm formation
   - Identity-based behavior change research
   - Contemplative practice traditions
 - [ ] SEO optimization
@@ -420,7 +419,7 @@ The unified Entry model supports any `type` value. Current types:
 - `timed` — Timer session (meditation, focus, etc.)
 - `tada` — Accomplishment/celebration
 - `journal` — Dream, note, reflection (uses subcategory)
-- `habit` — Habit completion (auto-created by habit rules)
+- `rhythm` — Rhythm completion (auto-created by rhythm rules)
 
 ### Future Candidates
 
@@ -459,7 +458,7 @@ Adding a new type requires no schema changes — just use it!
 Things we're explicitly _not_ building:
 
 - ❌ **Social network** — This is personal, not social
-- ❌ **Habit prescriptions** — We don't tell you what to do
+- ❌ **Rhythm prescriptions** — We don't tell you what to do
 - ❌ **Countdown timers** — We count up, celebrating what you did
 - ❌ **Streaks as punishment** — Missing a day isn't failure
 - ❌ **Notifications spam** — Minimal, user-controlled only

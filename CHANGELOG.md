@@ -25,7 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Unit tests for client & server logging (21 tests combined)
   - Test infrastructure with Vitest
   - CI integration - tests run automatically
-  - Test stubs for v0.2.0 features (habits, auth, E2E)
+  - Test stubs for v0.2.0 features (rhythms, auth, E2E)
   - Test documentation and guides
 
 ### Changed
@@ -104,7 +104,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 📝 Notes
   - 🙏 Gratitude
 - **Journal** (`/journal`) - Filtered view of journal-type entries with emoji editing
-- **Habits** (`/habits`) - Placeholder page for v0.2.0
+- **Rhythms** (`/rhythms`) - Placeholder page for v0.2.0
 - **Settings** (`/settings`) - JSON data export, bell configuration, authentication
 - **Login/Register** (`/login`) - User authentication
 
@@ -130,7 +130,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `users` - User accounts
 - `sessions` - Authentication sessions
 - `entries` - Unified entry model with type/category/subcategory/emoji
-- `habits` - Habit definitions (placeholder for v0.2.0)
+- `rhythms` - Rhythm definitions (placeholder for v0.2.0)
 - `timer_presets` - Saved timer configurations
 - `category_settings` - User category customization (schema ready, UI in v0.2.0)
 - `attachments` - Entry attachments (placeholder for v0.2.0)
@@ -158,7 +158,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Known Limitations
 
-- Habit tracking UI is placeholder only (coming in v0.2.0)
+- Rhythm tracking UI is placeholder only (coming in v0.2.0)
 - No offline sync (PWA works but doesn't cache data locally)
 - Single-user per instance (no multi-tenant support)
 - Error messages use `alert()` dialogs (toast system in v0.2.0)
@@ -179,14 +179,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Planned for v0.2.0
 
 - Category and emoji customization UI
-- Habit tracking implementation with streak calculations
+- Rhythm tracking implementation with streak calculations
 - Calendar heatmap visualization
 - Data import (Insight Timer CSV, Meditation Helper SQLite)
 - CSV export
 - Timer profiles (save/load configurations)
 - Toast notification system
 - Offline sync with IndexedDB
-- Push notifications for habit reminders
+- Push notifications for rhythm reminders
 
 See [design/roadmap.md](design/roadmap.md) for full roadmap.
 
