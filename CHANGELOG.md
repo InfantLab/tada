@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Timer Improvements (v0.2.0):**
+  - Unified interval system with configurable duration, repeats (including "forever"), and bell sounds per interval
+  - Collapsible accordion UI for interval configuration
+  - Warm-up countdown display with negative numbers (-20, -19...) and "settling in" text
+  - "No bells" toggle for unlimited silent sessions
+  - Post-session modal for mood (1-5 scale) and reflection capture
+  - Celebratory messaging on save: "You did 47m of Sitting!" instead of generic duration
+  - Fixed vs Unlimited timer modes with overtime tracking
+  - Gray out intervals after a "forever" repeating interval
+  - Toggle-style switches for ending reflection/mood options
+  - Bell rings counter display during session
 - Test suite with working utility tests
   - Unit tests for categoryDefaults (13 tests, 100% coverage)
   - Unit tests for client & server logging (21 tests combined)
@@ -19,8 +30,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Timer now defaults to "Unlimited" count-up mode instead of countdown
+- Timer settings panel redesigned with accordion-style collapsible sections
+- Ending reflection and mood capture now use toggle switches instead of checkboxes
 - GitHub CI now runs test suite (utils passing, API tests skipped)
 - AGENTS.md updated to reflect testing setup
+
+### Removed
+
+- Timer countdown mode (replaced with Fixed/Unlimited count-up modes)
+- Deprecated timer defaults (duration, bell sound) from Settings page
+- Loop count selector (replaced with per-interval repeat configuration)
 
 ### Known Issues
 

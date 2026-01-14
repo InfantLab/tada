@@ -45,18 +45,18 @@ _Target: Q1 2026_
 
 Critical auth improvements for self-hosted and future cloud deployment.
 
-- [ ] **Email field** added to user schema (optional for now, required for cloud)
-- [ ] **Password reset flow:**
+- [x] **Email field** added to user schema (optional for now, required for cloud)
+- [x] **Password reset flow:**
   - User requests reset via email
   - Time-limited reset token (6 hours expiry)
   - Email with reset link
   - Secure password update endpoint
 - [ ] **Email verification** (optional for self-hosted, required for cloud)
-- [ ] **SMTP configuration** in settings (supports standard providers)
-- [ ] **Email templates:** password reset, welcome email
-- [ ] **Rate limiting** on reset requests (prevent abuse)
-- [ ] **Audit logging** for auth events (login, password change, reset)
-- [ ] **"Change password"** feature for logged-in users
+- [x] **SMTP configuration** in settings (supports standard providers)
+- [x] **Email templates:** password reset, welcome email
+- [x] **Rate limiting** on reset requests (prevent abuse)
+- [x] **Audit logging** for auth events (login, password change, reset)
+- [x] **"Change password"** feature for logged-in users
 
 **Implementation notes:**
 
@@ -66,13 +66,19 @@ Critical auth improvements for self-hosted and future cloud deployment.
 - Password recovery requires email field populated
 - Future: magic link authentication (passwordless)
 
-### 🎯 Timer Philosophy: Count Up
+### 🎯 Timer Philosophy: Count Up ✅
 
 All timers count up, never down. We celebrate what you did, not what you "should" do.
 
-- [ ] Count-up timer as default (hide/remove countdown option)
-- [ ] Celebratory messaging: "You did 47 minutes!" not "Goal: 60 min"
-- [ ] Optional gentle milestones (chime at 10, 20, 30 min) — celebration, not pressure
+- [x] Count-up timer as default (hide/remove countdown option)
+- [x] Celebratory messaging: "You did 47 minutes!" not "Goal: 60 min"
+- [x] Optional gentle milestones (chime at 10, 20, 30 min) — celebration, not pressure
+- [x] Unified interval system with configurable duration, repeats, and bell sounds
+- [x] Warm-up countdown with "settling in" display
+- [x] Post-session mood and reflection capture
+- [x] Accordion UI for interval configuration
+- [x] "No bells" mode for silent unlimited sessions
+- [x] Fixed vs Unlimited mode with overtime tracking
 - [ ] Timer profiles: save/load named configurations (duration hint, category, bells)
 
 ### 📥 Generic CSV Import Framework ✅
