@@ -12,10 +12,10 @@ const appName = "Tada";
 // User preferences
 const settings = ref({
   theme: "system" as "light" | "dark" | "system",
-  defaultTimerMinutes: 10,
-  bellSound: "tibetan-bowl",
   notifications: true,
   timezone: "UTC",
+  captureMood: true,
+  captureReflection: true,
 });
 
 const isSaving = ref(false);
@@ -58,14 +58,6 @@ async function logout() {
     isLoggingOut.value = false;
   }
 }
-
-// Available bell sounds
-const bellSounds = [
-  { id: "tibetan-bowl", name: "Tibetan Bowl" },
-  { id: "meditation-bell", name: "Meditation Bell" },
-  { id: "crystal-singing", name: "Crystal Singing Bowl" },
-  { id: "soft-gong", name: "Soft Gong" },
-];
 
 // Theme options
 const themes = [
@@ -276,49 +268,57 @@ async function exportData() {
         <div
           class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 divide-y divide-stone-200 dark:divide-stone-700"
         >
-          <!-- Default duration -->
+          <!-- Capture mood -->
           <div class="p-4">
             <div class="flex items-center justify-between">
-              <label
-                class="text-sm font-medium text-stone-700 dark:text-stone-300"
-              >
-                Default duration
+              <div>
+                <label
+                  class="text-sm font-medium text-stone-700 dark:text-stone-300"
+                >
+                  Capture mood
+                </label>
+                <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5">
+                  Ask how you feel after each session
+                </p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input
+                  v-model="settings.captureMood"
+                  type="checkbox"
+                  class="sr-only peer"
+                  @change="saveSettings"
+                />
+                <div
+                  class="w-11 h-6 bg-stone-300 dark:bg-stone-600 rounded-full peer peer-checked:bg-tada-600 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"
+                />
               </label>
-              <select
-                v-model.number="settings.defaultTimerMinutes"
-                class="px-3 py-1.5 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-700 text-stone-800 dark:text-stone-100"
-              >
-                <option :value="5">5 minutes</option>
-                <option :value="10">10 minutes</option>
-                <option :value="15">15 minutes</option>
-                <option :value="20">20 minutes</option>
-                <option :value="30">30 minutes</option>
-                <option :value="45">45 minutes</option>
-                <option :value="60">60 minutes</option>
-              </select>
             </div>
           </div>
 
-          <!-- Bell sound -->
+          <!-- Capture reflection -->
           <div class="p-4">
             <div class="flex items-center justify-between">
-              <label
-                class="text-sm font-medium text-stone-700 dark:text-stone-300"
-              >
-                Bell sound
-              </label>
-              <select
-                v-model="settings.bellSound"
-                class="px-3 py-1.5 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-700 text-stone-800 dark:text-stone-100"
-              >
-                <option
-                  v-for="bell in bellSounds"
-                  :key="bell.id"
-                  :value="bell.id"
+              <div>
+                <label
+                  class="text-sm font-medium text-stone-700 dark:text-stone-300"
                 >
-                  {{ bell.name }}
-                </option>
-              </select>
+                  Capture reflection
+                </label>
+                <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5">
+                  Write notes after each session
+                </p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input
+                  v-model="settings.captureReflection"
+                  type="checkbox"
+                  class="sr-only peer"
+                  @change="saveSettings"
+                />
+                <div
+                  class="w-11 h-6 bg-stone-300 dark:bg-stone-600 rounded-full peer peer-checked:bg-tada-600 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"
+                />
+              </label>
             </div>
           </div>
         </div>

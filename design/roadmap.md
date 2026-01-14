@@ -135,8 +135,11 @@ Chains that bend, not break. When struggling, suggest easier tier instead of bro
   - Tier 3: 3 days/week
   - Tier 4: 30 minutes/week
   - Tier 5: X times/month
+- [ ] Visualize best achievable tier based on current week
 - [ ] Automatic tier suggestion when streak would break
+- [ ] Thursday reminder to keep on course for best achievable tier ("meditate 3 more times this week to hit 5x/week")
 - [ ] Identity-based framing: "You're becoming a meditator" not "47 sessions"
+- [ ] better names than Tier 1, 2, 3...?
 
 ### 🔗 Practice Links
 
@@ -198,6 +201,102 @@ Optional "magic" layer for those who want it, completely invisible to those who 
 ## v0.4.0: Cloud Service — tada.living
 
 _Target: Q3 2026_
+
+### 🌱 Gentle Onboarding Tour
+
+A soft, welcoming introduction that respects the user's intelligence and curiosity.
+
+**Philosophy:**
+
+- Onboarding should feel like a friend showing you around, not a mandatory training video
+- Point out essentials, let them discover the rest naturally
+- Never overwhelm — reveal features as they explore
+- Celebrate their first actions, however small
+
+**Initial Welcome (first visit):**
+
+- [ ] Soft welcome overlay: "Welcome to Ta-Da! — a place to notice your life"
+- [ ] Highlight top navigation row gently (Timer, Add, Tada, Journal)
+- [ ] Single-sentence hints: "Start a meditation timer" / "Capture a win" / etc.
+- [ ] Dismiss with any interaction — no forced clicks
+- [ ] Remember dismissal (localStorage + user preference)
+
+**Progressive Discovery:**
+
+- [ ] Feature hints appear contextually when user explores new areas
+- [ ] First timer completion: gentle celebration + "This is now in your collection"
+- [ ] First dream logged: "Dreams are treasures worth remembering"
+- [ ] First week: optional "Getting started" card on home (dismissible)
+- [ ] Settings tour only when they visit Settings
+
+**Returning Users:**
+
+- [ ] New feature callouts (subtle badge/dot, not modal)
+- [ ] "What's new" accessible from help, not forced
+- [ ] Respect: once dismissed, stays dismissed
+
+### ❓ Help & FAQ System
+
+In-app guidance that feels like a wise friend, not a manual.
+
+**Help Center (`/help`):**
+
+- [ ] Beautiful, zen-like FAQ page matching app aesthetic
+- [ ] Categories: Getting Started, Timer, Entries, Habits, Import, Privacy
+- [ ] Searchable with fuzzy matching
+- [ ] Expandable questions (accordion style)
+- [ ] Direct links from relevant pages ("Need help? →")
+
+**Contextual Help:**
+
+- [ ] `?` icon in header (subtle, consistent location)
+- [ ] Page-specific help panels (slide in, don't navigate away)
+- [ ] Timer help: "Why does the timer count up?"
+- [ ] Habit help: "How do graceful chains work?"
+- [ ] Import help: "Where do I get my Insight Timer data?"
+
+**FAQ Philosophy:**
+
+- Answer the "why" behind features, not just "how"
+- Reference the philosophy (count-up timers, identity over streaks)
+- Warm, encouraging tone throughout
+- Link to deeper reading in `/about` or blog (future)
+
+**Sample FAQ Questions:**
+
+- "Why don't timers count down?"
+- "What happens if I miss a day?"
+- "How is Ta-Da different from other habit trackers?"
+- "Is my data private?"
+- "How do I import from Insight Timer?"
+- "Can I use Ta-Da offline?"
+
+### 🐛 Bug Report Tool
+
+Make reporting issues feel zen, not stressful.
+
+**In-App Bug Reporter:**
+
+- [ ] Accessible from Help menu or Settings
+- [ ] Calm, friendly interface: "Something not quite right?"
+- [ ] Simple form: What happened? What did you expect?
+- [ ] Optional: include browser/device info (with consent preview)
+- [ ] Optional: attach screenshot or screen recording
+- [ ] No account required for self-hosted (email optional for follow-up)
+
+**For Cloud Users (tada.living):**
+
+- [ ] Automatic context: user ID, app version, recent actions (with consent)
+- [ ] Response acknowledgment: "We've heard you — thank you for helping Ta-Da improve"
+- [ ] Status tracking: view submitted reports and responses
+- [ ] Integration with support ticketing (Intercom/Zendesk/email)
+
+**Implementation Notes:**
+
+- Self-hosted: generates markdown report for GitHub issue or email
+- Cloud: submits to backend → support queue
+- Privacy: always show exactly what data will be sent before sending
+- Never include entry content without explicit opt-in
 
 ### ☁️ Multi-Tenant Platform
 
