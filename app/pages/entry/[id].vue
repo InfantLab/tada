@@ -1,6 +1,17 @@
 <script setup lang="ts">
 import type { Entry } from "~/server/db/schema";
 
+const { error: showError, success: showSuccess } = useToast();
+
+// Undo composable for deletion recovery
+const { addToUndo } = useUndo({
+  expiry: 10000, // 10 seconds to undo
+  onExpire: async (item) => {
+    // Entry is already deleted on server, nothing more to do
+    console.debug("Undo expired for entry:", item.id);
+  },
+});
+
 definePageMeta({
   layout: "default",
 });
@@ -76,21 +87,37 @@ async function saveEntry() {
   } catch (err: unknown) {
     console.error("Failed to save entry:", err);
     const message = err instanceof Error ? err.message : "Unknown error";
-    alert(`Failed to save entry: ${message}`);
+    showError(`Failed to save entry: ${message}`);
   } finally {
     isSaving.value = false;
   }
 }
 
-// Delete entry
+// Delete entry with undo support
 async function deleteEntry() {
   if (!entry.value) return;
   if (!confirm("Are you sure you want to delete this entry?")) return;
 
+  const entryData = { ...entry.value };
   isDeleting.value = true;
+
   try {
     await $fetch(`/api/entries/${entryId}`, {
       method: "DELETE",
+    });
+
+    // Add to undo stack
+    addToUndo(entryId, "entry", entryData);
+
+    // Show toast with undo action
+    showSuccess(`Entry deleted`, {
+      duration: 10000,
+      action: {
+        label: "Undo",
+        onClick: async () => {
+          await restoreEntry(entryData);
+        },
+      },
     });
 
     // Navigate back to timeline
@@ -98,9 +125,26 @@ async function deleteEntry() {
   } catch (err: unknown) {
     console.error("Failed to delete entry:", err);
     const message = err instanceof Error ? err.message : "Unknown error";
-    alert(`Failed to delete entry: ${message}`);
+    showError(`Failed to delete entry: ${message}`);
   } finally {
     isDeleting.value = false;
+  }
+}
+
+// Restore a deleted entry
+async function restoreEntry(data: Entry) {
+  try {
+    await $fetch("/api/entries", {
+      method: "POST",
+      body: {
+        ...data,
+        id: undefined, // Let server generate new ID
+      },
+    });
+    showSuccess("Entry restored!");
+  } catch (err) {
+    console.error("Failed to restore entry:", err);
+    showError("Failed to restore entry");
   }
 }
 

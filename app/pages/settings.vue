@@ -1,5 +1,13 @@
 <script setup lang="ts">
 // Settings page
+import {
+  CATEGORY_DEFAULTS,
+  getSubcategoriesForCategory,
+  getCategoryEmoji,
+  getSubcategoryEmoji,
+} from "~/utils/categoryDefaults";
+
+const { success: showSuccess, error: showError } = useToast();
 
 definePageMeta({
   layout: "default",
@@ -21,6 +29,288 @@ const settings = ref({
 const isSaving = ref(false);
 const isExporting = ref(false);
 const isLoggingOut = ref(false);
+
+// Delete Category Data modal
+const showDeleteCategoryModal = ref(false);
+const selectedDeleteCategory = ref<string | null>(null);
+const deleteCategoryCount = ref(0);
+const isDeletingCategory = ref(false);
+const deletedCategoryEntries = ref<unknown[]>([]); // For undo support
+
+// Timer Presets
+interface TimerPreset {
+  id: string;
+  name: string;
+  category: string;
+  subcategory: string;
+  durationSeconds: number | null;
+  bellConfig: {
+    startBell?: string;
+    endBell?: string;
+    intervalBells?: Array<{ minutes: number; sound: string }>;
+  } | null;
+  backgroundAudio: string | null;
+  isDefault: boolean;
+  createdAt: string;
+}
+
+const presets = ref<TimerPreset[]>([]);
+const isLoadingPresets = ref(false);
+const isDeletingPreset = ref<string | null>(null);
+const editingPreset = ref<TimerPreset | null>(null);
+const editPresetName = ref("");
+
+// Fetch timer presets
+async function fetchPresets() {
+  isLoadingPresets.value = true;
+  try {
+    const data = await $fetch<TimerPreset[]>("/api/presets");
+    presets.value = data;
+  } catch (error) {
+    console.error("Failed to fetch presets:", error);
+    showError("Failed to load timer presets");
+  } finally {
+    isLoadingPresets.value = false;
+  }
+}
+
+// Delete a preset
+async function deletePreset(preset: TimerPreset) {
+  if (!confirm(`Delete preset "${preset.name}"?`)) {
+    return;
+  }
+
+  isDeletingPreset.value = preset.id;
+  try {
+    await $fetch(`/api/presets/${preset.id}`, { method: "DELETE" });
+    presets.value = presets.value.filter((p) => p.id !== preset.id);
+    showSuccess(`Deleted "${preset.name}"`);
+  } catch (error) {
+    console.error("Failed to delete preset:", error);
+    showError("Failed to delete preset");
+  } finally {
+    isDeletingPreset.value = null;
+  }
+}
+
+// Start editing a preset
+function startEditPreset(preset: TimerPreset) {
+  editingPreset.value = preset;
+  editPresetName.value = preset.name;
+}
+
+// Cancel editing
+function cancelEditPreset() {
+  editingPreset.value = null;
+  editPresetName.value = "";
+}
+
+// Save edited preset
+async function saveEditPreset() {
+  if (!editingPreset.value || !editPresetName.value.trim()) {
+    return;
+  }
+
+  try {
+    await $fetch(`/api/presets/${editingPreset.value.id}`, {
+      method: "PUT",
+      body: { name: editPresetName.value.trim() },
+    });
+
+    // Update local state
+    const index = presets.value.findIndex(
+      (p) => p.id === editingPreset.value?.id
+    );
+    if (index !== -1) {
+      presets.value[index] = {
+        ...presets.value[index],
+        name: editPresetName.value.trim(),
+      };
+    }
+
+    showSuccess("Preset updated");
+    cancelEditPreset();
+  } catch (error) {
+    console.error("Failed to update preset:", error);
+    showError("Failed to update preset");
+  }
+}
+
+// Format duration for display
+function formatDuration(seconds: number | null): string {
+  if (!seconds) return "Open-ended";
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  if (secs === 0) return `${mins} min`;
+  return `${mins}:${secs.toString().padStart(2, "0")}`;
+}
+
+// User preferences composable
+const {
+  preferences: userPrefs,
+  loadPreferences: loadUserPrefs,
+  setCustomEmoji,
+  getCustomEmoji,
+  isEntryTypeVisible,
+  hideEntryType,
+  showEntryType,
+  addCustomEntryType,
+  removeCustomEntryType,
+  isCategoryVisible,
+  hideCategory,
+  showCategory,
+} = usePreferences();
+
+// Emoji customization
+const showEmojiPicker = ref(false);
+const emojiPickerTarget = ref<{
+  type: "category" | "subcategory" | "customType";
+  key: string;
+  name: string;
+} | null>(null);
+
+// Category visibility toggle
+async function toggleCategoryVisibility(category: string) {
+  if (isCategoryVisible(category)) {
+    await hideCategory(category);
+    showSuccess(`Hidden "${category}" from pickers`);
+  } else {
+    await showCategory(category);
+    showSuccess(`Showing "${category}" in pickers`);
+  }
+}
+
+// Entry type management
+const builtInEntryTypes = [
+  {
+    value: "tada",
+    label: "Ta-Da!",
+    emoji: "⚡",
+    description: "Celebrate an accomplishment",
+  },
+  {
+    value: "dream",
+    label: "Dream",
+    emoji: "🌙",
+    description: "Record a dream",
+  },
+  {
+    value: "note",
+    label: "Note",
+    emoji: "📝",
+    description: "Capture a thought",
+  },
+  {
+    value: "journal",
+    label: "Journal",
+    emoji: "💭",
+    description: "Write a journal entry",
+  },
+];
+
+const customEntryTypes = computed(() => userPrefs.value.customEntryTypes);
+
+const isAddingCustomType = ref(false);
+const newCustomType = ref({ name: "", emoji: "😀" });
+
+async function toggleEntryTypeVisibility(entryType: string) {
+  if (isEntryTypeVisible(entryType)) {
+    await hideEntryType(entryType);
+    showSuccess(`Hidden "${entryType}" from journal`);
+  } else {
+    await showEntryType(entryType);
+    showSuccess(`Showing "${entryType}" in journal`);
+  }
+}
+
+async function addCustomType() {
+  if (!newCustomType.value.name.trim()) return;
+
+  const success = await addCustomEntryType(
+    newCustomType.value.name.trim(),
+    newCustomType.value.emoji
+  );
+  if (success) {
+    showSuccess(`Added "${newCustomType.value.name}"`);
+    newCustomType.value = { name: "", emoji: "😀" };
+    isAddingCustomType.value = false;
+  } else {
+    showError("Failed to add custom type");
+  }
+}
+
+function cancelAddCustomType() {
+  newCustomType.value = { name: "", emoji: "😀" };
+  isAddingCustomType.value = false;
+}
+
+async function removeCustomType(name: string) {
+  if (!confirm(`Remove "${name}"?`)) return;
+
+  const success = await removeCustomEntryType(name);
+  if (success) {
+    showSuccess(`Removed "${name}"`);
+  } else {
+    showError("Failed to remove custom type");
+  }
+}
+
+function openCustomTypeEmojiPicker() {
+  emojiPickerTarget.value = {
+    type: "customType",
+    key: "customType",
+    name: "custom entry type",
+  };
+  showEmojiPicker.value = true;
+}
+
+// Get all categories and subcategories for customization
+const allCategories = computed(() => {
+  return Object.keys(CATEGORY_DEFAULTS);
+});
+
+const categoriesWithSubcategories = computed(() => {
+  return allCategories.value.map((cat) => ({
+    category: cat,
+    emoji: getCustomEmoji(cat) || getCategoryEmoji(cat),
+    subcategories: getSubcategoriesForCategory(cat).map((sub) => ({
+      key: `${cat}:${sub}`,
+      name: sub,
+      emoji: getCustomEmoji(`${cat}:${sub}`) || getSubcategoryEmoji(cat, sub),
+    })),
+  }));
+});
+
+// Open emoji picker for a category or subcategory
+function openEmojiPickerFor(
+  type: "category" | "subcategory",
+  key: string,
+  name: string
+) {
+  emojiPickerTarget.value = { type, key, name };
+  showEmojiPicker.value = true;
+}
+
+// Handle emoji selection
+async function handleEmojiSelected(emoji: string) {
+  if (!emojiPickerTarget.value) return;
+
+  // Handle custom type emoji selection
+  if (emojiPickerTarget.value.type === "customType") {
+    newCustomType.value.emoji = emoji;
+    emojiPickerTarget.value = null;
+    return;
+  }
+
+  const success = await setCustomEmoji(emojiPickerTarget.value.key, emoji);
+  if (success) {
+    showSuccess(`Updated emoji for ${emojiPickerTarget.value.name}`);
+  } else {
+    showError("Failed to update emoji");
+  }
+
+  emojiPickerTarget.value = null;
+}
 
 // User info
 const currentUser = ref<{
@@ -60,6 +350,8 @@ onMounted(async () => {
         emailForm.value.email = session.user.email;
       }
     }
+    // Fetch timer presets and user preferences
+    await Promise.all([fetchPresets(), loadUserPrefs()]);
   } catch (error) {
     console.error("Failed to fetch user info:", error);
   }
@@ -132,7 +424,7 @@ async function logout() {
     navigateTo("/login");
   } catch (error: unknown) {
     console.error("Logout failed:", error);
-    alert("Failed to log out. Please try again.");
+    showError("Failed to log out. Please try again.");
   } finally {
     isLoggingOut.value = false;
   }
@@ -202,10 +494,107 @@ async function exportData() {
   } catch (error: unknown) {
     console.error("Export failed:", error);
     const message = error instanceof Error ? error.message : "Unknown error";
-    alert(`Export failed: ${message}`);
+    showError(`Export failed: ${message}`);
   } finally {
     isExporting.value = false;
   }
+}
+
+// Delete Category Data functions
+async function openDeleteCategoryModal() {
+  showDeleteCategoryModal.value = true;
+  selectedDeleteCategory.value = null;
+  deleteCategoryCount.value = 0;
+}
+
+async function selectDeleteCategory(category: string) {
+  selectedDeleteCategory.value = category;
+  // Fetch count of entries in this category
+  try {
+    const data = await $fetch<{ entries: unknown[]; total: number }>(
+      "/api/entries",
+      {
+        params: { limit: 1, category },
+      }
+    );
+    deleteCategoryCount.value = data.total;
+  } catch (error) {
+    console.error("Failed to count entries:", error);
+    deleteCategoryCount.value = 0;
+  }
+}
+
+async function confirmDeleteCategory() {
+  if (!selectedDeleteCategory.value || deleteCategoryCount.value === 0) return;
+
+  isDeletingCategory.value = true;
+  try {
+    // Call bulk delete API
+    const result = await $fetch<{
+      success: boolean;
+      deletedCount: number;
+      entries: unknown[];
+    }>("/api/entries/bulk", {
+      method: "DELETE",
+      body: {
+        category: selectedDeleteCategory.value,
+      },
+    });
+
+    if (result.success) {
+      // Store for undo
+      deletedCategoryEntries.value = result.entries;
+      const count = result.deletedCount;
+      const category = selectedDeleteCategory.value;
+
+      showSuccess(`Deleted ${count} ${category} entries`, {
+        duration: 15000,
+        action: {
+          label: "Undo",
+          onClick: async () => {
+            await restoreDeletedCategoryEntries();
+          },
+        },
+      });
+
+      showDeleteCategoryModal.value = false;
+      selectedDeleteCategory.value = null;
+      deleteCategoryCount.value = 0;
+    }
+  } catch (error) {
+    console.error("Failed to delete entries:", error);
+    showError("Failed to delete entries");
+  } finally {
+    isDeletingCategory.value = false;
+  }
+}
+
+async function restoreDeletedCategoryEntries() {
+  if (deletedCategoryEntries.value.length === 0) return;
+
+  try {
+    // Get IDs from deleted entries
+    const ids = deletedCategoryEntries.value.map(
+      (e: unknown) => (e as { id: string }).id
+    );
+
+    await $fetch("/api/entries/bulk", {
+      method: "POST",
+      body: { ids },
+    });
+
+    showSuccess(`Restored ${ids.length} entries`);
+    deletedCategoryEntries.value = [];
+  } catch (error) {
+    console.error("Failed to restore entries:", error);
+    showError("Failed to restore entries");
+  }
+}
+
+function cancelDeleteCategory() {
+  showDeleteCategoryModal.value = false;
+  selectedDeleteCategory.value = null;
+  deleteCategoryCount.value = 0;
 }
 </script>
 
@@ -501,6 +890,378 @@ async function exportData() {
         </div>
       </section>
 
+      <!-- Timer Presets -->
+      <section>
+        <h2
+          class="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-4"
+        >
+          Timer Presets
+        </h2>
+        <div
+          class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700"
+        >
+          <!-- Loading state -->
+          <div v-if="isLoadingPresets" class="p-4 text-center">
+            <span class="text-sm text-stone-500 dark:text-stone-400"
+              >Loading presets...</span
+            >
+          </div>
+
+          <!-- Empty state -->
+          <div v-else-if="presets.length === 0" class="p-6 text-center">
+            <span class="text-3xl mb-2 block">⏱️</span>
+            <p class="text-sm text-stone-600 dark:text-stone-400">
+              No saved presets yet
+            </p>
+            <p class="text-xs text-stone-500 dark:text-stone-500 mt-1">
+              Create presets from the Timer page
+            </p>
+          </div>
+
+          <!-- Preset list -->
+          <div v-else class="divide-y divide-stone-200 dark:divide-stone-700">
+            <div v-for="preset in presets" :key="preset.id" class="p-4">
+              <!-- Edit mode -->
+              <div v-if="editingPreset?.id === preset.id" class="space-y-3">
+                <input
+                  v-model="editPresetName"
+                  type="text"
+                  class="w-full px-3 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-700 text-stone-800 dark:text-stone-100 text-sm focus:outline-none focus:ring-2 focus:ring-tada-500"
+                  placeholder="Preset name"
+                  @keyup.enter="saveEditPreset"
+                  @keyup.escape="cancelEditPreset"
+                />
+                <div class="flex gap-2">
+                  <button
+                    class="flex-1 py-2 px-3 bg-tada-600 text-white text-sm font-medium rounded-lg hover:opacity-90"
+                    @click="saveEditPreset"
+                  >
+                    Save
+                  </button>
+                  <button
+                    class="flex-1 py-2 px-3 bg-stone-200 dark:bg-stone-600 text-stone-700 dark:text-stone-200 text-sm font-medium rounded-lg hover:opacity-90"
+                    @click="cancelEditPreset"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+
+              <!-- Display mode -->
+              <div v-else class="flex items-center justify-between">
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2">
+                    <span
+                      class="font-medium text-stone-800 dark:text-stone-100 truncate"
+                    >
+                      {{ preset.name }}
+                    </span>
+                    <span
+                      v-if="preset.isDefault"
+                      class="text-xs px-1.5 py-0.5 bg-tada-100 dark:bg-tada-900/30 text-tada-700 dark:text-tada-300 rounded"
+                    >
+                      Default
+                    </span>
+                  </div>
+                  <p class="text-sm text-stone-500 dark:text-stone-400 mt-0.5">
+                    {{ preset.category }} / {{ preset.subcategory }} ·
+                    {{ formatDuration(preset.durationSeconds) }}
+                  </p>
+                </div>
+                <div class="flex items-center gap-1 ml-2">
+                  <button
+                    class="p-2 text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-700"
+                    title="Edit preset"
+                    @click="startEditPreset(preset)"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-5 w-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                      />
+                    </svg>
+                  </button>
+                  <button
+                    :disabled="isDeletingPreset === preset.id"
+                    class="p-2 text-stone-400 hover:text-red-500 dark:hover:text-red-400 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-700 disabled:opacity-50"
+                    title="Delete preset"
+                    @click="deletePreset(preset)"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-5 w-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Emoji Customization -->
+      <section>
+        <h2
+          class="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-4"
+        >
+          Customize Emojis
+        </h2>
+        <p class="text-sm text-stone-500 dark:text-stone-400 mb-4">
+          Change the emoji for any category or subcategory
+        </p>
+        <div
+          class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 divide-y divide-stone-200 dark:divide-stone-700"
+        >
+          <div
+            v-for="cat in categoriesWithSubcategories"
+            :key="cat.category"
+            class="p-4"
+          >
+            <!-- Category header -->
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-3">
+                <button
+                  class="text-2xl hover:scale-110 transition-transform cursor-pointer"
+                  title="Click to change emoji"
+                  @click="
+                    openEmojiPickerFor('category', cat.category, cat.category)
+                  "
+                >
+                  {{ cat.emoji }}
+                </button>
+                <span
+                  class="font-medium text-stone-800 dark:text-stone-100 capitalize"
+                >
+                  {{ cat.category }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Subcategories -->
+            <div class="ml-8 flex flex-wrap gap-2">
+              <button
+                v-for="sub in cat.subcategories"
+                :key="sub.key"
+                class="flex items-center gap-1.5 px-2 py-1 bg-stone-100 dark:bg-stone-700 rounded-lg hover:bg-stone-200 dark:hover:bg-stone-600 transition-colors"
+                @click="openEmojiPickerFor('subcategory', sub.key, sub.name)"
+              >
+                <span class="text-lg">{{ sub.emoji }}</span>
+                <span class="text-sm text-stone-600 dark:text-stone-300">{{
+                  sub.name
+                }}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Category Visibility -->
+      <section>
+        <h2
+          class="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-4"
+        >
+          Hide Categories
+        </h2>
+        <p class="text-sm text-stone-500 dark:text-stone-400 mb-4">
+          Hide categories you don't use from pickers throughout the app
+        </p>
+        <div
+          class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 divide-y divide-stone-200 dark:divide-stone-700"
+        >
+          <div
+            v-for="cat in allCategories"
+            :key="cat"
+            class="p-4 flex items-center justify-between"
+          >
+            <div class="flex items-center gap-3">
+              <span class="text-xl">{{
+                getCustomEmoji(cat) || getCategoryEmoji(cat)
+              }}</span>
+              <span
+                class="font-medium text-stone-800 dark:text-stone-100 capitalize"
+              >
+                {{ cat }}
+              </span>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                :checked="isCategoryVisible(cat)"
+                class="sr-only peer"
+                @change="toggleCategoryVisibility(cat)"
+              />
+              <div
+                class="w-11 h-6 bg-stone-300 dark:bg-stone-600 rounded-full peer peer-checked:bg-tada-600 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"
+              />
+            </label>
+          </div>
+        </div>
+        <p class="text-xs text-stone-500 dark:text-stone-400 mt-2">
+          Hidden categories will still appear for your existing entries
+        </p>
+      </section>
+
+      <!-- Entry Types -->
+      <section>
+        <h2
+          class="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-4"
+        >
+          Journal Entry Types
+        </h2>
+        <p class="text-sm text-stone-500 dark:text-stone-400 mb-4">
+          Show or hide entry types from the journal add page
+        </p>
+        <div
+          class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 divide-y divide-stone-200 dark:divide-stone-700"
+        >
+          <!-- Built-in entry types -->
+          <div
+            v-for="entryType in builtInEntryTypes"
+            :key="entryType.value"
+            class="p-4 flex items-center justify-between"
+          >
+            <div class="flex items-center gap-3">
+              <span class="text-xl">{{ entryType.emoji }}</span>
+              <div>
+                <span class="font-medium text-stone-800 dark:text-stone-100">
+                  {{ entryType.label }}
+                </span>
+                <p class="text-xs text-stone-500 dark:text-stone-400">
+                  {{ entryType.description }}
+                </p>
+              </div>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                :checked="isEntryTypeVisible(entryType.value)"
+                class="sr-only peer"
+                @change="toggleEntryTypeVisibility(entryType.value)"
+              />
+              <div
+                class="w-11 h-6 bg-stone-300 dark:bg-stone-600 rounded-full peer peer-checked:bg-tada-600 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"
+              />
+            </label>
+          </div>
+
+          <!-- Custom entry types -->
+          <div
+            v-for="customType in customEntryTypes"
+            :key="customType.name"
+            class="p-4 flex items-center justify-between"
+          >
+            <div class="flex items-center gap-3">
+              <span class="text-xl">{{ customType.emoji }}</span>
+              <div>
+                <span class="font-medium text-stone-800 dark:text-stone-100">
+                  {{ customType.name }}
+                </span>
+                <span
+                  class="ml-2 text-xs px-1.5 py-0.5 bg-tada-100 dark:bg-tada-900/30 text-tada-700 dark:text-tada-300 rounded"
+                >
+                  Custom
+                </span>
+              </div>
+            </div>
+            <button
+              class="p-2 text-stone-400 hover:text-red-500 dark:hover:text-red-400 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-700"
+              title="Remove custom type"
+              @click="removeCustomType(customType.name)"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Add custom entry type -->
+          <div class="p-4">
+            <button
+              v-if="!isAddingCustomType"
+              class="w-full flex items-center justify-center gap-2 py-2 text-tada-600 dark:text-tada-400 hover:bg-stone-50 dark:hover:bg-stone-700/50 rounded-lg transition-colors"
+              @click="isAddingCustomType = true"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+              Add custom entry type
+            </button>
+
+            <div v-else class="space-y-3">
+              <div class="flex gap-2">
+                <button
+                  class="text-2xl p-2 border border-stone-300 dark:border-stone-600 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-700"
+                  @click="openCustomTypeEmojiPicker"
+                >
+                  {{ newCustomType.emoji || "😀" }}
+                </button>
+                <input
+                  v-model="newCustomType.name"
+                  type="text"
+                  placeholder="Entry type name"
+                  class="flex-1 px-3 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-700 text-stone-800 dark:text-stone-100 text-sm focus:outline-none focus:ring-2 focus:ring-tada-500"
+                />
+              </div>
+              <div class="flex gap-2">
+                <button
+                  class="flex-1 py-2 px-3 bg-tada-600 text-white text-sm font-medium rounded-lg hover:opacity-90 disabled:opacity-50"
+                  :disabled="!newCustomType.name.trim()"
+                  @click="addCustomType"
+                >
+                  Add
+                </button>
+                <button
+                  class="flex-1 py-2 px-3 bg-stone-200 dark:bg-stone-600 text-stone-700 dark:text-stone-200 text-sm font-medium rounded-lg hover:opacity-90"
+                  @click="cancelAddCustomType"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- Notifications -->
       <section>
         <h2
@@ -594,7 +1355,7 @@ async function exportData() {
           <!-- Import -->
           <NuxtLink
             to="/import"
-            class="block w-full p-4 flex items-center justify-between hover:bg-stone-50 dark:hover:bg-stone-700/50 transition-colors rounded-lg"
+            class="w-full p-4 flex items-center justify-between hover:bg-stone-50 dark:hover:bg-stone-700/50 transition-colors rounded-lg"
           >
             <div class="flex items-center gap-3">
               <span class="text-xl">📥</span>
@@ -624,6 +1385,40 @@ async function exportData() {
               />
             </svg>
           </NuxtLink>
+
+          <!-- Delete Category Data -->
+          <button
+            class="w-full p-4 flex items-center justify-between hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-left"
+            @click="openDeleteCategoryModal"
+          >
+            <div class="flex items-center gap-3">
+              <span class="text-xl">🗑️</span>
+              <div>
+                <span
+                  class="block text-sm font-medium text-red-600 dark:text-red-400"
+                >
+                  Delete category data
+                </span>
+                <span class="text-xs text-stone-500 dark:text-stone-400">
+                  Remove all entries from a specific category
+                </span>
+              </div>
+            </div>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5 text-red-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </button>
         </div>
       </section>
 
@@ -697,5 +1492,111 @@ async function exportData() {
         {{ isSaving ? "Saving..." : "Save Settings" }}
       </button>
     </div>
+
+    <!-- Emoji Picker Modal -->
+    <EmojiPicker
+      v-model="showEmojiPicker"
+      :entry-name="emojiPickerTarget?.name"
+      @select="handleEmojiSelected"
+    />
+
+    <!-- Delete Category Data Modal -->
+    <Teleport to="body">
+      <div
+        v-if="showDeleteCategoryModal"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+      >
+        <!-- Backdrop -->
+        <div
+          class="absolute inset-0 bg-black/50"
+          @click="cancelDeleteCategory"
+        />
+
+        <!-- Modal -->
+        <div
+          class="relative bg-white dark:bg-stone-800 rounded-2xl shadow-xl max-w-md w-full p-6"
+        >
+          <h3 class="text-lg font-bold text-stone-800 dark:text-stone-100 mb-4">
+            Delete Category Data
+          </h3>
+
+          <!-- Category selection -->
+          <div v-if="!selectedDeleteCategory" class="space-y-2">
+            <p class="text-sm text-stone-600 dark:text-stone-400 mb-4">
+              Select a category to delete all its entries:
+            </p>
+            <div class="space-y-2 max-h-64 overflow-y-auto">
+              <button
+                v-for="cat in allCategories"
+                :key="cat"
+                class="w-full p-3 flex items-center gap-3 rounded-lg border border-stone-200 dark:border-stone-700 hover:bg-stone-50 dark:hover:bg-stone-700/50 transition-colors text-left"
+                @click="selectDeleteCategory(cat)"
+              >
+                <span class="text-xl">{{
+                  getCustomEmoji(cat) || getCategoryEmoji(cat)
+                }}</span>
+                <span
+                  class="font-medium text-stone-800 dark:text-stone-100 capitalize"
+                >
+                  {{ cat }}
+                </span>
+              </button>
+            </div>
+            <button
+              class="mt-4 w-full py-2 px-4 bg-stone-200 dark:bg-stone-700 text-stone-700 dark:text-stone-300 font-medium rounded-lg hover:opacity-90 transition-colors"
+              @click="cancelDeleteCategory"
+            >
+              Cancel
+            </button>
+          </div>
+
+          <!-- Confirmation -->
+          <div v-else>
+            <div class="mb-6 text-center">
+              <span class="text-4xl block mb-2">
+                {{
+                  getCustomEmoji(selectedDeleteCategory) ||
+                  getCategoryEmoji(selectedDeleteCategory)
+                }}
+              </span>
+              <p class="text-stone-600 dark:text-stone-400">
+                You are about to delete
+              </p>
+              <p class="text-2xl font-bold text-red-600 dark:text-red-400 mt-1">
+                {{ deleteCategoryCount }} entries
+              </p>
+              <p class="text-stone-600 dark:text-stone-400 mt-1">
+                from
+                <span class="font-semibold capitalize">{{
+                  selectedDeleteCategory
+                }}</span>
+              </p>
+            </div>
+
+            <p
+              class="text-sm text-stone-500 dark:text-stone-400 mb-4 text-center"
+            >
+              This action can be undone within 15 seconds.
+            </p>
+
+            <div class="flex gap-3">
+              <button
+                class="flex-1 py-2 px-4 bg-stone-200 dark:bg-stone-700 text-stone-700 dark:text-stone-300 font-medium rounded-lg hover:opacity-90 transition-colors"
+                @click="cancelDeleteCategory"
+              >
+                Cancel
+              </button>
+              <button
+                :disabled="isDeletingCategory || deleteCategoryCount === 0"
+                class="flex-1 py-2 px-4 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                @click="confirmDeleteCategory"
+              >
+                {{ isDeletingCategory ? "Deleting..." : "Delete" }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>

@@ -3,6 +3,8 @@
 import type { Entry } from "~/server/db/schema";
 import { getEntryDisplayProps } from "~/utils/categoryDefaults";
 
+const { error: showError } = useToast();
+
 definePageMeta({
   layout: "default",
 });
@@ -90,7 +92,7 @@ async function updateEmoji(emoji: string) {
   } catch (err: unknown) {
     console.error("Failed to update emoji:", err);
     const message = err instanceof Error ? err.message : "Unknown error";
-    alert(`Failed to update emoji: ${message}`);
+    showError(`Failed to update emoji: ${message}`);
   } finally {
     isUpdating.value = false;
     emojiPickerEntry.value = null;

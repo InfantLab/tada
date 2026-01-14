@@ -196,6 +196,14 @@ export function getSubcategoryEmoji(
 }
 
 /**
+ * Get the default emoji for a category
+ */
+export function getCategoryEmoji(category: string): string {
+  const cat = CATEGORY_DEFAULTS[category];
+  return cat?.emoji || "📌";
+}
+
+/**
  * Get category info by slug
  */
 export function getCategoryInfo(

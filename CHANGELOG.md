@@ -9,7 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **v0.2.0 Feature Completion:**
+
+  - **Ta-Da! Celebration**: Post-save celebration page with confetti, sound effects, streaks, and fun facts
+  - **Universal Entry Editing**: Edit any entry type (timed, dream, note, journal, ta-da) from entry detail page
+  - **Timer Presets**: Save and load timer configurations (category, subcategory, duration, bells)
+  - **Custom Emojis**: Personalize category and subcategory icons in Settings
+  - **Entry Type Visibility**: Show/hide entry types (ta-da, dream, note, journal) from journal
+  - **Subcategory Autocomplete**: Previously-used subcategories suggested in timer
+  - **Hide Categories**: Toggle visibility of timer categories you don't use
+  - **Undo Support**: "Undo" action in deletion toast with 5-15 second window
+  - **Delete Category Data**: Bulk delete all entries in a category with confirmation
+  - **Toast Notifications**: App-wide toast system with action buttons
+
 - **Timeline Scaling & Multi-Zoom Views (v0.2.1):**
+
   - Zoom toggle with Day/Week/Month/Year views
   - YearView: Shows yearly summary cards with tap-to-zoom into months
   - MonthView: Shows monthly summaries for selected year
@@ -24,11 +38,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Text selection preserved on entry cards (click navigates only if no text selected)
 
 - **Schema Simplification:**
+
   - Single `timestamp` field (NOT NULL) as canonical timeline position
   - Removed redundant `startedAt`, `endedAt`, `date` columns
   - Migration preserves existing data (COALESCE fallback)
 
 - **Import Optimizations:**
+
   - Batch inserts (1000 rows at a time) instead of individual inserts
   - Batch duplicate checking with `inArray()` query
   - Import time reduced from ~115s to ~5-10s for 4800+ entries

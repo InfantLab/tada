@@ -1,6 +1,15 @@
 <script setup lang="ts">
 // VirtualTimeline - Virtualized infinite-scrolling entry list
 import type { Entry } from "~/server/db/schema";
+import { getEntryDisplayProps } from "~/utils/categoryDefaults";
+
+// Get usePreferences to check for custom emojis
+const { getCustomEmoji, loadPreferences } = usePreferences();
+
+// Load preferences on mount (if not already loaded)
+onMounted(() => {
+  loadPreferences();
+});
 
 interface Props {
   category?: string;
@@ -177,20 +186,27 @@ function formatDuration(seconds: number): string {
   return `${mins}m ${secs}s`;
 }
 
-// Get icon for entry type
-function getTypeIcon(type: string): string {
-  const icons: Record<string, string> = {
-    timed: "🧘",
-    meditation: "🧘",
-    dream: "🌙",
-    tada: "⚡",
-    journal: "📝",
-    note: "📝",
-    reps: "💪",
-    gps_tracked: "🏃",
-    measurement: "📊",
-  };
-  return icons[type] || "📌";
+// Get icon for entry type - checking custom emojis first
+function getEntryEmoji(entry: Entry): string {
+  // First check if entry has its own emoji
+  if (entry.emoji) return entry.emoji;
+
+  // Then check for custom emoji for subcategory (category:subcategory key)
+  const category = entry.category || entry.entryType || "";
+  const subcategory = entry.subcategory || "";
+  if (category && subcategory) {
+    const customSubcategoryEmoji = getCustomEmoji(`${category}:${subcategory}`);
+    if (customSubcategoryEmoji) return customSubcategoryEmoji;
+  }
+
+  // Then check for custom emoji for category
+  if (category) {
+    const customCategoryEmoji = getCustomEmoji(category);
+    if (customCategoryEmoji) return customCategoryEmoji;
+  }
+
+  // Fall back to default display props
+  return getEntryDisplayProps(entry).emoji;
 }
 
 // Group entries by date
@@ -316,9 +332,7 @@ defineExpose({ loadInitial, entries });
               <div
                 class="flex-shrink-0 w-10 h-10 rounded-full bg-tada-100/30 dark:bg-tada-600/20 flex items-center justify-center"
               >
-                <span class="text-lg">{{
-                  entry.emoji || getTypeIcon(entry.type)
-                }}</span>
+                <span class="text-lg">{{ getEntryEmoji(entry) }}</span>
               </div>
 
               <!-- Entry content -->

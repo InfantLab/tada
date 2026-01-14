@@ -21,9 +21,19 @@
             {{ toastIcons[toast.type] }}
           </div>
 
-          <!-- Message -->
-          <div class="flex-1 text-sm font-medium">
-            {{ toast.message }}
+          <!-- Message and action -->
+          <div class="flex-1">
+            <div class="text-sm font-medium">
+              {{ toast.message }}
+            </div>
+            <!-- Action button -->
+            <button
+              v-if="toast.action"
+              class="mt-2 text-sm font-semibold underline hover:no-underline transition-all"
+              @click="handleAction(toast)"
+            >
+              {{ toast.action.label }}
+            </button>
           </div>
 
           <!-- Dismiss button -->
@@ -42,7 +52,16 @@
 </template>
 
 <script setup lang="ts">
+import type { Toast } from "~/composables/useToast";
+
 const { toasts, dismissToast } = useToast();
+
+const handleAction = async (toast: Toast) => {
+  if (toast.action) {
+    await toast.action.onClick();
+    dismissToast(toast.id);
+  }
+};
 
 const toastStyles = {
   success:

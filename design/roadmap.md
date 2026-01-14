@@ -79,7 +79,6 @@ All timers count up, never down. We celebrate what you did, not what you "should
 - [x] Accordion UI for interval configuration
 - [x] "No bells" mode for silent unlimited sessions
 - [x] Fixed vs Unlimited mode with overtime tracking
-- [ ] Timer profiles: save/load named configurations (duration hint, category, bells)
 
 ### 📥 Generic CSV Import Framework ✅
 
@@ -117,32 +116,17 @@ Build flexible import system with user-mappable columns and reusable recipes.
   - In-app instructions: Settings → Features & Preferences → Sessions → Export Data
   - All activities → mindfulness category
   - Activities: Meditation, Breathing, Manifesting, Walking, Tai Chi (preserve capitalization)
-- [ ] **View Import History:**
 
-### 📊 Timeline Stats & Breakdown
+### 🎨 User Customisation
 
-Richer statistics with category-level insights.
+Make Ta-Da feel like yours.
 
-- [ ] **Category breakdown in journey stats:**
-  - Show counts per entry type (timed, tada, dream, journal, note)
-  - Show hours per category (mindfulness, accomplishment, etc.)
-  - Show subcategory distribution within categories
-- [ ] **Interactive stats dashboard:**
-  - Tap category to filter timeline
-  - Visual pie/bar charts for distribution
-  - Trends over time (week-over-week, month-over-month)
-  - Browse past imports with success/skip/error counts
-  - Re-run or delete previous imports
-  - View detailed error logs per import
-  - Filter by recipe/source/date
-
-### 🎨 Custom Activities
-
-- [ ] User-defined activities beyond defaults
-- [ ] Custom emoji picker for any activity
+- [ ] **Timer presets:** Save named configurations (duration, category, bells) for quick start
+- [ ] **Custom emojis:** Change the emoji for any category or subcategory
+- [ ] **Hide categories:** Remove categories you don't use from menus/pickers
+- [ ] **Delete category data:** Option to delete all entries for a category (with confirmation)
+- [ ] **Undo support:** Recover from accidental deletions (time-limited)
 - [ ] Subcategory auto-complete (remember user additions like "metta", "walking")
-- [ ] Context-aware subcategory resolution (fix "walking" collision between categories)
-- [ ] **Category/Subcategory renaming tool** (batch update existing entries)
 
 ### 📉 Graceful Rhythm Chains
 
@@ -178,10 +162,35 @@ Chains that bend, not break. When struggling, suggest easier tier instead of bro
 - [x] Developer error tracking panel (browser, dev mode only)
 - [x] Column auto-detection for CSV import with confidence scoring
 - [ ] Toast/notification system (replace `alert()` dialogs)
-- [ ] Dedicated Ta-Da! add page with celebration magic
-- [ ] Category/subcategory emoji editing in Settings
 - [ ] Fix pre-existing logger test failures (7 tests, JSON format assertions)
 - [ ] Rewrite integration tests with @nuxt/test-utils/e2e
+
+### 🎉 Ta-Da! First-Class Celebration
+
+Make Ta-Das feel special — they're wins worth celebrating.
+
+- [ ] **Dedicated Ta-Da! page** (`/tada/add`):
+  - Triumphant sound effect on save
+  - Celebratory animation/confetti
+  - Distinct visual design from other entry types
+- [ ] **Remove Ta-Das from journal add page** — they have their own home now
+
+### 📝 Entry Types & Journal Improvements
+
+Flexible entry creation with personal touches.
+
+- [ ] **Customizable entry types** in journal add page:
+  - Default types: mood, dreams, morning pages, notes
+  - User can hide/show entry types they use
+  - Add custom entry types (saved to preferences)
+- [ ] **Entry display consistency:**
+  - Every entry shows its personal emoji in timeline
+  - Category emoji fallback when no personal emoji set
+  - Consistent emoji display strategy across all views
+- [ ] **Universal entry editing:**
+  - Every entry has edit screen (tap to open)
+  - Edit: title, contents, personal emoji
+  - Delete with confirmation
 
 ---
 
@@ -463,6 +472,23 @@ Adding a new type requires no schema changes — just use it!
 - **Pomodoro** — Work/break intervals (conflicts with count-up philosophy?)
 - **Spaced repetition** — Review past entries
 - **Social sharing** — Optional, never required
+
+### 📊 Timeline Stats & Breakdown (Parked)
+
+_Parked: Conflicts with philosophy — we're not productivity hackers._
+
+- **Category breakdown in journey stats:**
+  - Show counts per entry type (timed, tada, dream, journal, note)
+  - Show hours per category (mindfulness, accomplishment, etc.)
+  - Show subcategory distribution within categories
+- **Interactive stats dashboard:**
+  - Tap category to filter timeline
+  - Visual bar charts for distribution
+  - Trends over time (week-over-week, month-over-month)
+  - Browse past imports with success/skip/error counts
+  - Re-run or delete previous imports
+  - View detailed error logs per import
+  - Filter by recipe/source/date
 
 ---
 

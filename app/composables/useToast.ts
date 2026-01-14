@@ -5,12 +5,24 @@
 
 export type ToastType = "success" | "error" | "warning" | "info";
 
+export interface ToastAction {
+  label: string;
+  onClick: () => void | Promise<void>;
+}
+
 export interface Toast {
   id: string;
   message: string;
   type: ToastType;
   duration: number;
   dismissible: boolean;
+  action?: ToastAction;
+}
+
+export interface ToastOptions {
+  duration?: number;
+  dismissible?: boolean;
+  action?: ToastAction;
 }
 
 const toasts = ref<Toast[]>([]);
@@ -19,17 +31,18 @@ export const useToast = () => {
   const showToast = (
     message: string,
     type: ToastType = "info",
-    duration: number = 5000,
-    dismissible: boolean = true
+    options: ToastOptions = {}
   ) => {
     const id = `toast-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const duration = options.duration ?? 5000;
 
     const toast: Toast = {
       id,
       message,
       type,
       duration,
-      dismissible,
+      dismissible: options.dismissible ?? true,
+      action: options.action,
     };
 
     toasts.value.push(toast);
@@ -55,18 +68,26 @@ export const useToast = () => {
     toasts.value = [];
   };
 
-  // Convenience methods
-  const success = (message: string, duration?: number) =>
-    showToast(message, "success", duration);
+  // Convenience methods with options support
+  const success = (message: string, options?: ToastOptions | number) => {
+    const opts = typeof options === "number" ? { duration: options } : options;
+    return showToast(message, "success", opts);
+  };
 
-  const error = (message: string, duration?: number) =>
-    showToast(message, "error", duration);
+  const error = (message: string, options?: ToastOptions | number) => {
+    const opts = typeof options === "number" ? { duration: options } : options;
+    return showToast(message, "error", opts);
+  };
 
-  const warning = (message: string, duration?: number) =>
-    showToast(message, "warning", duration);
+  const warning = (message: string, options?: ToastOptions | number) => {
+    const opts = typeof options === "number" ? { duration: options } : options;
+    return showToast(message, "warning", opts);
+  };
 
-  const info = (message: string, duration?: number) =>
-    showToast(message, "info", duration);
+  const info = (message: string, options?: ToastOptions | number) => {
+    const opts = typeof options === "number" ? { duration: options } : options;
+    return showToast(message, "info", opts);
+  };
 
   return {
     toasts: readonly(toasts),

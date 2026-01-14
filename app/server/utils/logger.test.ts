@@ -5,16 +5,18 @@ import * as fs from "node:fs";
 vi.mock("node:fs");
 
 describe("logger (server-side)", () => {
+  let consoleLogSpy: ReturnType<typeof vi.spyOn>;
   let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
+    consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
     consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     vi.mocked(fs.mkdirSync).mockImplementation(() => undefined);
     vi.mocked(fs.appendFileSync).mockImplementation(() => {});
     vi.mocked(fs.statSync).mockReturnValue({
       size: 1024,
       isFile: () => true,
-    } as any);
+    } as unknown as fs.Stats);
   });
 
   afterEach(() => {
@@ -26,7 +28,7 @@ describe("logger (server-side)", () => {
       const logger = createLogger("test-module");
       logger.info("test message");
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect(consoleLogSpy).toHaveBeenCalledWith(
         expect.stringContaining('"prefix":"tada:test-module"')
       );
     });
@@ -35,7 +37,7 @@ describe("logger (server-side)", () => {
       const logger = createLogger("test");
       logger.info("test message");
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect(consoleLogSpy).toHaveBeenCalledWith(
         expect.stringContaining('"prefix":"tada:test"')
       );
     });
@@ -46,8 +48,8 @@ describe("logger (server-side)", () => {
       const logger = createLogger("test");
       logger.debug("debug message", { foo: "bar" });
 
-      expect(consoleErrorSpy).toHaveBeenCalled();
-      const logLine = consoleErrorSpy.mock.calls[0]?.[0] as string;
+      expect(consoleLogSpy).toHaveBeenCalled();
+      const logLine = consoleLogSpy.mock.calls[0]?.[0] as string;
       const logObj = JSON.parse(logLine);
 
       expect(logObj.level).toBe("debug");
@@ -59,7 +61,7 @@ describe("logger (server-side)", () => {
       const logger = createLogger("test");
       logger.info("info message", { data: 123 });
 
-      const logLine = consoleErrorSpy.mock.calls[0]?.[0] as string;
+      const logLine = consoleLogSpy.mock.calls[0]?.[0] as string;
       const logObj = JSON.parse(logLine);
 
       expect(logObj.level).toBe("info");
@@ -97,7 +99,7 @@ describe("logger (server-side)", () => {
       const logger = createLogger("test");
       logger.info("test");
 
-      const logLine = consoleErrorSpy.mock.calls[0]?.[0] as string;
+      const logLine = consoleLogSpy.mock.calls[0]?.[0] as string;
       expect(() => JSON.parse(logLine)).not.toThrow();
     });
 
@@ -105,7 +107,7 @@ describe("logger (server-side)", () => {
       const logger = createLogger("test");
       logger.info("test");
 
-      const logLine = consoleErrorSpy.mock.calls[0]?.[0] as string;
+      const logLine = consoleLogSpy.mock.calls[0]?.[0] as string;
       const logObj = JSON.parse(logLine);
 
       expect(logObj.timestamp).toBeTruthy();
@@ -116,7 +118,7 @@ describe("logger (server-side)", () => {
       const logger = createLogger("test");
       logger.info("test", { userId: "123", action: "create" });
 
-      const logLine = consoleErrorSpy.mock.calls[0]?.[0] as string;
+      const logLine = consoleLogSpy.mock.calls[0]?.[0] as string;
       const logObj = JSON.parse(logLine);
 
       expect(logObj.userId).toBe("123");

@@ -6,6 +6,9 @@ import {
   getSubcategoryEmoji,
   getTimedCategories,
 } from "~/utils/categoryDefaults";
+import type { TimerPreset } from "~/server/db/schema";
+
+const { error: showError } = useToast();
 
 definePageMeta({
   layout: "default",
@@ -70,6 +73,20 @@ const milestoneInterval = computed(() => {
 const selectedCategory = ref("mindfulness");
 const selectedSubcategory = ref("sitting");
 
+// User preferences for filtering categories
+const { loadPreferences, isCategoryVisible } = usePreferences();
+
+// Load preferences on mount
+onMounted(() => {
+  loadPreferences();
+});
+
+// Preset state
+const selectedPresetId = ref<string | null>(null);
+const presetPickerRef = ref<InstanceType<
+  typeof import("~/components/TimerPresetPicker.vue").default
+> | null>(null);
+
 const isSaving = ref(false);
 const startBell = ref("bell");
 const milestoneFired = ref<Set<number>>(new Set()); // Track which milestones have fired
@@ -121,7 +138,11 @@ const currentEmoji = computed(() => {
 const categoryOptions = computed(() => {
   // Only show categories that make sense for timed activities
   const timedCategories = getTimedCategories();
-  return timedCategories.map((slug) => {
+  // Filter out hidden categories
+  const visibleCategories = timedCategories.filter((slug) =>
+    isCategoryVisible(slug)
+  );
+  return visibleCategories.map((slug) => {
     const category = CATEGORY_DEFAULTS[slug]!;
     return {
       value: slug,
@@ -529,7 +550,7 @@ async function saveSession(includeOvertime: boolean = true) {
   } catch (error: unknown) {
     console.error("Failed to save session:", error);
     const message = error instanceof Error ? error.message : "Unknown error";
-    alert(`Failed to save session: ${message}`);
+    showError(`Failed to save session: ${message}`);
   } finally {
     isSaving.value = false;
   }
@@ -555,6 +576,66 @@ function releaseWakeLock() {
       console.log("Wake lock released");
     });
   }
+}
+
+// Preset handling
+
+function handlePresetSelect(preset: TimerPreset) {
+  // Apply preset settings
+  selectedCategory.value = preset.category || "mindfulness";
+  selectedSubcategory.value = preset.subcategory || "sitting";
+
+  // Determine timer mode based on duration
+  if (preset.durationSeconds) {
+    timerMode.value = "fixed";
+    targetMinutes.value = Math.floor(preset.durationSeconds / 60);
+  } else {
+    timerMode.value = "unlimited";
+  }
+
+  // Apply bell config if present
+  if (preset.bellConfig) {
+    if (preset.bellConfig.startBell) {
+      startBell.value = preset.bellConfig.startBell.replace(".mp3", "");
+    }
+    if (
+      preset.bellConfig.intervalBells &&
+      Array.isArray(preset.bellConfig.intervalBells)
+    ) {
+      intervals.value = preset.bellConfig.intervalBells.map((int) => ({
+        durationMinutes: int.minutes,
+        repeats: 1,
+        bellSound: int.sound || "bell.mp3",
+        customDuration: "",
+      }));
+    }
+  }
+}
+
+function openSavePresetDialog() {
+  if (!presetPickerRef.value) return;
+
+  // Gather current settings - matching schema structure
+  const presetData = {
+    category: selectedCategory.value,
+    subcategory: selectedSubcategory.value,
+    durationSeconds:
+      timerMode.value === "fixed" ? targetMinutes.value * 60 : null,
+    bellConfig: {
+      startBell: startBell.value + ".mp3",
+      endBell: startBell.value + ".mp3",
+      intervalBells: intervals.value
+        .filter((int) => int.durationMinutes > 0)
+        .map((int) => ({
+          minutes: int.durationMinutes,
+          sound: int.bellSound,
+        })),
+    },
+    backgroundAudio: null,
+    isDefault: false,
+  };
+
+  presetPickerRef.value.openSaveDialog(presetData);
 }
 
 // Cleanup on unmount
@@ -663,6 +744,29 @@ onUnmounted(() => {
         v-show="showSettings"
         class="mt-2 p-4 rounded-lg bg-stone-50 dark:bg-stone-800/50 space-y-5"
       >
+        <!-- Presets Section -->
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <label
+              class="block text-xs font-medium text-stone-600 dark:text-stone-300"
+              >Presets</label
+            >
+            <button
+              class="text-xs text-tada-600 dark:text-tada-400 hover:underline"
+              @click="openSavePresetDialog"
+            >
+              Save current as preset
+            </button>
+          </div>
+          <TimerPresetPicker
+            ref="presetPickerRef"
+            v-model="selectedPresetId"
+            @select="handlePresetSelect"
+          />
+        </div>
+
+        <hr class="border-stone-200 dark:border-stone-700" />
+
         <!-- Mode selector (center aligned) -->
         <div class="text-center">
           <label

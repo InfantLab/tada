@@ -1,6 +1,17 @@
 <script setup lang="ts">
 // Add entry page - quick capture for any entry type
 
+const { error: showError } = useToast();
+
+// Load user preferences for entry types
+const { loadPreferences, isEntryTypeVisible, getVisibleEntryTypes } =
+  usePreferences();
+
+// Load preferences on mount
+onMounted(() => {
+  loadPreferences();
+});
+
 definePageMeta({
   layout: "default",
 });
@@ -13,8 +24,8 @@ const title = ref("");
 const notes = ref("");
 const isSubmitting = ref(false);
 
-// Entry types
-const entryTypes = [
+// Built-in entry types
+const builtInEntryTypes = [
   {
     value: "tada",
     label: "Ta-Da!",
@@ -34,12 +45,36 @@ const entryTypes = [
     description: "Capture a thought",
   },
   {
-    value: "meditation",
-    label: "Meditation",
-    emoji: "🧘",
-    description: "Log a session",
+    value: "journal",
+    label: "Journal",
+    emoji: "💭",
+    description: "Write a journal entry",
   },
 ];
+
+// Visible entry types (filtered by preferences + custom types)
+const entryTypes = computed(() => {
+  const builtInVisible = builtInEntryTypes
+    .filter((t) => isEntryTypeVisible(t.value))
+    .map((t) => ({
+      value: t.value,
+      label: t.label,
+      emoji: t.emoji,
+      description: t.description,
+      name: t.label,
+    }));
+
+  // Get custom entry types from preferences
+  const customTypes = getVisibleEntryTypes([]).map((t) => ({
+    value: t.name.toLowerCase().replace(/\s+/g, "-"),
+    label: t.name,
+    emoji: t.emoji,
+    description: "Custom entry type",
+    name: t.name,
+  }));
+
+  return [...builtInVisible, ...customTypes];
+});
 
 // Dream-specific fields
 const dreamData = ref({
@@ -86,7 +121,7 @@ async function submitEntry() {
   } catch (error: unknown) {
     console.error("Failed to create entry:", error);
     const message = error instanceof Error ? error.message : "Unknown error";
-    alert(`Failed to create entry: ${message}`);
+    showError(`Failed to create entry: ${message}`);
   } finally {
     isSubmitting.value = false;
   }

@@ -3,10 +3,11 @@
 ## 🚫 CRITICAL - NEVER DO THIS
 
 - **❌ NEVER run `bun run dev`** — The user controls the dev server. It runs on :3000. Don't start, restart, or modify it.
-- **❌ NEVER run `bun run test`** — It blocks the terminal. Use VS Code Test Explorer or `runTests` tool instead.
+- **❌ NEVER run `bun run test`** — It blocks the terminal waiting for interactive quit. Use VS Code Test Explorer, `runTests` tool, or add `--run` flag for non-interactive mode.
 - **❌ NEVER run `sqlite3`** — sqlite3 CLI is not installed. Use `bun run db:studio` for DB UI or inspect via drizzle migrations.
 - **❌ NEVER commit automatically** — Wait for the user to explicitly say "commit" or "commit this" before running git commit.
 - **❌ Create documentation sparingly** — Only create documentation when there are major changes in function. Strongly favour updating existing files in /docs folder.
+- **❌ NEVER use interactive commands** — Always use `--run`, `--reporter=dot`, or similar flags to prevent commands from waiting for user input.
 
 ## Code Style
 

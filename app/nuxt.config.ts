@@ -8,6 +8,7 @@ export default defineNuxtConfig({
   },
 
   // Global CSS
+  // @ts-expect-error - css is valid config but InputConfig type misses it
   css: ["~/assets/css/main.css"],
 
   modules: ["@nuxtjs/tailwindcss", "@vite-pwa/nuxt", "@nuxt/eslint"],
@@ -120,6 +121,37 @@ export default defineNuxtConfig({
     experimental: {
       database: true,
     },
+  },
+
+  // Vite optimizations for faster dev
+  vite: {
+    // Pre-bundle heavy dependencies
+    optimizeDeps: {
+      include: ["vue", "vue-router", "@vueuse/core", "drizzle-orm"],
+    },
+    // Faster builds
+    build: {
+      // Use esbuild for minification (faster than terser)
+      minify: "esbuild",
+    },
+    // Reduce logging noise
+    server: {
+      warmup: {
+        clientFiles: [
+          "./pages/index.vue",
+          "./pages/timer.vue",
+          "./layouts/default.vue",
+        ],
+      },
+    },
+  },
+
+  // Experimental features for performance
+  experimental: {
+    // Payload extraction for smaller client bundle
+    payloadExtraction: true,
+    // Component islands for partial hydration (optional)
+    componentIslands: true,
   },
 
   compatibilityDate: "2026-01-10",

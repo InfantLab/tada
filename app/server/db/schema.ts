@@ -217,6 +217,45 @@ export const categorySettings = sqliteTable("category_settings", {
 });
 
 // ============================================================================
+// User Preferences - Per-user customization settings
+// ============================================================================
+
+export const userPreferences = sqliteTable("user_preferences", {
+  id: text("id").primaryKey(), // UUID
+  userId: text("user_id")
+    .notNull()
+    .unique()
+    .references(() => users.id, { onDelete: "cascade" }),
+
+  // Categories hidden from pickers
+  hiddenCategories: text("hidden_categories", { mode: "json" })
+    .$type<string[]>()
+    .default([]),
+
+  // Entry types hidden from journal add page
+  hiddenEntryTypes: text("hidden_entry_types", { mode: "json" })
+    .$type<string[]>()
+    .default([]),
+
+  // Custom emoji overrides for categories/subcategories
+  customEmojis: text("custom_emojis", { mode: "json" })
+    .$type<Record<string, string>>()
+    .default({}),
+
+  // User-defined entry types
+  customEntryTypes: text("custom_entry_types", { mode: "json" })
+    .$type<Array<{ name: string; emoji: string }>>()
+    .default([]),
+
+  createdAt: text("created_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
+});
+
+// ============================================================================
 // Timer Presets - Saved meditation timer configurations
 // ============================================================================
 
@@ -381,6 +420,9 @@ export type NewAttachment = typeof attachments.$inferInsert;
 
 export type CategorySetting = typeof categorySettings.$inferSelect;
 export type NewCategorySetting = typeof categorySettings.$inferInsert;
+
+export type UserPreferences = typeof userPreferences.$inferSelect;
+export type NewUserPreferences = typeof userPreferences.$inferInsert;
 
 export type TimerPreset = typeof timerPresets.$inferSelect;
 export type NewTimerPreset = typeof timerPresets.$inferInsert;

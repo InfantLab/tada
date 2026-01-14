@@ -9,7 +9,7 @@ const {
   errors,
   isExpanded,
   clearErrors,
-  clearByType,
+  clearByType: _clearByType,
   copyAllErrors,
   copyError,
   removeError,
