@@ -72,6 +72,8 @@ export function useCSVImport() {
           recipeId: config.recipeId || null,
           filename: config.filename || "unknown.csv",
         },
+        // Large imports can take several minutes - increase timeout to 5 minutes
+        timeout: 300000, // 5 minutes in milliseconds
       });
 
       // Show success toast

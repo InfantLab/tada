@@ -1082,18 +1082,31 @@ async function startImport() {
 
   try {
     // Simulate progress updates (since API call is atomic)
+    // For large imports, slow down the simulation so it doesn't finish before API responds
+    const updateInterval = rowsTotal.value > 1000 ? 500 : 100;
     const progressInterval = setInterval(() => {
       if (rowsProcessed.value < rowsTotal.value) {
+        // Increment more slowly for large imports
+        const increment = Math.max(1, Math.ceil(rowsTotal.value / 50));
         rowsProcessed.value = Math.min(
-          rowsProcessed.value + Math.ceil(rowsTotal.value / 20),
+          rowsProcessed.value + increment,
           rowsTotal.value
         );
+        // Cap at 90% until API responds
         importProgress.value = Math.floor(
-          (rowsProcessed.value / rowsTotal.value) * 95
+          (rowsProcessed.value / rowsTotal.value) * 90
         );
-        progressMessage.value = "Processing entries...";
+        
+        // More informative messages
+        if (importProgress.value < 30) {
+          progressMessage.value = "Processing entries...";
+        } else if (importProgress.value < 60) {
+          progressMessage.value = "Writing to database...";
+        } else {
+          progressMessage.value = "Finalizing import...";
+        }
       }
-    }, 100);
+    }, updateInterval);
 
     const results = await importCSV({
       csvData: csvData.value,
@@ -1110,8 +1123,11 @@ async function startImport() {
 
     importResults.value = results;
     currentStep.value = 4;
-  } catch {
-    parseError.value = "Import failed. Please try again.";
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Import failed. Please try again.";
+    console.error("Import error:", error);
+    parseError.value = message;
+    toast.error(message);
   } finally {
     isImporting.value = false;
   }
