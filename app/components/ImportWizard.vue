@@ -1034,7 +1034,8 @@ function validateEntry(entry: Record<string, unknown>): string[] {
   // Validate duration format if present
   if (entry["duration"] && typeof entry["duration"] === "string") {
     const duration = entry["duration"] as string;
-    if (!/^\d+:\d{2}:\d{2}$/.test(duration) && !/^\d+$/.test(duration)) {
+    // Allow H:M:S (single digits) or H:MM:SS (double digits) or seconds-only
+    if (!/^\d+:\d{1,2}:\d{1,2}$/.test(duration) && !/^\d+:\d{1,2}$/.test(duration) && !/^\d+$/.test(duration)) {
       warnings.push("Invalid duration format (expected H:mm:ss or seconds)");
     }
   }
