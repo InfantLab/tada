@@ -31,9 +31,8 @@ async function loadEntry() {
     // Populate form fields
     name.value = data.name;
     notes.value = data.notes || "";
-    timestamp.value = formatDatetimeLocal(
-      data.timestamp || data.startedAt || data.date || data.createdAt
-    );
+    // timestamp is THE canonical timeline field - always set
+    timestamp.value = formatDatetimeLocal(data.timestamp);
     tags.value = data.tags || [];
   } catch (err: unknown) {
     console.error("Failed to load entry:", err);

@@ -3,12 +3,12 @@ import { db } from "~/server/db";
 import { entries, importLogs } from "~/server/db/schema";
 import { createLogger } from "~/server/utils/logger";
 import { checkRateLimit } from "~/server/utils/rateLimiter";
-import { eq } from "drizzle-orm";
+import { inArray } from "drizzle-orm";
 
 const logger = createLogger("api:import-entries");
 
-// Batch size for database inserts (500 rows per transaction)
-const BATCH_SIZE = 500;
+// Batch size for database inserts - SQLite handles large batches well
+const BATCH_SIZE = 1000;
 
 // Rate limit: 1 import per 10 seconds per user
 const RATE_LIMIT_REQUESTS = 1;
@@ -73,77 +73,126 @@ export default defineEventHandler(async (event) => {
   });
 
   try {
-    // Process in batches to avoid overwhelming the database
-    for (let i = 0; i < entriesToImport.length; i += BATCH_SIZE) {
-      const batch = entriesToImport.slice(i, i + BATCH_SIZE);
+    // Collect all externalIds for batch duplicate check
+    const externalIds = entriesToImport
+      .map((e: { externalId?: string }) => e.externalId)
+      .filter((id: string | undefined): id is string => !!id);
 
-      for (let j = 0; j < batch.length; j++) {
-        const rowIndex = i + j;
-        const entryData = batch[j];
+    // Batch lookup of existing externalIds
+    const existingExternalIds = new Set<string>();
+    if (externalIds.length > 0) {
+      // Check in batches to avoid SQL limits
+      for (let i = 0; i < externalIds.length; i += 500) {
+        const batchIds = externalIds.slice(i, i + 500);
+        const existing = await db
+          .select({ externalId: entries.externalId })
+          .from(entries)
+          .where(inArray(entries.externalId, batchIds));
+        existing.forEach((e) => {
+          if (e.externalId) existingExternalIds.add(e.externalId);
+        });
+      }
+      logger.info("Duplicate check complete", {
+        totalExternalIds: externalIds.length,
+        existingCount: existingExternalIds.size,
+      });
+    }
 
-        try {
-          // Check for duplicate based on externalId
-          if (entryData.externalId) {
-            const existing = await db
-              .select()
-              .from(entries)
-              .where(eq(entries.externalId, entryData.externalId))
-              .limit(1);
+    // Prepare all valid entries first
+    const entriesToInsert: Array<{
+      id: string;
+      userId: string;
+      type: string;
+      name: string;
+      category: string | null;
+      subcategory: string | null;
+      emoji: string | null;
+      timestamp: string;
+      durationSeconds: number | null;
+      timezone: string;
+      data: Record<string, unknown>;
+      tags: string[];
+      notes: string | null;
+      source: string;
+      externalId: string | null;
+    }> = [];
 
-            if (existing.length > 0) {
-              logger.debug("Skipping duplicate entry", {
-                externalId: entryData.externalId,
-                row: rowIndex,
-              });
-              results.skipped++;
-              continue;
-            }
-          }
+    for (let i = 0; i < entriesToImport.length; i++) {
+      const entryData = entriesToImport[i];
 
-          // Create entry
-          const newEntry = {
-            id: randomUUID(),
-            userId: user.id,
-            type: entryData.type || "timed",
-            name: entryData.name || "Imported Activity",
-            category: entryData.category,
-            subcategory: entryData.subcategory,
-            emoji: entryData.emoji,
-            timestamp: entryData.timestamp,
-            startedAt: entryData.startedAt,
-            endedAt: entryData.endedAt,
-            durationSeconds: entryData.durationSeconds,
-            date: entryData.date,
-            timezone: entryData.timezone || user.timezone || "UTC",
-            data: entryData.data || {},
-            tags: entryData.tags || [],
-            notes: entryData.notes,
-            source,
-            externalId: entryData.externalId,
-          };
+      // Skip duplicates
+      if (
+        entryData.externalId &&
+        existingExternalIds.has(entryData.externalId)
+      ) {
+        results.skipped++;
+        continue;
+      }
 
-          await db.insert(entries).values(newEntry);
-          results.successful++;
+      try {
+        // timestamp is THE canonical timeline field - must be set
+        const timestamp = entryData.timestamp || new Date().toISOString();
 
-          if (results.successful % 100 === 0) {
-            logger.info("Import progress", {
-              successful: results.successful,
-              total: entriesToImport.length,
+        entriesToInsert.push({
+          id: randomUUID(),
+          userId: user.id,
+          type: entryData.type || "timed",
+          name: entryData.name || "Imported Activity",
+          category: entryData.category || null,
+          subcategory: entryData.subcategory || null,
+          emoji: entryData.emoji || null,
+          timestamp,
+          durationSeconds: entryData.durationSeconds || null,
+          timezone: entryData.timezone || user.timezone || "UTC",
+          data: entryData.data || {},
+          tags: entryData.tags || [],
+          notes: entryData.notes || null,
+          source,
+          externalId: entryData.externalId || null,
+        });
+      } catch (error) {
+        results.failed++;
+        results.errors.push({
+          row: i,
+          message: error instanceof Error ? error.message : String(error),
+        });
+      }
+    }
+
+    // Batch insert all entries
+    logger.info("Inserting entries", { count: entriesToInsert.length });
+
+    for (let i = 0; i < entriesToInsert.length; i += BATCH_SIZE) {
+      const batch = entriesToInsert.slice(i, i + BATCH_SIZE);
+      try {
+        await db.insert(entries).values(batch);
+        results.successful += batch.length;
+        logger.info("Batch inserted", {
+          batchNum: Math.floor(i / BATCH_SIZE) + 1,
+          batchSize: batch.length,
+          totalProgress: results.successful,
+        });
+      } catch (error) {
+        // If batch fails, try inserting one by one to identify problematic entries
+        logger.warn("Batch insert failed, falling back to individual inserts", {
+          batchStart: i,
+          error: error instanceof Error ? error.message : String(error),
+        });
+
+        for (let j = 0; j < batch.length; j++) {
+          try {
+            await db.insert(entries).values(batch[j]!);
+            results.successful++;
+          } catch (insertError) {
+            results.failed++;
+            results.errors.push({
+              row: i + j,
+              message:
+                insertError instanceof Error
+                  ? insertError.message
+                  : String(insertError),
             });
           }
-        } catch (error) {
-          logger.error("Failed to import entry", {
-            row: rowIndex,
-            error: error instanceof Error ? error.message : String(error),
-          });
-
-          results.failed++;
-          results.errors.push({
-            row: rowIndex,
-            message: error instanceof Error ? error.message : String(error),
-          });
-
-          // Continue processing other entries even if one fails
         }
       }
     }

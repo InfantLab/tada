@@ -225,21 +225,18 @@ export function getTimedCategories(): string[] {
 }
 
 /**
- * Get entry timestamp with fallback priority
+ * Get entry timestamp
+ *
+ * Since v0.2.0, `timestamp` is the ONLY canonical timeline field and is NEVER NULL.
+ * This function now simply returns the timestamp, with a fallback only for
+ * legacy data or defensive programming.
  */
 export function getEntryTimestamp(entry: {
-  timestamp?: string | null;
-  startedAt?: string | null;
-  date?: string | null;
+  timestamp: string;
   createdAt?: string | null;
 }): string {
-  return (
-    entry.timestamp ||
-    entry.startedAt ||
-    entry.date ||
-    entry.createdAt ||
-    new Date().toISOString()
-  );
+  // timestamp is now NOT NULL in schema, but keep fallback for safety
+  return entry.timestamp || entry.createdAt || new Date().toISOString();
 }
 
 /**

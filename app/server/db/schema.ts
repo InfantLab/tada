@@ -84,12 +84,17 @@ export const entries = sqliteTable("entries", {
   subcategory: text("subcategory"), // 'sitting', 'work', 'piano', etc.
   emoji: text("emoji"), // Per-entry override (nullable)
 
-  // Time handling (use whichever pattern fits)
-  timestamp: text("timestamp"), // ISO 8601 - instant events
-  startedAt: text("started_at"), // ISO 8601 - duration start
-  endedAt: text("ended_at"), // ISO 8601 - duration end
-  durationSeconds: integer("duration_seconds"), // Computed or manual
-  date: text("date"), // YYYY-MM-DD - date-only events
+  // =========================================================================
+  // TIMELINE POSITION - Single source of truth
+  // =========================================================================
+  // `timestamp` is THE canonical field for timeline ordering.
+  // - For timed activities: when the session STARTED
+  // - For instant events: when it happened
+  // - For imports: the original date/time from source data
+  // NEVER use createdAt/updatedAt for timeline ordering.
+  // =========================================================================
+  timestamp: text("timestamp").notNull(), // ISO 8601 - THE timeline position
+  durationSeconds: integer("duration_seconds"), // Duration in seconds (optional)
   timezone: text("timezone").notNull().default("UTC"), // Original timezone
 
   // Type-specific payload (JSON)
@@ -103,7 +108,7 @@ export const entries = sqliteTable("entries", {
   source: text("source").notNull().default("manual"), // 'manual', 'import', 'strava', etc.
   externalId: text("external_id"), // ID from source for deduplication
 
-  // Sync support
+  // Sync support (audit fields - NEVER for timeline)
   createdAt: text("created_at")
     .notNull()
     .default(sql`(datetime('now'))`),
@@ -259,11 +264,10 @@ export const importRecipes = sqliteTable("import_recipes", {
   description: text("description"),
 
   // Column mapping configuration (JSON)
+  // Maps CSV column headers to entry fields
   columnMapping: text("column_mapping", { mode: "json" }).$type<{
-    timestamp?: string; // CSV column name
-    startedAt?: string;
-    endedAt?: string;
-    duration?: string;
+    timestamp?: string; // CSV column name for date/time (maps to entries.timestamp)
+    duration?: string; // CSV column name for duration
     name?: string;
     category?: string;
     subcategory?: string;

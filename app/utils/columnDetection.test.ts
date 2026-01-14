@@ -7,12 +7,13 @@ import {
 
 describe("columnDetection", () => {
   describe("detectColumnMappings", () => {
-    it("should detect exact match for startedAt", () => {
+    it("should detect exact match for timestamp from 'Started At' header", () => {
       const result = detectColumnMappings(["Started At", "Duration", "Name"]);
 
-      expect(result["startedAt"]).toBeDefined();
-      expect(result["startedAt"]?.csvColumn).toBe("Started At");
-      expect(result["startedAt"]?.confidence).toBe("high");
+      // "Started At" in CSV maps to our canonical `timestamp` field
+      expect(result["timestamp"]).toBeDefined();
+      expect(result["timestamp"]?.csvColumn).toBe("Started At");
+      expect(result["timestamp"]?.confidence).toBe("high");
     });
 
     it("should detect exact match for duration", () => {
@@ -26,9 +27,10 @@ describe("columnDetection", () => {
     it("should detect partial match with medium confidence", () => {
       const result = detectColumnMappings(["Session Start Time", "Length"]);
 
-      expect(result["startedAt"]).toBeDefined();
-      expect(result["startedAt"]?.csvColumn).toBe("Session Start Time");
-      expect(result["startedAt"]?.confidence).toBe("medium");
+      // "Session Start Time" contains "start" and "time" - maps to timestamp
+      expect(result["timestamp"]).toBeDefined();
+      expect(result["timestamp"]?.csvColumn).toBe("Session Start Time");
+      expect(result["timestamp"]?.confidence).toBe("medium");
     });
 
     it("should detect activity as name field", () => {
@@ -59,7 +61,7 @@ describe("columnDetection", () => {
       const result = detectColumnMappings(["DURATION", "started at", "NAME"]);
 
       expect(result["duration"]?.csvColumn).toBe("DURATION");
-      expect(result["startedAt"]?.csvColumn).toBe("started at");
+      expect(result["timestamp"]?.csvColumn).toBe("started at");
       expect(result["name"]?.csvColumn).toBe("NAME");
     });
 
@@ -79,8 +81,9 @@ describe("columnDetection", () => {
       ];
       const result = detectColumnMappings(headers);
 
-      expect(result["startedAt"]?.csvColumn).toBe("Started At");
-      expect(result["startedAt"]?.confidence).toBe("high");
+      // Insight Timer's "Started At" maps to our timestamp field
+      expect(result["timestamp"]?.csvColumn).toBe("Started At");
+      expect(result["timestamp"]?.confidence).toBe("high");
       expect(result["duration"]?.csvColumn).toBe("Duration");
       expect(result["duration"]?.confidence).toBe("high");
       expect(result["name"]?.csvColumn).toBe("Activity");
@@ -117,15 +120,16 @@ describe("columnDetection", () => {
     it("should include reason for each detection", () => {
       const result = detectColumnMappings(["Started At"]);
 
-      expect(result["startedAt"]?.reason).toContain("Started At");
+      expect(result["timestamp"]?.reason).toContain("Started At");
     });
 
-    it("should not detect overlapping fields incorrectly", () => {
-      // "start" could match multiple things, but should prefer better matches
+    it("should detect date/time columns as timestamp field", () => {
+      // Both "Start Time" and "End Time" contain "time" pattern
+      // "Start Time" also contains "start" which is more specific
       const result = detectColumnMappings(["Start Time", "End Time"]);
 
-      expect(result["startedAt"]?.csvColumn).toBe("Start Time");
-      expect(result["endedAt"]?.csvColumn).toBe("End Time");
+      expect(result["timestamp"]?.csvColumn).toBe("Start Time");
+      // Note: We no longer have an endedAt field - end times are derived from duration
     });
   });
 

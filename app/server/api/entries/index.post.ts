@@ -10,12 +10,12 @@ const logger = createLogger("api:entries:post");
 interface CreateEntryBody {
   type: string;
   name: string;
-  timestamp?: string;
-  startedAt?: string | null;
-  endedAt?: string | null;
+  timestamp?: string; // THE timeline position - required (defaults to now)
   durationSeconds?: number | null;
-  date?: string | null;
   timezone?: string;
+  category?: string | null;
+  subcategory?: string | null;
+  emoji?: string | null;
   data?: Record<string, unknown>;
   tags?: string[];
   notes?: string | null;
@@ -61,20 +61,21 @@ export default defineEventHandler(async (event) => {
     // Prepare entry data
     const now = new Date().toISOString();
 
-    // Ensure at least ONE timestamp field is set (prefer explicit timestamp, then startedAt, then now)
-    const timestamp = typedBody.timestamp || typedBody.startedAt || now;
+    // timestamp is THE canonical timeline field - always set
+    // Use provided timestamp, or default to now
+    const timestamp = typedBody.timestamp || now;
 
     const newEntry: NewEntry = {
       id: nanoid(),
       userId,
       type: typedBody.type,
       name: typedBody.name,
-      timestamp,
-      startedAt: typedBody.startedAt || null,
-      endedAt: typedBody.endedAt || null,
+      timestamp, // THE timeline position - never null
       durationSeconds: typedBody.durationSeconds || null,
-      date: typedBody.date || null,
       timezone: typedBody.timezone || "UTC",
+      category: typedBody.category || null,
+      subcategory: typedBody.subcategory || null,
+      emoji: typedBody.emoji || null,
       data: typedBody.data || {},
       tags: typedBody.tags || [],
       notes: typedBody.notes || null,

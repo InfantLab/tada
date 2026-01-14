@@ -69,6 +69,16 @@ export default {
           "sky-soft": "#9ED3F5",
           "lilac-soft": "#D6B9F5",
         },
+        // Category colors - Mindfulness (timed activities, meditation)
+        mindfulness: {
+          light: "#6BB7E8", // lotus-sky
+          dark: "#B88CF2", // lotus-lilac
+        },
+        // Cosmic indigo light for borders
+        "cosmic-indigo": {
+          DEFAULT: "#3A1A55",
+          light: "#4A2A65",
+        },
       },
       fontFamily: {
         sans: ["Inter", "system-ui", "sans-serif"],

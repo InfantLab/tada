@@ -12,6 +12,9 @@ export interface ColumnDetection {
 
 /**
  * Detect which CSV columns map to our entry fields
+ *
+ * Note: We map "Started At", "Start Time", etc. to `timestamp` since
+ * timestamp is THE canonical timeline field in our schema.
  */
 export function detectColumnMappings(
   csvHeaders: string[]
@@ -22,8 +25,9 @@ export function detectColumnMappings(
   const normalizedHeaders = csvHeaders.map((h) => h.toLowerCase().trim());
 
   // Patterns for each field type
+  // Note: "startedAt" from CSV imports maps to our "timestamp" field
   const patterns = {
-    startedAt: {
+    timestamp: {
       exact: [
         "started at",
         "start time",
@@ -31,12 +35,9 @@ export function detectColumnMappings(
         "date",
         "datetime",
         "timestamp",
+        "time",
       ],
       partial: ["start", "date", "time", "when"],
-    },
-    endedAt: {
-      exact: ["ended at", "end time", "ended", "finish time", "finished"],
-      partial: ["end", "finish", "stop"],
     },
     duration: {
       exact: ["duration", "length", "time spent", "elapsed"],

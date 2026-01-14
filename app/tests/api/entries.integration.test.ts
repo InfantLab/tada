@@ -294,17 +294,18 @@ describe("Entries API Integration", async () => {
       ];
 
       for (let i = 0; i < timestamps.length; i++) {
+        const ts = timestamps[i]!;
         await db.insert(entries).values({
           id: nanoid(),
           userId: testUserId,
           type: "timed",
           name: `entry-${i}`,
-          timestamp: timestamps[i],
+          timestamp: ts,
           timezone: "UTC",
           data: {},
           tags: [],
-          createdAt: timestamps[i],
-          updatedAt: timestamps[i],
+          createdAt: ts,
+          updatedAt: ts,
         });
       }
 

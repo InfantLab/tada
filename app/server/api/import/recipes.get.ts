@@ -13,12 +13,12 @@ const BUILTIN_RECIPES = [
     description:
       "Import meditation sessions from Insight Timer CSV export. All activities are mapped to mindfulness category with their original activity type preserved.",
     columnMapping: {
-      startedAt: "Started At",
+      timestamp: "Started At", // Maps CSV "Started At" column to entry.timestamp
       duration: "Duration",
       name: "Activity",
     },
     transforms: {
-      dateFormat: "DD/MM/YYYY HH:mm:ss",
+      dateFormat: "MM/DD/YYYY HH:mm:ss", // Insight Timer uses US date format
       durationFormat: "H:mm:ss",
       defaultCategory: "mindfulness",
     },

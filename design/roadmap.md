@@ -118,6 +118,19 @@ Build flexible import system with user-mappable columns and reusable recipes.
   - All activities → mindfulness category
   - Activities: Meditation, Breathing, Manifesting, Walking, Tai Chi (preserve capitalization)
 - [ ] **View Import History:**
+
+### 📊 Timeline Stats & Breakdown
+
+Richer statistics with category-level insights.
+
+- [ ] **Category breakdown in journey stats:**
+  - Show counts per entry type (timed, tada, dream, journal, note)
+  - Show hours per category (mindfulness, accomplishment, etc.)
+  - Show subcategory distribution within categories
+- [ ] **Interactive stats dashboard:**
+  - Tap category to filter timeline
+  - Visual pie/bar charts for distribution
+  - Trends over time (week-over-week, month-over-month)
   - Browse past imports with success/skip/error counts
   - Re-run or delete previous imports
   - View detailed error logs per import

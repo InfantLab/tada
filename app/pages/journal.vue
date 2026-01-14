@@ -6,11 +6,25 @@ definePageMeta({
   layout: "default",
 });
 
+const router = useRouter();
+
 // Fetch journal entries from API
 const entries = ref<Entry[]>([]);
 const isLoading = ref(true);
 const error = ref<string | null>(null);
 const selectedType = ref<"all" | "dream" | "journal" | "tada">("all");
+
+// Navigate to entry only if no text was selected
+function handleEntryClick(entry: Entry, event: MouseEvent) {
+  const selection = window.getSelection();
+  if (selection && selection.toString().trim().length > 0) {
+    return;
+  }
+  if ((event.target as HTMLElement).closest("a, button")) {
+    return;
+  }
+  router.push(`/entry/${entry.id}`);
+}
 
 onMounted(async () => {
   try {
@@ -146,11 +160,11 @@ function getTypeIcon(type: string): string {
 
     <!-- Entries list -->
     <div v-else class="space-y-4">
-      <NuxtLink
+      <div
         v-for="entry in filteredEntries"
         :key="entry.id"
-        :to="`/entry/${entry.id}`"
-        class="block bg-white dark:bg-stone-800 rounded-xl p-4 shadow-sm border border-stone-200 dark:border-stone-700 hover:border-tada-300 dark:hover:border-tada-600 transition-colors"
+        class="bg-white dark:bg-stone-800 rounded-xl p-4 shadow-sm border border-stone-200 dark:border-stone-700 hover:border-tada-300 dark:hover:border-tada-600 transition-colors cursor-pointer"
+        @click="handleEntryClick(entry, $event)"
       >
         <div class="flex items-start gap-3">
           <!-- Type icon -->
@@ -171,14 +185,7 @@ function getTypeIcon(type: string): string {
               <span
                 class="text-xs text-stone-400 dark:text-stone-500 whitespace-nowrap"
               >
-                {{
-                  formatDate(
-                    entry.timestamp ||
-                      entry.startedAt ||
-                      entry.date ||
-                      entry.createdAt
-                  )
-                }}
+                {{ formatDate(entry.timestamp) }}
               </span>
             </div>
             <p
@@ -228,7 +235,7 @@ function getTypeIcon(type: string): string {
             />
           </svg>
         </div>
-      </NuxtLink>
+      </div>
     </div>
   </div>
 </template>

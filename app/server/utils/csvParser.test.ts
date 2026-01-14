@@ -277,7 +277,7 @@ Bob,25,extra,columns`;
   describe("generateExternalId", () => {
     it("should generate consistent IDs for same data", async () => {
       const entry = {
-        startedAt: "2024-01-15T10:30:00Z",
+        timestamp: "2024-01-15T10:30:00Z",
         name: "Meditation",
         type: "timed",
         durationSeconds: 600,
@@ -292,14 +292,14 @@ Bob,25,extra,columns`;
 
     it("should generate different IDs for different data", async () => {
       const entry1 = {
-        startedAt: "2024-01-15T10:30:00Z",
+        timestamp: "2024-01-15T10:30:00Z",
         name: "Meditation",
         type: "timed",
         durationSeconds: 600,
       };
 
       const entry2 = {
-        startedAt: "2024-01-15T10:30:00Z",
+        timestamp: "2024-01-15T10:30:00Z",
         name: "Breathing", // Different name
         type: "timed",
         durationSeconds: 600,
@@ -320,9 +320,10 @@ Bob,25,extra,columns`;
       expect(id).toMatch(/^import-[a-f0-9]{32}$/);
     });
 
-    it("should use timestamp as fallback for startedAt", async () => {
+    it("should use timestamp as the key field for deduplication", async () => {
+      // Two entries with same timestamp and name should have same ID
       const entry1 = {
-        startedAt: "2024-01-15T10:30:00Z",
+        timestamp: "2024-01-15T10:30:00Z",
         name: "Test",
       };
 

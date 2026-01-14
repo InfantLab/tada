@@ -222,16 +222,16 @@
           Column Mapping
         </h3>
 
-        <!-- Started At -->
+        <!-- Timestamp (when it happened / started) -->
         <div class="space-y-1">
           <div class="grid grid-cols-2 gap-4 items-center">
             <label
               class="text-sm font-medium text-text-light dark:text-text-dark"
             >
-              Started At <span class="text-red-500">*</span>
+              Date/Time <span class="text-red-500">*</span>
             </label>
             <select
-              v-model="columnMapping['startedAt']"
+              v-model="columnMapping['timestamp']"
               class="px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             >
               <option value="">-- Select Column --</option>
@@ -241,14 +241,14 @@
             </select>
           </div>
           <div
-            v-if="columnDetections['startedAt']"
+            v-if="columnDetections['timestamp']"
             :class="
-              getConfidenceColor(columnDetections['startedAt'].confidence)
+              getConfidenceColor(columnDetections['timestamp'].confidence)
             "
             class="text-xs pl-1"
           >
-            {{ getConfidenceBadge(columnDetections["startedAt"].confidence) }}:
-            {{ columnDetections["startedAt"].reason }}
+            {{ getConfidenceBadge(columnDetections["timestamp"].confidence) }}:
+            {{ columnDetections["timestamp"].reason }}
           </div>
         </div>
 
@@ -423,33 +423,7 @@
           </div>
         </div>
 
-        <!-- Ended At -->
-        <div class="space-y-1">
-          <div class="grid grid-cols-2 gap-4 items-center">
-            <label
-              class="text-sm font-medium text-text-light dark:text-text-dark"
-            >
-              Ended At
-            </label>
-            <select
-              v-model="columnMapping['endedAt']"
-              class="px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-            >
-              <option value="">-- Calculate from Duration --</option>
-              <option v-for="field in csvFields" :key="field" :value="field">
-                {{ field }}
-              </option>
-            </select>
-          </div>
-          <div
-            v-if="columnDetections['endedAt']"
-            :class="getConfidenceColor(columnDetections['endedAt'].confidence)"
-            class="text-xs pl-1"
-          >
-            {{ getConfidenceBadge(columnDetections["endedAt"].confidence) }}:
-            {{ columnDetections["endedAt"].reason }}
-          </div>
-        </div>
+        <!-- Note: We removed the Ended At field since end time is computed from timestamp + duration -->
 
         <!-- Emoji -->
         <div class="space-y-1">
@@ -546,7 +520,7 @@
           <button
             class="px-6 py-3 bg-mindfulness-light dark:bg-mindfulness-dark text-white rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
             :disabled="
-              !columnMapping['startedAt'] || !columnMapping['duration']
+              !columnMapping['timestamp'] || !columnMapping['duration']
             "
             @click="
               generatePreview();
@@ -556,10 +530,10 @@
             Preview →
           </button>
           <p
-            v-if="!columnMapping['startedAt'] || !columnMapping['duration']"
+            v-if="!columnMapping['timestamp'] || !columnMapping['duration']"
             class="text-xs text-text-light-muted dark:text-text-dark-muted"
           >
-            Map "Started At" and "Duration" to continue
+            Map "Date/Time" and "Duration" to continue
           </p>
         </div>
       </div>
@@ -620,7 +594,7 @@
                 class="hover:bg-pearl-mist/50 dark:hover:bg-cosmic-black/50"
               >
                 <td class="px-4 py-2">{{ index + 1 }}</td>
-                <td class="px-4 py-2">{{ entry.startedAt || "—" }}</td>
+                <td class="px-4 py-2">{{ entry.timestamp || "—" }}</td>
                 <td class="px-4 py-2">{{ entry.duration || "—" }}</td>
                 <td class="px-4 py-2">
                   {{ entry.name || entry.subcategory || "—" }}
@@ -651,16 +625,28 @@
           class="flex justify-between text-sm text-text-light-muted dark:text-text-dark-muted"
         >
           <span>{{ progressMessage }}</span>
-          <span>{{ rowsProcessed }} / {{ rowsTotal }}</span>
+          <span v-if="importProgress < 100"
+            >{{ rowsTotal.toLocaleString() }} entries</span
+          >
+          <span v-else>Done!</span>
         </div>
         <div
-          class="w-full bg-pearl-mist dark:bg-cosmic-indigo-light rounded-full h-2"
+          class="w-full bg-pearl-mist dark:bg-cosmic-indigo-light rounded-full h-2 overflow-hidden"
         >
+          <!-- Indeterminate progress animation while waiting for server -->
           <div
-            class="bg-mindfulness-light dark:bg-mindfulness-dark h-2 rounded-full transition-all duration-300"
-            :style="{ width: `${importProgress}%` }"
+            v-if="importProgress < 100"
+            class="h-2 rounded-full bg-gradient-to-r from-mindfulness-light via-mindfulness-dark to-mindfulness-light animate-pulse"
+            style="width: 100%; animation: shimmer 1.5s ease-in-out infinite"
           ></div>
+          <!-- Full bar when complete -->
+          <div v-else class="bg-green-500 h-2 rounded-full w-full"></div>
         </div>
+        <p
+          class="text-xs text-text-light-muted dark:text-text-dark-muted text-center"
+        >
+          This may take a minute for large imports...
+        </p>
       </div>
 
       <div class="flex gap-4 mt-6">
@@ -731,6 +717,13 @@
           >
             Failed to Import
           </div>
+          <button
+            v-if="importResults.errors && importResults.errors.length > 0"
+            class="mt-2 text-sm text-red-600 dark:text-red-400 hover:underline"
+            @click="downloadErrorLog"
+          >
+            📥 Download error log
+          </button>
         </div>
         <div
           class="pt-4 text-sm text-text-light-secondary dark:text-text-dark-secondary"
@@ -892,7 +885,7 @@ const columnDetections = ref<Record<string, ColumnDetection>>({});
 
 // Transform configuration
 const transforms = ref({
-  dateFormat: "DD/MM/YYYY HH:mm:ss",
+  dateFormat: "MM/DD/YYYY HH:mm:ss",
   timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
   durationFormat: "H:mm:ss",
   defaultCategory: "mindfulness",
@@ -915,7 +908,6 @@ const validationWarnings = ref<Record<number, string[]>>({});
 const isImporting = ref(false);
 const importProgress = ref(0);
 const progressMessage = ref("");
-const rowsProcessed = ref(0);
 const rowsTotal = ref(0);
 const importResults = ref<{
   total: number;
@@ -963,6 +955,8 @@ watchEffect(() => {
       ...recipeTransforms,
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC", // Always use user's current locale
     };
+    // Sync dropdown to show the pre-selected recipe
+    selectedRecipeId.value = props.recipe.id;
   }
 });
 
@@ -1024,8 +1018,8 @@ function validateEntry(entry: Record<string, unknown>): string[] {
   const warnings: string[] = [];
 
   // Required fields check
-  if (!entry["startedAt"]) {
-    warnings.push("Missing start time");
+  if (!entry["timestamp"]) {
+    warnings.push("Missing date/time");
   }
   if (!entry["duration"]) {
     warnings.push("Missing duration");
@@ -1081,37 +1075,9 @@ async function startImport() {
   isImporting.value = true;
   importProgress.value = 0;
   rowsTotal.value = csvData.value.length;
-  rowsProcessed.value = 0;
-  progressMessage.value = "Starting import...";
+  progressMessage.value = "Sending to server...";
 
   try {
-    // Simulate progress updates (since API call is atomic)
-    // For large imports, slow down the simulation so it doesn't finish before API responds
-    const updateInterval = rowsTotal.value > 1000 ? 500 : 100;
-    const progressInterval = setInterval(() => {
-      if (rowsProcessed.value < rowsTotal.value) {
-        // Increment more slowly for large imports
-        const increment = Math.max(1, Math.ceil(rowsTotal.value / 50));
-        rowsProcessed.value = Math.min(
-          rowsProcessed.value + increment,
-          rowsTotal.value
-        );
-        // Cap at 90% until API responds
-        importProgress.value = Math.floor(
-          (rowsProcessed.value / rowsTotal.value) * 90
-        );
-
-        // More informative messages
-        if (importProgress.value < 30) {
-          progressMessage.value = "Processing entries...";
-        } else if (importProgress.value < 60) {
-          progressMessage.value = "Writing to database...";
-        } else {
-          progressMessage.value = "Finalizing import...";
-        }
-      }
-    }, updateInterval);
-
     const results = await importCSV({
       csvData: csvData.value,
       columnMapping: columnMapping.value,
@@ -1120,8 +1086,6 @@ async function startImport() {
       filename: selectedFile.value?.name,
     });
 
-    clearInterval(progressInterval);
-    rowsProcessed.value = rowsTotal.value;
     importProgress.value = 100;
     progressMessage.value = "Import complete!";
 

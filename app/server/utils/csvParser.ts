@@ -221,7 +221,6 @@ export function parseDateTime(
 export function validateEntryData(entry: {
   durationSeconds?: number | null;
   timestamp?: string | null;
-  startedAt?: string | null;
 }): string[] {
   const warnings: string[] = [];
 
@@ -245,14 +244,7 @@ export function validateEntryData(entry: {
   if (entry.timestamp) {
     const date = new Date(entry.timestamp);
     if (date > new Date()) {
-      warnings.push("Date is in the future");
-    }
-  }
-
-  if (entry.startedAt) {
-    const date = new Date(entry.startedAt);
-    if (date > new Date()) {
-      warnings.push("Start date is in the future");
+      warnings.push("Timestamp is in the future");
     }
   }
 
@@ -316,7 +308,6 @@ export function detectDateFormat(samples: string[]): {
  * Generate stable external ID for import deduplication
  */
 export async function generateExternalId(entry: {
-  startedAt?: string;
   timestamp?: string;
   name?: string;
   type?: string;
@@ -324,7 +315,7 @@ export async function generateExternalId(entry: {
 }): Promise<string> {
   const crypto = await import("crypto");
   const parts = [
-    entry.startedAt || entry.timestamp || "",
+    entry.timestamp || "", // THE timeline position
     entry.type || "timed",
     entry.name || "",
     entry.durationSeconds?.toString() || "",

@@ -26,7 +26,8 @@
     "drizzle-orm": "^0.38.3",
     "nanoid": "^5.1.6",
     "nodemailer": "^7.0.12",
-    "oslo": "^1.2.1"
+    "oslo": "^1.2.1",
+    "vue-virtual-scroller": "^1.1.2"
   },
   "devDependencies": {
     "@nuxt/devtools": "^1.7.0",

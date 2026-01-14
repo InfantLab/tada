@@ -7,6 +7,8 @@ definePageMeta({
   layout: "default",
 });
 
+const router = useRouter();
+
 // Fetch Ta-Da! entries from API
 const entries = ref<Entry[]>([]);
 const isLoading = ref(true);
@@ -16,6 +18,18 @@ const error = ref<string | null>(null);
 const showEmojiPicker = ref(false);
 const emojiPickerEntry = ref<Entry | null>(null);
 const isUpdating = ref(false);
+
+// Navigate to entry only if no text was selected
+function handleEntryClick(entry: Entry, event: MouseEvent) {
+  const selection = window.getSelection();
+  if (selection && selection.toString().trim().length > 0) {
+    return;
+  }
+  if ((event.target as HTMLElement).closest("a, button")) {
+    return;
+  }
+  router.push(`/entry/${entry.id}`);
+}
 
 onMounted(async () => {
   try {
@@ -89,11 +103,7 @@ async function updateEmoji(emoji: string) {
     <!-- Page header with Ta-Da! logotype -->
     <div class="flex items-center justify-between mb-6">
       <div class="flex items-center gap-4">
-        <img
-          src="/icons/tada-logotype.png"
-          alt="TA-DA"
-          class="h-16 w-auto"
-        >
+        <img src="/icons/tada-logotype.png" alt="TA-DA" class="h-16 w-auto" />
         <div>
           <h1 class="text-2xl font-bold text-stone-800 dark:text-stone-100">
             Your Accomplishments
@@ -174,11 +184,11 @@ async function updateEmoji(emoji: string) {
       </div>
 
       <!-- Ta-Da! entries -->
-      <NuxtLink
+      <div
         v-for="entry in entries"
         :key="entry.id"
-        :to="`/entry/${entry.id}`"
-        class="block bg-white dark:bg-stone-800 rounded-xl p-4 shadow-sm border border-stone-200 dark:border-stone-700 hover:border-amber-300 dark:hover:border-amber-600 transition-all hover:shadow-md"
+        class="bg-white dark:bg-stone-800 rounded-xl p-4 shadow-sm border border-stone-200 dark:border-stone-700 hover:border-amber-300 dark:hover:border-amber-600 transition-all hover:shadow-md cursor-pointer"
+        @click="handleEntryClick(entry, $event)"
       >
         <div class="flex items-start gap-3">
           <!-- Entry emoji with amber highlight (clickable) -->
@@ -204,14 +214,7 @@ async function updateEmoji(emoji: string) {
               <span
                 class="text-xs text-stone-400 dark:text-stone-500 whitespace-nowrap"
               >
-                {{
-                  formatDate(
-                    entry.timestamp ||
-                      entry.startedAt ||
-                      entry.date ||
-                      entry.createdAt
-                  )
-                }}
+                {{ formatDate(entry.timestamp) }}
               </span>
             </div>
             <p
@@ -247,7 +250,7 @@ async function updateEmoji(emoji: string) {
             />
           </svg>
         </div>
-      </NuxtLink>
+      </div>
     </div>
 
     <!-- Emoji Picker Component -->

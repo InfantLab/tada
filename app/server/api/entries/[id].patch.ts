@@ -9,12 +9,12 @@ const logger = createLogger("api:entries:patch");
 interface UpdateEntryBody {
   type?: string;
   name?: string;
-  timestamp?: string;
-  startedAt?: string | null;
-  endedAt?: string | null;
+  timestamp?: string; // THE timeline position
   durationSeconds?: number | null;
-  date?: string | null;
   timezone?: string;
+  category?: string | null;
+  subcategory?: string | null;
+  emoji?: string | null;
   data?: Record<string, unknown>;
   tags?: string[];
   notes?: string | null;
@@ -65,12 +65,13 @@ export default defineEventHandler(async (event) => {
     if (body.type !== undefined) updateData["type"] = body.type;
     if (body.name !== undefined) updateData["name"] = body.name;
     if (body.timestamp !== undefined) updateData["timestamp"] = body.timestamp;
-    if (body.startedAt !== undefined) updateData["startedAt"] = body.startedAt;
-    if (body.endedAt !== undefined) updateData["endedAt"] = body.endedAt;
     if (body.durationSeconds !== undefined)
       updateData["durationSeconds"] = body.durationSeconds;
-    if (body.date !== undefined) updateData["date"] = body.date;
     if (body.timezone !== undefined) updateData["timezone"] = body.timezone;
+    if (body.category !== undefined) updateData["category"] = body.category;
+    if (body.subcategory !== undefined)
+      updateData["subcategory"] = body.subcategory;
+    if (body.emoji !== undefined) updateData["emoji"] = body.emoji;
     if (body.data !== undefined) updateData["data"] = body.data;
     if (body.tags !== undefined) updateData["tags"] = body.tags;
     if (body.notes !== undefined) updateData["notes"] = body.notes;

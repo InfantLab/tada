@@ -4,7 +4,8 @@
   "workspaceFolder": "/workspaces/tada",
   "forwardPorts": [3000, 4983],
   "features": {
-    "ghcr.io/devcontainers/features/git:1": {}
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
   },
   "postCreateCommand": "cd app && bun install",
   "customizations": {

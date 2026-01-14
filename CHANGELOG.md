@@ -9,6 +9,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Timeline Scaling & Multi-Zoom Views (v0.2.1):**
+  - Zoom toggle with Day/Week/Month/Year views
+  - YearView: Shows yearly summary cards with tap-to-zoom into months
+  - MonthView: Shows monthly summaries for selected year
+  - WeekView: Shows weekly summaries
+  - VirtualTimeline: Infinite-scrolling paginated entry list (100 entries/page)
+  - JourneyBadge: Zoom-aware stats celebration (this week/month/year)
+  - PeriodSummaryCard: Reusable component for period displays
+  - TimelineHeader: Search, category filter, time range controls
+  - Stats API (`/api/entries/stats`): Period-based statistics
+  - Summary API (`/api/entries/summary`): Aggregated period data
+  - Sticky zoom toggle that floats at top when scrolling
+  - Text selection preserved on entry cards (click navigates only if no text selected)
+
+- **Schema Simplification:**
+  - Single `timestamp` field (NOT NULL) as canonical timeline position
+  - Removed redundant `startedAt`, `endedAt`, `date` columns
+  - Migration preserves existing data (COALESCE fallback)
+
+- **Import Optimizations:**
+  - Batch inserts (1000 rows at a time) instead of individual inserts
+  - Batch duplicate checking with `inArray()` query
+  - Import time reduced from ~115s to ~5-10s for 4800+ entries
+  - Honest indeterminate progress bar while waiting for server
+  - Recipe dropdown syncs when selecting from recipe cards
+  - Download error log button for failed imports
+  - Added `mindfulness` color tokens to Tailwind config
+
 - **Timer Improvements (v0.2.0):**
   - Unified interval system with configurable duration, repeats (including "forever"), and bell sounds per interval
   - Collapsible accordion UI for interval configuration
