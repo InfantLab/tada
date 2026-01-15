@@ -248,6 +248,12 @@ A soft, welcoming introduction that respects the user's intelligence and curiosi
 - [ ] Dismiss with any interaction — no forced clicks
 - [ ] Remember dismissal (localStorage + user preference)
 
+**Timer-specific guidance:**
+
+- [ ] First timer start: gentle note "For best results, keep this tab in the foreground during your session"
+- [ ] Explain: browsers throttle background tabs, bells may be delayed if backgrounded
+- [ ] Show only once, remember dismissal
+
 **Progressive Discovery:**
 
 - [ ] Feature hints appear contextually when user explores new areas

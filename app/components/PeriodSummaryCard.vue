@@ -16,17 +16,28 @@ const emit = defineEmits<{
   click: [period: string];
 }>();
 
-// Format hours in human-readable way
+// Format hours in full words to properly celebrate achievements
 function formatHours(hours: number): string {
   if (hours < 1) {
     const mins = Math.round(hours * 60);
-    return mins > 0 ? `${mins}m` : "—";
+    if (mins === 0) return "—";
+    return mins === 1 ? "1 minute" : `${mins} minutes`;
   }
   if (hours < 24) {
-    return `${Math.round(hours * 10) / 10}h`;
+    const rounded = Math.round(hours * 10) / 10;
+    // Show whole hours when close to whole number
+    if (Math.abs(rounded - Math.round(rounded)) < 0.1) {
+      const whole = Math.round(rounded);
+      return whole === 1 ? "1 hour" : `${whole} hours`;
+    }
+    return `${rounded} hours`;
   }
-  const days = hours / 24;
-  return `${Math.round(days * 10) / 10}d`;
+  const days = Math.round((hours / 24) * 10) / 10;
+  if (Math.abs(days - Math.round(days)) < 0.1) {
+    const whole = Math.round(days);
+    return whole === 1 ? "1 day" : `${whole} days`;
+  }
+  return `${days} days`;
 }
 
 function handleClick() {

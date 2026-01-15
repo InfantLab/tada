@@ -25,6 +25,10 @@ const isWarmingUp = ref(false);
 const warmUpSeconds = ref<number>(10);
 const customWarmUpSeconds = ref<string>("");
 
+// Time tracking for accurate background timing
+const sessionStartTime = ref<number | null>(null); // Date.now() when session started
+const pausedElapsed = ref(0); // Accumulated elapsed time when paused
+
 // Interval configuration - unified for both modes
 interface TimerInterval {
   durationMinutes: number;
@@ -83,6 +87,7 @@ onMounted(() => {
 
 // Preset state
 const selectedPresetId = ref<string | null>(null);
+const selectedPresetName = ref<string | null>(null);
 const presetPickerRef = ref<InstanceType<
   typeof import("~/components/TimerPresetPicker.vue").default
 > | null>(null);
@@ -91,6 +96,7 @@ const isSaving = ref(false);
 const startBell = ref("bell");
 const milestoneFired = ref<Set<number>>(new Set()); // Track which milestones have fired
 const showSettings = ref(false);
+const showPresetSelector = ref(false); // New accordion for preset selection
 const wakeLock = ref<WakeLockSentinel | null>(null);
 const expandedIntervalIndex = ref(0); // Which interval accordion is open
 const noIntervalBells = ref(false); // Unlimited timer with no interval bells
@@ -134,6 +140,33 @@ const currentEmoji = computed(() => {
   return getSubcategoryEmoji(selectedCategory.value, selectedSubcategory.value);
 });
 
+// Get current preset name for headline display
+const currentPresetName = computed(() => {
+  if (selectedPresetName.value) {
+    return selectedPresetName.value;
+  }
+  // Default: use subcategory label
+  const subcat = subcategoryOptions.value.find(
+    (s) => s.value === selectedSubcategory.value
+  );
+  return subcat?.label || "Timer";
+});
+
+// Get current preset description for headline display
+const currentPresetDescription = computed(() => {
+  const catOption = categoryOptions.value.find(
+    (c) => c.value === selectedCategory.value
+  );
+  const catLabel = catOption?.label || selectedCategory.value;
+  
+  const modeLabel = timerMode.value === "fixed" ? "Fixed" : "Open-ended";
+  const intervalInfo = intervals.value[0]?.durationMinutes
+    ? `${intervals.value[0].durationMinutes}min intervals`
+    : "";
+  
+  return `${catLabel} • ${modeLabel}${intervalInfo ? ` • ${intervalInfo}` : ""}`;
+});
+
 // Category options for parent category selection
 const categoryOptions = computed(() => {
   // Only show categories that make sense for timed activities
@@ -165,6 +198,12 @@ watch(selectedCategory, (newCategory) => {
   }
 });
 
+// When preset is cleared, reset the preset name
+watch(selectedPresetId, (newId) => {
+  if (!newId) {
+    selectedPresetName.value = null;
+  }
+});
 // Load settings from localStorage
 onMounted(() => {
   try {
@@ -240,19 +279,23 @@ const _isComplete = computed(() => {
 function checkMilestones() {
   if (timerMode.value !== "unlimited") return;
   const currentMinutes = Math.floor(elapsedSeconds.value / 60);
-  const milestone =
-    Math.floor(currentMinutes / milestoneInterval.value) *
-    milestoneInterval.value;
-
-  // Only fire if this milestone hasn't fired yet and we're at a real milestone
-  if (
-    milestone > 0 &&
-    currentMinutes >= milestone &&
-    !milestoneFired.value.has(milestone)
-  ) {
-    milestoneFired.value.add(milestone);
-    ringsCount.value += 1;
-    playBell("interval", 0); // Use first interval's bell for unlimited mode
+  const interval = milestoneInterval.value;
+  
+  // Find all milestones we should have hit
+  const lastMilestone = Math.floor(currentMinutes / interval) * interval;
+  
+  // Count missed milestones and play ONE bell if any were missed (handles backgrounded tabs)
+  let missedCount = 0;
+  for (let m = interval; m <= lastMilestone; m += interval) {
+    if (!milestoneFired.value.has(m)) {
+      milestoneFired.value.add(m);
+      ringsCount.value += 1;
+      missedCount += 1;
+    }
+  }
+  // Play single bell for all missed milestones (avoid cacophony)
+  if (missedCount > 0) {
+    playBell("interval", 0);
   }
 }
 
@@ -265,6 +308,9 @@ function buildCumulativeTargets(intervals: number[]): number[] {
   }
   return result;
 }
+
+// Track previous elapsed for milestone/interval boundary detection
+let lastCheckedElapsed = 0;
 
 function beginSession() {
   isRunning.value = true;
@@ -282,8 +328,17 @@ function beginSession() {
   overtimeSeconds.value = 0;
   nextIntervalIndex.value = 0;
 
+  // Start time-based tracking (accurate even when backgrounded)
+  sessionStartTime.value = Date.now();
+  pausedElapsed.value = 0;
+  lastCheckedElapsed = 0;
+
   timerInterval.value = setInterval(() => {
-    elapsedSeconds.value++;
+    // Calculate elapsed from actual time, not increments
+    const now = Date.now();
+    const newElapsed = Math.floor((now - sessionStartTime.value!) / 1000) + pausedElapsed.value;
+    const prevElapsed = elapsedSeconds.value;
+    elapsedSeconds.value = newElapsed;
 
     // Check for milestones in count-up mode
     if (timerMode.value === "unlimited") {
@@ -298,19 +353,36 @@ function beginSession() {
           : [targetMinutes.value];
       const cumulative = buildCumulativeTargets(intrvls);
 
+      // Handle potentially jumping past multiple intervals (backgrounded tab)
       if (!isOvertime.value && nextIntervalIndex.value < cumulative.length) {
-        const target = cumulative[nextIntervalIndex.value];
-        if (elapsedSeconds.value >= target) {
-          ringsCount.value += 1;
-          playBell("interval", nextIntervalIndex.value);
-          nextIntervalIndex.value += 1;
-          if (nextIntervalIndex.value >= cumulative.length) {
-            // Enter overtime (keep accumulating silently, with small sub-timer)
-            isOvertime.value = true;
+        // Count how many intervals we've crossed
+        let crossedCount = 0;
+        let lastCrossedIndex = nextIntervalIndex.value;
+        while (lastCrossedIndex < cumulative.length) {
+          const target = cumulative[lastCrossedIndex];
+          if (elapsedSeconds.value >= target) {
+            ringsCount.value += 1;
+            crossedCount += 1;
+            lastCrossedIndex += 1;
+          } else {
+            break;
           }
         }
-      } else if (isOvertime.value) {
-        overtimeSeconds.value += 1;
+        // Play ONE bell for all crossed intervals (avoid cacophony)
+        if (crossedCount > 0) {
+          playBell("interval", lastCrossedIndex - 1);
+          nextIntervalIndex.value = lastCrossedIndex;
+        }
+        // Check if we've completed all intervals
+        if (nextIntervalIndex.value >= cumulative.length) {
+          isOvertime.value = true;
+        }
+      }
+      
+      if (isOvertime.value) {
+        // Calculate overtime from difference
+        const totalTarget = cumulative[cumulative.length - 1] || 0;
+        overtimeSeconds.value = Math.max(0, elapsedSeconds.value - totalTarget);
       }
     }
   }, 1000);
@@ -348,6 +420,10 @@ function startTimer() {
 
 function pauseTimer() {
   isPaused.value = true;
+  // Store current elapsed time before clearing interval
+  if (sessionStartTime.value !== null) {
+    pausedElapsed.value = elapsedSeconds.value;
+  }
   if (timerInterval.value) {
     clearInterval(timerInterval.value);
     timerInterval.value = null;
@@ -369,8 +445,15 @@ function resumeTimer() {
     }, 1000);
     return;
   }
+
+  // Reset start time for resumed session, keeping accumulated elapsed
+  sessionStartTime.value = Date.now();
+
   timerInterval.value = setInterval(() => {
-    elapsedSeconds.value++;
+    // Calculate elapsed from actual time
+    const now = Date.now();
+    const newElapsed = Math.floor((now - sessionStartTime.value!) / 1000) + pausedElapsed.value;
+    elapsedSeconds.value = newElapsed;
 
     // Check for milestones in count-up mode
     if (timerMode.value === "unlimited") {
@@ -383,18 +466,33 @@ function resumeTimer() {
           ? fixedIntervals.value
           : [targetMinutes.value];
       const cumulative = buildCumulativeTargets(intrvls);
+      
+      // Handle potentially jumping past multiple intervals (backgrounded tab)
       if (!isOvertime.value && nextIntervalIndex.value < cumulative.length) {
-        const target = cumulative[nextIntervalIndex.value];
-        if (elapsedSeconds.value >= target) {
-          ringsCount.value += 1;
-          playBell("interval", nextIntervalIndex.value);
-          nextIntervalIndex.value += 1;
-          if (nextIntervalIndex.value >= cumulative.length) {
-            isOvertime.value = true;
+        let crossedCount = 0;
+        let lastCrossedIndex = nextIntervalIndex.value;
+        while (lastCrossedIndex < cumulative.length) {
+          const target = cumulative[lastCrossedIndex];
+          if (elapsedSeconds.value >= target) {
+            ringsCount.value += 1;
+            crossedCount += 1;
+            lastCrossedIndex += 1;
+          } else {
+            break;
           }
         }
-      } else if (isOvertime.value) {
-        overtimeSeconds.value += 1;
+        if (crossedCount > 0) {
+          playBell("interval", lastCrossedIndex - 1);
+          nextIntervalIndex.value = lastCrossedIndex;
+        }
+        if (nextIntervalIndex.value >= cumulative.length) {
+          isOvertime.value = true;
+        }
+      }
+      
+      if (isOvertime.value) {
+        const totalTarget = cumulative[cumulative.length - 1] || 0;
+        overtimeSeconds.value = Math.max(0, elapsedSeconds.value - totalTarget);
       }
     }
   }, 1000);
@@ -407,6 +505,9 @@ function stopTimer() {
     clearInterval(timerInterval.value);
     timerInterval.value = null;
   }
+  // Reset time tracking
+  sessionStartTime.value = null;
+  pausedElapsed.value = 0;
   releaseWakeLock();
 }
 
@@ -581,6 +682,9 @@ function releaseWakeLock() {
 // Preset handling
 
 function handlePresetSelect(preset: TimerPreset) {
+  // Store preset name for headline
+  selectedPresetName.value = preset.name;
+  
   // Apply preset settings
   selectedCategory.value = preset.category || "mindfulness";
   selectedSubcategory.value = preset.subcategory || "sitting";
@@ -610,6 +714,9 @@ function handlePresetSelect(preset: TimerPreset) {
       }));
     }
   }
+  
+  // Collapse preset selector after selection, expand settings for customization
+  showPresetSelector.value = false;
 }
 
 function openSavePresetDialog() {
@@ -654,74 +761,73 @@ onUnmounted(() => {
       {{ currentEmoji }}
     </div>
 
-    <!-- Category selector (only when not running) -->
-    <div v-if="!isRunning" class="mb-4">
-      <label
-        class="block text-sm font-medium text-stone-600 dark:text-stone-300 mb-2 text-center"
+    <!-- HEADLINE: Current Timer Name & Description (only when not running) -->
+    <div v-if="!isRunning" class="w-full max-w-md px-4 mb-6 text-center">
+      <div class="flex items-center justify-center gap-3 mb-2">
+        <span class="text-3xl">{{ currentEmoji }}</span>
+        <h1 class="text-2xl font-semibold text-stone-800 dark:text-stone-100">
+          {{ currentPresetName }}
+        </h1>
+      </div>
+      <p class="text-sm text-stone-500 dark:text-stone-400">
+        {{ currentPresetDescription }}
+      </p>
+    </div>
+
+    <!-- SECTION 1: Preset Selector Accordion (only when not running) -->
+    <div v-if="!isRunning" class="w-full max-w-md px-4 mb-4">
+      <button
+        class="w-full flex items-center justify-between px-4 py-3 rounded-lg bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"
+        @click="showPresetSelector = !showPresetSelector"
       >
-        Category
-      </label>
-      <div class="flex flex-wrap gap-2 justify-center max-w-md">
-        <button
-          v-for="cat in categoryOptions"
-          :key="cat.value"
-          class="px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
-          :class="
-            selectedCategory === cat.value
-              ? 'ring-2 ring-offset-2 dark:ring-offset-stone-900'
-              : 'bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600'
-          "
-          :style="
-            selectedCategory === cat.value
-              ? {
-                  backgroundColor: cat.color + '20',
-                  color: cat.color,
-                  borderColor: cat.color,
-                }
-              : {}
-          "
-          @click="selectedCategory = cat.value"
+        <div class="flex items-center gap-2">
+          <span class="text-lg">⏱️</span>
+          <span class="text-sm font-medium text-stone-700 dark:text-stone-300">
+            Choose Timer Preset
+          </span>
+        </div>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5 text-stone-500 dark:text-stone-400 transition-transform"
+          :class="{ 'rotate-180': showPresetSelector }"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
         >
-          <span>{{ cat.icon }}</span>
-          <span>{{ cat.label }}</span>
-        </button>
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M19 9l-7 7-7-7"
+          />
+        </svg>
+      </button>
+
+      <!-- Preset Selector Panel -->
+      <div
+        v-show="showPresetSelector"
+        class="mt-2 p-4 rounded-lg bg-stone-50 dark:bg-stone-800/50"
+      >
+        <TimerPresetPicker
+          ref="presetPickerRef"
+          v-model="selectedPresetId"
+          @select="handlePresetSelect"
+        />
       </div>
     </div>
 
-    <!-- Subcategory selector (only when not running) -->
-    <div v-if="!isRunning" class="mb-6">
-      <label
-        class="block text-sm font-medium text-stone-600 dark:text-stone-300 mb-2 text-center"
-      >
-        Activity Type
-      </label>
-      <div class="flex flex-wrap gap-2 justify-center max-w-md">
-        <button
-          v-for="cat in subcategoryOptions"
-          :key="cat.value"
-          class="px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
-          :class="
-            selectedSubcategory === cat.value
-              ? 'bg-tada-100/30 dark:bg-tada-600/20 text-tada-700 dark:text-tada-300 ring-2 ring-tada-500 dark:ring-tada-500'
-              : 'bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600'
-          "
-          @click="selectedSubcategory = cat.value"
-        >
-          <span>{{ cat.icon }}</span>
-          <span>{{ cat.label }}</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- Settings Accordion (only when not running) -->
+    <!-- SECTION 2: Timer Settings Accordion (only when not running) -->
     <div v-if="!isRunning" class="w-full max-w-md px-4 mb-6">
       <button
-        class="w-full flex items-center justify-between px-4 py-2 rounded-lg bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"
+        class="w-full flex items-center justify-between px-4 py-3 rounded-lg bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"
         @click="showSettings = !showSettings"
       >
-        <span class="text-sm font-medium text-stone-700 dark:text-stone-300">
-          Settings
-        </span>
+        <div class="flex items-center gap-2">
+          <span class="text-lg">⚙️</span>
+          <span class="text-sm font-medium text-stone-700 dark:text-stone-300">
+            Timer Settings
+          </span>
+        </div>
         <svg
           xmlns="http://www.w3.org/2000/svg"
           class="h-5 w-5 text-stone-500 dark:text-stone-400 transition-transform"
@@ -744,25 +850,63 @@ onUnmounted(() => {
         v-show="showSettings"
         class="mt-2 p-4 rounded-lg bg-stone-50 dark:bg-stone-800/50 space-y-5"
       >
-        <!-- Presets Section -->
+        <!-- Category selector -->
         <div>
-          <div class="flex items-center justify-between mb-2">
-            <label
-              class="block text-xs font-medium text-stone-600 dark:text-stone-300"
-              >Presets</label
-            >
+          <label
+            class="block text-xs font-medium text-stone-600 dark:text-stone-300 mb-2"
+          >
+            Category
+          </label>
+          <div class="flex flex-wrap gap-2">
             <button
-              class="text-xs text-tada-600 dark:text-tada-400 hover:underline"
-              @click="openSavePresetDialog"
+              v-for="cat in categoryOptions"
+              :key="cat.value"
+              class="px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
+              :class="
+                selectedCategory === cat.value
+                  ? 'ring-2 ring-offset-2 dark:ring-offset-stone-900'
+                  : 'bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600'
+              "
+              :style="
+                selectedCategory === cat.value
+                  ? {
+                      backgroundColor: cat.color + '20',
+                      color: cat.color,
+                      borderColor: cat.color,
+                    }
+                  : {}
+              "
+              @click="selectedCategory = cat.value"
             >
-              Save current as preset
+              <span>{{ cat.icon }}</span>
+              <span>{{ cat.label }}</span>
             </button>
           </div>
-          <TimerPresetPicker
-            ref="presetPickerRef"
-            v-model="selectedPresetId"
-            @select="handlePresetSelect"
-          />
+        </div>
+
+        <!-- Subcategory selector -->
+        <div>
+          <label
+            class="block text-xs font-medium text-stone-600 dark:text-stone-300 mb-2"
+          >
+            Activity Type
+          </label>
+          <div class="flex flex-wrap gap-2">
+            <button
+              v-for="cat in subcategoryOptions"
+              :key="cat.value"
+              class="px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
+              :class="
+                selectedSubcategory === cat.value
+                  ? 'bg-tada-100/30 dark:bg-tada-600/20 text-tada-700 dark:text-tada-300 ring-2 ring-tada-500 dark:ring-tada-500'
+                  : 'bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600'
+              "
+              @click="selectedSubcategory = cat.value"
+            >
+              <span>{{ cat.icon }}</span>
+              <span>{{ cat.label }}</span>
+            </button>
+          </div>
         </div>
 
         <hr class="border-stone-200 dark:border-stone-700" />
@@ -1097,6 +1241,14 @@ onUnmounted(() => {
             </button>
           </div>
         </div>
+
+        <!-- Save as Preset button -->
+        <button
+          class="w-full py-2.5 rounded-lg border-2 border-dashed border-stone-300 dark:border-stone-600 text-sm font-medium text-stone-500 dark:text-stone-400 hover:border-tada-500 hover:text-tada-600 dark:hover:border-tada-400 dark:hover:text-tada-400 transition-colors"
+          @click="openSavePresetDialog"
+        >
+          💾 Save as Preset
+        </button>
       </div>
     </div>
 

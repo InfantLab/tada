@@ -178,12 +178,25 @@ function formatRelativeTime(timestamp: string): string {
   return date.toLocaleDateString();
 }
 
-// Format duration
+// Format duration with readable abbreviations
 function formatDuration(seconds: number): string {
-  const mins = Math.floor(seconds / 60);
+  const hours = Math.floor(seconds / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
   const secs = seconds % 60;
-  if (mins === 0) return `${secs}s`;
-  return `${mins}m ${secs}s`;
+
+  if (hours > 0) {
+    const hourStr = hours === 1 ? "1 hr" : `${hours} hrs`;
+    if (mins === 0) return hourStr;
+    const minStr = `${mins} min`;
+    return `${hourStr} ${minStr}`;
+  }
+  if (mins > 0) {
+    const minStr = `${mins} min`;
+    if (secs === 0) return minStr;
+    const secStr = `${secs} secs`;
+    return `${minStr} ${secStr}`;
+  }
+  return secs === 1 ? "1 sec" : `${secs} secs`;
 }
 
 // Get icon for entry type - checking custom emojis first
