@@ -38,8 +38,9 @@ const showEmojiPicker = ref(false);
 function autoGrow() {
   const textarea = notesTextarea.value;
   if (textarea) {
-    textarea.style.height = 'auto';
-    textarea.style.height = Math.min(textarea.scrollHeight, window.innerHeight * 0.5) + 'px';
+    textarea.style.height = "auto";
+    textarea.style.height =
+      Math.min(textarea.scrollHeight, window.innerHeight * 0.5) + "px";
   }
 }
 
@@ -201,7 +202,9 @@ async function submitEntry() {
           autofocus
         />
 
-        <p class="text-center text-sm text-indigo-600 dark:text-indigo-400 mt-3">
+        <p
+          class="text-center text-sm text-indigo-600 dark:text-indigo-400 mt-3"
+        >
           Tap the emoji to customize it ☝️
         </p>
       </div>
@@ -384,7 +387,7 @@ async function submitEntry() {
 
 <style scoped>
 .journal-textarea {
-  font-family: 'Georgia', 'Times New Roman', serif;
+  font-family: "Georgia", "Times New Roman", serif;
   font-size: 1.125rem;
   line-height: 1.75;
   letter-spacing: 0.01em;
