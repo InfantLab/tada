@@ -596,10 +596,57 @@ function cancelDeleteCategory() {
   selectedDeleteCategory.value = null;
   deleteCategoryCount.value = 0;
 }
+
+// Sidebar navigation
+const sidebarNavItems = [
+  { id: "account", label: "Account", icon: "👤" },
+  { id: "security", label: "Security", icon: "🔒" },
+  { id: "appearance", label: "Appearance", icon: "🎨" },
+  { id: "timer", label: "Timer", icon: "⏱️" },
+  { id: "presets", label: "Presets", icon: "⚡" },
+  { id: "categories", label: "Categories", icon: "📁" },
+  { id: "entry-types", label: "Entry Types", icon: "📝" },
+  { id: "notifications", label: "Notifications", icon: "🔔" },
+  { id: "data", label: "Data", icon: "💾" },
+  { id: "about", label: "About", icon: "ℹ️" },
+];
+
+const activeSection = ref("account");
+
+function scrollToSection(sectionId: string) {
+  activeSection.value = sectionId;
+  const element = document.getElementById(`section-${sectionId}`);
+  if (element) {
+    element.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+}
+
+// Intersection observer to update active section on scroll
+onMounted(() => {
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const id = entry.target.id.replace("section-", "");
+          activeSection.value = id;
+        }
+      });
+    },
+    { threshold: 0.3, rootMargin: "-80px 0px -60% 0px" }
+  );
+
+  // Observe all sections after a short delay to ensure DOM is ready
+  setTimeout(() => {
+    sidebarNavItems.forEach((item) => {
+      const el = document.getElementById(`section-${item.id}`);
+      if (el) observer.observe(el);
+    });
+  }, 100);
+});
 </script>
 
 <template>
-  <div class="max-w-lg mx-auto">
+  <div class="max-w-5xl mx-auto">
     <!-- Page header -->
     <div class="flex items-center gap-4 mb-6">
       <NuxtLink
@@ -626,9 +673,52 @@ function cancelDeleteCategory() {
       </h1>
     </div>
 
-    <div class="space-y-8">
-      <!-- Account -->
-      <section v-if="currentUser">
+    <!-- Mobile navigation tabs -->
+    <div class="lg:hidden mb-6 -mx-4 px-4 overflow-x-auto scrollbar-hide">
+      <div class="flex gap-2 pb-2 min-w-max">
+        <button
+          v-for="item in sidebarNavItems"
+          :key="item.id"
+          class="flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap"
+          :class="
+            activeSection === item.id
+              ? 'bg-tada-100 dark:bg-tada-600/30 text-tada-800 dark:text-tada-200'
+              : 'bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-700'
+          "
+          @click="scrollToSection(item.id)"
+        >
+          <span>{{ item.icon }}</span>
+          <span>{{ item.label }}</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Main layout: sidebar + content -->
+    <div class="flex gap-8">
+      <!-- Desktop sidebar -->
+      <aside class="hidden lg:block w-56 flex-shrink-0">
+        <nav class="sticky top-24 space-y-1">
+          <button
+            v-for="item in sidebarNavItems"
+            :key="item.id"
+            class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all"
+            :class="
+              activeSection === item.id
+                ? 'bg-gradient-to-r from-tada-100 to-amber-100 dark:from-tada-600/30 dark:to-amber-600/20 text-tada-800 dark:text-tada-200 shadow-sm'
+                : 'text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800'
+            "
+            @click="scrollToSection(item.id)"
+          >
+            <span class="text-lg">{{ item.icon }}</span>
+            <span class="font-medium">{{ item.label }}</span>
+          </button>
+        </nav>
+      </aside>
+
+      <!-- Content area -->
+      <div class="flex-1 min-w-0 max-w-lg space-y-8">
+        <!-- Account -->
+        <section v-if="currentUser" id="section-account">
         <h2
           class="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-4"
         >
@@ -689,7 +779,7 @@ function cancelDeleteCategory() {
       </section>
 
       <!-- Security -->
-      <section v-if="currentUser">
+      <section v-if="currentUser" id="section-security">
         <h2
           class="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-4"
         >
@@ -787,7 +877,7 @@ function cancelDeleteCategory() {
       </section>
 
       <!-- Appearance -->
-      <section>
+      <section id="section-appearance">
         <h2
           class="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-4"
         >
@@ -825,7 +915,7 @@ function cancelDeleteCategory() {
       </section>
 
       <!-- Timer -->
-      <section>
+      <section id="section-timer">
         <h2
           class="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-4"
         >
@@ -891,7 +981,7 @@ function cancelDeleteCategory() {
       </section>
 
       <!-- Timer Presets -->
-      <section>
+      <section id="section-presets">
         <h2
           class="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-4"
         >
@@ -1074,7 +1164,7 @@ function cancelDeleteCategory() {
       </section>
 
       <!-- Category Visibility -->
-      <section>
+      <section id="section-categories">
         <h2
           class="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-4"
         >
@@ -1120,7 +1210,7 @@ function cancelDeleteCategory() {
       </section>
 
       <!-- Entry Types -->
-      <section>
+      <section id="section-entry-types">
         <h2
           class="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-4"
         >
@@ -1263,7 +1353,7 @@ function cancelDeleteCategory() {
       </section>
 
       <!-- Notifications -->
-      <section>
+      <section id="section-notifications">
         <h2
           class="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-4"
         >
@@ -1308,7 +1398,7 @@ function cancelDeleteCategory() {
       </section>
 
       <!-- Data -->
-      <section>
+      <section id="section-data">
         <h2
           class="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-4"
         >
@@ -1423,7 +1513,7 @@ function cancelDeleteCategory() {
       </section>
 
       <!-- About -->
-      <section>
+      <section id="section-about">
         <h2
           class="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-4"
         >
@@ -1491,6 +1581,7 @@ function cancelDeleteCategory() {
       >
         {{ isSaving ? "Saving..." : "Save Settings" }}
       </button>
+      </div>
     </div>
 
     <!-- Emoji Picker Modal -->
@@ -1600,3 +1691,23 @@ function cancelDeleteCategory() {
     </Teleport>
   </div>
 </template>
+<style scoped>
+/* Hide scrollbar for mobile tabs */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Smooth scroll for sections */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Section scroll margin for sticky header */
+section[id^="section-"] {
+  scroll-margin-top: 6rem;
+}
+</style>

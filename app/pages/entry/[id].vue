@@ -40,12 +40,22 @@ const showEmojiPicker = ref(false);
 // Editable fields
 const name = ref("");
 const notes = ref("");
+const notesTextarea = ref<HTMLTextAreaElement | null>(null);
 const timestamp = ref("");
 const tags = ref<string[]>([]);
 const category = ref<string | null>(null);
 const subcategory = ref<string | null>(null);
 const emoji = ref<string | null>(null);
 const durationSeconds = ref<number | null>(null);
+
+// Auto-grow textarea as user types
+function autoGrow() {
+  const textarea = notesTextarea.value;
+  if (textarea) {
+    textarea.style.height = 'auto';
+    textarea.style.height = Math.min(textarea.scrollHeight, window.innerHeight * 0.5) + 'px';
+  }
+}
 
 // Load entry
 async function loadEntry() {
@@ -262,22 +272,41 @@ function getTypeIcon(type: string): string {
 
       <!-- Form -->
       <div
-        class="bg-white dark:bg-stone-800 rounded-xl p-6 shadow-sm border border-stone-200 dark:border-stone-700 space-y-6"
+        class="bg-gradient-to-br from-stone-50 via-stone-100/50 to-stone-50 dark:from-stone-800 dark:via-stone-800/80 dark:to-stone-800 rounded-2xl p-6 shadow-lg border-2 border-stone-200 dark:border-stone-600 space-y-6"
       >
-        <!-- Title -->
+        <!-- Hero: Large Emoji + Title -->
         <div>
-          <label
-            class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2"
-          >
-            Title
-          </label>
+          <!-- Clickable Emoji -->
+          <div class="flex justify-center mb-4">
+            <button
+              type="button"
+              class="text-6xl hover:scale-110 transition-transform cursor-pointer p-2 rounded-2xl hover:bg-stone-200/50 dark:hover:bg-stone-700/50"
+              title="Click to change emoji"
+              @click="showEmojiPicker = !showEmojiPicker"
+            >
+              {{ emoji || getTypeIcon(entry.type) }}
+            </button>
+          </div>
+
+          <!-- Large Title Input -->
           <input
             v-model="name"
             type="text"
-            class="w-full px-4 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-900 text-stone-900 dark:text-white focus:ring-2 focus:ring-tada-500 dark:focus:ring-tada-500 focus:border-transparent"
+            class="w-full px-4 py-4 text-xl font-bold text-center rounded-xl border-2 border-stone-300 dark:border-stone-600 bg-white/80 dark:bg-stone-900/80 text-stone-800 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-500 focus:outline-none focus:ring-4 focus:ring-stone-400/30 dark:focus:ring-stone-500/30 focus:border-stone-400 dark:focus:border-stone-500"
             placeholder="Entry title"
           />
+
+          <p class="text-center text-sm text-stone-500 dark:text-stone-400 mt-3">
+            Tap the emoji to customize it ☝️
+          </p>
         </div>
+
+        <!-- Emoji Picker (moved here, shown inline) -->
+        <EmojiPicker
+          v-model="showEmojiPicker"
+          :entry-name="name"
+          @select="(e) => (emoji = e)"
+        />
 
         <!-- Timestamp -->
         <DateTimeInput v-model="timestamp" label="Date & Time" />
@@ -285,15 +314,17 @@ function getTypeIcon(type: string): string {
         <!-- Notes -->
         <div>
           <label
-            class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2"
+            class="block text-sm font-medium text-stone-600 dark:text-stone-400 mb-2"
           >
             Notes
           </label>
           <textarea
+            ref="notesTextarea"
             v-model="notes"
-            rows="6"
-            class="w-full px-4 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-900 text-stone-900 dark:text-white focus:ring-2 focus:ring-tada-500 dark:focus:ring-tada-500 focus:border-transparent resize-none"
+            rows="4"
+            class="journal-textarea w-full px-5 py-4 rounded-xl border border-stone-200 dark:border-stone-600 bg-white/80 dark:bg-stone-900/80 text-stone-800 dark:text-stone-100 placeholder-stone-400/60 dark:placeholder-stone-500/60 focus:outline-none focus:ring-2 focus:ring-stone-400/50 focus:border-stone-300 dark:focus:border-stone-500 focus:bg-white dark:focus:bg-stone-900 transition-all duration-200"
             placeholder="Add notes or details..."
+            @input="autoGrow"
           />
         </div>
 
@@ -301,13 +332,13 @@ function getTypeIcon(type: string): string {
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label
-              class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2"
+              class="block text-sm font-medium text-stone-600 dark:text-stone-400 mb-2"
             >
               Category
             </label>
             <select
               v-model="category"
-              class="w-full px-4 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-900 text-stone-900 dark:text-white focus:ring-2 focus:ring-tada-500 dark:focus:ring-tada-500 focus:border-transparent"
+              class="w-full px-4 py-2.5 rounded-xl border border-stone-200 dark:border-stone-600 bg-white/80 dark:bg-stone-900/80 text-stone-900 dark:text-white focus:ring-2 focus:ring-stone-400/50 focus:border-stone-300 dark:focus:border-stone-500"
             >
               <option value="">No category</option>
               <option
@@ -321,14 +352,14 @@ function getTypeIcon(type: string): string {
           </div>
           <div>
             <label
-              class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2"
+              class="block text-sm font-medium text-stone-600 dark:text-stone-400 mb-2"
             >
               Subcategory
             </label>
             <select
               v-model="subcategory"
               :disabled="!category"
-              class="w-full px-4 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-900 text-stone-900 dark:text-white focus:ring-2 focus:ring-tada-500 dark:focus:ring-tada-500 focus:border-transparent disabled:opacity-50"
+              class="w-full px-4 py-2.5 rounded-xl border border-stone-200 dark:border-stone-600 bg-white/80 dark:bg-stone-900/80 text-stone-900 dark:text-white focus:ring-2 focus:ring-stone-400/50 focus:border-stone-300 dark:focus:border-stone-500 disabled:opacity-50"
             >
               <option value="">No subcategory</option>
               <option
@@ -340,32 +371,6 @@ function getTypeIcon(type: string): string {
               </option>
             </select>
           </div>
-        </div>
-
-        <!-- Emoji -->
-        <div>
-          <label
-            class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2"
-          >
-            Emoji
-          </label>
-          <div class="flex items-center gap-3">
-            <button
-              type="button"
-              class="w-12 h-12 text-2xl rounded-lg border border-stone-300 dark:border-stone-600 hover:bg-stone-100 dark:hover:bg-stone-700 transition-colors"
-              @click="showEmojiPicker = !showEmojiPicker"
-            >
-              {{ emoji || "➕" }}
-            </button>
-            <span class="text-sm text-stone-500 dark:text-stone-400">
-              Click to change emoji
-            </span>
-          </div>
-          <EmojiPicker
-            v-model="showEmojiPicker"
-            :entry-name="name"
-            @select="(e) => (emoji = e)"
-          />
         </div>
 
         <!-- Duration (for timed entries) -->
@@ -442,7 +447,7 @@ function getTypeIcon(type: string): string {
         <div class="flex gap-3 pt-4">
           <button
             :disabled="isSaving"
-            class="flex-1 px-4 py-2 bg-tada-600 hover:opacity-90 text-black dark:bg-tada-600 dark:text-white dark:hover:opacity-90 disabled:bg-stone-300 disabled:cursor-not-allowed rounded-lg font-medium transition-colors"
+            class="flex-1 py-3 px-4 bg-gradient-to-r from-stone-600 to-stone-700 hover:from-stone-700 hover:to-stone-800 disabled:from-stone-300 disabled:to-stone-300 dark:disabled:from-stone-600 dark:disabled:to-stone-600 text-white font-bold text-lg rounded-xl transition-all transform hover:scale-[1.02] disabled:hover:scale-100 shadow-lg disabled:shadow-none"
             @click="saveEntry"
           >
             <span v-if="!isSaving">Save Changes</span>
@@ -455,7 +460,7 @@ function getTypeIcon(type: string): string {
           </button>
           <button
             :disabled="isDeleting"
-            class="px-4 py-2 bg-red-500 hover:bg-red-600 disabled:bg-stone-300 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors"
+            class="px-6 py-3 bg-red-500 hover:bg-red-600 disabled:bg-stone-300 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-colors shadow-md"
             @click="deleteEntry"
           >
             <span v-if="!isDeleting">Delete</span>
@@ -466,3 +471,43 @@ function getTypeIcon(type: string): string {
     </div>
   </div>
 </template>
+
+<style scoped>
+.journal-textarea {
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-size: 1.125rem;
+  line-height: 1.75;
+  letter-spacing: 0.01em;
+  resize: none;
+  min-height: 6rem;
+  max-height: 50vh;
+  overflow-y: auto;
+  field-sizing: content;
+}
+
+.journal-textarea::placeholder {
+  font-style: italic;
+  opacity: 0.6;
+}
+
+.journal-textarea:focus {
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+.journal-textarea::-webkit-scrollbar {
+  width: 6px;
+}
+
+.journal-textarea::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.journal-textarea::-webkit-scrollbar-thumb {
+  background: rgba(120, 113, 108, 0.3);
+  border-radius: 3px;
+}
+
+.journal-textarea::-webkit-scrollbar-thumb:hover {
+  background: rgba(120, 113, 108, 0.5);
+}
+</style>

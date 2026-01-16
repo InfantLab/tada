@@ -161,6 +161,7 @@ Chains that bend, not break. When struggling, suggest easier tier instead of bro
 
 - [x] Developer error tracking panel (browser, dev mode only)
 - [x] Column auto-detection for CSV import with confidence scoring
+- [ ] Settings page autosave (debounced save on change, no manual save button)
 - [ ] Toast/notification system (replace `alert()` dialogs)
 - [ ] Fix pre-existing logger test failures (7 tests, JSON format assertions)
 - [ ] Rewrite integration tests with @nuxt/test-utils/e2e
