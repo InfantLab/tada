@@ -243,21 +243,95 @@ Same activity, different intention and framing.
 
 Emojis provide **instant visual recognition** throughout the app. They appear in timelines, timers, calendars, and rhythm views.
 
-### Emoji Hierarchy
+### Emoji Architecture
 
-Emojis are resolved in priority order:
+There are THREE levels of emojis in the system:
 
-1. **Entry-level override** (`entry.emoji`) — User picked a specific emoji for this entry
-2. **Subcategory default** — Defined emoji for the subcategory
-3. **Category default** — Defined emoji for the category
-4. **Fallback** — 📌 (pushpin) for unrecognized categories
+| Level           | Scope             | Editability                          | Example                      |
+| --------------- | ----------------- | ------------------------------------ | ---------------------------- |
+| **Category**    | Life domain       | Defaults + user customization global | `mindfulness` → 🧘           |
+| **Subcategory** | Specific activity | Defaults + user customization global | `sitting` → 🧘, `piano` → 🎹 |
+| **Entry**       | Individual record | Set at creation, editable later      | A specific meditation → 🧘   |
 
-### Resolution Example
+### Emoji Flow: Creation → Display → Edit
+
+**1. CREATING an entry:**
+
+- When a new entry is created, it is assigned the **subcategory's emoji** (or category emoji if no subcategory)
+- This emoji is stored in `entry.emoji` as the entry's personal emoji
+- The emoji comes from: user's custom subcategory emoji → default subcategory emoji → category emoji
+
+**2. DISPLAYING an entry:**
+
+- Timeline and other views display the **entry's own emoji** (`entry.emoji`)
+- If entry has no emoji (legacy data), fall back to subcategory → category → 📌
+
+**3. EDITING an entry:**
+
+- User can override the entry's emoji to any emoji they want
+- This only affects that specific entry, not the category/subcategory defaults
+
+### Why Store Emoji Per-Entry?
+
+1. **Historical accuracy** — If user changes subcategory emoji, old entries keep their original emoji
+2. **Personalization** — Each entry can have its own emoji (e.g., different meditation emojis for different sessions)
+3. **Import flexibility** — Imported entries can preserve source-specific emojis
+4. **Simple display logic** — Timeline just shows `entry.emoji`, no complex lookups
+
+### Global Emoji Customization
+
+Users can customize category and subcategory emojis globally in Settings:
+
+- **Category emoji override**: Changes the default emoji for all future entries in that category
+- **Subcategory emoji override**: Changes the default emoji for all future entries with that subcategory
+- Stored in `userPreferences.customEmojis` with keys like:
+  - `"mindfulness"` for category
+  - `"mindfulness:sitting"` for subcategory
+
+### Emoji Resolution (for new entries)
+
+When creating a new entry, resolve the emoji to assign:
+
+```typescript
+function resolveEmojiForNewEntry(
+  category: string,
+  subcategory: string,
+  userCustomEmojis: Record<string, string>
+): string {
+  // 1. Check user's custom subcategory emoji
+  const customSubcatKey = `${category}:${subcategory}`;
+  if (userCustomEmojis[customSubcatKey]) {
+    return userCustomEmojis[customSubcatKey];
+  }
+
+  // 2. Check user's custom category emoji
+  if (userCustomEmojis[category]) {
+    return userCustomEmojis[category];
+  }
+
+  // 3. Default subcategory emoji
+  const subcatEmoji = SUBCATEGORY_DEFAULTS[subcategory]?.emoji;
+  if (subcatEmoji) return subcatEmoji;
+
+  // 4. Default category emoji
+  const catEmoji = CATEGORY_DEFAULTS[category]?.emoji;
+  if (catEmoji) return catEmoji;
+
+  // 5. Fallback
+  return "📌";
+}
+```
+
+### Emoji Resolution (for display, legacy support)
+
+When displaying an entry that may not have an emoji stored:
 
 ```typescript
 function getEntryEmoji(entry: Entry): string {
+  // Entry's own emoji (the canonical source)
   if (entry.emoji) return entry.emoji;
 
+  // Legacy fallback for entries without stored emoji
   const subcatEmoji = SUBCATEGORY_DEFAULTS[entry.subcategory]?.emoji;
   if (subcatEmoji) return subcatEmoji;
 

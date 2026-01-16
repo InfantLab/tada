@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Ta-Da! page - celebrate accomplishments with positive reinforcement
+// Ta-Da! history page - view all accomplishments
 import type { Entry } from "~/server/db/schema";
 import { getEntryDisplayProps } from "~/utils/categoryDefaults";
 
@@ -105,20 +105,38 @@ async function updateEmoji(emoji: string) {
     <!-- Page header with Ta-Da! logotype -->
     <div class="flex items-center justify-between mb-6">
       <div class="flex items-center gap-4">
-        <img src="/icons/tada-logotype.png" alt="TA-DA" class="h-16 w-auto" />
+        <NuxtLink
+          to="/tada"
+          class="p-2 -ml-2 rounded-lg text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-700"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 19l-7-7 7-7"
+            />
+          </svg>
+        </NuxtLink>
         <div>
           <h1 class="text-2xl font-bold text-stone-800 dark:text-stone-100">
             Your Accomplishments
           </h1>
           <p class="text-sm text-stone-500 dark:text-stone-400">
-            Celebrate what you've achieved
+            Everything you've achieved
           </p>
         </div>
       </div>
 
       <!-- Add Ta-Da! button -->
       <NuxtLink
-        to="/add?type=tada"
+        to="/tada"
         class="flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-medium transition-colors shadow-sm"
       >
         <svg
@@ -159,7 +177,7 @@ async function updateEmoji(emoji: string) {
         achieved.
       </p>
       <NuxtLink
-        to="/add?type=tada"
+        to="/tada"
         class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-medium transition-colors shadow-md"
       >
         ⚡ Add your first Ta-Da!

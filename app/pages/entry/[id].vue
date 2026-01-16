@@ -1,7 +1,14 @@
 <script setup lang="ts">
 import type { Entry } from "~/server/db/schema";
+import {
+  CATEGORY_DEFAULTS,
+  getSubcategoriesForCategory,
+} from "~/utils/categoryDefaults";
 
 const { error: showError, success: showSuccess } = useToast();
+
+// Use unified entry save composable for updates
+const { updateEntry, createEntry, isLoading: isSaving } = useEntrySave();
 
 // Undo composable for deletion recovery
 const { addToUndo } = useUndo({
@@ -11,6 +18,9 @@ const { addToUndo } = useUndo({
     console.debug("Undo expired for entry:", item.id);
   },
 });
+
+// User preferences for category visibility
+const { loadPreferences, isCategoryVisible } = usePreferences();
 
 definePageMeta({
   layout: "default",
@@ -22,29 +32,38 @@ const entryId = route.params["id"] as string;
 // Form state
 const entry = ref<Entry | null>(null);
 const isLoading = ref(true);
-const isSaving = ref(false);
 const isDeleting = ref(false);
 const error = ref<string | null>(null);
+const showAdvanced = ref(false);
+const showEmojiPicker = ref(false);
 
 // Editable fields
 const name = ref("");
 const notes = ref("");
 const timestamp = ref("");
 const tags = ref<string[]>([]);
+const category = ref<string | null>(null);
+const subcategory = ref<string | null>(null);
+const emoji = ref<string | null>(null);
+const durationSeconds = ref<number | null>(null);
 
 // Load entry
 async function loadEntry() {
   try {
     isLoading.value = true;
+    await loadPreferences();
     const data = await $fetch<Entry>(`/api/entries/${entryId}`);
     entry.value = data;
 
     // Populate form fields
     name.value = data.name;
     notes.value = data.notes || "";
-    // timestamp is THE canonical timeline field - always set
-    timestamp.value = formatDatetimeLocal(data.timestamp);
+    timestamp.value = data.timestamp;
     tags.value = data.tags || [];
+    category.value = data.category || null;
+    subcategory.value = data.subcategory || null;
+    emoji.value = data.emoji || null;
+    durationSeconds.value = data.durationSeconds || null;
   } catch (err: unknown) {
     console.error("Failed to load entry:", err);
     error.value = err instanceof Error ? err.message : "Failed to load entry";
@@ -55,42 +74,52 @@ async function loadEntry() {
 
 onMounted(loadEntry);
 
-// Format date for datetime-local input
-function formatDatetimeLocal(dateStr: string): string {
-  const date = new Date(dateStr);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  const hours = String(date.getHours()).padStart(2, "0");
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-  return `${year}-${month}-${day}T${hours}:${minutes}`;
-}
+// Category options
+const categoryOptions = computed(() => {
+  return Object.keys(CATEGORY_DEFAULTS)
+    .filter((slug) => isCategoryVisible(slug))
+    .map((slug) => ({
+      value: slug,
+      label: CATEGORY_DEFAULTS[slug]!.label,
+      emoji: CATEGORY_DEFAULTS[slug]!.emoji,
+    }));
+});
+
+// Subcategory options based on selected category
+const subcategoryOptions = computed(() => {
+  if (!category.value) return [];
+  return getSubcategoriesForCategory(category.value).map((s) => ({
+    value: s.slug,
+    label: s.label,
+    emoji: s.emoji,
+  }));
+});
 
 // Save changes
 async function saveEntry() {
   if (!entry.value) return;
 
-  isSaving.value = true;
-  try {
-    await $fetch(`/api/entries/${entryId}`, {
-      method: "PATCH",
-      body: {
-        name: name.value,
-        notes: notes.value || null,
-        timestamp: new Date(timestamp.value).toISOString(),
-        tags: tags.value.length > 0 ? tags.value : null,
-      },
-    });
+  const result = await updateEntry(
+    entryId,
+    {
+      name: name.value,
+      notes: notes.value || null,
+      timestamp: timestamp.value,
+      tags: tags.value.length > 0 ? tags.value : undefined,
+      category: category.value,
+      subcategory: subcategory.value,
+      emoji: emoji.value,
+      durationSeconds: durationSeconds.value,
+    },
+    {
+      navigateTo: "/",
+      successMessage: "Entry saved!",
+      skipEmojiResolution: true, // Keep the manually selected emoji
+    }
+  );
 
-    // Navigate back to timeline
-    navigateTo("/");
-  } catch (err: unknown) {
-    console.error("Failed to save entry:", err);
-    const message = err instanceof Error ? err.message : "Unknown error";
-    showError(`Failed to save entry: ${message}`);
-  } finally {
-    isSaving.value = false;
-  }
+  // Result will be null if save failed (error already shown by composable)
+  if (!result) return;
 }
 
 // Delete entry with undo support
@@ -133,18 +162,27 @@ async function deleteEntry() {
 
 // Restore a deleted entry
 async function restoreEntry(data: Entry) {
-  try {
-    await $fetch("/api/entries", {
-      method: "POST",
-      body: {
-        ...data,
-        id: undefined, // Let server generate new ID
-      },
-    });
-    showSuccess("Entry restored!");
-  } catch (err) {
-    console.error("Failed to restore entry:", err);
-    showError("Failed to restore entry");
+  const result = await createEntry(
+    {
+      type: data.type,
+      name: data.name,
+      category: data.category ?? undefined,
+      subcategory: data.subcategory ?? undefined,
+      emoji: data.emoji ?? undefined,
+      timestamp: data.timestamp,
+      durationSeconds: data.durationSeconds ?? undefined,
+      data: data.data as Record<string, unknown> | undefined,
+      tags: data.tags ?? undefined,
+      notes: data.notes ?? undefined,
+    },
+    {
+      skipEmojiResolution: true, // Preserve original emoji
+      successMessage: "Entry restored!",
+    }
+  );
+
+  if (!result) {
+    console.error("Failed to restore entry");
   }
 }
 
@@ -242,18 +280,7 @@ function getTypeIcon(type: string): string {
         </div>
 
         <!-- Timestamp -->
-        <div>
-          <label
-            class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2"
-          >
-            Date & Time
-          </label>
-          <input
-            v-model="timestamp"
-            type="datetime-local"
-            class="w-full px-4 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-900 text-stone-900 dark:text-white focus:ring-2 focus:ring-tada-500 dark:focus:ring-tada-500 focus:border-transparent"
-          />
-        </div>
+        <DateTimeInput v-model="timestamp" label="Date & Time" />
 
         <!-- Notes -->
         <div>
@@ -270,21 +297,143 @@ function getTypeIcon(type: string): string {
           />
         </div>
 
+        <!-- Category & Subcategory -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label
+              class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2"
+            >
+              Category
+            </label>
+            <select
+              v-model="category"
+              class="w-full px-4 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-900 text-stone-900 dark:text-white focus:ring-2 focus:ring-tada-500 dark:focus:ring-tada-500 focus:border-transparent"
+            >
+              <option value="">No category</option>
+              <option
+                v-for="cat in categoryOptions"
+                :key="cat.value"
+                :value="cat.value"
+              >
+                {{ cat.emoji }} {{ cat.label }}
+              </option>
+            </select>
+          </div>
+          <div>
+            <label
+              class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2"
+            >
+              Subcategory
+            </label>
+            <select
+              v-model="subcategory"
+              :disabled="!category"
+              class="w-full px-4 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-900 text-stone-900 dark:text-white focus:ring-2 focus:ring-tada-500 dark:focus:ring-tada-500 focus:border-transparent disabled:opacity-50"
+            >
+              <option value="">No subcategory</option>
+              <option
+                v-for="sub in subcategoryOptions"
+                :key="sub.value"
+                :value="sub.value"
+              >
+                {{ sub.emoji }} {{ sub.label }}
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Emoji -->
+        <div>
+          <label
+            class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2"
+          >
+            Emoji
+          </label>
+          <div class="flex items-center gap-3">
+            <button
+              type="button"
+              class="w-12 h-12 text-2xl rounded-lg border border-stone-300 dark:border-stone-600 hover:bg-stone-100 dark:hover:bg-stone-700 transition-colors"
+              @click="showEmojiPicker = !showEmojiPicker"
+            >
+              {{ emoji || "➕" }}
+            </button>
+            <span class="text-sm text-stone-500 dark:text-stone-400">
+              Click to change emoji
+            </span>
+          </div>
+          <EmojiPicker
+            v-model="showEmojiPicker"
+            :entry-name="name"
+            @select="(e) => (emoji = e)"
+          />
+        </div>
+
+        <!-- Duration (for timed entries) -->
+        <DurationInput
+          v-if="entry.type === 'timed' || entry.type === 'meditation'"
+          v-model="durationSeconds"
+          label="Duration"
+        />
+
         <!-- Entry metadata (read-only) -->
         <div class="pt-4 border-t border-stone-200 dark:border-stone-700">
-          <div class="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <span class="text-stone-500 dark:text-stone-400">Type:</span>
-              <span class="ml-2 text-stone-700 dark:text-stone-300">{{
-                entry.type
-              }}</span>
+          <button
+            type="button"
+            class="flex items-center gap-2 text-sm text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-300 mb-3"
+            @click="showAdvanced = !showAdvanced"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-4 w-4 transition-transform"
+              :class="{ 'rotate-90': showAdvanced }"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+            Advanced Details
+          </button>
+          <div v-if="showAdvanced" class="space-y-3 text-sm">
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <span class="text-stone-500 dark:text-stone-400">Type:</span>
+                <span class="ml-2 text-stone-700 dark:text-stone-300">{{
+                  entry.type
+                }}</span>
+              </div>
+              <div v-if="entry.source">
+                <span class="text-stone-500 dark:text-stone-400">Source:</span>
+                <span class="ml-2 text-stone-700 dark:text-stone-300">{{
+                  entry.source
+                }}</span>
+              </div>
+              <div>
+                <span class="text-stone-500 dark:text-stone-400">Created:</span>
+                <span class="ml-2 text-stone-700 dark:text-stone-300">{{
+                  new Date(entry.createdAt).toLocaleString()
+                }}</span>
+              </div>
+              <div v-if="entry.updatedAt !== entry.createdAt">
+                <span class="text-stone-500 dark:text-stone-400">Updated:</span>
+                <span class="ml-2 text-stone-700 dark:text-stone-300">{{
+                  new Date(entry.updatedAt).toLocaleString()
+                }}</span>
+              </div>
             </div>
-            <div v-if="entry.durationSeconds">
-              <span class="text-stone-500 dark:text-stone-400">Duration:</span>
-              <span class="ml-2 text-stone-700 dark:text-stone-300">
-                {{ Math.floor(entry.durationSeconds / 60) }}m
-                {{ entry.durationSeconds % 60 }}s
-              </span>
+            <div v-if="entry.data">
+              <span class="text-stone-500 dark:text-stone-400 block mb-1"
+                >Data (JSON):</span
+              >
+              <pre
+                class="text-xs bg-stone-100 dark:bg-stone-900 p-2 rounded overflow-x-auto"
+                >{{ JSON.stringify(entry.data, null, 2) }}</pre
+              >
             </div>
           </div>
         </div>

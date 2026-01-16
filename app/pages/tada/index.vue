@@ -1,8 +1,27 @@
 <script setup lang="ts">
-// Dedicated Ta-Da! add page - celebrate accomplishments with positive reinforcement
+// Dedicated Ta-Da! entry page - celebrate accomplishments with positive reinforcement
 import { getSubcategoriesForCategory } from "~/utils/categoryDefaults";
 
-const { error: showError, success: showSuccess } = useToast();
+// Use the unified entry save composable
+const { createEntry, isLoading: isSubmitting } = useEntrySave();
+const { success: showSuccess } = useToast();
+
+// User preferences for custom emojis (for emoji resolution in composable)
+const { loadPreferences } = usePreferences();
+
+// Load preferences on mount
+onMounted(() => {
+  loadPreferences();
+});
+
+// Auto-grow textarea as user types
+function autoGrow() {
+  const textarea = notesTextarea.value;
+  if (textarea) {
+    textarea.style.height = 'auto';
+    textarea.style.height = Math.min(textarea.scrollHeight, window.innerHeight * 0.5) + 'px';
+  }
+}
 
 definePageMeta({
   layout: "default",
@@ -11,13 +30,13 @@ definePageMeta({
 // Form state
 const title = ref("");
 const notes = ref("");
-const isSubmitting = ref(false);
+const notesTextarea = ref<HTMLTextAreaElement | null>(null);
 
 // Celebration state
 const showCelebration = ref(false);
 
-// Emoji picker state
-const customEmoji = ref<string | null>(null);
+// Emoji picker state - default to ⚡
+const customEmoji = ref<string>("⚡");
 const showEmojiPicker = ref(false);
 
 // Subcategory for tadas (home, work, personal, etc.)
@@ -42,11 +61,11 @@ function handleEmojiSelect(emoji: string) {
   customEmoji.value = emoji;
 }
 
-// Play celebration sound
+// Play celebration sound - using the correct tada fanfare
 function playCelebrationSound() {
   try {
-    const audio = new Audio("/sounds/tada-celebration.mp3");
-    audio.volume = 0.6;
+    const audio = new Audio("/sounds/tada-f-versionD.mp3");
+    audio.volume = 0.7;
     audio.play().catch(() => {
       // Audio play failed (user hasn't interacted with page yet)
     });
@@ -64,44 +83,35 @@ function celebrate() {
   // Auto-hide celebration after animation completes
   setTimeout(() => {
     showCelebration.value = false;
-    navigateTo("/tada");
+    navigateTo("/");
   }, 2000);
 }
 
 async function submitEntry() {
   if (!title.value.trim() && !notes.value.trim()) return;
 
-  isSubmitting.value = true;
-
-  try {
-    const entry = {
+  const result = await createEntry(
+    {
       type: "tada",
       name: title.value.trim() || "Ta-Da! entry",
       category: "accomplishment",
       subcategory: tadaSubcategory.value,
-      emoji: customEmoji.value || undefined,
-      title: title.value.trim() || null,
+      emoji: customEmoji.value || "⚡",
       notes: notes.value.trim() || null,
-      timestamp: new Date().toISOString(),
       data: {},
       tags: ["accomplishment", tadaSubcategory.value].filter(
         Boolean
       ) as string[],
-    };
+    },
+    {
+      skipEmojiResolution: true, // Use the emoji we have
+      showSuccessToast: false, // We handle celebration ourselves
+    }
+  );
 
-    await $fetch("/api/entries", {
-      method: "POST",
-      body: entry,
-    });
-
-    // Trigger celebration instead of immediate navigation
+  // Only celebrate if save succeeded
+  if (result) {
     celebrate();
-  } catch (error: unknown) {
-    console.error("Failed to create Ta-Da!:", error);
-    const message = error instanceof Error ? error.message : "Unknown error";
-    showError(`Failed to create Ta-Da!: ${message}`);
-  } finally {
-    isSubmitting.value = false;
   }
 }
 </script>
@@ -111,7 +121,7 @@ async function submitEntry() {
     <!-- Page header with Ta-Da! branding -->
     <div class="flex items-center gap-4 mb-6">
       <NuxtLink
-        to="/tada"
+        to="/"
         class="p-2 -ml-2 rounded-lg text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-700"
       >
         <svg
@@ -132,63 +142,44 @@ async function submitEntry() {
       <img src="/icons/tada-logotype.png" alt="TA-DA" class="h-12 w-auto" />
     </div>
 
-    <!-- Celebratory header -->
-    <div
-      class="bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 rounded-xl p-6 mb-6 border border-amber-200 dark:border-amber-800"
+    <!-- Main Ta-Da Entry Area -->
+    <form
+      class="bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 dark:from-amber-900/30 dark:via-yellow-900/20 dark:to-orange-900/20 rounded-2xl p-6 border-2 border-amber-200 dark:border-amber-700 shadow-lg space-y-6"
+      @submit.prevent="submitEntry"
     >
-      <div class="flex items-center gap-3 mb-2">
-        <span class="text-4xl">⚡</span>
-        <h1 class="text-2xl font-bold text-amber-700 dark:text-amber-300">
-          What did you accomplish?
-        </h1>
-      </div>
-      <p class="text-sm text-amber-600 dark:text-amber-400">
-        Every win deserves recognition. Celebrate what you did!
-      </p>
-    </div>
-
-    <form class="space-y-6" @submit.prevent="submitEntry">
-      <!-- Title -->
+      <!-- Large Emoji + Title Input - The Hero Section -->
       <div>
-        <label
-          for="title"
-          class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2"
-        >
-          What did you do?
-        </label>
+        <!-- Clickable Emoji -->
+        <div class="flex justify-center mb-4">
+          <button
+            type="button"
+            class="text-7xl hover:scale-110 transition-transform cursor-pointer p-2 rounded-2xl hover:bg-amber-100/50 dark:hover:bg-amber-800/30"
+            title="Click to change emoji"
+            @click="openEmojiPicker"
+          >
+            {{ customEmoji }}
+          </button>
+        </div>
+
+        <!-- Large Title Input -->
         <input
           id="title"
           v-model="title"
           type="text"
-          placeholder="Describe your accomplishment..."
-          class="w-full px-4 py-3 rounded-xl border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 text-stone-800 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+          placeholder="What did you accomplish?"
+          class="w-full px-4 py-4 text-2xl font-bold text-center rounded-xl border-2 border-amber-300 dark:border-amber-600 bg-white/80 dark:bg-stone-800/80 text-stone-800 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-500 focus:outline-none focus:ring-4 focus:ring-amber-400/50 dark:focus:ring-amber-500/50 focus:border-amber-400 dark:focus:border-amber-500"
           autofocus
         />
-      </div>
 
-      <!-- Custom Emoji -->
-      <div>
-        <label
-          class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2"
-        >
-          Emoji (optional)
-        </label>
-        <button
-          type="button"
-          class="w-full px-4 py-3 rounded-xl border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 text-stone-800 dark:text-stone-100 hover:bg-stone-50 dark:hover:bg-stone-750 transition-colors flex items-center gap-3"
-          @click="openEmojiPicker"
-        >
-          <span class="text-2xl">{{ customEmoji || "⚡" }}</span>
-          <span class="text-stone-500 dark:text-stone-400"
-            >Click to change emoji</span
-          >
-        </button>
+        <p class="text-center text-sm text-amber-600 dark:text-amber-400 mt-3">
+          Tap the emoji to customize it ☝️
+        </p>
       </div>
 
       <!-- Subcategory for Tadas -->
       <div>
         <label
-          class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2"
+          class="block text-sm font-medium text-amber-700 dark:text-amber-300 mb-2"
         >
           Category
         </label>
@@ -215,16 +206,18 @@ async function submitEntry() {
       <div>
         <label
           for="notes"
-          class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2"
+          class="block text-sm font-medium text-amber-700 dark:text-amber-300 mb-2"
         >
           Details (optional)
         </label>
         <textarea
           id="notes"
+          ref="notesTextarea"
           v-model="notes"
           rows="4"
           placeholder="Add any details you want to remember..."
-          class="w-full px-4 py-3 rounded-xl border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 text-stone-800 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none"
+          class="journal-textarea w-full px-5 py-4 rounded-xl border border-amber-200 dark:border-amber-700 bg-white/80 dark:bg-stone-800/80 text-stone-800 dark:text-stone-100 placeholder-amber-400/60 dark:placeholder-amber-500/60 focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-300 dark:focus:border-amber-600 focus:bg-white dark:focus:bg-stone-800 transition-all duration-200"
+          @input="autoGrow"
         />
       </div>
 
@@ -232,15 +225,26 @@ async function submitEntry() {
       <button
         type="submit"
         :disabled="isSubmitting || (!title.trim() && !notes.trim())"
-        class="w-full py-4 px-4 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 disabled:from-stone-300 disabled:to-stone-300 dark:disabled:from-stone-600 dark:disabled:to-stone-600 text-white font-bold text-lg rounded-xl transition-all transform hover:scale-105 disabled:hover:scale-100 shadow-lg disabled:shadow-none flex items-center justify-center gap-2"
+        class="w-full py-4 px-4 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 disabled:from-stone-300 disabled:to-stone-300 dark:disabled:from-stone-600 dark:disabled:to-stone-600 text-white font-bold text-xl rounded-xl transition-all transform hover:scale-105 disabled:hover:scale-100 shadow-lg disabled:shadow-none flex items-center justify-center gap-3"
       >
         <span v-if="isSubmitting">Saving...</span>
         <template v-else>
-          <span class="text-2xl">⚡</span>
+          <span class="text-3xl">⚡</span>
           <span>Ta-Da!</span>
         </template>
       </button>
+
     </form>
+
+    <!-- Link to history (outside the form card) -->
+    <div class="text-center mt-4">
+      <NuxtLink
+        to="/tada/history"
+        class="text-sm text-stone-500 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 underline"
+      >
+        View all your accomplishments →
+      </NuxtLink>
+    </div>
 
     <!-- Emoji Picker Component -->
     <EmojiPicker
@@ -280,6 +284,45 @@ async function submitEntry() {
 </template>
 
 <style scoped>
+/* Pretty textarea styling */
+.journal-textarea {
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-size: 1.125rem;
+  line-height: 1.75;
+  letter-spacing: 0.01em;
+  resize: none;
+  min-height: 6rem;
+  max-height: 50vh;
+  overflow-y: auto;
+  field-sizing: content;
+}
+
+.journal-textarea::placeholder {
+  font-style: italic;
+  opacity: 0.6;
+}
+
+.journal-textarea:focus {
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+.journal-textarea::-webkit-scrollbar {
+  width: 6px;
+}
+
+.journal-textarea::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.journal-textarea::-webkit-scrollbar-thumb {
+  background: rgba(245, 158, 11, 0.3);
+  border-radius: 3px;
+}
+
+.journal-textarea::-webkit-scrollbar-thumb:hover {
+  background: rgba(245, 158, 11, 0.5);
+}
+
 /* Celebration Overlay */
 .celebration-overlay {
   position: fixed;

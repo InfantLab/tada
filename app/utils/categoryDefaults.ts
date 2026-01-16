@@ -253,3 +253,56 @@ export function getEntryTimestamp(entry: {
 export function getCategorySlugs(): string[] {
   return Object.keys(CATEGORY_DEFAULTS);
 }
+
+/**
+ * Resolve the emoji to assign to a new entry based on category and subcategory.
+ * Uses user's custom emoji preferences if provided, otherwise falls back to defaults.
+ *
+ * Priority order:
+ * 1. User's custom subcategory emoji (key: "category:subcategory")
+ * 2. User's custom category emoji (key: "category")
+ * 3. Default subcategory emoji from CATEGORY_DEFAULTS
+ * 4. Default category emoji from CATEGORY_DEFAULTS
+ * 5. Fallback: 📌
+ *
+ * @param category - The category slug (e.g., "mindfulness")
+ * @param subcategory - The subcategory slug (e.g., "sitting")
+ * @param customEmojis - User's custom emoji overrides from preferences
+ */
+export function resolveEmojiForNewEntry(
+  category: string,
+  subcategory: string,
+  customEmojis: Record<string, string> = {}
+): string {
+  // 1. Check user's custom subcategory emoji
+  if (category && subcategory) {
+    const customSubcatKey = `${category}:${subcategory}`;
+    if (customEmojis[customSubcatKey]) {
+      return customEmojis[customSubcatKey];
+    }
+  }
+
+  // 2. Check user's custom category emoji
+  if (category && customEmojis[category]) {
+    return customEmojis[category];
+  }
+
+  // 3. Default subcategory emoji (within the specific category)
+  if (category && subcategory) {
+    const subcatDef = getSubcategoryInCategory(category, subcategory);
+    if (subcatDef?.emoji) {
+      return subcatDef.emoji;
+    }
+  }
+
+  // 4. Default category emoji
+  if (category) {
+    const catEmoji = getCategoryEmoji(category);
+    if (catEmoji && catEmoji !== "📌") {
+      return catEmoji;
+    }
+  }
+
+  // 5. Fallback
+  return "📌";
+}

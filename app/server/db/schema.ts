@@ -195,6 +195,15 @@ export const attachments = sqliteTable("attachments", {
 // ============================================================================
 // Category Settings - User customization of category/subcategory display
 // ============================================================================
+// NOTE: This table provides per-row storage for complex category customization.
+// For simple emoji overrides, userPreferences.customEmojis is used instead.
+// This table exists for future features like per-category colors, visibility,
+// or other settings that benefit from individual row storage.
+//
+// Emoji storage strategy:
+// - Category emoji: subcategory is NULL, emoji = category's custom emoji
+// - Subcategory emoji: subcategory is set, emoji = that subcategory's custom emoji
+// ============================================================================
 
 export const categorySettings = sqliteTable("category_settings", {
   id: text("id").primaryKey(), // UUID
@@ -203,10 +212,10 @@ export const categorySettings = sqliteTable("category_settings", {
     .references(() => users.id, { onDelete: "cascade" }),
 
   category: text("category").notNull(), // 'mindfulness', 'accomplishment', etc.
-  subcategory: text("subcategory"), // null = category-level setting
+  subcategory: text("subcategory"), // null = category-level setting, set = subcategory-level
 
-  emoji: text("emoji"), // Override default emoji
-  color: text("color"), // Override default color (hex)
+  emoji: text("emoji"), // Override default emoji for this category OR subcategory
+  color: text("color"), // Override default color (hex) - category-level only
 
   createdAt: text("created_at")
     .notNull()
@@ -237,7 +246,11 @@ export const userPreferences = sqliteTable("user_preferences", {
     .$type<string[]>()
     .default([]),
 
-  // Custom emoji overrides for categories/subcategories
+  // Custom emoji overrides for categories and subcategories
+  // Key format:
+  //   - Category emoji: "mindfulness" → "🪷"
+  //   - Subcategory emoji: "mindfulness:sitting" → "🧘‍♂️"
+  // These are user's global preferences that affect new entry emoji assignment
   customEmojis: text("custom_emojis", { mode: "json" })
     .$type<Record<string, string>>()
     .default({}),

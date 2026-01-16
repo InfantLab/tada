@@ -8,7 +8,8 @@ import {
 } from "~/utils/categoryDefaults";
 import type { TimerPreset } from "~/server/db/schema";
 
-const { error: showError } = useToast();
+// Use unified entry save composable
+const { createEntry, isLoading: isSaving } = useEntrySave();
 
 definePageMeta({
   layout: "default",
@@ -77,8 +78,8 @@ const milestoneInterval = computed(() => {
 const selectedCategory = ref("mindfulness");
 const selectedSubcategory = ref("sitting");
 
-// User preferences for filtering categories
-const { loadPreferences, isCategoryVisible } = usePreferences();
+// User preferences for filtering categories and custom emojis
+const { loadPreferences, isCategoryVisible, preferences } = usePreferences();
 
 // Load preferences on mount
 onMounted(() => {
@@ -92,7 +93,6 @@ const presetPickerRef = ref<InstanceType<
   typeof import("~/components/TimerPresetPicker.vue").default
 > | null>(null);
 
-const isSaving = ref(false);
 const startBell = ref("bell");
 const milestoneFired = ref<Set<number>>(new Set()); // Track which milestones have fired
 const showSettings = ref(false);
@@ -158,13 +158,15 @@ const currentPresetDescription = computed(() => {
     (c) => c.value === selectedCategory.value
   );
   const catLabel = catOption?.label || selectedCategory.value;
-  
+
   const modeLabel = timerMode.value === "fixed" ? "Fixed" : "Open-ended";
   const intervalInfo = intervals.value[0]?.durationMinutes
     ? `${intervals.value[0].durationMinutes}min intervals`
     : "";
-  
-  return `${catLabel} • ${modeLabel}${intervalInfo ? ` • ${intervalInfo}` : ""}`;
+
+  return `${catLabel} • ${modeLabel}${
+    intervalInfo ? ` • ${intervalInfo}` : ""
+  }`;
 });
 
 // Category options for parent category selection
@@ -280,10 +282,10 @@ function checkMilestones() {
   if (timerMode.value !== "unlimited") return;
   const currentMinutes = Math.floor(elapsedSeconds.value / 60);
   const interval = milestoneInterval.value;
-  
+
   // Find all milestones we should have hit
   const lastMilestone = Math.floor(currentMinutes / interval) * interval;
-  
+
   // Count missed milestones and play ONE bell if any were missed (handles backgrounded tabs)
   let missedCount = 0;
   for (let m = interval; m <= lastMilestone; m += interval) {
@@ -336,7 +338,8 @@ function beginSession() {
   timerInterval.value = setInterval(() => {
     // Calculate elapsed from actual time, not increments
     const now = Date.now();
-    const newElapsed = Math.floor((now - sessionStartTime.value!) / 1000) + pausedElapsed.value;
+    const newElapsed =
+      Math.floor((now - sessionStartTime.value!) / 1000) + pausedElapsed.value;
     const prevElapsed = elapsedSeconds.value;
     elapsedSeconds.value = newElapsed;
 
@@ -378,7 +381,7 @@ function beginSession() {
           isOvertime.value = true;
         }
       }
-      
+
       if (isOvertime.value) {
         // Calculate overtime from difference
         const totalTarget = cumulative[cumulative.length - 1] || 0;
@@ -452,7 +455,8 @@ function resumeTimer() {
   timerInterval.value = setInterval(() => {
     // Calculate elapsed from actual time
     const now = Date.now();
-    const newElapsed = Math.floor((now - sessionStartTime.value!) / 1000) + pausedElapsed.value;
+    const newElapsed =
+      Math.floor((now - sessionStartTime.value!) / 1000) + pausedElapsed.value;
     elapsedSeconds.value = newElapsed;
 
     // Check for milestones in count-up mode
@@ -466,7 +470,7 @@ function resumeTimer() {
           ? fixedIntervals.value
           : [targetMinutes.value];
       const cumulative = buildCumulativeTargets(intrvls);
-      
+
       // Handle potentially jumping past multiple intervals (backgrounded tab)
       if (!isOvertime.value && nextIntervalIndex.value < cumulative.length) {
         let crossedCount = 0;
@@ -489,7 +493,7 @@ function resumeTimer() {
           isOvertime.value = true;
         }
       }
-      
+
       if (isOvertime.value) {
         const totalTarget = cumulative[cumulative.length - 1] || 0;
         overtimeSeconds.value = Math.max(0, elapsedSeconds.value - totalTarget);
@@ -588,41 +592,40 @@ function requestSave(includeOvertime: boolean = true) {
 async function saveSession(includeOvertime: boolean = true) {
   if (elapsedSeconds.value < 1) return;
 
-  isSaving.value = true;
   showPostSessionModal.value = false;
 
-  try {
-    // Get the subcategory label for the name
-    const subcatOption = subcategoryOptions.value.find(
-      (s) => s.value === selectedSubcategory.value
-    );
-    const subcatLabel = subcatOption?.label || selectedSubcategory.value;
-    const minutes = Math.floor(elapsedSeconds.value / 60);
+  // Get the subcategory label for the name
+  const subcatOption = subcategoryOptions.value.find(
+    (s) => s.value === selectedSubcategory.value
+  );
+  const subcatLabel = subcatOption?.label || selectedSubcategory.value;
+  const minutes = Math.floor(elapsedSeconds.value / 60);
 
-    // Celebratory messaging: "You did 47 minutes!"
-    const celebrateMessages = [
-      `You did ${minutes}m of ${subcatLabel}!`,
-      `${minutes} minutes of ${subcatLabel} - awesome!`,
-      `You showed up for ${minutes}m of ${subcatLabel}!`,
-      `${minutes} minutes well spent on ${subcatLabel}!`,
-    ];
-    const celebrationMessage =
-      celebrateMessages[Math.floor(Math.random() * celebrateMessages.length)];
+  // Celebratory messaging: "You did 47 minutes!"
+  const celebrateMessages = [
+    `You did ${minutes}m of ${subcatLabel}!`,
+    `${minutes} minutes of ${subcatLabel} - awesome!`,
+    `You showed up for ${minutes}m of ${subcatLabel}!`,
+    `${minutes} minutes well spent on ${subcatLabel}!`,
+  ];
+  const celebrationMessage =
+    celebrateMessages[Math.floor(Math.random() * celebrateMessages.length)];
 
-    const totalFixedSeconds = fixedIntervals.value.reduce((a, b) => a + b, 0);
-    const durationToSave =
-      timerMode.value === "fixed"
-        ? includeOvertime && isOvertime.value
-          ? totalFixedSeconds + overtimeSeconds.value
-          : totalFixedSeconds
-        : elapsedSeconds.value;
+  const totalFixedSeconds = fixedIntervals.value.reduce((a, b) => a + b, 0);
+  const durationToSave =
+    timerMode.value === "fixed"
+      ? includeOvertime && isOvertime.value
+        ? totalFixedSeconds + overtimeSeconds.value
+        : totalFixedSeconds
+      : elapsedSeconds.value;
 
-    const entry = {
+  const result = await createEntry(
+    {
       type: "timed",
       name: celebrationMessage,
       category: selectedCategory.value,
       subcategory: selectedSubcategory.value,
-      timestamp: new Date().toISOString(),
+      // Emoji resolved automatically by composable from category/subcategory
       durationSeconds: durationToSave,
       data: {
         mode: timerMode.value,
@@ -636,24 +639,16 @@ async function saveSession(includeOvertime: boolean = true) {
         reflection: sessionReflection.value || undefined,
       },
       tags: [selectedCategory.value, selectedSubcategory.value],
-    };
+    },
+    {
+      navigateTo: "/",
+      showSuccessToast: false, // Navigate silently
+    }
+  );
 
-    await $fetch("/api/entries", {
-      method: "POST",
-      body: entry,
-    });
-
-    // Reset for next session
+  // Only reset if save succeeded
+  if (result) {
     resetTimer();
-
-    // Navigate to timeline
-    navigateTo("/");
-  } catch (error: unknown) {
-    console.error("Failed to save session:", error);
-    const message = error instanceof Error ? error.message : "Unknown error";
-    showError(`Failed to save session: ${message}`);
-  } finally {
-    isSaving.value = false;
   }
 }
 
@@ -684,7 +679,7 @@ function releaseWakeLock() {
 function handlePresetSelect(preset: TimerPreset) {
   // Store preset name for headline
   selectedPresetName.value = preset.name;
-  
+
   // Apply preset settings
   selectedCategory.value = preset.category || "mindfulness";
   selectedSubcategory.value = preset.subcategory || "sitting";
@@ -714,7 +709,7 @@ function handlePresetSelect(preset: TimerPreset) {
       }));
     }
   }
-  
+
   // Collapse preset selector after selection, expand settings for customization
   showPresetSelector.value = false;
 }

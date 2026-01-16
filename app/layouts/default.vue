@@ -3,7 +3,7 @@ const navigation = [
   { name: "Timeline", href: "/", icon: "i-heroicons-clock" },
   { name: "Timer", href: "/timer", icon: "i-heroicons-play-circle" },
   { name: "Ta-Da!", href: "/tada", icon: "i-heroicons-bolt" },
-  { name: "Journal", href: "/journal", icon: "i-heroicons-book-open" },
+  { name: "Journal", href: "/add", icon: "i-heroicons-book-open" },
   { name: "Rhythms", href: "/rhythms", icon: "i-heroicons-chart-bar" },
 ];
 
