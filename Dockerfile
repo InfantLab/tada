@@ -1,19 +1,15 @@
-# Build stage
-FROM oven/bun:1 AS builder
+# Build stage - use Alpine for consistency with production
+FROM oven/bun:1-alpine AS builder
 
 WORKDIR /app
 
-# Install CA certificates for HTTPS git operations
-RUN apt-get update && \
-    apt-get install -y ca-certificates && \
-    update-ca-certificates && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+# Install build dependencies (CA certs for HTTPS, build tools for native modules)
+RUN apk add --no-cache ca-certificates
 
 # Copy package files
 COPY app/package.json app/bun.lock* ./
 
-# Install dependencies
+# Install dependencies (native bindings will be compiled for musl/Alpine)
 RUN bun install --frozen-lockfile
 
 # Copy source
@@ -22,20 +18,23 @@ COPY app/ ./
 # Build the application (skip type check - generated files cause issues)
 RUN bun run build:docker
 
-# Production stage
+# Production stage - Alpine for minimal attack surface
 FROM oven/bun:1-alpine AS production
 
 WORKDIR /app
 
-# Install CA certificates and bash for HTTPS operations and development
-RUN apk add ca-certificates bash
+# Install runtime dependencies
+RUN apk add --no-cache ca-certificates
 
 # Create non-root user
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nuxt
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 --ingroup nodejs nuxt
 
 # Copy built application
 COPY --from=builder /app/.output ./.output
+
+# Copy node_modules for native bindings (libsql needs platform-specific binaries)
+COPY --from=builder /app/node_modules ./node_modules
 
 # Create data directory for SQLite
 RUN mkdir -p /app/data && chown -R nuxt:nodejs /app/data

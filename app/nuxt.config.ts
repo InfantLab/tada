@@ -121,6 +121,18 @@ export default defineNuxtConfig({
     experimental: {
       database: true,
     },
+    // Externalize native bindings - they can't be bundled, must use node_modules at runtime
+    externals: {
+      external: [
+        "@libsql/client",
+        "@libsql/linux-x64-gnu",
+        "@libsql/linux-x64-musl",
+        "@libsql/darwin-arm64",
+        "@libsql/darwin-x64",
+        "@libsql/win32-x64-msvc",
+        "libsql",
+      ],
+    },
   },
 
   // Vite optimizations for faster dev
