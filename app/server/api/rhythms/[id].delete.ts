@@ -4,6 +4,7 @@
  */
 
 import { eq, and } from "drizzle-orm";
+import { db } from "~/server/db";
 import { rhythms } from "~/server/db/schema";
 import { createLogger } from "~/server/utils/logger";
 
@@ -20,7 +21,6 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const db = event.context["db"];
   const id = getRouterParam(event, "id");
 
   if (!id) {

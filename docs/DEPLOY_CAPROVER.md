@@ -39,10 +39,14 @@ The SQLite database must persist across container restarts.
 2. **In CapRover Dashboard → Apps → tada → "App Configs" tab:**
 
    - Scroll to **"Persistent Directories"**
-   - **Path in App:** `/app/data` (must be absolute path with leading slash)
+   - **Path in App:** `/data` ⚠️ **CRITICAL: Must be exactly `/data`, not `/app/data`**
    - **Host Path:** `/var/lib/caprover/appsdata/tadata`
    - Click **"+"** to add
    - Click **"Save & Update"**
+
+   > ⚠️ **DATA LOSS WARNING:** The Dockerfile sets `DATABASE_URL=file:/data/db.sqlite`. 
+   > If you change the "Path in App" or the Dockerfile DATABASE_URL, you will lose all data.
+   > The paths must match exactly.
 
 3. **Configure Container HTTP Port:**
 

@@ -3,6 +3,7 @@
  */
 
 import { randomUUID } from "crypto";
+import { db } from "~/server/db";
 import { rhythms } from "~/server/db/schema";
 import { createLogger } from "~/server/utils/logger";
 
@@ -84,7 +85,6 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const db = event.context["db"];
   const id = randomUUID();
   const now = new Date().toISOString();
 

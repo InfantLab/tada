@@ -6,6 +6,7 @@
  */
 
 import { eq, desc } from "drizzle-orm";
+import { db } from "~/server/db";
 import { rhythms } from "~/server/db/schema";
 import { createLogger } from "~/server/utils/logger";
 import {
@@ -28,7 +29,6 @@ export default defineEventHandler(async (event) => {
   }
 
   const userId = session.userId;
-  const db = event.context["db"];
 
   try {
     // Fetch all rhythms for this user
@@ -96,10 +96,12 @@ export default defineEventHandler(async (event) => {
 
     return { rhythms: rhythmsWithSummary };
   } catch (error) {
-    logger.error("Failed to fetch rhythms", { error, userId });
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    logger.error("Failed to fetch rhythms", { error: errorMessage, stack: errorStack, userId });
     throw createError({
       statusCode: 500,
-      message: "Failed to fetch rhythms",
+      message: `Failed to fetch rhythms: ${errorMessage}`,
     });
   }
 });

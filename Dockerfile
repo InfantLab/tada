@@ -41,12 +41,16 @@ COPY --from=builder /app/node_modules ./.output/server/node_modules
 COPY --from=builder /app/migrate.js ./migrate.js
 COPY --from=builder /app/server/db/migrations ./server/db/migrations
 
-# Create data directory for SQLite
-RUN mkdir -p /app/data && chown -R nuxt:nodejs /app/data
+# Create data directory for SQLite at /data (CapRover persistent volume mount point)
+# WARNING: Do NOT change this path - it must match CapRover's persistent directory config
+# The host path /var/lib/caprover/appsdata/tadata maps to /data in the container
+RUN mkdir -p /data && chown -R nuxt:nodejs /data
 
 # Set environment variables
+# WARNING: DATABASE_URL must point to /data/db.sqlite for persistence across deploys
+# Changing this path will cause DATA LOSS - the database will be ephemeral
 ENV NODE_ENV=production
-ENV DATABASE_URL=file:/app/data/db.sqlite
+ENV DATABASE_URL=file:/data/db.sqlite
 ENV HOST=0.0.0.0
 ENV PORT=3000
 

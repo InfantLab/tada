@@ -6,6 +6,7 @@
  */
 
 import { eq, and } from "drizzle-orm";
+import { db } from "~/server/db";
 import { rhythms } from "~/server/db/schema";
 import { createLogger } from "~/server/utils/logger";
 import {
@@ -48,8 +49,6 @@ export default defineEventHandler(async (event) => {
       message: "Rhythm ID is required",
     });
   }
-
-  const db = event.context["db"];
 
   try {
     // Fetch the rhythm

@@ -4,6 +4,7 @@
  */
 
 import { eq, and } from "drizzle-orm";
+import { db } from "~/server/db";
 import { rhythms } from "~/server/db/schema";
 import { createLogger } from "~/server/utils/logger";
 
@@ -51,8 +52,6 @@ export default defineEventHandler(async (event) => {
       message: "Request body is required",
     });
   }
-
-  const db = event.context["db"];
 
   try {
     // Verify rhythm exists and belongs to user
