@@ -1,34 +1,168 @@
 <script setup lang="ts">
-// Rhythms page - See your natural patterns
-import type { Rhythm } from "~/server/db/schema";
+/**
+ * Rhythms page - See your natural patterns with graceful chains
+ *
+ * Displays rhythm panels with tier-based progress, visualizations,
+ * and identity-based encouragement messaging.
+ */
+import {
+  useRhythms,
+  type RhythmSummary,
+  type RhythmProgress,
+} from "~/composables/useRhythms";
+import { useToast } from "~/composables/useToast";
 
 definePageMeta({
   layout: "default",
 });
 
-// Extended rhythm with UI-specific fields
-interface RhythmWithUI extends Rhythm {
-  completedToday: boolean;
-  emoji: string;
-}
+const { showToast } = useToast();
 
-// Fetch rhythms from API
-const rhythms = ref<RhythmWithUI[]>([]);
-const isLoading = ref(true);
-const error = ref<string | null>(null);
+const {
+  rhythms,
+  loading,
+  error,
+  fetchRhythms,
+  createRhythm,
+  updateRhythm,
+  deleteRhythm,
+  fetchProgress,
+} = useRhythms();
 
+// Modal state
+const showCreateModal = ref(false);
+const editingRhythm = ref<RhythmSummary | null>(null);
+const deletingRhythmId = ref<string | null>(null);
+
+// Expanded panel state (by rhythm ID)
+const expandedPanels = ref<Set<string>>(new Set());
+
+// Progress data cache (by rhythm ID)
+const progressData = ref<Map<string, RhythmProgress>>(new Map());
+
+// Fetch rhythms on mount
 onMounted(async () => {
   try {
-    // TODO: Create rhythms API endpoint in Phase 2
-    // For now, show placeholder that Phase 2 is needed
-    rhythms.value = [];
-  } catch (err: unknown) {
+    await fetchRhythms();
+  } catch (err) {
     console.error("Failed to fetch rhythms:", err);
-    error.value = err instanceof Error ? err.message : "Failed to load rhythms";
-  } finally {
-    isLoading.value = false;
   }
 });
+
+// Toggle panel expansion and fetch progress if needed
+async function togglePanel(rhythmId: string) {
+  if (expandedPanels.value.has(rhythmId)) {
+    expandedPanels.value.delete(rhythmId);
+  } else {
+    expandedPanels.value.add(rhythmId);
+    // Fetch progress if not cached
+    if (!progressData.value.has(rhythmId)) {
+      try {
+        const progress = await fetchProgress(rhythmId);
+        progressData.value.set(rhythmId, progress);
+      } catch (err) {
+        console.error("Failed to fetch progress:", err);
+      }
+    }
+  }
+}
+
+// Check if panel is expanded
+function isPanelExpanded(rhythmId: string): boolean {
+  return expandedPanels.value.has(rhythmId);
+}
+
+// Get progress for a rhythm
+function getProgress(rhythmId: string): RhythmProgress | undefined {
+  return progressData.value.get(rhythmId);
+}
+
+// Handle rhythm creation
+async function handleCreateRhythm(rhythmData: {
+  name: string;
+  matchCategory: string;
+  durationThresholdSeconds: number;
+  frequency: string;
+}) {
+  try {
+    await createRhythm({
+      ...rhythmData,
+      matchType: "timed",
+      goalType: "duration",
+      goalValue: Math.floor(rhythmData.durationThresholdSeconds / 60),
+      goalUnit: "minutes",
+    });
+    showCreateModal.value = false;
+    showToast("Rhythm created successfully", "success");
+  } catch (err) {
+    console.error("Failed to create rhythm:", err);
+    showToast("Failed to create rhythm. Please try again.", "error");
+  }
+}
+
+// Handle rhythm update
+async function handleUpdateRhythm(rhythmData: {
+  id: string;
+  name: string;
+  durationThresholdSeconds: number;
+  frequency: string;
+}) {
+  try {
+    await updateRhythm(rhythmData.id, {
+      name: rhythmData.name,
+      durationThresholdSeconds: rhythmData.durationThresholdSeconds,
+      frequency: rhythmData.frequency,
+    });
+    showCreateModal.value = false;
+    editingRhythm.value = null;
+    showToast("Rhythm updated successfully", "success");
+  } catch (err) {
+    console.error("Failed to update rhythm:", err);
+    showToast("Failed to update rhythm. Please try again.", "error");
+  }
+}
+
+// Open edit modal
+function openEditModal(rhythm: RhythmSummary) {
+  editingRhythm.value = rhythm;
+  showCreateModal.value = true;
+}
+
+// Handle delete confirmation
+async function confirmDelete(rhythmId: string) {
+  deletingRhythmId.value = rhythmId;
+}
+
+// Perform delete
+async function handleDelete() {
+  if (!deletingRhythmId.value) return;
+
+  try {
+    await deleteRhythm(deletingRhythmId.value);
+    deletingRhythmId.value = null;
+    showToast("Rhythm deleted", "success");
+  } catch (err) {
+    console.error("Failed to delete rhythm:", err);
+    showToast("Failed to delete rhythm. Please try again.", "error");
+  }
+}
+
+// Cancel delete
+function cancelDelete() {
+  deletingRhythmId.value = null;
+}
+
+// Get emoji for category
+function getCategoryEmoji(category: string | null): string {
+  const emojis: Record<string, string> = {
+    mindfulness: "🧘",
+    movement: "🏃",
+    creative: "🎨",
+    learning: "📚",
+    health: "❤️",
+  };
+  return emojis[category || ""] || "✨";
+}
 
 // Get the last 7 days for the mini calendar
 function getLast7Days() {
@@ -52,7 +186,7 @@ const last7Days = getLast7Days();
 <template>
   <div>
     <!-- Page header -->
-    <div class="flex items-center justify-between mb-6">
+    <div class="mb-6 flex items-center justify-between">
       <div>
         <h1 class="text-2xl font-bold text-stone-800 dark:text-stone-100">
           Rhythms
@@ -64,7 +198,8 @@ const last7Days = getLast7Days();
 
       <!-- Add rhythm button -->
       <button
-        class="flex items-center gap-2 px-4 py-2 bg-tada-600 hover:opacity-90 text-black dark:bg-tada-600 dark:text-white rounded-lg font-medium transition-colors shadow-sm"
+        class="flex items-center gap-2 rounded-lg bg-tada-600 px-4 py-2 font-medium text-black shadow-sm transition-colors hover:opacity-90 dark:bg-tada-600 dark:text-white"
+        @click="showCreateModal = true"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -85,24 +220,39 @@ const last7Days = getLast7Days();
     </div>
 
     <!-- Loading state -->
-    <div v-if="isLoading" class="flex items-center justify-center py-12">
+    <div v-if="loading" class="flex items-center justify-center py-12">
       <div
-        class="animate-spin rounded-full h-8 w-8 border-2 border-tada-300 border-t-transparent dark:border-tada-600"
+        class="h-8 w-8 animate-spin rounded-full border-2 border-tada-300 border-t-transparent dark:border-tada-600"
       />
     </div>
 
+    <!-- Error state -->
+    <div
+      v-else-if="error"
+      class="rounded-lg bg-red-50 p-4 text-center dark:bg-red-900/20"
+    >
+      <p class="text-red-600 dark:text-red-400">{{ error }}</p>
+      <button
+        class="mt-2 text-sm text-red-500 underline hover:no-underline"
+        @click="fetchRhythms"
+      >
+        Try again
+      </button>
+    </div>
+
     <!-- Empty state -->
-    <div v-else-if="rhythms.length === 0" class="text-center py-12">
-      <div class="text-6xl mb-4">🌊</div>
-      <h2 class="text-xl font-semibold text-stone-700 dark:text-stone-200 mb-2">
+    <div v-else-if="rhythms.length === 0" class="py-12 text-center">
+      <div class="mb-4 text-6xl">🌊</div>
+      <h2 class="mb-2 text-xl font-semibold text-stone-700 dark:text-stone-200">
         No rhythms yet
       </h2>
-      <p class="text-stone-500 dark:text-stone-400 max-w-md mx-auto mb-6">
+      <p class="mx-auto mb-6 max-w-md text-stone-500 dark:text-stone-400">
         Create rhythms to discover your natural patterns. Your practice will
         reveal itself over time.
       </p>
       <button
-        class="inline-flex items-center gap-2 px-4 py-2 bg-tada-600 hover:opacity-90 text-black dark:bg-tada-600 dark:text-white rounded-lg font-medium transition-colors"
+        class="inline-flex items-center gap-2 rounded-lg bg-tada-600 px-4 py-2 font-medium text-black transition-colors hover:opacity-90 dark:bg-tada-600 dark:text-white"
+        @click="showCreateModal = true"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -127,68 +277,63 @@ const last7Days = getLast7Days();
       <div
         v-for="rhythm in rhythms"
         :key="rhythm.id"
-        class="bg-white dark:bg-stone-800 rounded-xl p-4 shadow-sm border border-stone-200 dark:border-stone-700"
+        class="rounded-xl border border-stone-200 bg-white shadow-sm dark:border-stone-700 dark:bg-stone-800"
       >
-        <div class="flex items-start gap-4">
-          <!-- Emoji and completion toggle -->
-          <button
-            class="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center text-2xl transition-colors"
-            :class="
-              rhythm.completedToday
-                ? 'bg-tada-100/30 dark:bg-tada-600/20'
-                : 'bg-stone-100 dark:bg-stone-700'
-            "
+        <!-- Collapsed header - clickable to expand -->
+        <div
+          class="flex cursor-pointer items-start gap-4 p-4"
+          @click="togglePanel(rhythm.id)"
+        >
+          <!-- Emoji -->
+          <div
+            class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-stone-100 text-2xl dark:bg-stone-700"
           >
-            {{ rhythm.emoji }}
-          </button>
+            {{ getCategoryEmoji(rhythm.matchCategory) }}
+          </div>
 
           <!-- Rhythm info -->
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-2 mb-1">
+          <div class="min-w-0 flex-1">
+            <div class="mb-1 flex items-center gap-2">
               <h3 class="font-medium text-stone-800 dark:text-stone-100">
                 {{ rhythm.name }}
               </h3>
               <span
-                v-if="rhythm.completedToday"
-                class="text-xs px-2 py-0.5 rounded-full bg-tada-100/30 text-tada-700 dark:bg-tada-600/20 dark:text-tada-300"
+                class="rounded-full bg-tada-100/30 px-2 py-0.5 text-xs text-tada-700 dark:bg-tada-600/20 dark:text-tada-300"
               >
-                Done
+                {{ rhythm.currentTierLabel }}
               </span>
             </div>
 
-            <!-- Streak info -->
+            <!-- Chain info -->
             <div
-              class="flex items-center gap-4 text-sm text-stone-500 dark:text-stone-400"
+              class="flex flex-wrap items-center gap-2 text-sm text-stone-500 sm:gap-4 dark:text-stone-400"
             >
               <span class="flex items-center gap-1">
-                🔥 {{ rhythm.currentStreak }} day streak
+                🔥 {{ rhythm.currentChainWeeks }} week streak
               </span>
               <span class="flex items-center gap-1">
-                🏆 Best: {{ rhythm.longestStreak }}
+                ⏱️ {{ Math.floor(rhythm.durationThresholdSeconds / 60) }} min
+                threshold
               </span>
             </div>
 
-            <!-- Mini calendar (last 7 days) -->
-            <div class="flex gap-1 mt-3">
+            <!-- Mini calendar placeholder (last 7 days) -->
+            <div class="mt-3 flex gap-1 sm:gap-1.5">
               <div
                 v-for="day in last7Days"
                 :key="day.date.toISOString()"
                 class="flex flex-col items-center"
               >
-                <span class="text-xs text-stone-400 dark:text-stone-500 mb-1">
+                <span class="mb-1 text-xs text-stone-400 dark:text-stone-500">
                   {{ day.dayName }}
                 </span>
                 <div
-                  class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-medium transition-colors"
+                  class="flex h-8 w-8 items-center justify-center rounded-lg text-xs font-medium transition-colors"
                   :class="[
                     day.isToday
                       ? 'ring-2 ring-tada-500 dark:ring-tada-500'
                       : '',
-                    rhythm.completedToday && day.isToday
-                      ? 'bg-tada-600 text-black dark:bg-tada-600 dark:text-white'
-                      : Math.random() > 0.3 && !day.isToday
-                      ? 'bg-tada-600 text-black dark:bg-tada-600 dark:text-white'
-                      : 'bg-stone-100 dark:bg-stone-700 text-stone-500 dark:text-stone-400',
+                    'bg-stone-100 text-stone-500 dark:bg-stone-700 dark:text-stone-400',
                   ]"
                 >
                   {{ day.dayNum }}
@@ -197,18 +342,12 @@ const last7Days = getLast7Days();
             </div>
           </div>
 
-          <!-- Quick complete button -->
-          <button
-            class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-colors"
-            :class="
-              rhythm.completedToday
-                ? 'bg-tada-600 text-black dark:bg-tada-600 dark:text-white'
-                : 'bg-stone-100 dark:bg-stone-700 text-stone-500 dark:text-stone-400 hover:bg-tada-100/20 dark:hover:bg-tada-600/20 hover:text-tada-700 dark:hover:text-tada-300'
-            "
-          >
+          <!-- Expand/Collapse indicator -->
+          <div class="flex-shrink-0">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              class="h-6 w-6"
+              class="h-5 w-5 text-stone-400 transition-transform dark:text-stone-500"
+              :class="{ 'rotate-180': isPanelExpanded(rhythm.id) }"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -217,12 +356,121 @@ const last7Days = getLast7Days();
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 stroke-width="2"
-                d="M5 13l4 4L19 7"
+                d="M19 9l-7 7-7-7"
               />
             </svg>
-          </button>
+          </div>
+        </div>
+
+        <!-- Expanded panel with chain stats and encouragement -->
+        <div
+          v-if="isPanelExpanded(rhythm.id)"
+          class="border-t border-stone-200 p-4 dark:border-stone-700"
+        >
+          <template v-if="getProgress(rhythm.id)">
+            <!-- Visualizations grid - stacked on mobile, side by side on desktop -->
+            <div class="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+              <!-- Year Tracker (GitHub-style heatmap) -->
+              <div class="min-w-0">
+                <RhythmYearTracker
+                  :days="getProgress(rhythm.id)!.days"
+                  :threshold-seconds="rhythm.durationThresholdSeconds"
+                />
+              </div>
+
+              <!-- Month Calendar -->
+              <div class="flex justify-center lg:justify-start">
+                <RhythmMonthCalendar :days="getProgress(rhythm.id)!.days" />
+              </div>
+            </div>
+
+            <!-- Chain Stats -->
+            <RhythmChainStats
+              :chains="getProgress(rhythm.id)!.chains"
+              :achieved-tier="getProgress(rhythm.id)!.currentWeek.achievedTier"
+              :nudge-message="getProgress(rhythm.id)!.currentWeek.nudgeMessage"
+              class="mb-4"
+            />
+
+            <!-- Encouragement and Totals -->
+            <RhythmEncouragement
+              :encouragement="getProgress(rhythm.id)!.encouragement"
+              :journey-stage="getProgress(rhythm.id)!.journeyStage"
+              :totals="getProgress(rhythm.id)!.totals"
+            />
+
+            <!-- Action buttons -->
+            <div
+              class="mt-4 flex items-center justify-end gap-3 border-t border-stone-200 pt-4 dark:border-stone-700"
+            >
+              <button
+                class="min-h-[44px] min-w-[44px] rounded-lg px-4 py-2 text-sm text-stone-600 hover:bg-stone-100 dark:text-stone-400 dark:hover:bg-stone-700"
+                @click.stop="openEditModal(rhythm)"
+              >
+                Edit
+              </button>
+              <button
+                class="min-h-[44px] min-w-[44px] rounded-lg px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                @click.stop="confirmDelete(rhythm.id)"
+              >
+                Delete
+              </button>
+            </div>
+          </template>
+          <div v-else class="flex items-center justify-center py-4">
+            <div
+              class="h-6 w-6 animate-spin rounded-full border-2 border-tada-300 border-t-transparent dark:border-tada-600"
+            />
+          </div>
         </div>
       </div>
     </div>
+
+    <!-- Create/Edit Modal -->
+    <RhythmCreateModal
+      :is-open="showCreateModal"
+      :edit-rhythm="editingRhythm"
+      @close="
+        showCreateModal = false;
+        editingRhythm = null;
+      "
+      @save="handleCreateRhythm"
+      @update="handleUpdateRhythm"
+    />
+
+    <!-- Delete Confirmation Modal -->
+    <Teleport to="body">
+      <div
+        v-if="deletingRhythmId"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+        @click.self="cancelDelete"
+      >
+        <div
+          class="mx-4 w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl dark:bg-stone-800"
+        >
+          <h3 class="text-lg font-semibold text-stone-900 dark:text-stone-100">
+            Delete Rhythm?
+          </h3>
+          <p class="mt-2 text-sm text-stone-600 dark:text-stone-400">
+            This will permanently delete this rhythm and all its tracking data.
+            This action cannot be undone.
+          </p>
+          <div class="mt-6 flex justify-end gap-3">
+            <button
+              class="rounded-lg px-4 py-2 text-sm text-stone-600 hover:bg-stone-100 dark:text-stone-400 dark:hover:bg-stone-700"
+              @click="cancelDelete"
+            >
+              Cancel
+            </button>
+            <button
+              class="rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white hover:bg-red-600"
+              @click="handleDelete"
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>

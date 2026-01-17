@@ -15,11 +15,11 @@
 
 **Purpose**: Database schema changes and core utilities
 
-- [ ] T001 Add `durationThresholdSeconds` and `panelPreferences` columns to rhythms table in server/db/schema.ts
-- [ ] T002 Create `encouragements` table in server/db/schema.ts
-- [ ] T003 Generate database migration with `bun run db:generate`
-- [ ] T004 [P] Create encouragements seed script in scripts/seed-encouragements.mjs
-- [ ] T005 [P] Create tier types and constants in utils/tierCalculator.ts
+- [x] T001 Add `durationThresholdSeconds` and `panelPreferences` columns to rhythms table in server/db/schema.ts
+- [x] T002 Create `encouragements` table in server/db/schema.ts
+- [x] T003 Generate database migration with `bun run db:generate`
+- [x] T004 [P] Create encouragements seed script in scripts/seed-encouragements.mjs
+- [x] T005 [P] Create tier types and constants in utils/tierCalculator.ts
 
 ---
 
@@ -29,12 +29,12 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T006 Implement `getTierForDaysCompleted()` function in utils/tierCalculator.ts
-- [ ] T007 Implement `calculateWeeklyProgress()` function in utils/tierCalculator.ts
-- [ ] T008 [P] Write unit tests for tier calculator in utils/tierCalculator.test.ts
-- [ ] T009 Implement `calculateChainStats()` function in server/utils/rhythmCalculator.ts
-- [ ] T010 Implement `selectEncouragement()` function in server/utils/rhythmCalculator.ts
-- [ ] T011 [P] Create useRhythms composable skeleton in composables/useRhythms.ts
+- [x] T006 Implement `getTierForDaysCompleted()` function in utils/tierCalculator.ts
+- [x] T007 Implement `calculateWeeklyProgress()` function in utils/tierCalculator.ts
+- [x] T008 [P] Write unit tests for tier calculator in utils/tierCalculator.test.ts
+- [x] T009 Implement `calculateChainStats()` function in server/utils/rhythmCalculator.ts
+- [x] T010 Implement `selectEncouragement()` function in server/utils/rhythmCalculator.ts
+- [x] T011 [P] Create useRhythms composable skeleton in composables/useRhythms.ts
 
 **Checkpoint**: Foundation ready - user story implementation can now begin
 
@@ -48,11 +48,11 @@
 
 ### Implementation for US1
 
-- [ ] T012 [US1] Implement POST /api/rhythms endpoint in server/api/rhythms/index.post.ts
-- [ ] T013 [US1] Implement GET /api/rhythms endpoint in server/api/rhythms/index.get.ts
-- [ ] T014 [P] [US1] Create RhythmCreateModal component in components/RhythmCreateModal.vue
-- [ ] T015 [US1] Add rhythm creation flow to pages/rhythms.vue
-- [ ] T016 [US1] Wire useRhythms composable to fetch and create rhythms
+- [x] T012 [US1] Implement POST /api/rhythms endpoint in server/api/rhythms/index.post.ts
+- [x] T013 [US1] Implement GET /api/rhythms endpoint in server/api/rhythms/index.get.ts
+- [x] T014 [P] [US1] Create RhythmCreateModal component in components/RhythmCreateModal.vue
+- [x] T015 [US1] Add rhythm creation flow to pages/rhythms.vue
+- [x] T016 [US1] Wire useRhythms composable to fetch and create rhythms
 
 **Checkpoint**: Can create a rhythm and see it listed
 
@@ -66,10 +66,10 @@
 
 ### Implementation for US2
 
-- [ ] T017 [US2] Implement GET /api/rhythms/:id/progress endpoint in server/api/rhythms/[id]/progress.get.ts
-- [ ] T018 [P] [US2] Create RhythmChainStats component in components/RhythmChainStats.vue
-- [ ] T019 [US2] Add progress fetching to useRhythms composable
-- [ ] T020 [US2] Display current tier and chain stats in rhythm panel on pages/rhythms.vue
+- [x] T017 [US2] Implement GET /api/rhythms/:id/progress endpoint in server/api/rhythms/[id]/progress.get.ts
+- [x] T018 [P] [US2] Create RhythmChainStats component in components/RhythmChainStats.vue
+- [x] T019 [US2] Add progress fetching to useRhythms composable
+- [x] T020 [US2] Display current tier and chain stats in rhythm panel on pages/rhythms.vue
 
 **Checkpoint**: MVP complete - can create rhythm and see graceful tier display
 
@@ -83,10 +83,10 @@
 
 ### Implementation for US3
 
-- [ ] T021 [US3] Run encouragements seed script to populate database
-- [ ] T022 [P] [US3] Create RhythmEncouragement component in components/RhythmEncouragement.vue
-- [ ] T023 [US3] Add encouragement selection to progress API response
-- [ ] T024 [US3] Display encouragement and totals in rhythm panel
+- [x] T021 [US3] Run encouragements seed script to populate database
+- [x] T022 [P] [US3] Create RhythmEncouragement component in components/RhythmEncouragement.vue
+- [x] T023 [US3] Add encouragement selection to progress API response
+- [x] T024 [US3] Display encouragement and totals in rhythm panel
 
 **Checkpoint**: Rhythm panels show identity-based encouragement with statistics
 
@@ -100,8 +100,8 @@
 
 ### Implementation for US4
 
-- [ ] T025 [US4] Add nudge message calculation to progress API
-- [ ] T026 [US4] Display nudge message in RhythmChainStats when applicable
+- [x] T025 [US4] Add nudge message calculation to progress API
+- [x] T026 [US4] Display nudge message in RhythmChainStats when applicable
 
 **Checkpoint**: Mid-week guidance appears when user is behind target
 
@@ -115,10 +115,10 @@
 
 ### Implementation for US5
 
-- [ ] T027 [P] [US5] Create RhythmYearTracker component in components/RhythmYearTracker.vue
-- [ ] T028 [P] [US5] Create RhythmMonthCalendar component in components/RhythmMonthCalendar.vue
-- [ ] T029 [US5] Add day-by-day data to progress API response
-- [ ] T030 [US5] Integrate visualizations into rhythm panel on pages/rhythms.vue
+- [x] T027 [P] [US5] Create RhythmYearTracker component in components/RhythmYearTracker.vue
+- [x] T028 [P] [US5] Create RhythmMonthCalendar component in components/RhythmMonthCalendar.vue
+- [x] T029 [US5] Add day-by-day data to progress API response
+- [x] T030 [US5] Integrate visualizations into rhythm panel on pages/rhythms.vue
 
 **Checkpoint**: Rhythm panels show year tracker and month calendar
 
@@ -132,8 +132,8 @@
 
 ### Implementation for US6
 
-- [ ] T031 [US6] Add per-tier chain calculation to rhythmCalculator.ts
-- [ ] T032 [US6] Enhance RhythmChainStats to show all tiers with current/longest
+- [x] T031 [US6] Add per-tier chain calculation to rhythmCalculator.ts
+- [x] T032 [US6] Enhance RhythmChainStats to show all tiers with current/longest
 
 **Checkpoint**: Chain statistics display for all tiers
 
@@ -147,9 +147,9 @@
 
 ### Implementation for US7
 
-- [ ] T033 [P] [US7] Create RhythmPanel accordion component in components/RhythmPanel.vue
-- [ ] T034 [US7] Refactor pages/rhythms.vue to use RhythmPanel for each rhythm
-- [ ] T035 [US7] Add collapsed state with summary (name, tier, chain length)
+- [x] T033 [P] [US7] Create RhythmPanel accordion component in components/RhythmPanel.vue
+- [x] T034 [US7] Refactor pages/rhythms.vue to use RhythmPanel for each rhythm
+- [x] T035 [US7] Add collapsed state with summary (name, tier, chain length)
 
 **Checkpoint**: Multiple rhythms display in accordion with collapse/expand
 
@@ -163,11 +163,11 @@
 
 ### Implementation for US8
 
-- [ ] T036 [US8] Implement GET /api/rhythms/:id endpoint in server/api/rhythms/[id].get.ts
-- [ ] T037 [US8] Implement PUT /api/rhythms/:id endpoint in server/api/rhythms/[id].put.ts
-- [ ] T038 [US8] Implement DELETE /api/rhythms/:id endpoint in server/api/rhythms/[id].delete.ts
-- [ ] T039 [US8] Add edit mode to RhythmCreateModal component
-- [ ] T040 [US8] Add delete confirmation and action to rhythm panel
+- [x] T036 [US8] Implement GET /api/rhythms/:id endpoint in server/api/rhythms/[id].get.ts
+- [x] T037 [US8] Implement PUT /api/rhythms/:id endpoint in server/api/rhythms/[id].put.ts
+- [x] T038 [US8] Implement DELETE /api/rhythms/:id endpoint in server/api/rhythms/[id].delete.ts
+- [x] T039 [US8] Add edit mode to RhythmCreateModal component
+- [x] T040 [US8] Add delete confirmation and action to rhythm panel
 
 **Checkpoint**: Can edit and delete rhythms
 
@@ -181,10 +181,10 @@
 
 ### Implementation for US9
 
-- [ ] T041 [US9] Add responsive breakpoints to RhythmPanel (stack vs side-by-side)
-- [ ] T042 [US9] Optimize RhythmYearTracker for mobile (horizontal scroll or simplified)
-- [ ] T043 [US9] Ensure touch targets are 44px minimum on mobile
-- [ ] T044 [US9] Test and adjust collapsed panel density on desktop
+- [x] T041 [US9] Add responsive breakpoints to RhythmPanel (stack vs side-by-side)
+- [x] T042 [US9] Optimize RhythmYearTracker for mobile (horizontal scroll or simplified)
+- [x] T043 [US9] Ensure touch targets are 44px minimum on mobile
+- [x] T044 [US9] Test and adjust collapsed panel density on desktop
 
 **Checkpoint**: Layout works well on mobile and desktop
 
@@ -194,9 +194,9 @@
 
 **Purpose**: Final cleanup and verification
 
-- [ ] T045 [P] Add loading states to all rhythm components
-- [ ] T046 [P] Add error handling for API failures
-- [ ] T047 Run quickstart.md verification checklist
+- [x] T045 [P] Add loading states to all rhythm components
+- [x] T046 [P] Add error handling for API failures
+- [x] T047 Run quickstart.md verification checklist
 - [ ] T048 Manual testing on mobile device
 
 ---
