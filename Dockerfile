@@ -33,8 +33,9 @@ RUN addgroup --system --gid 1001 nodejs && \
 # Copy built application
 COPY --from=builder /app/.output ./.output
 
-# Copy node_modules for native bindings (libsql needs platform-specific binaries)
-COPY --from=builder /app/node_modules ./node_modules
+# Copy full node_modules into .output/server for proper module resolution
+# Nitro creates partial node_modules there, we need the complete set including transitive deps
+COPY --from=builder /app/node_modules ./.output/server/node_modules
 
 # Create data directory for SQLite
 RUN mkdir -p /app/data && chown -R nuxt:nodejs /app/data
