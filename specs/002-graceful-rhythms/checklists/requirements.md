@@ -2,6 +2,7 @@
 
 **Purpose**: Validate specification completeness and quality before proceeding to planning  
 **Created**: 2026-01-17  
+**Updated**: 2026-01-17  
 **Feature**: [spec.md](../spec.md)
 
 ## Content Quality
@@ -31,7 +32,12 @@
 
 ## Notes
 
-- Existing `rhythms` table schema was reviewed and appears sufficient for core features
-- Tier naming ("Most Days", "Few Times") chosen over numeric tiers per roadmap question
+- Scope clearly defines v1 (timer-based, mindfulness only) vs future (moment-based, accumulative)
+- Design patterns documented for future rhythm types
+- Existing `rhythms` table schema will be extended (duration threshold, panel preferences)
+- 32 functional requirements covering creation, tiers, visualization, multiple rhythms, management, and layout
+- 10 success criteria covering UX, performance, and mobile/desktop
+- 10 edge cases identified and resolved with clear answers
+- Tier naming ("Most Days", "Few Times") chosen over numeric tiers
 - Identity language thresholds documented in Assumptions section
-- Week boundary handling documented in Assumptions
+- Week boundary and year tracker behavior documented
