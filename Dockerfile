@@ -37,6 +37,10 @@ COPY --from=builder /app/.output ./.output
 # Nitro creates partial node_modules there, we need the complete set including transitive deps
 COPY --from=builder /app/node_modules ./.output/server/node_modules
 
+# Copy migration files and script for database setup
+COPY --from=builder /app/migrate.js ./migrate.js
+COPY --from=builder /app/server/db/migrations ./server/db/migrations
+
 # Create data directory for SQLite
 RUN mkdir -p /app/data && chown -R nuxt:nodejs /app/data
 
@@ -56,5 +60,5 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD bun --eval "fetch('http://localhost:3000/api/health').then(r => process.exit(r.ok ? 0 : 1))" || exit 1
 
-# Start the application
-CMD ["bun", "run", ".output/server/index.mjs"]
+# Run migrations then start the application
+CMD ["sh", "-c", "bun run migrate.js && bun run .output/server/index.mjs"]
