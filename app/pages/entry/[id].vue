@@ -52,8 +52,9 @@ const durationSeconds = ref<number | null>(null);
 function autoGrow() {
   const textarea = notesTextarea.value;
   if (textarea) {
-    textarea.style.height = 'auto';
-    textarea.style.height = Math.min(textarea.scrollHeight, window.innerHeight * 0.5) + 'px';
+    textarea.style.height = "auto";
+    textarea.style.height =
+      Math.min(textarea.scrollHeight, window.innerHeight * 0.5) + "px";
   }
 }
 
@@ -296,7 +297,9 @@ function getTypeIcon(type: string): string {
             placeholder="Entry title"
           />
 
-          <p class="text-center text-sm text-stone-500 dark:text-stone-400 mt-3">
+          <p
+            class="text-center text-sm text-stone-500 dark:text-stone-400 mt-3"
+          >
             Tap the emoji to customize it ☝️
           </p>
         </div>
@@ -474,7 +477,7 @@ function getTypeIcon(type: string): string {
 
 <style scoped>
 .journal-textarea {
-  font-family: 'Georgia', 'Times New Roman', serif;
+  font-family: "Georgia", "Times New Roman", serif;
   font-size: 1.125rem;
   line-height: 1.75;
   letter-spacing: 0.01em;

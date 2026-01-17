@@ -18,8 +18,9 @@ onMounted(() => {
 function autoGrow() {
   const textarea = notesTextarea.value;
   if (textarea) {
-    textarea.style.height = 'auto';
-    textarea.style.height = Math.min(textarea.scrollHeight, window.innerHeight * 0.5) + 'px';
+    textarea.style.height = "auto";
+    textarea.style.height =
+      Math.min(textarea.scrollHeight, window.innerHeight * 0.5) + "px";
   }
 }
 
@@ -233,7 +234,6 @@ async function submitEntry() {
           <span>Ta-Da!</span>
         </template>
       </button>
-
     </form>
 
     <!-- Link to history (outside the form card) -->
@@ -286,7 +286,7 @@ async function submitEntry() {
 <style scoped>
 /* Pretty textarea styling */
 .journal-textarea {
-  font-family: 'Georgia', 'Times New Roman', serif;
+  font-family: "Georgia", "Times New Roman", serif;
   font-size: 1.125rem;
   line-height: 1.75;
   letter-spacing: 0.01em;

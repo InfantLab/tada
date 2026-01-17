@@ -160,10 +160,59 @@ export const rhythms = sqliteTable("rhythms", {
   longestStreak: integer("longest_streak").notNull().default(0),
   lastCompletedDate: text("last_completed_date"),
 
+  // Graceful rhythm chains (v0.3.0+)
+  // Minimum duration per day to count as "complete" (default 6 minutes)
+  durationThresholdSeconds: integer("duration_threshold_seconds")
+    .notNull()
+    .default(360),
+
+  // Panel display preferences (JSON)
+  panelPreferences: text("panel_preferences", { mode: "json" })
+    .$type<{
+      showYearTracker: boolean;
+      showMonthCalendar: boolean;
+      showChainStats: boolean;
+      monthViewMode: "calendar" | "linear";
+      expandedByDefault: boolean;
+    }>()
+    .default({
+      showYearTracker: true,
+      showMonthCalendar: true,
+      showChainStats: true,
+      monthViewMode: "calendar",
+      expandedByDefault: true,
+    }),
+
   createdAt: text("created_at")
     .notNull()
     .default(sql`(datetime('now'))`),
   updatedAt: text("updated_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
+});
+
+// ============================================================================
+// Encouragements - Library of identity-based messages for rhythm chains
+// ============================================================================
+
+export const encouragements = sqliteTable("encouragements", {
+  id: text("id").primaryKey(), // UUID
+
+  // Categorization
+  stage: text("stage").notNull(), // 'starting', 'building', 'becoming'
+  context: text("context").notNull(), // 'tier_achieved', 'streak_milestone', 'general', 'mid_week_nudge'
+  activityType: text("activity_type").notNull().default("general"), // 'mindfulness', 'movement', 'general'
+
+  // The message
+  message: text("message").notNull(), // "You're becoming a meditator"
+
+  // Optional: tier-specific messages
+  tierName: text("tier_name"), // 'daily', 'most_days', 'few_times', 'weekly' (null = applies to all)
+
+  // Metadata
+  isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+
+  createdAt: text("created_at")
     .notNull()
     .default(sql`(datetime('now'))`),
 });
@@ -427,6 +476,9 @@ export type NewEntry = typeof entries.$inferInsert;
 
 export type Rhythm = typeof rhythms.$inferSelect;
 export type NewRhythm = typeof rhythms.$inferInsert;
+
+export type Encouragement = typeof encouragements.$inferSelect;
+export type NewEncouragement = typeof encouragements.$inferInsert;
 
 export type Attachment = typeof attachments.$inferSelect;
 export type NewAttachment = typeof attachments.$inferInsert;
