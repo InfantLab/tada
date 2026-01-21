@@ -3,31 +3,36 @@
  *
  * Calculates chain statistics, selects encouragement messages, and
  * aggregates entry data for rhythm progress.
+ *
+ * Chain Types (v0.3.1+):
+ * - daily: Consecutive days with min X minutes - counted in days
+ * - weekly_high: 5+ days/week with min X min/day - counted in weeks
+ * - weekly_low: 3+ days/week with min X min/day - counted in weeks
+ * - weekly_target: Y+ cumulative minutes/week - counted in weeks
+ * - monthly_target: Y+ cumulative minutes/month - counted in months
  */
 
-import { eq, and, gte, lte, sql } from "drizzle-orm";
+import { eq, and, gte, lte } from "drizzle-orm";
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
-import { entries, rhythms, encouragements } from "../db/schema";
-import type { Rhythm, Entry, Encouragement } from "../db/schema";
+import { entries, encouragements } from "../db/schema";
+import type { Rhythm, Entry } from "../db/schema";
+import type * as schema from "../db/schema";
 import {
-  getTierForDaysCompleted,
-  getTierLabel,
   formatDate,
   getWeekStart,
-  type TierName,
+  formatMonth,
+  getChainConfig,
   type DayStatus,
-  TIER_ORDER,
+  type ChainType,
+  type ChainStat,
 } from "~/utils/tierCalculator";
 
 // ============================================================================
 // Types
 // ============================================================================
 
-export interface ChainStats {
-  tier: TierName;
-  current: number; // Current consecutive weeks at this tier
-  longest: number; // Longest ever at this tier
-}
+// Re-export ChainStat from tierCalculator for consistency
+export type { ChainStat };
 
 export interface RhythmTotals {
   totalSessions: number;
@@ -35,6 +40,22 @@ export interface RhythmTotals {
   totalHours: number;
   firstEntryDate: string | null;
   weeksActive: number;
+  monthsActive: number;
+}
+
+export interface CurrentChainState {
+  lastCompleteDate: string | null; // Last date with a complete entry (YYYY-MM-DD)
+  lastPeriodKey: string | null; // Week start (YYYY-MM-DD) or month (YYYY-MM)
+  thisPeriodDays: number; // Completed days in the current period so far
+  thisPeriodSeconds: number; // Total seconds this period
+}
+
+export interface CachedChainData {
+  chains: ChainStat[];
+  currentChain: CurrentChainState;
+  totals: RhythmTotals;
+  lastCalculatedAt: string;
+  lastEntryTimestamp: string | null;
 }
 
 export type JourneyStage = "starting" | "building" | "becoming";
@@ -47,7 +68,7 @@ export type JourneyStage = "starting" | "building" | "becoming";
  * Get entries matching a rhythm's criteria within a date range
  */
 export async function getMatchingEntries(
-  db: LibSQLDatabase,
+  db: LibSQLDatabase<typeof schema>,
   rhythm: Rhythm,
   userId: string,
   startDate: Date,
@@ -123,22 +144,145 @@ export function entriesToDayStatuses(
 }
 
 /**
- * Calculate chain statistics for all tiers
+ * Calculate chain statistics for a specific chain type
  *
- * A chain is a consecutive run of weeks at or above a tier level.
- * For example, a "most_days" chain continues as long as each week
- * has 5+ completed days.
+ * Supports multiple chain types:
+ * - daily: Consecutive days with activity - counted in days
+ * - weekly_high: 5+ days per week - counted in weeks
+ * - weekly_low: 3+ days per week - counted in weeks
+ * - weekly_target: Cumulative minutes per week - counted in weeks
+ * - monthly_target: Cumulative minutes per month - counted in months
  */
-export function calculateChainStats(dayStatuses: DayStatus[]): ChainStats[] {
+export function calculateTypedChainStats(
+  dayStatuses: DayStatus[],
+  chainType: ChainType,
+  targetMinutes?: number, // Required for weekly_target and monthly_target
+): ChainStat {
+  const config = getChainConfig(chainType);
+
   if (dayStatuses.length === 0) {
-    return TIER_ORDER.filter((t) => t !== "starting").map((tier) => ({
-      tier,
-      current: 0,
-      longest: 0,
-    }));
+    return { type: chainType, current: 0, longest: 0, unit: config.unit };
   }
 
-  // Group days by week (Monday-Sunday)
+  switch (chainType) {
+    case "daily":
+      return calculateDailyChain(dayStatuses, config.unit);
+    case "weekly_high":
+      return calculateWeeklyDaysChain(dayStatuses, 5, config.unit);
+    case "weekly_low":
+      return calculateWeeklyDaysChain(dayStatuses, 3, config.unit);
+    case "weekly_target":
+      return calculateWeeklyTargetChain(
+        dayStatuses,
+        (targetMinutes || 0) * 60,
+        config.unit,
+      );
+    case "monthly_target":
+      return calculateMonthlyTargetChain(
+        dayStatuses,
+        (targetMinutes || 0) * 60,
+        config.unit,
+      );
+    default:
+      return { type: chainType, current: 0, longest: 0, unit: config.unit };
+  }
+}
+
+/**
+ * Calculate daily chain: consecutive days with activity
+ */
+function calculateDailyChain(
+  dayStatuses: DayStatus[],
+  unit: ChainUnit,
+): ChainStat {
+  // Sort by date
+  const sorted = [...dayStatuses]
+    .filter((d) => d.isComplete)
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  if (sorted.length === 0) {
+    return { type: "daily", current: 0, longest: 0, unit };
+  }
+
+  let current = 0;
+  let longest = 0;
+  let currentChain = 0;
+  let prevDate: Date | null = null;
+
+  // Walk forward to calculate longest
+  for (const day of sorted) {
+    const date = new Date(day.date);
+
+    if (prevDate) {
+      const diffDays = Math.round(
+        (date.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24),
+      );
+      if (diffDays === 1) {
+        // Consecutive day
+        currentChain++;
+      } else {
+        // Gap - chain broken
+        currentChain = 1;
+      }
+    } else {
+      currentChain = 1;
+    }
+
+    longest = Math.max(longest, currentChain);
+    prevDate = date;
+  }
+
+  // Walk backward from today for current chain
+  const today = formatDate(new Date());
+  const reversedSorted = [...sorted].reverse();
+  currentChain = 0;
+  prevDate = null;
+
+  for (const day of reversedSorted) {
+    const date = new Date(day.date);
+
+    if (currentChain === 0) {
+      // First iteration - check if it's today or yesterday
+      const diffFromToday = Math.round(
+        (new Date(today).getTime() - date.getTime()) / (1000 * 60 * 60 * 24),
+      );
+      if (diffFromToday > 1) {
+        // More than 1 day ago - chain is broken
+        break;
+      }
+      currentChain = 1;
+      prevDate = date;
+    } else if (prevDate) {
+      const diffDays = Math.round(
+        (prevDate.getTime() - date.getTime()) / (1000 * 60 * 60 * 24),
+      );
+      if (diffDays === 1) {
+        // Consecutive day (going backward)
+        currentChain++;
+        prevDate = date;
+      } else {
+        // Gap - chain broken
+        break;
+      }
+    }
+  }
+
+  current = currentChain;
+
+  return { type: "daily", current, longest, unit };
+}
+
+/**
+ * Calculate weekly chain based on days per week threshold
+ */
+function calculateWeeklyDaysChain(
+  dayStatuses: DayStatus[],
+  minDays: number,
+  unit: ChainUnit,
+): ChainStat {
+  const chainType: ChainType = minDays >= 5 ? "weekly_high" : "weekly_low";
+
+  // Group days by week
   const weekMap = new Map<string, number>(); // weekStart -> daysCompleted
 
   for (const day of dayStatuses) {
@@ -153,64 +297,225 @@ export function calculateChainStats(dayStatuses: DayStatus[]): ChainStats[] {
     .map(([weekStart, daysCompleted]) => ({
       weekStart,
       daysCompleted,
-      tier: getTierForDaysCompleted(daysCompleted),
+      meetsThreshold: daysCompleted >= minDays,
     }))
     .sort((a, b) => a.weekStart.localeCompare(b.weekStart));
 
-  // Calculate chains for each tier (excluding "starting")
-  const chains: ChainStats[] = [];
-  const tiersToTrack: TierName[] = [
-    "daily",
-    "most_days",
-    "few_times",
-    "weekly",
-  ];
+  if (weeks.length === 0) {
+    return { type: chainType, current: 0, longest: 0, unit };
+  }
 
-  for (const tier of tiersToTrack) {
-    const tierIndex = TIER_ORDER.indexOf(tier);
-    let current = 0;
-    let longest = 0;
-    let currentChain = 0;
+  // Calculate longest chain
+  let longest = 0;
+  let currentChain = 0;
 
-    // Walk through weeks in reverse (most recent first) for current chain
-    const reversedWeeks = [...weeks].reverse();
+  for (const week of weeks) {
+    if (week.meetsThreshold) {
+      currentChain++;
+      longest = Math.max(longest, currentChain);
+    } else {
+      currentChain = 0;
+    }
+  }
 
-    for (let i = 0; i < reversedWeeks.length; i++) {
-      const week = reversedWeeks[i];
-      if (!week) continue; // Skip if undefined
-      const weekTierIndex = TIER_ORDER.indexOf(week.tier);
+  // Calculate current chain (from most recent week)
+  const reversedWeeks = [...weeks].reverse();
+  currentChain = 0;
 
-      // A week counts towards a tier if it achieved that tier or better
-      if (weekTierIndex <= tierIndex && week.tier !== "starting") {
-        if (i === 0 || currentChain > 0) {
-          currentChain++;
-        }
-      } else {
-        // Chain broken - this only affects current chain calculation
-        if (i === 0) {
-          currentChain = 0;
-        }
+  for (let i = 0; i < reversedWeeks.length; i++) {
+    const week = reversedWeeks[i];
+    if (!week) continue;
+
+    // Check if weeks are consecutive
+    if (i > 0) {
+      const prevWeek = reversedWeeks[i - 1];
+      if (prevWeek && !isConsecutiveWeek(week.weekStart, prevWeek.weekStart)) {
         break;
       }
     }
-    current = currentChain;
 
-    // Calculate longest chain by walking forward
-    currentChain = 0;
-    for (const week of weeks) {
-      const weekTierIndex = TIER_ORDER.indexOf(week.tier);
-      if (weekTierIndex <= tierIndex && week.tier !== "starting") {
-        currentChain++;
-        longest = Math.max(longest, currentChain);
-      } else {
+    if (week.meetsThreshold) {
+      currentChain++;
+    } else {
+      // For the most recent week, allow partial progress
+      if (i === 0) {
         currentChain = 0;
+      }
+      break;
+    }
+  }
+
+  return { type: chainType, current: currentChain, longest, unit };
+}
+
+/**
+ * Calculate weekly target chain: cumulative seconds per week
+ */
+function calculateWeeklyTargetChain(
+  dayStatuses: DayStatus[],
+  targetSeconds: number,
+  unit: ChainUnit,
+): ChainStat {
+  // Group by week and sum seconds
+  const weekMap = new Map<string, number>(); // weekStart -> totalSeconds
+
+  for (const day of dayStatuses) {
+    const weekStart = formatDate(getWeekStart(new Date(day.date)));
+    weekMap.set(weekStart, (weekMap.get(weekStart) || 0) + day.totalSeconds);
+  }
+
+  // Sort weeks chronologically
+  const weeks = Array.from(weekMap.entries())
+    .map(([weekStart, totalSeconds]) => ({
+      weekStart,
+      totalSeconds,
+      meetsTarget: totalSeconds >= targetSeconds,
+    }))
+    .sort((a, b) => a.weekStart.localeCompare(b.weekStart));
+
+  if (weeks.length === 0) {
+    return { type: "weekly_target", current: 0, longest: 0, unit };
+  }
+
+  // Calculate longest chain
+  let longest = 0;
+  let currentChain = 0;
+
+  for (const week of weeks) {
+    if (week.meetsTarget) {
+      currentChain++;
+      longest = Math.max(longest, currentChain);
+    } else {
+      currentChain = 0;
+    }
+  }
+
+  // Calculate current chain (from most recent week)
+  const reversedWeeks = [...weeks].reverse();
+  currentChain = 0;
+
+  for (let i = 0; i < reversedWeeks.length; i++) {
+    const week = reversedWeeks[i];
+    if (!week) continue;
+
+    // Check if weeks are consecutive
+    if (i > 0) {
+      const prevWeek = reversedWeeks[i - 1];
+      if (prevWeek && !isConsecutiveWeek(week.weekStart, prevWeek.weekStart)) {
+        break;
       }
     }
 
-    chains.push({ tier, current, longest });
+    if (week.meetsTarget) {
+      currentChain++;
+    } else {
+      if (i === 0) {
+        currentChain = 0;
+      }
+      break;
+    }
   }
 
-  return chains;
+  return { type: "weekly_target", current: currentChain, longest, unit };
+}
+
+/**
+ * Calculate monthly target chain: cumulative seconds per month
+ */
+function calculateMonthlyTargetChain(
+  dayStatuses: DayStatus[],
+  targetSeconds: number,
+  unit: ChainUnit,
+): ChainStat {
+  // Group by month and sum seconds
+  const monthMap = new Map<string, number>(); // YYYY-MM -> totalSeconds
+
+  for (const day of dayStatuses) {
+    const monthKey = formatMonth(new Date(day.date));
+    monthMap.set(monthKey, (monthMap.get(monthKey) || 0) + day.totalSeconds);
+  }
+
+  // Sort months chronologically
+  const months = Array.from(monthMap.entries())
+    .map(([monthKey, totalSeconds]) => ({
+      monthKey,
+      totalSeconds,
+      meetsTarget: totalSeconds >= targetSeconds,
+    }))
+    .sort((a, b) => a.monthKey.localeCompare(b.monthKey));
+
+  if (months.length === 0) {
+    return { type: "monthly_target", current: 0, longest: 0, unit };
+  }
+
+  // Calculate longest chain
+  let longest = 0;
+  let currentChain = 0;
+
+  for (const month of months) {
+    if (month.meetsTarget) {
+      currentChain++;
+      longest = Math.max(longest, currentChain);
+    } else {
+      currentChain = 0;
+    }
+  }
+
+  // Calculate current chain (from most recent month)
+  const reversedMonths = [...months].reverse();
+  currentChain = 0;
+
+  for (let i = 0; i < reversedMonths.length; i++) {
+    const month = reversedMonths[i];
+    if (!month) continue;
+
+    // Check if months are consecutive
+    if (i > 0) {
+      const prevMonth = reversedMonths[i - 1];
+      if (
+        prevMonth &&
+        !isConsecutiveMonth(month.monthKey, prevMonth.monthKey)
+      ) {
+        break;
+      }
+    }
+
+    if (month.meetsTarget) {
+      currentChain++;
+    } else {
+      if (i === 0) {
+        currentChain = 0;
+      }
+      break;
+    }
+  }
+
+  return { type: "monthly_target", current: currentChain, longest, unit };
+}
+
+/**
+ * Check if month2 is the month immediately after month1
+ */
+function isConsecutiveMonth(month1: string, month2: string): boolean {
+  const [y1, m1] = month1.split("-").map(Number);
+  const [y2, m2] = month2.split("-").map(Number);
+
+  if (
+    y1 === undefined ||
+    m1 === undefined ||
+    y2 === undefined ||
+    m2 === undefined
+  ) {
+    return false;
+  }
+
+  // Month 2 should be exactly 1 month after month 1
+  if (y1 === y2) {
+    return m2 === m1 + 1;
+  } else if (y2 === y1 + 1) {
+    return m1 === 12 && m2 === 1;
+  }
+  return false;
 }
 
 /**
@@ -235,9 +540,13 @@ export function calculateTotals(
 
   // Count unique weeks with activity
   const activeWeeks = new Set<string>();
+  // Count unique months with activity
+  const activeMonths = new Set<string>();
+
   for (const day of dayStatuses) {
     if (day.isComplete) {
       activeWeeks.add(formatDate(getWeekStart(new Date(day.date))));
+      activeMonths.add(formatMonth(new Date(day.date)));
     }
   }
 
@@ -247,6 +556,7 @@ export function calculateTotals(
     totalHours,
     firstEntryDate,
     weeksActive: activeWeeks.size,
+    monthsActive: activeMonths.size,
   };
 }
 
@@ -263,7 +573,7 @@ export function getJourneyStage(weeksActive: number): JourneyStage {
  * Select an encouragement message based on stage and context
  */
 export async function selectEncouragement(
-  db: LibSQLDatabase,
+  db: LibSQLDatabase<typeof schema>,
   stage: JourneyStage,
   context: string,
   activityType: string = "general",
@@ -335,4 +645,85 @@ export async function selectEncouragement(
   };
 
   return fallbacks[stage];
+}
+
+// ============================================================================
+// Helper Functions
+// ============================================================================
+
+/**
+ * Check if week2 is the week immediately after week1
+ */
+function isConsecutiveWeek(week1Start: string, week2Start: string): boolean {
+  const w1 = new Date(week1Start);
+  w1.setDate(w1.getDate() + 7);
+  return formatDate(w1) === week2Start;
+}
+
+/**
+ * Build initial cache data from a full calculation
+ *
+ * Note: The legacy tryIncrementalChainUpdate and updateChainsForNewDay functions
+ * have been removed in favor of simpler full recalculation with caching.
+ * The new chain type system (daily, weekly_high, weekly_low, weekly_target, monthly_target)
+ * uses calculateTypedChainStats which is designed for full recalculation with efficient caching.
+ */
+export function buildCacheData(
+  chains: ChainStat[],
+  totals: RhythmTotals,
+  dayStatuses: DayStatus[],
+  lastEntryTimestamp: string | null,
+): CachedChainData {
+  // Find the last complete date and current period stats
+  const today = new Date();
+  const todayWeekStart = formatDate(getWeekStart(today));
+
+  let lastCompleteDate: string | null = null;
+  let thisPeriodDays = 0;
+  let thisPeriodSeconds = 0;
+
+  // Find this week's stats from day statuses (use week as default period)
+  for (const day of dayStatuses) {
+    const dayWeekStart = formatDate(getWeekStart(new Date(day.date)));
+    if (dayWeekStart === todayWeekStart) {
+      thisPeriodSeconds += day.totalSeconds;
+      if (day.isComplete) {
+        thisPeriodDays += 1;
+        if (!lastCompleteDate || day.date > lastCompleteDate) {
+          lastCompleteDate = day.date;
+        }
+      }
+    } else if (day.isComplete) {
+      // Track last complete date from previous weeks too
+      if (!lastCompleteDate || day.date > lastCompleteDate) {
+        lastCompleteDate = day.date;
+      }
+    }
+  }
+
+  // Find the last period with activity for chain tracking
+  let lastPeriodKey: string | null = null;
+  const periodsWithActivity = new Set<string>();
+  for (const day of dayStatuses) {
+    if (day.isComplete) {
+      periodsWithActivity.add(formatDate(getWeekStart(new Date(day.date))));
+    }
+  }
+  const sortedPeriods = Array.from(periodsWithActivity).sort();
+  if (sortedPeriods.length > 0) {
+    lastPeriodKey = sortedPeriods[sortedPeriods.length - 1] || null;
+  }
+
+  return {
+    chains,
+    currentChain: {
+      lastCompleteDate,
+      lastPeriodKey,
+      thisPeriodDays,
+      thisPeriodSeconds,
+    },
+    totals,
+    lastCalculatedAt: new Date().toISOString(),
+    lastEntryTimestamp,
+  };
 }

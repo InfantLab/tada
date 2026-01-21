@@ -12,7 +12,7 @@ describe("GET /api/health", () => {
   });
 
   it("should include timestamp", async () => {
-    const result = handler({} as any);
+    const result = handler({} as H3Event);
 
     expect(result.timestamp).toBeDefined();
     expect(() => new Date(result.timestamp)).not.toThrow();

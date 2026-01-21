@@ -17,10 +17,6 @@ const copied = ref(false);
 
 const isDevMode = import.meta.dev;
 
-const errorSummary = computed(() => {
-  return `${props.error.statusCode}: ${props.error.message}`;
-});
-
 const errorDetails = computed(() => {
   return JSON.stringify(
     {

@@ -1,54 +1,44 @@
 <script setup lang="ts">
 /**
- * RhythmChainStats - Display chain statistics for each tier
+ * RhythmChainStats - Display chain statistics
  *
- * Shows current and longest chains, ordered by tier (Daily first).
- * Current chain is prominent, longest is subtle.
+ * Shows the chain stat based on rhythm's configured chain type.
+ *
+ * Chain types:
+ * - daily: Consecutive days - counted in days
+ * - weekly_high: 5+ days per week - counted in weeks
+ * - weekly_low: 3+ days per week - counted in weeks
+ * - weekly_target: Cumulative minutes per week - counted in weeks
+ * - monthly_target: Cumulative minutes per month - counted in months
  */
 
-import { computed } from "vue";
-import type { TierName } from "~/utils/tierCalculator";
-import { getTierLabel, TIER_ORDER } from "~/utils/tierCalculator";
+import type { ChainType, ChainUnit } from "~/utils/tierCalculator";
+import { formatChainValue } from "~/utils/tierCalculator";
 
-interface ChainStat {
-  tier: TierName;
+interface TypedChain {
+  type: ChainType;
   current: number;
   longest: number;
+  unit: ChainUnit;
+  label: string;
+  description: string;
 }
 
 interface Props {
-  chains: ChainStat[];
-  achievedTier: TierName;
+  chain: TypedChain;
   nudgeMessage?: string;
 }
 
 const props = defineProps<Props>();
 
-// Sort chains by tier order and filter out "starting"
-const sortedChains = computed(() => {
-  return props.chains
-    .filter((c) => c.tier !== "starting")
-    .sort((a, b) => TIER_ORDER.indexOf(a.tier) - TIER_ORDER.indexOf(b.tier));
-});
-
-// Get tier label
-function getTierDisplayLabel(tier: TierName): string {
-  return getTierLabel(tier);
+// Check if current chain equals or exceeds best (personal record)
+function isPersonalBest(): boolean {
+  return props.chain.current > 0 && props.chain.current >= props.chain.longest;
 }
 
-// Check if this tier is the currently achieved tier
-function isAchievedTier(tier: TierName): boolean {
-  return tier === props.achievedTier;
-}
-
-// Format chain duration
-function formatChain(weeks: number, tier: TierName): string {
-  if (weeks === 0) return "—";
-  if (tier === "daily") {
-    // For daily tier, show as days
-    return `${weeks * 7} days`;
-  }
-  return weeks === 1 ? "1 week" : `${weeks} weeks`;
+// Format value based on unit
+function formatValue(value: number): string {
+  return formatChainValue(value, props.chain.unit);
 }
 </script>
 
@@ -62,66 +52,60 @@ function formatChain(weeks: number, tier: TierName): string {
       💡 {{ nudgeMessage }}
     </div>
 
-    <!-- Chain stats by tier -->
-    <div class="grid gap-2 sm:grid-cols-2">
-      <div
-        v-for="chain in sortedChains"
-        :key="chain.tier"
-        :class="[
-          'rounded-lg px-3 py-2 transition-colors',
-          isAchievedTier(chain.tier)
-            ? 'bg-tada-100/30 ring-1 ring-tada-500/30 dark:bg-tada-600/20'
-            : 'bg-stone-50 dark:bg-stone-700/50',
-        ]"
-      >
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <span
-              v-if="isAchievedTier(chain.tier)"
-              class="text-tada-600 dark:text-tada-400"
-            >
-              ✓
-            </span>
-            <span
-              :class="[
-                'text-sm font-medium',
-                isAchievedTier(chain.tier)
-                  ? 'text-tada-700 dark:text-tada-300'
-                  : 'text-stone-600 dark:text-stone-400',
-              ]"
-            >
-              {{ getTierDisplayLabel(chain.tier) }}
-            </span>
+    <!-- Primary chain stat -->
+    <div
+      class="rounded-lg bg-tada-50 px-4 py-3 ring-1 ring-tada-200 dark:bg-tada-900/20 dark:ring-tada-700/30"
+    >
+      <!-- Chain type header -->
+      <div class="flex items-center justify-between">
+        <div>
+          <span class="text-sm font-semibold text-tada-700 dark:text-tada-300">
+            {{ chain.label }}
+          </span>
+          <span class="ml-1.5 text-xs text-tada-500 dark:text-tada-400">
+            ({{ chain.description }})
+          </span>
+        </div>
+        <!-- Personal best badge -->
+        <span
+          v-if="isPersonalBest()"
+          class="rounded bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
+        >
+          🏆 Best!
+        </span>
+      </div>
+
+      <!-- Current and Best display -->
+      <div class="mt-3 flex items-end justify-between">
+        <!-- Current chain -->
+        <div>
+          <div class="text-xs text-tada-500 dark:text-tada-400">Current</div>
+          <div
+            :class="[
+              'text-2xl font-bold',
+              chain.current > 0
+                ? 'text-tada-700 dark:text-tada-200'
+                : 'text-stone-300 dark:text-stone-600',
+            ]"
+          >
+            {{ formatValue(chain.current) }}
           </div>
         </div>
 
-        <div class="mt-1 flex items-baseline gap-3">
-          <!-- Current chain (prominent) -->
-          <div class="flex items-baseline gap-1">
-            <span
-              :class="[
-                'text-lg font-semibold',
-                chain.current > 0
-                  ? 'text-stone-800 dark:text-stone-100'
-                  : 'text-stone-400 dark:text-stone-500',
-              ]"
-            >
-              {{ chain.current > 0 ? chain.current : "—" }}
-            </span>
-            <span
-              v-if="chain.current > 0"
-              class="text-xs text-stone-500 dark:text-stone-400"
-            >
-              {{ chain.current === 1 ? "week" : "weeks" }}
-            </span>
+        <!-- Best chain -->
+        <div class="text-right">
+          <div class="text-xs text-stone-400 dark:text-stone-500">
+            All-Time Best
           </div>
-
-          <!-- Longest chain (subtle) -->
           <div
-            v-if="chain.longest > 0"
-            class="text-xs text-stone-400 dark:text-stone-500"
+            :class="[
+              'text-xl font-semibold',
+              chain.longest > 0
+                ? 'text-stone-600 dark:text-stone-300'
+                : 'text-stone-300 dark:text-stone-600',
+            ]"
           >
-            best: {{ chain.longest }}
+            {{ formatValue(chain.longest) }}
           </div>
         </div>
       </div>

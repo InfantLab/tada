@@ -12,9 +12,14 @@ import { createLogger } from "~/server/utils/logger";
 import {
   getMatchingEntries,
   entriesToDayStatuses,
-  calculateChainStats,
+  calculateTypedChainStats,
 } from "~/server/utils/rhythmCalculator";
-import { calculateWeeklyProgress, getTierLabel } from "~/utils/tierCalculator";
+import {
+  calculateWeeklyProgress,
+  getTierLabel,
+  getChainConfig,
+  type ChainType,
+} from "~/utils/tierCalculator";
 
 const logger = createLogger("api:rhythms:list");
 
@@ -62,9 +67,14 @@ export default defineEventHandler(async (event) => {
         // Calculate current week progress
         const weekProgress = calculateWeeklyProgress(dayStatuses, new Date());
 
-        // Calculate chain stats
-        const chains = calculateChainStats(dayStatuses);
-        const dailyChain = chains.find((c) => c.tier === "daily");
+        // Calculate chain stat based on rhythm's chain type
+        const chainType = (rhythm.chainType as ChainType) || "weekly_low";
+        const chainConfig = getChainConfig(chainType);
+        const chain = calculateTypedChainStats(
+          dayStatuses,
+          chainType,
+          rhythm.chainTargetMinutes || undefined,
+        );
 
         // Parse panel preferences
         const panelPrefs = rhythm.panelPreferences || {
@@ -82,12 +92,13 @@ export default defineEventHandler(async (event) => {
           matchCategory: rhythm.matchCategory,
           durationThresholdSeconds: rhythm.durationThresholdSeconds,
           frequency: rhythm.frequency,
+          chainType: chainType,
+          chainLabel: chainConfig.shortLabel,
           currentTier: weekProgress.achievedTier,
           currentTierLabel: getTierLabel(weekProgress.achievedTier),
-          currentChainDays: dailyChain?.current || 0,
-          currentChainWeeks:
-            chains.find((c) => c.tier === weekProgress.achievedTier)?.current ||
-            0,
+          currentChain: chain.current,
+          longestChain: chain.longest,
+          chainUnit: chain.unit,
           panelPreferences: panelPrefs,
           createdAt: rhythm.createdAt,
         };
@@ -98,7 +109,11 @@ export default defineEventHandler(async (event) => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     const errorStack = error instanceof Error ? error.stack : undefined;
-    logger.error("Failed to fetch rhythms", { error: errorMessage, stack: errorStack, userId });
+    logger.error("Failed to fetch rhythms", {
+      error: errorMessage,
+      stack: errorStack,
+      userId,
+    });
     throw createError({
       statusCode: 500,
       message: `Failed to fetch rhythms: ${errorMessage}`,

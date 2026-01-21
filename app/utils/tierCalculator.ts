@@ -2,11 +2,18 @@
  * Tier Calculator - Pure functions for rhythm tier calculations
  *
  * Tiers represent flexible frequency targets that "bend, not break":
- * - Daily: 7 days per week
+ * - Daily: 7 days per week (every day)
  * - Most Days: 5-6 days per week
  * - Few Times: 3-4 days per week
  * - Weekly: 1-2 days per week
  * - Starting: New rhythm, not enough data yet
+ *
+ * Chain Types (v0.3.1+):
+ * - daily: Consecutive days with min X minutes - counted in days
+ * - weekly_high: 5+ days/week with min X min/day - counted in weeks
+ * - weekly_low: 3+ days/week with min X min/day - counted in weeks
+ * - weekly_target: Y+ cumulative minutes/week - counted in weeks
+ * - monthly_target: Y+ cumulative minutes/month - counted in months
  */
 
 // ============================================================================
@@ -20,9 +27,134 @@ export type TierName =
   | "weekly"
   | "starting";
 
+/**
+ * Chain types determine how streaks are calculated and counted
+ */
+export type ChainType =
+  | "daily" // Consecutive days with min duration
+  | "weekly_high" // 5+ days per week - counted in weeks
+  | "weekly_low" // 3+ days per week - counted in weeks
+  | "weekly_target" // Cumulative minutes per week - counted in weeks
+  | "monthly_target"; // Cumulative minutes per month - counted in months
+
+/**
+ * Unit of measurement for a chain
+ */
+export type ChainUnit = "days" | "weeks" | "months";
+
+/**
+ * Configuration for a specific chain type
+ */
+export interface ChainConfig {
+  type: ChainType;
+  label: string;
+  shortLabel: string;
+  description: string;
+  unit: ChainUnit;
+  // For day-based chains (daily, weekly_high, weekly_low)
+  minDaysPerPeriod?: number; // Days required per period (7 for daily, 5 for high, 3 for low)
+  // For target-based chains: targetMinutes is configured per-rhythm
+}
+
+/**
+ * Statistics for a single chain type
+ */
+export interface ChainStat {
+  type: ChainType;
+  current: number; // Current chain length in the chain's unit
+  longest: number; // All-time best in the chain's unit
+  unit: ChainUnit;
+}
+
 export interface FrequencyTier {
   name: TierName;
   label: string;
+  shortLabel: string;
+  description: string;
+  minDays: number;
+  maxDays: number;
+}
+
+export interface WeeklyProgress {
+  startDate: string; // Monday of the week (YYYY-MM-DD)
+  endDate: string; // Sunday of the week (YYYY-MM-DD)
+  daysCompleted: number;
+  achievedTier: TierName;
+  bestPossibleTier: TierName;
+  daysRemaining: number;
+}
+
+export interface DayStatus {
+  date: string; // YYYY-MM-DD
+  totalSeconds: number;
+  isComplete: boolean;
+  entryCount: number;
+}
+
+// ============================================================================
+// Constants
+// ============================================================================
+
+/**
+ * Chain type configurations
+ */
+export const CHAIN_CONFIGS: ChainConfig[] = [
+  {
+    type: "daily",
+    label: "Daily Chain",
+    shortLabel: "Daily",
+    description: "Every day",
+    unit: "days",
+    minDaysPerPeriod: 1, // Per day
+  },
+  {
+    type: "weekly_high",
+    label: "Weekly (High)",
+    shortLabel: "5×/wk",
+    description: "5+ days per week",
+    unit: "weeks",
+    minDaysPerPeriod: 5,
+  },
+  {
+    type: "weekly_low",
+    label: "Weekly (Regular)",
+    shortLabel: "3×/wk",
+    description: "3+ days per week",
+    unit: "weeks",
+    minDaysPerPeriod: 3,
+  },
+  {
+    type: "weekly_target",
+    label: "Weekly Target",
+    shortLabel: "Wk Goal",
+    description: "Minutes per week",
+    unit: "weeks",
+  },
+  {
+    type: "monthly_target",
+    label: "Monthly Target",
+    shortLabel: "Mo Goal",
+    description: "Minutes per month",
+    unit: "months",
+  },
+];
+
+/**
+ * Order of chain types from most demanding to least
+ */
+export const CHAIN_TYPE_ORDER: ChainType[] = [
+  "daily",
+  "weekly_high",
+  "weekly_low",
+  "weekly_target",
+  "monthly_target",
+];
+
+export interface FrequencyTier {
+  name: TierName;
+  label: string;
+  shortLabel: string;
+  description: string;
   minDays: number;
   maxDays: number;
 }
@@ -48,11 +180,46 @@ export interface DayStatus {
 // ============================================================================
 
 export const TIERS: FrequencyTier[] = [
-  { name: "daily", label: "Daily", minDays: 7, maxDays: 7 },
-  { name: "most_days", label: "Most Days", minDays: 5, maxDays: 6 },
-  { name: "few_times", label: "Few Times", minDays: 3, maxDays: 4 },
-  { name: "weekly", label: "Weekly", minDays: 1, maxDays: 2 },
-  { name: "starting", label: "Starting", minDays: 0, maxDays: 0 },
+  {
+    name: "daily",
+    label: "Every Day",
+    shortLabel: "Daily",
+    description: "7 days per week",
+    minDays: 7,
+    maxDays: 7,
+  },
+  {
+    name: "most_days",
+    label: "Most Days",
+    shortLabel: "5-6×",
+    description: "5-6 days per week",
+    minDays: 5,
+    maxDays: 6,
+  },
+  {
+    name: "few_times",
+    label: "Several Times",
+    shortLabel: "3-4×",
+    description: "3-4 days per week",
+    minDays: 3,
+    maxDays: 4,
+  },
+  {
+    name: "weekly",
+    label: "At Least Once",
+    shortLabel: "1-2×",
+    description: "1-2 days per week",
+    minDays: 1,
+    maxDays: 2,
+  },
+  {
+    name: "starting",
+    label: "Starting",
+    shortLabel: "—",
+    description: "No activity yet",
+    minDays: 0,
+    maxDays: 0,
+  },
 ];
 
 export const TIER_ORDER: TierName[] = [
@@ -62,6 +229,86 @@ export const TIER_ORDER: TierName[] = [
   "weekly",
   "starting",
 ];
+
+// ============================================================================
+// Chain Helper Functions
+// ============================================================================
+
+/**
+ * Get the chain configuration for a chain type
+ */
+export function getChainConfig(chainType: ChainType): ChainConfig {
+  const config = CHAIN_CONFIGS.find((c) => c.type === chainType);
+  // Default to weekly_low if not found
+  return config ?? (CHAIN_CONFIGS[2] as ChainConfig);
+}
+
+/**
+ * Get the label for a chain type
+ */
+export function getChainLabel(chainType: ChainType): string {
+  return getChainConfig(chainType).label;
+}
+
+/**
+ * Get the short label for a chain type
+ */
+export function getChainShortLabel(chainType: ChainType): string {
+  return getChainConfig(chainType).shortLabel;
+}
+
+/**
+ * Get the description for a chain type
+ */
+export function getChainDescription(chainType: ChainType): string {
+  return getChainConfig(chainType).description;
+}
+
+/**
+ * Get the unit for a chain type
+ */
+export function getChainUnit(chainType: ChainType): ChainUnit {
+  return getChainConfig(chainType).unit;
+}
+
+/**
+ * Format a chain value with its unit (e.g., "5 days", "3 weeks", "2 months")
+ */
+export function formatChainValue(value: number, unit: ChainUnit): string {
+  if (value === 0) return "—";
+  const singular = unit.slice(0, -1); // Remove 's'
+  return value === 1 ? `1 ${singular}` : `${value} ${unit}`;
+}
+
+/**
+ * Get the start of a month for a given date
+ */
+export function getMonthStart(date: Date): Date {
+  const d = new Date(date);
+  d.setDate(1);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+/**
+ * Get the end of a month for a given date
+ */
+export function getMonthEnd(date: Date): Date {
+  const d = new Date(date);
+  d.setMonth(d.getMonth() + 1);
+  d.setDate(0); // Last day of previous month
+  d.setHours(23, 59, 59, 999);
+  return d;
+}
+
+/**
+ * Format a date as YYYY-MM (for monthly grouping)
+ */
+export function formatMonth(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  return `${year}-${month}`;
+}
 
 // ============================================================================
 // Functions
@@ -92,6 +339,20 @@ export function getTierInfo(tierName: TierName): FrequencyTier {
  */
 export function getTierLabel(tierName: TierName): string {
   return getTierInfo(tierName).label;
+}
+
+/**
+ * Get the short label for a tier (for compact displays)
+ */
+export function getTierShortLabel(tierName: TierName): string {
+  return getTierInfo(tierName).shortLabel;
+}
+
+/**
+ * Get the description for a tier (explains the rule)
+ */
+export function getTierDescription(tierName: TierName): string {
+  return getTierInfo(tierName).description;
 }
 
 /**

@@ -44,6 +44,18 @@ const progressData = ref<Map<string, RhythmProgress>>(new Map());
 onMounted(async () => {
   try {
     await fetchRhythms();
+    // Fetch progress for all rhythms to show bar charts
+    for (const rhythm of rhythms.value) {
+      if (!progressData.value.has(rhythm.id)) {
+        fetchProgress(rhythm.id)
+          .then((progress) => {
+            progressData.value.set(rhythm.id, progress);
+          })
+          .catch((err) => {
+            console.error("Failed to fetch progress:", err);
+          });
+      }
+    }
   } catch (err) {
     console.error("Failed to fetch rhythms:", err);
   }
@@ -163,24 +175,6 @@ function getCategoryEmoji(category: string | null): string {
   };
   return emojis[category || ""] || "✨";
 }
-
-// Get the last 7 days for the mini calendar
-function getLast7Days() {
-  const days = [];
-  for (let i = 6; i >= 0; i--) {
-    const date = new Date();
-    date.setDate(date.getDate() - i);
-    days.push({
-      date,
-      dayName: date.toLocaleDateString("en-US", { weekday: "short" }).charAt(0),
-      dayNum: date.getDate(),
-      isToday: i === 0,
-    });
-  }
-  return days;
-}
-
-const last7Days = getLast7Days();
 </script>
 
 <template>
@@ -317,27 +311,19 @@ const last7Days = getLast7Days();
               </span>
             </div>
 
-            <!-- Mini calendar placeholder (last 7 days) -->
-            <div class="mt-3 flex gap-1 sm:gap-1.5">
+            <!-- Bar chart (last 4 weeks) -->
+            <div class="mt-3">
+              <RhythmBarChart
+                v-if="getProgress(rhythm.id)"
+                :days="getProgress(rhythm.id)!.days"
+                :goal-type="'duration'"
+                :threshold-seconds="rhythm.durationThresholdSeconds"
+              />
               <div
-                v-for="day in last7Days"
-                :key="day.date.toISOString()"
-                class="flex flex-col items-center"
+                v-else
+                class="flex h-[60px] items-center justify-center text-xs text-stone-400"
               >
-                <span class="mb-1 text-xs text-stone-400 dark:text-stone-500">
-                  {{ day.dayName }}
-                </span>
-                <div
-                  class="flex h-8 w-8 items-center justify-center rounded-lg text-xs font-medium transition-colors"
-                  :class="[
-                    day.isToday
-                      ? 'ring-2 ring-tada-500 dark:ring-tada-500'
-                      : '',
-                    'bg-stone-100 text-stone-500 dark:bg-stone-700 dark:text-stone-400',
-                  ]"
-                >
-                  {{ day.dayNum }}
-                </div>
+                Loading activity...
               </div>
             </div>
           </div>
@@ -380,14 +366,16 @@ const last7Days = getLast7Days();
 
               <!-- Month Calendar -->
               <div class="flex justify-center lg:justify-start">
-                <RhythmMonthCalendar :days="getProgress(rhythm.id)!.days" />
+                <RhythmMonthCalendar
+                  :days="getProgress(rhythm.id)!.days"
+                  :threshold-seconds="rhythm.durationThresholdSeconds"
+                />
               </div>
             </div>
 
             <!-- Chain Stats -->
             <RhythmChainStats
-              :chains="getProgress(rhythm.id)!.chains"
-              :achieved-tier="getProgress(rhythm.id)!.currentWeek.achievedTier"
+              :chain="getProgress(rhythm.id)!.chain"
               :nudge-message="getProgress(rhythm.id)!.currentWeek.nudgeMessage"
               class="mb-4"
             />

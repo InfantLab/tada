@@ -50,19 +50,25 @@ describe("tierCalculator", () => {
     it("returns correct info for each tier", () => {
       expect(getTierInfo("daily")).toEqual({
         name: "daily",
-        label: "Daily",
+        label: "Every Day",
+        shortLabel: "Daily",
+        description: "7 days per week",
         minDays: 7,
         maxDays: 7,
       });
       expect(getTierInfo("most_days")).toEqual({
         name: "most_days",
         label: "Most Days",
+        shortLabel: "5-6×",
+        description: "5-6 days per week",
         minDays: 5,
         maxDays: 6,
       });
       expect(getTierInfo("few_times")).toEqual({
         name: "few_times",
-        label: "Few Times",
+        label: "Several Times",
+        shortLabel: "3-4×",
+        description: "3-4 days per week",
         minDays: 3,
         maxDays: 4,
       });
@@ -71,10 +77,10 @@ describe("tierCalculator", () => {
 
   describe("getTierLabel", () => {
     it("returns human-readable labels", () => {
-      expect(getTierLabel("daily")).toBe("Daily");
+      expect(getTierLabel("daily")).toBe("Every Day");
       expect(getTierLabel("most_days")).toBe("Most Days");
-      expect(getTierLabel("few_times")).toBe("Few Times");
-      expect(getTierLabel("weekly")).toBe("Weekly");
+      expect(getTierLabel("few_times")).toBe("Several Times");
+      expect(getTierLabel("weekly")).toBe("At Least Once");
       expect(getTierLabel("starting")).toBe("Starting");
     });
   });
@@ -230,7 +236,7 @@ describe("tierCalculator", () => {
       };
 
       expect(generateNudgeMessage(progress, "daily")).toBe(
-        "3 more times to hit 'Daily'",
+        "3 more times to hit 'Every Day'",
       );
     });
 
@@ -246,7 +252,7 @@ describe("tierCalculator", () => {
 
       // Target daily (7 days) is impossible with 2+2=4 max
       expect(generateNudgeMessage(progress, "daily")).toBe(
-        "1 more time to hit 'Few Times'",
+        "1 more time to hit 'Several Times'",
       );
     });
 

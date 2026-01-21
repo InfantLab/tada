@@ -4,7 +4,7 @@
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 
-const scryptAsync = promisify(scrypt);
+const _scryptAsync = promisify(scrypt);
 
 // Scrypt parameters (similar to Argon2id security level)
 const SALT_LENGTH = 16;

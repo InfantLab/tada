@@ -79,7 +79,7 @@ const selectedCategory = ref("mindfulness");
 const selectedSubcategory = ref("sitting");
 
 // User preferences for filtering categories and custom emojis
-const { loadPreferences, isCategoryVisible, preferences } = usePreferences();
+const { loadPreferences, isCategoryVisible, preferences: _preferences } = usePreferences();
 
 // Load preferences on mount
 onMounted(() => {
@@ -312,7 +312,7 @@ function buildCumulativeTargets(intervals: number[]): number[] {
 }
 
 // Track previous elapsed for milestone/interval boundary detection
-let lastCheckedElapsed = 0;
+let _lastCheckedElapsed = 0;
 
 function beginSession() {
   isRunning.value = true;
@@ -333,14 +333,14 @@ function beginSession() {
   // Start time-based tracking (accurate even when backgrounded)
   sessionStartTime.value = Date.now();
   pausedElapsed.value = 0;
-  lastCheckedElapsed = 0;
+  _lastCheckedElapsed = 0;
 
   timerInterval.value = setInterval(() => {
     // Calculate elapsed from actual time, not increments
     const now = Date.now();
     const newElapsed =
       Math.floor((now - sessionStartTime.value!) / 1000) + pausedElapsed.value;
-    const prevElapsed = elapsedSeconds.value;
+    const _prevElapsed = elapsedSeconds.value;
     elapsedSeconds.value = newElapsed;
 
     // Check for milestones in count-up mode

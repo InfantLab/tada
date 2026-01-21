@@ -57,6 +57,20 @@
       "when": 1768657918560,
       "tag": "0007_hot_stick",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1768938180076,
+      "tag": "0008_superb_ronan",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1768941558950,
+      "tag": "0009_wandering_exodus",
+      "breakpoints": true
     }
   ]
 }

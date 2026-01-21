@@ -46,8 +46,8 @@ const seconds = computed({
   },
 });
 
-// Display string
-const displayDuration = computed(() => {
+// Display string (unused but kept for reference)
+const _displayDuration = computed(() => {
   if (props.modelValue === null || props.modelValue === undefined) return "—";
   const mins = Math.floor(props.modelValue / 60);
   const secs = props.modelValue % 60;

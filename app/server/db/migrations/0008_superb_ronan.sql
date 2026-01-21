@@ -1,0 +1,1 @@
+ALTER TABLE `rhythms` ADD `cached_chain_stats` text;

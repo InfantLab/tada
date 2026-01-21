@@ -48,7 +48,6 @@ export default defineEventHandler(async (event) => {
     return {
       id: rhythm.id,
       name: rhythm.name,
-      emoji: rhythm.emoji,
       matchCategory: rhythm.matchCategory,
       matchSubcategory: rhythm.matchSubcategory,
       matchType: rhythm.matchType,

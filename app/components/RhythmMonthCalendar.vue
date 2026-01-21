@@ -67,13 +67,26 @@
         :title="getDayTooltip(day)"
       >
         <span v-if="day.inMonth" class="day-number">{{ day.dayNum }}</span>
-        <div v-if="day.isComplete" class="completion-dot" />
       </div>
     </div>
 
-    <!-- Summary -->
-    <div class="mt-3 text-center text-xs text-stone-500 dark:text-stone-400">
-      {{ completedDays }} of {{ totalDaysInMonth }} days
+    <!-- Legend and Summary -->
+    <div class="mt-3 flex items-center justify-between">
+      <div class="flex items-center gap-1 text-xs text-stone-400">
+        <span>Less</span>
+        <div class="flex gap-0.5">
+          <div
+            v-for="level in [0, 1, 2, 3, 4]"
+            :key="level"
+            class="h-3 w-3 rounded-sm"
+            :class="getLegendClass(level)"
+          />
+        </div>
+        <span>More</span>
+      </div>
+      <div class="text-xs text-stone-500 dark:text-stone-400">
+        {{ completedDays }}/{{ totalDaysInMonth }} days
+      </div>
     </div>
   </div>
 </template>
@@ -96,10 +109,12 @@ interface CalendarDay {
   isFuture: boolean;
   isComplete: boolean;
   totalSeconds: number;
+  intensityLevel: number;
 }
 
 const props = defineProps<{
   days: DayStatus[];
+  thresholdSeconds?: number;
 }>();
 
 // Current displayed month
@@ -157,21 +172,34 @@ const calendarDays = computed(() => {
   const prevMonth = new Date(displayYear.value, displayMonth.value, 0);
   const prevMonthDays = prevMonth.getDate();
 
+  // Helper to calculate intensity level
+  const getIntensityLevel = (seconds: number, isFuture: boolean): number => {
+    if (isFuture || seconds === 0) return 0;
+    const threshold = props.thresholdSeconds || 360;
+    if (seconds < threshold * 0.5) return 1;
+    if (seconds < threshold) return 2;
+    if (seconds < threshold * 2) return 3;
+    return 4;
+  };
+
   // Add previous month's trailing days
   for (let i = startDay - 1; i >= 0; i--) {
     const dayNum = prevMonthDays - i;
     const date = new Date(displayYear.value, displayMonth.value - 1, dayNum);
     const dateKey = formatDateKey(date);
     const status = dayMap.value.get(dateKey);
+    const isFuture = date > today;
+    const totalSeconds = status?.totalSeconds ?? 0;
 
     result.push({
       date,
       dayNum,
       inMonth: false,
       isToday: false,
-      isFuture: date > today,
+      isFuture,
       isComplete: status?.isComplete ?? false,
-      totalSeconds: status?.totalSeconds ?? 0,
+      totalSeconds,
+      intensityLevel: getIntensityLevel(totalSeconds, isFuture),
     });
   }
 
@@ -180,15 +208,18 @@ const calendarDays = computed(() => {
     const date = new Date(displayYear.value, displayMonth.value, i);
     const dateKey = formatDateKey(date);
     const status = dayMap.value.get(dateKey);
+    const isFuture = date > today;
+    const totalSeconds = status?.totalSeconds ?? 0;
 
     result.push({
       date,
       dayNum: i,
       inMonth: true,
       isToday: date.getTime() === today.getTime(),
-      isFuture: date > today,
+      isFuture,
       isComplete: status?.isComplete ?? false,
-      totalSeconds: status?.totalSeconds ?? 0,
+      totalSeconds,
+      intensityLevel: getIntensityLevel(totalSeconds, isFuture),
     });
   }
 
@@ -199,15 +230,18 @@ const calendarDays = computed(() => {
     const date = new Date(displayYear.value, displayMonth.value + 1, i);
     const dateKey = formatDateKey(date);
     const status = dayMap.value.get(dateKey);
+    const isFuture = date > today;
+    const totalSeconds = status?.totalSeconds ?? 0;
 
     result.push({
       date,
       dayNum: i,
       inMonth: false,
       isToday: false,
-      isFuture: date > today,
+      isFuture,
       isComplete: status?.isComplete ?? false,
-      totalSeconds: status?.totalSeconds ?? 0,
+      totalSeconds,
+      intensityLevel: getIntensityLevel(totalSeconds, isFuture),
     });
   }
 
@@ -244,6 +278,7 @@ function getDayClasses(day: CalendarDay): string[] {
 
   if (!day.inMonth) {
     classes.push("out-of-month");
+    return classes;
   }
 
   if (day.isToday) {
@@ -252,11 +287,18 @@ function getDayClasses(day: CalendarDay): string[] {
 
   if (day.isFuture) {
     classes.push("is-future");
+    return classes;
   }
 
-  if (day.isComplete && !day.isFuture) {
-    classes.push("is-complete");
-  }
+  // Intensity-based coloring (same as year tracker)
+  const intensityClasses: Record<number, string> = {
+    0: "intensity-0",
+    1: "intensity-1",
+    2: "intensity-2",
+    3: "intensity-3",
+    4: "intensity-4",
+  };
+  classes.push(intensityClasses[day.intensityLevel] || "intensity-0");
 
   return classes;
 }
@@ -276,6 +318,17 @@ function getDayTooltip(day: CalendarDay): string {
 
   const minutes = Math.round(day.totalSeconds / 60);
   return `${dateStr}: ${minutes} min`;
+}
+
+function getLegendClass(level: number): string {
+  const classes: Record<number, string> = {
+    0: "bg-stone-100 dark:bg-stone-700",
+    1: "bg-green-100 dark:bg-green-900",
+    2: "bg-green-300 dark:bg-green-700",
+    3: "bg-green-500 dark:bg-green-500",
+    4: "bg-green-700 dark:bg-green-300",
+  };
+  return classes[level] || classes[0];
 }
 </script>
 
@@ -306,9 +359,12 @@ function getDayTooltip(day: CalendarDay): string {
   justify-content: center;
   border-radius: 0.375rem;
   font-size: 0.75rem;
-  color: #374151;
-  background: #f9fafb;
   cursor: default;
+  transition: transform 0.1s ease;
+}
+
+.calendar-day:hover {
+  transform: scale(1.1);
 }
 
 .calendar-day.out-of-month {
@@ -317,8 +373,6 @@ function getDayTooltip(day: CalendarDay): string {
 }
 
 .calendar-day.is-today {
-  ring: 2px;
-  ring-color: #f59e0b;
   outline: 2px solid #f59e0b;
   outline-offset: -1px;
 }
@@ -328,35 +382,40 @@ function getDayTooltip(day: CalendarDay): string {
   background: #fafafa;
 }
 
-.calendar-day.is-complete {
-  background: #dcfce7;
+/* Intensity levels - light mode */
+.calendar-day.intensity-0 {
+  background: #f5f5f4; /* stone-100 */
+  color: #78716c;
+}
+
+.calendar-day.intensity-1 {
+  background: #dcfce7; /* green-100 */
   color: #166534;
+}
+
+.calendar-day.intensity-2 {
+  background: #86efac; /* green-300 */
+  color: #166534;
+}
+
+.calendar-day.intensity-3 {
+  background: #22c55e; /* green-500 */
+  color: white;
+}
+
+.calendar-day.intensity-4 {
+  background: #15803d; /* green-700 */
+  color: white;
 }
 
 .day-number {
   z-index: 1;
 }
 
-.completion-dot {
-  position: absolute;
-  bottom: 0.125rem;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 0.25rem;
-  height: 0.25rem;
-  border-radius: 50%;
-  background: #16a34a;
-}
-
 /* Dark mode */
 @media (prefers-color-scheme: dark) {
   .weekday-header {
     color: #6b7280;
-  }
-
-  .calendar-day {
-    background: #374151;
-    color: #e5e7eb;
   }
 
   .calendar-day.out-of-month {
@@ -369,13 +428,29 @@ function getDayTooltip(day: CalendarDay): string {
     background: #1f2937;
   }
 
-  .calendar-day.is-complete {
-    background: #166534;
+  .calendar-day.intensity-0 {
+    background: #44403c; /* stone-700 */
+    color: #a8a29e;
+  }
+
+  .calendar-day.intensity-1 {
+    background: #14532d; /* green-900 */
     color: #bbf7d0;
   }
 
-  .completion-dot {
-    background: #22c55e;
+  .calendar-day.intensity-2 {
+    background: #15803d; /* green-700 */
+    color: #dcfce7;
+  }
+
+  .calendar-day.intensity-3 {
+    background: #22c55e; /* green-500 */
+    color: white;
+  }
+
+  .calendar-day.intensity-4 {
+    background: #86efac; /* green-300 */
+    color: #14532d;
   }
 }
 </style>

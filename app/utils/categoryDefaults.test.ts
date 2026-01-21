@@ -28,7 +28,7 @@ describe("categoryDefaults", () => {
     });
 
     it("should have valid emoji, color, and label for each category", () => {
-      Object.entries(CATEGORY_DEFAULTS).forEach(([slug, category]) => {
+      Object.entries(CATEGORY_DEFAULTS).forEach(([_slug, category]) => {
         expect(category.emoji).toBeTruthy();
         expect(category.color).toMatch(/^#[0-9A-F]{6}$/i);
         expect(category.label).toBeTruthy();

@@ -1,4 +1,5 @@
-import { beforeAll, afterAll, beforeEach } from "vitest";
+import { beforeAll, afterAll } from "vitest";
+import { eq } from "drizzle-orm";
 import { db } from "~/server/db";
 import {
   users,
@@ -7,7 +8,6 @@ import {
   importLogs,
   importRecipes,
 } from "~/server/db/schema";
-import { eq, sql } from "drizzle-orm";
 
 /**
  * Global test setup
@@ -65,7 +65,7 @@ export async function createTestUser(id: string, username: string) {
 // Helper to create test entry
 export async function createTestEntry(
   userId: string,
-  overrides: Partial<any> = {}
+  overrides: Partial<Record<string, unknown>> = {}
 ) {
   const entry = {
     id: `test-entry-${Date.now()}-${Math.random()}`,

@@ -2,7 +2,7 @@
   <div class="rhythm-year-tracker">
     <div class="mb-2 flex items-center justify-between">
       <h4 class="text-sm font-medium text-stone-600 dark:text-stone-400">
-        {{ year }}
+        Last 12 months
       </h4>
       <div
         class="flex items-center gap-1 text-xs text-stone-400 dark:text-stone-500"
@@ -20,13 +20,13 @@
       </div>
     </div>
 
-    <!-- Weeks grid (GitHub-style) -->
+    <!-- Weeks grid (GitHub-style, trailing 52 weeks) -->
     <div class="tracker-grid">
       <!-- Month labels row -->
       <div class="month-labels">
         <span
-          v-for="month in monthLabels"
-          :key="month.name"
+          v-for="(month, idx) in monthLabels"
+          :key="`${month.name}-${idx}`"
           class="month-label"
           :style="{ gridColumn: `span ${month.weeks}` }"
         >
@@ -82,16 +82,14 @@ interface DayData {
   date: Date;
   status?: DayStatus;
   isFuture: boolean;
-  isOutOfRange: boolean;
+  isEmpty: boolean;
 }
 
 const props = defineProps<{
   days: DayStatus[];
-  year?: number;
   thresholdSeconds?: number;
 }>();
 
-const year = computed(() => props.year || new Date().getFullYear());
 const intensityLevels = [0, 1, 2, 3, 4];
 
 // Create a map for quick lookup
@@ -101,6 +99,62 @@ const dayMap = computed(() => {
     map.set(day.date, day);
   }
   return map;
+});
+
+// Build weeks grid - 53 weeks trailing back from today (GitHub-style)
+const weeks = computed(() => {
+  const result: DayData[][] = [];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // End on today, start ~53 weeks ago on a Sunday
+  const endDate = new Date(today);
+
+  // Find the Sunday of the week containing 52 weeks ago
+  const startDate = new Date(today);
+  startDate.setDate(startDate.getDate() - 364); // Go back ~52 weeks
+  // Adjust to the previous Sunday
+  const startDay = startDate.getDay();
+  startDate.setDate(startDate.getDate() - startDay);
+
+  const currentDate = new Date(startDate);
+  let currentWeek: DayData[] = [];
+
+  while (currentDate <= endDate) {
+    const dateStr = formatDateKey(currentDate);
+    const status = dayMap.value.get(dateStr);
+
+    currentWeek.push({
+      date: new Date(currentDate),
+      status,
+      isFuture: currentDate > today,
+      isEmpty: false,
+    });
+
+    // If it's Saturday (day 6), start a new week
+    if (currentDate.getDay() === 6) {
+      result.push(currentWeek);
+      currentWeek = [];
+    }
+
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+
+  // Push any remaining days (partial week at end)
+  if (currentWeek.length > 0) {
+    // Pad with empty cells if needed
+    while (currentWeek.length < 7) {
+      currentWeek.push({
+        date: new Date(),
+        status: undefined,
+        isFuture: true,
+        isEmpty: true,
+      });
+    }
+    result.push(currentWeek);
+  }
+
+  return result;
 });
 
 // Calculate month labels with their week spans
@@ -125,10 +179,10 @@ const monthLabels = computed(() => {
   let weekCount = 0;
 
   for (const week of weeks.value) {
-    // Get the month of the middle of the week
-    const midDay = week[3] || week[0];
-    if (midDay && !midDay.isOutOfRange) {
-      const month = midDay.date.getMonth();
+    // Get the month of the first non-empty day in the week
+    const firstDay = week.find((d) => !d.isEmpty);
+    if (firstDay) {
+      const month = firstDay.date.getMonth();
       if (month !== currentMonth) {
         if (currentMonth !== -1 && weekCount > 0) {
           labels.push({
@@ -152,59 +206,6 @@ const monthLabels = computed(() => {
   return labels;
 });
 
-// Build weeks grid (52-53 weeks)
-const weeks = computed(() => {
-  const result: DayData[][] = [];
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  // Start from the first Sunday of the year (or last Sunday of previous year)
-  const startDate = new Date(year.value, 0, 1);
-  // Adjust to start on Sunday
-  const startDay = startDate.getDay();
-  if (startDay > 0) {
-    startDate.setDate(startDate.getDate() - startDay);
-  }
-
-  // End on the last Saturday of the year (or first Saturday of next year)
-  const endDate = new Date(year.value, 11, 31);
-  const endDay = endDate.getDay();
-  if (endDay < 6) {
-    endDate.setDate(endDate.getDate() + (6 - endDay));
-  }
-
-  const currentDate = new Date(startDate);
-  let currentWeek: DayData[] = [];
-
-  while (currentDate <= endDate) {
-    const dateStr = formatDateKey(currentDate);
-    const status = dayMap.value.get(dateStr);
-    const isCurrentYear = currentDate.getFullYear() === year.value;
-
-    currentWeek.push({
-      date: new Date(currentDate),
-      status,
-      isFuture: currentDate > today,
-      isOutOfRange: !isCurrentYear,
-    });
-
-    // If it's Saturday (day 6), start a new week
-    if (currentDate.getDay() === 6) {
-      result.push(currentWeek);
-      currentWeek = [];
-    }
-
-    currentDate.setDate(currentDate.getDate() + 1);
-  }
-
-  // Push any remaining days
-  if (currentWeek.length > 0) {
-    result.push(currentWeek);
-  }
-
-  return result;
-});
-
 function formatDateKey(date: Date): string {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, "0");
@@ -213,7 +214,7 @@ function formatDateKey(date: Date): string {
 }
 
 function getIntensityLevel(day: DayData): number {
-  if (!day.status || day.isOutOfRange) return 0;
+  if (!day.status || day.isEmpty) return 0;
   if (day.isFuture) return 0;
 
   const seconds = day.status.totalSeconds;
@@ -238,13 +239,13 @@ function getIntensityClass(level: number): string {
 }
 
 function getDayCellClass(day: DayData): string {
-  if (day.isOutOfRange) return "bg-transparent";
+  if (day.isEmpty) return "bg-transparent";
   if (day.isFuture) return "bg-stone-50 dark:bg-stone-800";
   return getIntensityClass(getIntensityLevel(day));
 }
 
 function getDayTooltip(day: DayData): string {
-  if (day.isOutOfRange || day.isFuture) return "";
+  if (day.isEmpty || day.isFuture) return "";
 
   const dateStr = day.date.toLocaleDateString("en-US", {
     month: "short",

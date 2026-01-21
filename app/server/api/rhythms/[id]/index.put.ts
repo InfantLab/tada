@@ -126,6 +126,13 @@ export default defineEventHandler(async (event) => {
       .where(eq(rhythms.id, rhythmId))
       .returning();
 
+    if (!updated) {
+      throw createError({
+        statusCode: 404,
+        message: "Rhythm not found or not updated",
+      });
+    }
+
     logger.info("Rhythm updated", {
       rhythmId,
       userId,
@@ -135,7 +142,6 @@ export default defineEventHandler(async (event) => {
     return {
       id: updated.id,
       name: updated.name,
-      emoji: updated.emoji,
       matchCategory: updated.matchCategory,
       durationThresholdSeconds: updated.durationThresholdSeconds,
       frequency: updated.frequency,

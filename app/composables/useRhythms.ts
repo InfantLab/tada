@@ -5,7 +5,6 @@
  */
 
 import { ref, computed, type Ref } from "vue";
-import type { Rhythm } from "~/server/db/schema";
 import type { TierName, DayStatus } from "~/utils/tierCalculator";
 
 // ============================================================================

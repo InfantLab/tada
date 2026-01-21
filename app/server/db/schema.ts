@@ -166,6 +166,50 @@ export const rhythms = sqliteTable("rhythms", {
     .notNull()
     .default(360),
 
+  // Chain type configuration (v0.3.1+)
+  // Determines how chains are calculated and counted
+  // - 'daily': Consecutive days with min duration - counted in days
+  // - 'weekly_high': 5+ days/week with min duration - counted in weeks
+  // - 'weekly_low': 3+ days/week with min duration - counted in weeks
+  // - 'weekly_target': Cumulative minutes/week - counted in weeks
+  // - 'monthly_target': Cumulative minutes/month - counted in months
+  chainType: text("chain_type").notNull().default("weekly_low"), // Default to 3+ days/week
+
+  // For target-based chains (weekly_target, monthly_target):
+  // The cumulative minutes required per period
+  chainTargetMinutes: integer("chain_target_minutes"),
+
+  // Cached chain statistics for efficient incremental updates
+  // Instead of recalculating from scratch, we track enough state to update incrementally
+  cachedChainStats: text("cached_chain_stats", { mode: "json" }).$type<{
+    // Chain data (new v0.3.1 format with type-based chains)
+    chains: Array<{
+      type: string; // ChainType
+      current: number; // Current chain in appropriate unit
+      longest: number; // All-time best
+      unit: string; // 'days' | 'weeks' | 'months'
+    }>;
+    // For incremental updates: track the current chain's state
+    currentChain: {
+      lastCompleteDate: string | null; // Last date with a complete entry (YYYY-MM-DD)
+      lastPeriodKey: string | null; // Week start (YYYY-MM-DD) or month (YYYY-MM)
+      thisPeriodDays: number; // Completed days in the current period so far
+      thisPeriodSeconds: number; // Total seconds this period
+    };
+    // Aggregate totals
+    totals: {
+      totalSessions: number;
+      totalSeconds: number;
+      totalHours: number;
+      firstEntryDate: string | null;
+      weeksActive: number;
+      monthsActive: number;
+    };
+    // Cache metadata
+    lastCalculatedAt: string;
+    lastEntryTimestamp: string | null; // For detecting if full recalc needed
+  }>(),
+
   // Panel display preferences (JSON)
   panelPreferences: text("panel_preferences", { mode: "json" })
     .$type<{

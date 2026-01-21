@@ -120,11 +120,11 @@
           >
             <option :value="null">-- Select a saved recipe --</option>
             <option
-              v-for="recipe in userRecipes"
-              :key="recipe.id"
-              :value="recipe.id"
+              v-for="recipeOption in userRecipes"
+              :key="recipeOption.id"
+              :value="recipeOption.id"
             >
-              {{ recipe.name }}
+              {{ recipeOption.name }}
             </option>
           </select>
           <button
@@ -1198,7 +1198,7 @@ async function restoreVersion(versionIndex: number) {
     return;
 
   try {
-    const response = await $fetch<{ success: boolean; recipe: any }>(
+    const response = await $fetch<{ success: boolean; recipe: Record<string, unknown> }>(
       `/api/import/recipes/${selectedRecipeId.value}/restore`,
       {
         method: "POST",

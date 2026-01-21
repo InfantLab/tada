@@ -3,7 +3,7 @@ import { useErrorTracker } from "./useErrorTracker";
 
 describe("useErrorTracker", () => {
   // Store original clipboard
-  const originalClipboard = navigator.clipboard;
+  const _originalClipboard = navigator.clipboard;
 
   beforeEach(() => {
     // Clear errors between tests
