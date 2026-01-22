@@ -374,12 +374,12 @@ function getCategoryEmoji(category: string | null): string {
               :threshold-seconds="rhythm.durationThresholdSeconds"
               :weekly-target-minutes="
                 getProgress(rhythm.id)!.primaryChainType === 'weekly_target'
-                  ? getProgress(rhythm.id)!.chainTargetMinutes
+                  ? (getProgress(rhythm.id)!.chainTargetMinutes ?? undefined)
                   : undefined
               "
               :monthly-target-minutes="
                 getProgress(rhythm.id)!.primaryChainType === 'monthly_target'
-                  ? getProgress(rhythm.id)!.chainTargetMinutes
+                  ? (getProgress(rhythm.id)!.chainTargetMinutes ?? undefined)
                   : undefined
               "
               :nudge-message="getProgress(rhythm.id)!.currentWeek.nudgeMessage"

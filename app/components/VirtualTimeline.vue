@@ -205,7 +205,7 @@ function getEntryEmoji(entry: Entry): string {
   if (entry.emoji) return entry.emoji;
 
   // Then check for custom emoji for subcategory (category:subcategory key)
-  const category = entry.category || entry.entryType || "";
+  const category = entry.category || entry.type || "";
   const subcategory = entry.subcategory || "";
   if (category && subcategory) {
     const customSubcategoryEmoji = getCustomEmoji(`${category}:${subcategory}`);

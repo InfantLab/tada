@@ -121,9 +121,10 @@ async function saveEditPreset() {
     const index = presets.value.findIndex(
       (p) => p.id === editingPreset.value?.id,
     );
-    if (index !== -1) {
+    const existingPreset = presets.value[index];
+    if (index !== -1 && existingPreset) {
       presets.value[index] = {
-        ...presets.value[index],
+        ...existingPreset,
         name: editPresetName.value.trim(),
       };
     }
@@ -285,9 +286,9 @@ const categoriesWithSubcategories = computed(() => {
     category: cat,
     emoji: getCustomEmoji(cat) || getCategoryEmoji(cat),
     subcategories: getSubcategoriesForCategory(cat).map((sub) => ({
-      key: `${cat}:${sub}`,
-      name: sub,
-      emoji: getCustomEmoji(`${cat}:${sub}`) || getSubcategoryEmoji(cat, sub),
+      key: `${cat}:${sub.slug}`,
+      name: sub.label,
+      emoji: getCustomEmoji(`${cat}:${sub.slug}`) || getSubcategoryEmoji(cat, sub.slug),
     })),
   }));
 });
@@ -355,7 +356,13 @@ onMounted(async () => {
   try {
     const session = await $fetch("/api/auth/session");
     if (session.user) {
-      currentUser.value = session.user;
+      currentUser.value = {
+        id: session.user.id,
+        username: session.user.username,
+        timezone: session.user.timezone,
+        email: session.user.email ?? undefined,
+        emailVerified: session.user.emailVerified ?? undefined,
+      };
       // Pre-fill email form if user has email
       if (session.user.email) {
         emailForm.value.email = session.user.email;

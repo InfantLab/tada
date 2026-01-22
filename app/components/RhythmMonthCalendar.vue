@@ -328,7 +328,7 @@ function getLegendClass(level: number): string {
     3: "bg-green-500 dark:bg-green-500",
     4: "bg-green-700 dark:bg-green-300",
   };
-  return classes[level] || classes[0];
+  return classes[level] ?? classes[0]!;
 }
 </script>
 

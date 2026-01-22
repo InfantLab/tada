@@ -276,11 +276,11 @@ const intervalProgress = computed(() => {
         : [targetMinutes.value];
     const cumulative = buildCumulativeTargets(intrvls);
     const prevTarget =
-      nextIntervalIndex.value > 0 ? cumulative[nextIntervalIndex.value - 1] : 0;
+      nextIntervalIndex.value > 0 ? (cumulative[nextIntervalIndex.value - 1] ?? 0) : 0;
     const currentTarget =
-      cumulative[nextIntervalIndex.value] ?? cumulative[cumulative.length - 1];
-    const intervalLength = currentTarget - prevTarget;
-    const elapsedInInterval = elapsedSeconds.value - prevTarget;
+      cumulative[nextIntervalIndex.value] ?? cumulative[cumulative.length - 1] ?? 0;
+    const intervalLength = (currentTarget ?? 0) - (prevTarget ?? 0);
+    const elapsedInInterval = elapsedSeconds.value - (prevTarget ?? 0);
     if (isOvertime.value) return 100; // Full ring during overtime
     return Math.min(100, (elapsedInInterval / intervalLength) * 100);
   }
@@ -381,7 +381,7 @@ function beginSession() {
         let crossedCount = 0;
         let lastCrossedIndex = nextIntervalIndex.value;
         while (lastCrossedIndex < cumulative.length) {
-          const target = cumulative[lastCrossedIndex];
+          const target = cumulative[lastCrossedIndex] ?? 0;
           if (elapsedSeconds.value >= target) {
             ringsCount.value += 1;
             crossedCount += 1;
@@ -495,7 +495,7 @@ function resumeTimer() {
         let crossedCount = 0;
         let lastCrossedIndex = nextIntervalIndex.value;
         while (lastCrossedIndex < cumulative.length) {
-          const target = cumulative[lastCrossedIndex];
+          const target = cumulative[lastCrossedIndex] ?? 0;
           if (elapsedSeconds.value >= target) {
             ringsCount.value += 1;
             crossedCount += 1;

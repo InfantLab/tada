@@ -47,7 +47,7 @@ const periodStats = computed(() => {
 async function fetchStats() {
   try {
     isLoading.value = true;
-    stats.value = await $fetch("/api/entries/stats");
+    stats.value = await $fetch<typeof stats.value>("/api/entries/stats");
   } catch (err) {
     console.error("Failed to fetch stats:", err);
   } finally {

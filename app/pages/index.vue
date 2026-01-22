@@ -68,8 +68,8 @@ const customDateRange = computed(() => {
   if (selectedWeek.value) {
     const match = selectedWeek.value.match(/^(\d{4})-W(\d{2})$/);
     if (match) {
-      const year = parseInt(match[1]);
-      const week = parseInt(match[2]);
+      const year = parseInt(match[1] ?? "");
+      const week = parseInt(match[2] ?? "");
       // Calculate start of ISO week
       const jan4 = new Date(year, 0, 4);
       const dayOfWeek = jan4.getDay() || 7;
@@ -101,7 +101,7 @@ const activeFilterLabel = computed(() => {
   if (selectedWeek.value) {
     const match = selectedWeek.value.match(/^(\d{4})-W(\d{2})$/);
     if (match) {
-      return `Week ${parseInt(match[2])}, ${match[1]}`;
+      return `Week ${parseInt(match[2] ?? "0")}, ${match[1]}`;
     }
   }
   return "";

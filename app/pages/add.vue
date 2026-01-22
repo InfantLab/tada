@@ -81,7 +81,7 @@ const displayEmoji = computed(() => {
 // When category changes, reset subcategory to first option
 watch(category, (newCat) => {
   const subs = getSubcategoriesForCategory(newCat);
-  if (subs.length > 0) {
+  if (subs.length > 0 && subs[0]) {
     subcategory.value = subs[0].slug;
   } else {
     subcategory.value = "";

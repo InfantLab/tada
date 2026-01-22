@@ -1208,13 +1208,13 @@ async function restoreVersion(versionIndex: number) {
 
     if (response.success && response.recipe) {
       // Update local state with restored recipe
-      columnMapping.value = response.recipe.columnMapping;
+      columnMapping.value = response.recipe["columnMapping"] as Record<string, string>;
       transforms.value = {
         ...transforms.value,
-        ...response.recipe.transforms,
+        ...(response.recipe["transforms"] as Record<string, unknown> || {}),
       };
       currentRecipePreviousVersions.value =
-        response.recipe.previousVersions || [];
+        (response.recipe["previousVersions"] as Array<{ savedAt: string; columnMapping: Record<string, unknown>; transforms: Record<string, unknown> }>) || [];
 
       toast.success("Version restored successfully");
       generatePreview();
