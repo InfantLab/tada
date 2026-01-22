@@ -66,7 +66,7 @@ watch(
           props.editRhythm.durationThresholdSeconds / 60,
         );
         frequency.value = props.editRhythm.frequency;
-        category.value = props.editRhythm.matchCategory;
+        category.value = props.editRhythm.matchCategory ?? "mindfulness";
       } else {
         // Create mode - reset to defaults
         name.value = "";

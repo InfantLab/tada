@@ -628,7 +628,7 @@ async function saveSession(includeOvertime: boolean = true) {
     `${minutes} minutes well spent on ${subcatLabel}!`,
   ];
   const celebrationMessage =
-    celebrateMessages[Math.floor(Math.random() * celebrateMessages.length)];
+    celebrateMessages[Math.floor(Math.random() * celebrateMessages.length)] ?? `You did ${minutes}m!`;
 
   const totalFixedSeconds = fixedIntervals.value.reduce((a, b) => a + b, 0);
   const durationToSave =
