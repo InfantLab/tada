@@ -36,6 +36,7 @@
 - **Quotes:** `"` not `'`
 - **Semicolons:** Required
 - **Types:** Never `any` (use `unknown` + guards)
+- **`$fetch` calls:** Always use explicit type: `$fetch<Type>("/api/...")` — untyped calls cause CI failures
 - **Strictness:** All code must pass TypeScript strict mode (no ts-ignore, proper null checks)
 - **Logging:** `createLogger()` not `console.log`
 
@@ -146,12 +147,39 @@ Example locations:
 
 ### Running Tests in CI
 
-The CI pipeline (when setup) runs:
+The CI pipeline runs in `.github/workflows/ci.yml`:
 
-1. `bun run lint` — Must pass
-2. `bun run typecheck` — Must pass
-3. `bun run test` — Must pass
-4. `bun run build` — Must succeed
+1. `bun install --frozen-lockfile` — Reproducible installs
+2. `bun run lint` — Must pass
+3. `bunx nuxt prepare` — Generate types (critical!)
+4. `bun run typecheck` — Must pass
+5. `mkdir -p data` — Create SQLite directory
+6. `bun run test:run` — Non-interactive test run
+7. `bun run build` — Must succeed
+
+### ⚠️ CI vs Local Differences (READ THIS)
+
+**Why CI fails when local passes:**
+
+1. **Missing `.nuxt/` types** — Local dev server runs `nuxt prepare` automatically. CI starts fresh.
+   - Fix: CI runs `bunx nuxt prepare` before typecheck
+
+2. **Missing `data/` directory** — SQLite can't create test.db if parent directory doesn't exist.
+   - Fix: CI runs `mkdir -p data` before tests
+
+3. **`$fetch` type inference** — Nuxt infers route types, causing "excessive stack depth" errors.
+   - Fix: Always use explicit types: `$fetch<ResponseType>("/api/...")` or `$fetch<unknown>(...)` for fire-and-forget
+
+**To test like CI locally:**
+```bash
+cd app
+rm -rf .nuxt node_modules
+bun install --frozen-lockfile
+bunx nuxt prepare
+bun run lint && bun run typecheck && bun run test:run
+```
+
+**Golden rule:** If adding new `$fetch` calls, always add explicit type parameter.
 
 ## PR Instructions
 
