@@ -855,7 +855,7 @@ async function saveRecipe(config: {
   columnMapping: Record<string, string>;
   transforms: typeof transforms.value;
 }) {
-  await $fetch("/api/import/recipes", {
+  await $fetch<void>("/api/import/recipes", {
     method: "POST",
     body: config,
   });
@@ -1234,7 +1234,7 @@ async function deleteSelectedRecipe() {
   if (!confirm(`Delete recipe "${recipe.name}"?`)) return;
 
   try {
-    await $fetch(`/api/import/recipes/${selectedRecipeId.value}`, {
+    await $fetch<void>(`/api/import/recipes/${selectedRecipeId.value}`, {
       method: "DELETE",
     });
 

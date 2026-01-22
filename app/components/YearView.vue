@@ -30,7 +30,7 @@ async function fetchSummary() {
   try {
     isLoading.value = true;
     error.value = null;
-    summaryData.value = await $fetch("/api/entries/summary?period=year");
+    summaryData.value = await $fetch<SummaryResponse>("/api/entries/summary?period=year");
   } catch (err: unknown) {
     console.error("Failed to fetch year summary:", err);
     error.value = err instanceof Error ? err.message : "Failed to load summary";

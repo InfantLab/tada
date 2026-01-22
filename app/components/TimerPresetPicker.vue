@@ -120,7 +120,7 @@ async function deletePreset(preset: TimerPreset, event: Event) {
   if (!confirm(`Delete "${preset.name}" preset?`)) return;
 
   try {
-    await $fetch(`/api/presets/${preset.id}`, { method: "DELETE" });
+    await $fetch<void>(`/api/presets/${preset.id}`, { method: "DELETE" });
     presets.value = presets.value.filter((p) => p.id !== preset.id);
     if (props.modelValue === preset.id) {
       deselectPreset();

@@ -101,12 +101,12 @@ async function fetchEntries(cursor?: string) {
   if (props.category) params.set("category", props.category);
   if (props.search) params.set("search", props.search);
 
-  const data = await $fetch(`/api/entries?${params.toString()}`);
-  return data as {
+  const data = await $fetch<{
     entries: Entry[];
     nextCursor: string | null;
     hasMore: boolean;
-  };
+  }>(`/api/entries?${params.toString()}`);
+  return data;
 }
 
 // Initial load
