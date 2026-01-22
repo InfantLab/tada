@@ -22,14 +22,16 @@ Ta-Da! inverts the traditional productivity mindset:
 
 Read more: [design/philosophy.md](design/philosophy.md)
 
-## Features (v0.1.0)
+## Features (v0.2.0)
 
-- **🧘 Meditation Timer** — Countdown or unlimited modes with customizable bell sounds, wake lock support
-- **⚡ Ta-Da! Accomplishments** — Quick capture of wins with category and emoji
+- **🌿 Graceful Rhythms** — Track natural patterns with multiple chain types (daily, weekly, monthly targets)
+- **🧘 Meditation Timer** — Unlimited or fixed modes with interval bells, presets, and warm-up countdown
+- **⚡ Ta-Da! Accomplishments** — Celebrate wins with confetti, sound effects, and streaks
 - **🌙 Dream Journal** — Rich dream entries with mood and themes
 - **📝 Quick Notes** — Capture thoughts, gratitude, reflections
-- **📊 Entry Timeline** — Chronological feed with emoji badges and category colors
-- **🎨 Emoji Customization** — Full system emoji picker for any entry
+- **📊 Timeline Views** — Day/Week/Month/Year zoom with infinite scroll
+- **📥 CSV Import** — Import from Insight Timer and other apps with custom recipes
+- **🎨 Customization** — Custom emojis, timer presets, hide categories
 - **📱 PWA** — Installable, works offline
 - **🔒 Self-Hosted** — Your data stays yours, full JSON export
 
@@ -125,11 +127,11 @@ See [docs/DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) for full development work
 
 ## Roadmap
 
-**Current:** v0.1.0 (MVP) ✅ — Feature complete!
+**Current:** v0.2.0 (Graceful Rhythms) ✅ — Shipped January 2026!
 
-**Next:** v0.2.0 (Q1 2026) — Rhythm tracking, category customization, data import
+**Next:** v0.3.0 (Q2 2026) — Voice input, photo attachments, magic features
 
-**Future:** v0.3.0+ — Voice input, Obsidian sync, advanced visualizations
+**Future:** v0.4.0+ — Cloud service (tada.living), Obsidian sync, AI insights
 
 See [design/roadmap.md](design/roadmap.md) and [CHANGELOG.md](CHANGELOG.md) for details.
 

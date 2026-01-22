@@ -2,8 +2,8 @@
 
 Feature ideas and future plans, organized by version releases.
 
-**Current Version:** v0.1.0 ✅ (shipped)  
-**Next Release:** v0.2.0
+**Current Version:** v0.2.0 ✅ (shipped)  
+**Next Release:** v0.3.0
 
 ---
 
@@ -12,7 +12,7 @@ Feature ideas and future plans, organized by version releases.
 | Version    | Theme                       | Target              |
 | ---------- | --------------------------- | ------------------- |
 | **v0.1.0** | MVP — Foundation            | ✅ Shipped Jan 2026 |
-| **v0.2.0** | Core Experience             | Jan 2026            |
+| **v0.2.0** | Graceful Rhythms            | ✅ Shipped Jan 2026 |
 | **v0.3.0** | Magic & Voice               | Feb 2026            |
 | **v0.4.0** | Cloud Service (tada.living) | Mar 2026            |
 | **v0.5.0** | Rituals & AI Insights       | Apr 2026            |
@@ -37,112 +37,104 @@ See [CHANGELOG.md](../CHANGELOG.md) and [RELEASE_NOTES_v0.1.0.md](../RELEASE_NOT
 
 ---
 
-## v0.2.0: Core Experience
+## v0.2.0: Graceful Rhythms ✅
 
-_Target: Q1 2026_
+_Status: Shipped January 2026_
 
-### 🔐 User Email & Password Recovery
+See [CHANGELOG.md](../CHANGELOG.md) and [RELEASE_NOTES_v0.2.0.md](../RELEASE_NOTES_v0.2.0.md) for details.
 
-Critical auth improvements for self-hosted and future cloud deployment.
+**Delivered:**
 
-- [x] **Email field** added to user schema (optional for now, required for cloud)
-- [x] **Password reset flow:**
-  - User requests reset via email
-  - Time-limited reset token (6 hours expiry)
-  - Email with reset link
-  - Secure password update endpoint
-- [ ] **Email verification** (optional for self-hosted, required for cloud)
-- [x] **SMTP configuration** in settings (supports standard providers)
-- [x] **Email templates:** password reset, welcome email
-- [x] **Rate limiting** on reset requests (prevent abuse)
-- [x] **Audit logging** for auth events (login, password change, reset)
-- [x] **"Change password"** feature for logged-in users
+### 🔐 User Email & Password Recovery ✅
 
-**Implementation notes:**
-
-- Use Nodemailer for SMTP (works with Gmail, SendGrid, Postmark, etc.)
-- Self-hosted: optional email config, gracefully degrades without SMTP
-- Reset tokens stored in database with expiry and single-use flag
-- Password recovery requires email field populated
-- Future: magic link authentication (passwordless)
+- Email field added to user schema
+- Password reset flow with time-limited tokens
+- SMTP configuration (supports standard providers)
+- Email templates for password reset
+- Rate limiting on reset requests
+- "Change password" feature for logged-in users
 
 ### 🎯 Timer Philosophy: Count Up ✅
 
-All timers count up, never down. We celebrate what you did, not what you "should" do.
-
-- [x] Count-up timer as default (hide/remove countdown option)
-- [x] Celebratory messaging: "You did 47 minutes!" not "Goal: 60 min"
-- [x] Optional gentle milestones (chime at 10, 20, 30 min) — celebration, not pressure
-- [x] Unified interval system with configurable duration, repeats, and bell sounds
-- [x] Warm-up countdown with "settling in" display
-- [x] Post-session mood and reflection capture
-- [x] Accordion UI for interval configuration
-- [x] "No bells" mode for silent unlimited sessions
-- [x] Fixed vs Unlimited mode with overtime tracking
+- Count-up timer as default
+- Celebratory messaging: "You did 47 minutes!"
+- Unified interval system with configurable duration, repeats, and bell sounds
+- Warm-up countdown with "settling in" display
+- Post-session mood and reflection capture
+- Timer presets with save/load
+- Mode auto-derived from intervals (Forever = unlimited)
+- "No bells" mode for silent sessions
 
 ### 📥 Generic CSV Import Framework ✅
 
-Build flexible import system with user-mappable columns and reusable recipes.
+- CSV Mapper UI with column preview and mapping
+- Import Recipes saved to database
+- Built-in Insight Timer recipe
+- Date/time format detection and parsing
+- Duration parsing (H:MM:SS, seconds, minutes)
+- Duplicate detection with externalId hash
+- Batched database inserts (500 at a time)
+- Progress bar with success/skip/error counts
+- Downloadable error log for failed rows
 
-- [x] **CSV Mapper UI:**
-  - Upload any CSV file
-  - Preview first 10 rows with column headers
-  - Drag-and-drop or dropdown to map CSV columns → Tada fields
-  - Required mappings: timestamp/date, activity/name
-  - Optional mappings: duration, category, subcategory, notes, tags
-- [x] **Import Recipes** (saved to database):
-  - Save column mappings as named recipe
-  - Share recipes between users (future)
-  - Built-in recipes: Insight Timer ✅
-- [x] **Data Transformation:**
-  - Date/time format detection and parsing (MM/DD/YYYY, ISO, Unix timestamps)
-  - Duration parsing (H:MM:SS, seconds, minutes)
-  - Timezone selector for imports (backend ready, UI pending)
-  - Category/subcategory creation or mapping to existing
-  - Custom emoji picker for new subcategories (pending)
-- [x] **Data Validation:**
-  - Flag suspicious durations (>3 hours, <30 seconds)
-  - Preview transformed entries before import
-  - Duplicate detection (externalId hash matching)
-  - Skip duplicates automatically (count returned)
-- [x] **Robust Import:**
-  - Streaming CSV parser for large files (10,000+ rows)
-  - Batched database inserts (500 at a time)
-  - Progress bar with success/skip/error counts
-  - Downloadable error log for failed rows
-  - Transaction safety (rollback on critical errors)
-- [x] **Insight Timer Recipe** (first built-in):
-  - Pre-configured mapping for Insight Timer CSV format
-  - In-app instructions: Settings → Features & Preferences → Sessions → Export Data
-  - All activities → mindfulness category
-  - Activities: Meditation, Breathing, Manifesting, Walking, Tai Chi (preserve capitalization)
+### 🎨 User Customisation ✅
 
-### 🎨 User Customisation
+- Timer presets: Save named configurations
+- Custom emojis: Change emoji for any category or subcategory
+- Hide categories: Remove categories you don't use
+- Delete category data: Delete all entries for a category
+- Undo support: Recover from accidental deletions
+- Entry type visibility: Show/hide entry types from journal
 
-Make Ta-Da feel like yours.
+### 📉 Graceful Rhythm Chains ✅
 
-- [ ] **Timer presets:** Save named configurations (duration, category, bells) for quick start
-- [ ] **Custom emojis:** Change the emoji for any category or subcategory
-- [ ] **Hide categories:** Remove categories you don't use from menus/pickers
-- [ ] **Delete category data:** Option to delete all entries for a category (with confirmation)
-- [ ] **Undo support:** Recover from accidental deletions (time-limited)
-- [ ] Subcategory auto-complete (remember user additions like "metta", "walking")
+- Multiple chain types:
+  - Daily: Consecutive days with activity
+  - Weekly High: 5+ days per week
+  - Weekly Low: 3+ days per week
+  - Weekly Target: Cumulative minutes per week
+  - Monthly Target: Cumulative minutes per month
+- Journey stages based on total hours:
+  - Starting (<10h) → Building (10-100h) → Becoming (100-1000h) → Being (1000h+)
+- Year tracker (GitHub-style heatmap) with historical navigation
+- Bar chart (28-day histogram) with period navigation
+- Chain tabs for switching between chain types
+- Context-aware encouragement messages
+- Tier system: Starting → Steady → Strong → Daily
 
-### 📉 Graceful Rhythm Chains
+### 🎉 Ta-Da! First-Class Celebration ✅
 
-Chains that bend, not break. When struggling, suggest easier tier instead of broken chain.
+- Post-save celebration page with confetti and sound effects
+- Streak display and fun facts
+- Distinct visual design from other entry types
 
-- [ ] Tiered frequency targets:
-  - Tier 1: Daily (strict Seinfeld chain)
-  - Tier 2: 5 days/week
-  - Tier 3: 3 days/week
-  - Tier 4: 30 minutes/week
-  - Tier 5: X times/month
-- [ ] Visualize best achievable tier based on current week
-- [ ] Automatic tier suggestion when streak would break
-- [ ] Thursday reminder to keep on course for best achievable tier ("meditate 3 more times this week to hit 5x/week")
-- [ ] Identity-based framing: "You're becoming a meditator" not "47 sessions"
-- [ ] better names than Tier 1, 2, 3...?
+### 📊 Timeline Scaling ✅
+
+- Zoom toggle with Day/Week/Month/Year views
+- Period summary cards for each view
+- Infinite-scrolling paginated entry list
+- Journey badge with zoom-aware stats
+
+### 🔧 Polish ✅
+
+- Developer error tracking panel
+- Column auto-detection for CSV import with confidence scoring
+- Toast/notification system (replaced alert() dialogs)
+- 133+ unit tests with CI integration
+
+---
+
+## v0.3.0: Magic & Voice
+
+_Target: Q2 2026_
+
+### Moved from v0.2.0 (not completed)
+
+- [ ] **Email verification** (optional for self-hosted, required for cloud)
+- [ ] Timezone selector UI for imports (backend ready)
+- [ ] Settings page autosave
+- [ ] Fix pre-existing logger test failures (7 tests)
+- [ ] Rewrite integration tests with @nuxt/test-utils/e2e
 
 ### 🔗 Practice Links
 
@@ -156,48 +148,6 @@ Chains that bend, not break. When struggling, suggest easier tier instead of bro
 - [ ] Attach photos to entries (priority feature)
 - [ ] Photo gallery view for visual entries
 - [ ] Capture from camera or select from library
-
-### 🔧 Polish
-
-- [x] Developer error tracking panel (browser, dev mode only)
-- [x] Column auto-detection for CSV import with confidence scoring
-- [ ] Settings page autosave (debounced save on change, no manual save button)
-- [ ] Toast/notification system (replace `alert()` dialogs)
-- [ ] Fix pre-existing logger test failures (7 tests, JSON format assertions)
-- [ ] Rewrite integration tests with @nuxt/test-utils/e2e
-
-### 🎉 Ta-Da! First-Class Celebration
-
-Make Ta-Das feel special — they're wins worth celebrating.
-
-- [ ] **Dedicated Ta-Da! page** (`/tada/add`):
-  - Triumphant sound effect on save
-  - Celebratory animation/confetti
-  - Distinct visual design from other entry types
-- [ ] **Remove Ta-Das from journal add page** — they have their own home now
-
-### 📝 Entry Types & Journal Improvements
-
-Flexible entry creation with personal touches.
-
-- [ ] **Customizable entry types** in journal add page:
-  - Default types: mood, dreams, morning pages, notes
-  - User can hide/show entry types they use
-  - Add custom entry types (saved to preferences)
-- [ ] **Entry display consistency:**
-  - Every entry shows its personal emoji in timeline
-  - Category emoji fallback when no personal emoji set
-  - Consistent emoji display strategy across all views
-- [ ] **Universal entry editing:**
-  - Every entry has edit screen (tap to open)
-  - Edit: title, contents, personal emoji
-  - Delete with confirmation
-
----
-
-## v0.3.0: Magic & Voice
-
-_Target: Q2 2026_
 
 ### 🌙 Celestial Calendar Module
 
