@@ -25,6 +25,7 @@ export default defineVitestConfig({
       "**/.{idea,git,cache,output,temp}/**",
       "**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*",
       "**/tests/stubs/**", // Exclude stub tests from main run
+      "**/tests/api/**", // Exclude integration tests (need @nuxt/test-utils e2e rewrite)
     ],
     coverage: {
       provider: "v8",

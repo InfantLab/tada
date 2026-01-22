@@ -15,8 +15,9 @@
     "lint:fix": "eslint . --fix",
     "typecheck": "nuxt typecheck",
     "test": "vitest",
+    "test:run": "vitest --run",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage",
+    "test:coverage": "vitest --run --coverage",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio"

@@ -18,6 +18,7 @@ This release introduces the **Graceful Rhythms** system — a gentle way to trac
 A new way to observe your practice patterns that celebrates consistency without punishing breaks.
 
 **Multiple Chain Types:**
+
 - **Daily Chain** — Consecutive days with activity
 - **Weekly High** — 5+ days per week
 - **Weekly Low** — 3+ days per week (gentler target)
@@ -26,12 +27,14 @@ A new way to observe your practice patterns that celebrates consistency without 
 
 **Journey Stages:**
 Your journey stage is based on total practice hours, not streaks:
+
 - 🌱 **Starting** — Less than 10 hours
 - 🌿 **Building** — 10-100 hours
 - 🌳 **Becoming** — 100-1000 hours
 - ⭐ **Being** — 1000+ hours (you ARE this practice)
 
 **Visualizations:**
+
 - **Year Tracker** — GitHub-style heatmap with historical navigation
 - **Bar Chart** — 28-day histogram with period navigation
 - **Chain Tabs** — Switch between chain types to see different perspectives
@@ -70,6 +73,7 @@ Your journey stage is based on total practice hours, not streaks:
 ## 🔧 Technical Changes
 
 ### Added
+
 - Rhythms API with caching (`/api/rhythms`, `/api/rhythms/[id]/progress`)
 - Chain calculation utilities with multiple chain types
 - Encouragement messages table with seeding
@@ -77,16 +81,19 @@ Your journey stage is based on total practice hours, not streaks:
 - Stats and Summary APIs for period aggregation
 
 ### Changed
+
 - Journey stage now based on total hours (not weeks)
 - Timer mode auto-derived from interval configuration
 - Chain statistics cached and invalidated on new entries
 
 ### Fixed
+
 - Timer preset 600 minutes display bug
 - TypeScript strict mode compliance
 - Duplicate preset name handling
 
 ### Removed
+
 - Mode selector from timer settings (now automatic)
 
 ---
