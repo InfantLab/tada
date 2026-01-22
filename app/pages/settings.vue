@@ -6,6 +6,7 @@ import {
   getCategoryEmoji,
   getSubcategoryEmoji,
 } from "~/utils/categoryDefaults";
+import type { Entry } from "~/server/db/schema";
 
 const { success: showSuccess, error: showError } = useToast();
 
@@ -361,7 +362,7 @@ onMounted(async () => {
       currentUser.value = {
         id: session.user.id,
         username: session.user.username,
-        timezone: session.user.timezone,
+        timezone: session.user.timezone ?? "UTC",
         email: session.user.email ?? undefined,
         emailVerified: session.user.emailVerified ?? undefined,
       };
