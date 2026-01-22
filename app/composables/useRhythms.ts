@@ -5,7 +5,12 @@
  */
 
 import { ref, computed, type Ref } from "vue";
-import type { TierName, DayStatus } from "~/utils/tierCalculator";
+import type {
+  TierName,
+  DayStatus,
+  ChainType,
+  ChainUnit,
+} from "~/utils/tierCalculator";
 
 // ============================================================================
 // Types
@@ -20,8 +25,12 @@ export interface RhythmSummary {
   frequency: string;
   currentTier: TierName;
   currentTierLabel: string;
-  currentChainDays: number;
-  currentChainWeeks: number;
+  currentChain: number;
+  longestChain: number;
+  chainUnit: ChainUnit;
+  chainType: ChainType;
+  chainLabel: string;
+  chainTargetMinutes?: number | null;
   panelPreferences: {
     showYearTracker: boolean;
     showMonthCalendar: boolean;
@@ -32,14 +41,20 @@ export interface RhythmSummary {
   createdAt: string;
 }
 
-export interface ChainStats {
-  tier: TierName;
+export interface TypedChain {
+  type: ChainType;
   current: number;
   longest: number;
+  unit: ChainUnit;
+  label: string;
+  description: string;
 }
 
 export interface RhythmProgress {
   rhythmId: string;
+  primaryChainType: ChainType;
+  chainTargetMinutes?: number | null;
+  durationThresholdSeconds: number;
   currentWeek: {
     startDate: string;
     daysCompleted: number;
@@ -48,7 +63,7 @@ export interface RhythmProgress {
     daysRemaining: number;
     nudgeMessage?: string;
   };
-  chains: ChainStats[];
+  chains: TypedChain[];
   days: DayStatus[];
   totals: {
     totalSessions: number;
@@ -56,8 +71,9 @@ export interface RhythmProgress {
     totalHours: number;
     firstEntryDate: string | null;
     weeksActive: number;
+    monthsActive: number;
   };
-  journeyStage: "starting" | "building" | "becoming";
+  journeyStage: "starting" | "building" | "becoming" | "being";
   encouragement: string;
 }
 
@@ -159,8 +175,11 @@ export function useRhythms() {
         ...newRhythm,
         currentTier: "starting",
         currentTierLabel: "Starting",
-        currentChainDays: 0,
-        currentChainWeeks: 0,
+        currentChain: 0,
+        longestChain: 0,
+        chainUnit: "weeks",
+        chainType: "weekly_low",
+        chainLabel: "Weekly Low",
       };
       rhythms.value.push(rhythmWithDefaults);
 

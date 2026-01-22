@@ -303,7 +303,12 @@ function getCategoryEmoji(category: string | null): string {
               class="flex flex-wrap items-center gap-2 text-sm text-stone-500 sm:gap-4 dark:text-stone-400"
             >
               <span class="flex items-center gap-1">
-                🔥 {{ rhythm.currentChainWeeks }} week streak
+                🔥 {{ rhythm.currentChain }} {{ rhythm.chainUnit }} streak
+              </span>
+              <span
+                class="flex items-center gap-1 text-xs text-stone-400 dark:text-stone-500"
+              >
+                ({{ rhythm.chainLabel }})
               </span>
               <span class="flex items-center gap-1">
                 ⏱️ {{ Math.floor(rhythm.durationThresholdSeconds / 60) }} min
@@ -348,36 +353,37 @@ function getCategoryEmoji(category: string | null): string {
           </div>
         </div>
 
-        <!-- Expanded panel with chain stats and encouragement -->
+        <!-- Expanded panel with chain tabs and encouragement -->
         <div
           v-if="isPanelExpanded(rhythm.id)"
           class="border-t border-stone-200 p-4 dark:border-stone-700"
         >
           <template v-if="getProgress(rhythm.id)">
-            <!-- Visualizations grid - stacked on mobile, side by side on desktop -->
-            <div class="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <!-- Year Tracker (GitHub-style heatmap) -->
-              <div class="min-w-0">
-                <RhythmYearTracker
-                  :days="getProgress(rhythm.id)!.days"
-                  :threshold-seconds="rhythm.durationThresholdSeconds"
-                />
-              </div>
-
-              <!-- Month Calendar -->
-              <div class="flex justify-center lg:justify-start">
-                <RhythmMonthCalendar
-                  :days="getProgress(rhythm.id)!.days"
-                  :threshold-seconds="rhythm.durationThresholdSeconds"
-                />
-              </div>
+            <!-- Year Tracker at top -->
+            <div class="mb-6">
+              <RhythmYearTracker
+                :days="getProgress(rhythm.id)!.days"
+                :threshold-seconds="rhythm.durationThresholdSeconds"
+              />
             </div>
 
-            <!-- Chain Stats -->
-            <RhythmChainStats
-              :chain="getProgress(rhythm.id)!.chain"
+            <!-- Chain Tabs (with calendar/histogram views and stats) -->
+            <RhythmChainTabs
+              :days="getProgress(rhythm.id)!.days"
+              :chains="getProgress(rhythm.id)!.chains"
+              :threshold-seconds="rhythm.durationThresholdSeconds"
+              :weekly-target-minutes="
+                getProgress(rhythm.id)!.primaryChainType === 'weekly_target'
+                  ? getProgress(rhythm.id)!.chainTargetMinutes
+                  : undefined
+              "
+              :monthly-target-minutes="
+                getProgress(rhythm.id)!.primaryChainType === 'monthly_target'
+                  ? getProgress(rhythm.id)!.chainTargetMinutes
+                  : undefined
+              "
               :nudge-message="getProgress(rhythm.id)!.currentWeek.nudgeMessage"
-              class="mb-4"
+              class="mb-6"
             />
 
             <!-- Encouragement and Totals -->

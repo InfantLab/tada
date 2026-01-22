@@ -65,7 +65,7 @@ export async function createTestUser(id: string, username: string) {
 // Helper to create test entry
 export async function createTestEntry(
   userId: string,
-  overrides: Partial<Record<string, unknown>> = {}
+  overrides: Partial<Record<string, unknown>> = {},
 ) {
   const entry = {
     id: `test-entry-${Date.now()}-${Math.random()}`,

@@ -53,8 +53,46 @@ function openSaveDialog(data: Partial<TimerPreset>) {
   showSaveModal.value = true;
 }
 
+// Find existing preset with same name (case-insensitive)
+function findExistingPreset(name: string): TimerPreset | undefined {
+  const trimmedLower = name.trim().toLowerCase();
+  return presets.value.find((p) => p.name.toLowerCase() === trimmedLower);
+}
+
 async function savePreset() {
   if (!newPresetName.value.trim() || !presetDataToSave.value) return;
+
+  // Check for existing preset with same name
+  const existing = findExistingPreset(newPresetName.value);
+  if (existing) {
+    const confirmed = confirm(
+      `A preset named "${existing.name}" already exists. Replace it with the new settings?`,
+    );
+    if (!confirmed) return;
+
+    // Update existing preset
+    isSaving.value = true;
+    try {
+      const updated = await $fetch<TimerPreset>(`/api/presets/${existing.id}`, {
+        method: "PUT",
+        body: {
+          name: newPresetName.value.trim(),
+          ...presetDataToSave.value,
+        },
+      });
+      // Replace in local state
+      const idx = presets.value.findIndex((p) => p.id === existing.id);
+      if (idx !== -1) presets.value[idx] = updated;
+      showSuccess("Preset updated!");
+      showSaveModal.value = false;
+      presetDataToSave.value = null;
+    } catch {
+      showError("Failed to update preset");
+    } finally {
+      isSaving.value = false;
+    }
+    return;
+  }
 
   isSaving.value = true;
   try {
@@ -91,6 +129,18 @@ async function deletePreset(preset: TimerPreset, event: Event) {
   } catch {
     showError("Failed to delete preset");
   }
+}
+
+// Get interval info for preset summary display
+function getIntervalInfo(preset: TimerPreset): string {
+  const bells = preset.bellConfig?.intervalBells;
+  if (!bells || bells.length === 0) return "";
+
+  // Get the first interval's duration
+  const firstInterval = bells[0];
+  if (!firstInterval || !firstInterval.minutes) return "";
+
+  return `${firstInterval.minutes}m bells`;
 }
 
 // Expose methods to parent
@@ -143,7 +193,10 @@ onMounted(loadPresets);
               <span v-if="preset.durationSeconds">
                 • {{ Math.floor(preset.durationSeconds / 60) }} min
               </span>
-              <span v-else> • Open-ended</span>
+              <span v-else> • Unlimited</span>
+              <span v-if="getIntervalInfo(preset)">
+                • {{ getIntervalInfo(preset) }}
+              </span>
             </div>
           </div>
         </div>

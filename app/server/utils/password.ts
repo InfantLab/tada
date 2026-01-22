@@ -31,7 +31,7 @@ export async function hashPassword(password: string): Promise<string> {
   // Store as: algorithm$N$r$p$salt$hash (all in hex)
   const { N, r, p } = SCRYPT_OPTIONS;
   return `scrypt$${N}$${r}$${p}$${salt.toString("hex")}$${derivedKey.toString(
-    "hex"
+    "hex",
   )}`;
 }
 
@@ -40,7 +40,7 @@ export async function hashPassword(password: string): Promise<string> {
  */
 export async function verifyPassword(
   password: string,
-  hash: string
+  hash: string,
 ): Promise<boolean> {
   try {
     const parts = hash.split("$");

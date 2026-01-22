@@ -28,7 +28,7 @@ export function parseCSV<T = Record<string, unknown>>(
   options: {
     expectedFields?: string[];
     skipEmptyLines?: boolean;
-  } = {}
+  } = {},
 ): ParseResult<T> {
   const { expectedFields, skipEmptyLines = true } = options;
 
@@ -65,7 +65,7 @@ export function parseCSV<T = Record<string, unknown>>(
   const actualFields = result.meta.fields || [];
   if (expectedFields && expectedFields.length > 0) {
     const missing = expectedFields.filter(
-      (field) => !actualFields.includes(field)
+      (field) => !actualFields.includes(field),
     );
     if (missing.length > 0) {
       errors.push({
@@ -140,7 +140,7 @@ export function parseDuration(duration: string): number | null {
 export function parseDateTime(
   dateStr: string,
   format: string = "DD/MM/YYYY HH:mm:ss",
-  _timezone: string = "UTC"
+  _timezone: string = "UTC",
 ): string | null {
   if (!dateStr || typeof dateStr !== "string") {
     return null;
@@ -163,21 +163,21 @@ export function parseDateTime(
 
     if (format === "DD/MM/YYYY HH:mm:ss") {
       match = trimmed.match(
-        /^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2}):(\d{2})$/
+        /^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2}):(\d{2})$/,
       );
       if (!match) return null;
       [, day = "", month = "", year = "", hour = "", minute = "", second = ""] =
         match;
     } else if (format === "MM/DD/YYYY HH:mm:ss") {
       match = trimmed.match(
-        /^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2}):(\d{2})$/
+        /^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2}):(\d{2})$/,
       );
       if (!match) return null;
       [, month = "", day = "", year = "", hour = "", minute = "", second = ""] =
         match;
     } else if (format === "YYYY-MM-DD HH:mm:ss") {
       match = trimmed.match(
-        /^(\d{4})-(\d{1,2})-(\d{1,2})\s+(\d{1,2}):(\d{2}):(\d{2})$/
+        /^(\d{4})-(\d{1,2})-(\d{1,2})\s+(\d{1,2}):(\d{2}):(\d{2})$/,
       );
       if (!match) return null;
       [, year = "", month = "", day = "", hour = "", minute = "", second = ""] =
@@ -195,8 +195,8 @@ export function parseDateTime(
     const date = new Date(
       `${year}-${month!.padStart(2, "0")}-${day!.padStart(
         2,
-        "0"
-      )}T${hour!.padStart(2, "0")}:${minute}:${second}`
+        "0",
+      )}T${hour!.padStart(2, "0")}:${minute}:${second}`,
     );
 
     if (isNaN(date.getTime())) {
@@ -228,15 +228,15 @@ export function validateEntryData(entry: {
   if (entry.durationSeconds && entry.durationSeconds > 10800) {
     warnings.push(
       `Duration of ${Math.floor(
-        entry.durationSeconds / 3600
-      )} hours is unusually long`
+        entry.durationSeconds / 3600,
+      )} hours is unusually long`,
     );
   }
 
   // Check for suspiciously short durations (<30 seconds)
   if (entry.durationSeconds && entry.durationSeconds < 30) {
     warnings.push(
-      `Duration of ${entry.durationSeconds} seconds is unusually short`
+      `Duration of ${entry.durationSeconds} seconds is unusually short`,
     );
   }
 

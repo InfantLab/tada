@@ -17,7 +17,7 @@ definePageMeta({
 
 // Timer state
 const timerMode = ref<"fixed" | "unlimited">("unlimited");
-const targetMinutes = ref(600); // seconds for single-interval fallback
+const targetMinutes = ref(10); // Fallback duration in minutes
 const elapsedSeconds = ref(0);
 const isRunning = ref(false);
 const isPaused = ref(false);
@@ -79,7 +79,11 @@ const selectedCategory = ref("mindfulness");
 const selectedSubcategory = ref("sitting");
 
 // User preferences for filtering categories and custom emojis
-const { loadPreferences, isCategoryVisible, preferences: _preferences } = usePreferences();
+const {
+  loadPreferences,
+  isCategoryVisible,
+  preferences: _preferences,
+} = usePreferences();
 
 // Load preferences on mount
 onMounted(() => {
@@ -114,8 +118,11 @@ function isIntervalDisabled(idx: number): boolean {
 
 // Get interval summary for collapsed view
 function getIntervalSummary(int: TimerInterval): string {
-  const repeatText = int.repeats === 0 ? "∞" : `×${int.repeats}`;
-  return `${int.durationMinutes}m ${repeatText}`;
+  if (int.repeats === 0) {
+    return `${int.durationMinutes}m bells (unlimited)`;
+  }
+  const total = int.durationMinutes * int.repeats;
+  return `${int.durationMinutes}m × ${int.repeats} = ${total}m total`;
 }
 
 // Post-session capture (global settings from localStorage)
@@ -147,7 +154,7 @@ const currentPresetName = computed(() => {
   }
   // Default: use subcategory label
   const subcat = subcategoryOptions.value.find(
-    (s) => s.value === selectedSubcategory.value
+    (s) => s.value === selectedSubcategory.value,
   );
   return subcat?.label || "Timer";
 });
@@ -155,11 +162,11 @@ const currentPresetName = computed(() => {
 // Get current preset description for headline display
 const currentPresetDescription = computed(() => {
   const catOption = categoryOptions.value.find(
-    (c) => c.value === selectedCategory.value
+    (c) => c.value === selectedCategory.value,
   );
   const catLabel = catOption?.label || selectedCategory.value;
 
-  const modeLabel = timerMode.value === "fixed" ? "Fixed" : "Open-ended";
+  const modeLabel = timerMode.value === "fixed" ? "Fixed" : "Unlimited";
   const intervalInfo = intervals.value[0]?.durationMinutes
     ? `${intervals.value[0].durationMinutes}min intervals`
     : "";
@@ -175,7 +182,7 @@ const categoryOptions = computed(() => {
   const timedCategories = getTimedCategories();
   // Filter out hidden categories
   const visibleCategories = timedCategories.filter((slug) =>
-    isCategoryVisible(slug)
+    isCategoryVisible(slug),
   );
   return visibleCategories.map((slug) => {
     const category = CATEGORY_DEFAULTS[slug]!;
@@ -199,6 +206,18 @@ watch(selectedCategory, (newCategory) => {
     selectedSubcategory.value = newCategory; // Use category slug as fallback
   }
 });
+
+// Auto-determine timer mode from intervals:
+// - If any interval has repeats=0 (Forever) → unlimited
+// - Otherwise → fixed
+watch(
+  intervals,
+  (newIntervals) => {
+    const hasForeverInterval = newIntervals.some((int) => int.repeats === 0);
+    timerMode.value = hasForeverInterval ? "unlimited" : "fixed";
+  },
+  { deep: true },
+);
 
 // When preset is cleared, reset the preset name
 watch(selectedPresetId, (newId) => {
@@ -530,7 +549,7 @@ function resetTimer() {
 
 function playBell(
   bellType: "start" | "interval" = "interval",
-  intervalIndex: number = 0
+  intervalIndex: number = 0,
 ) {
   // Skip interval bells if noIntervalBells is enabled
   if (bellType === "interval" && noIntervalBells.value) return;
@@ -596,7 +615,7 @@ async function saveSession(includeOvertime: boolean = true) {
 
   // Get the subcategory label for the name
   const subcatOption = subcategoryOptions.value.find(
-    (s) => s.value === selectedSubcategory.value
+    (s) => s.value === selectedSubcategory.value,
   );
   const subcatLabel = subcatOption?.label || selectedSubcategory.value;
   const minutes = Math.floor(elapsedSeconds.value / 60);
@@ -643,7 +662,7 @@ async function saveSession(includeOvertime: boolean = true) {
     {
       navigateTo: "/",
       showSuccessToast: false, // Navigate silently
-    }
+    },
   );
 
   // Only reset if save succeeded
@@ -717,12 +736,23 @@ function handlePresetSelect(preset: TimerPreset) {
 function openSavePresetDialog() {
   if (!presetPickerRef.value) return;
 
+  // Check if any interval is "Forever" (repeats=0) - this means unlimited mode
+  const hasForeverInterval = intervals.value.some((int) => int.repeats === 0);
+
+  // Calculate total duration from intervals (only if no "Forever" interval)
+  let durationSeconds: number | null = null;
+  if (!hasForeverInterval && timerMode.value === "fixed") {
+    durationSeconds = intervals.value.reduce(
+      (sum, int) => sum + int.durationMinutes * 60 * int.repeats,
+      0,
+    );
+  }
+
   // Gather current settings - matching schema structure
   const presetData = {
     category: selectedCategory.value,
     subcategory: selectedSubcategory.value,
-    durationSeconds:
-      timerMode.value === "fixed" ? targetMinutes.value * 60 : null,
+    durationSeconds,
     bellConfig: {
       startBell: startBell.value + ".mp3",
       endBell: startBell.value + ".mp3",
@@ -731,6 +761,7 @@ function openSavePresetDialog() {
         .map((int) => ({
           minutes: int.durationMinutes,
           sound: int.bellSound,
+          repeats: int.repeats, // Include repeats for preset restoration
         })),
     },
     backgroundAudio: null,
@@ -905,38 +936,6 @@ onUnmounted(() => {
         </div>
 
         <hr class="border-stone-200 dark:border-stone-700" />
-
-        <!-- Mode selector (center aligned) -->
-        <div class="text-center">
-          <label
-            class="block text-xs font-medium text-stone-600 dark:text-stone-300 mb-2"
-            >Mode</label
-          >
-          <div class="inline-flex gap-2">
-            <button
-              class="px-4 py-1.5 rounded text-sm font-medium transition-colors"
-              :class="
-                timerMode === 'fixed'
-                  ? 'bg-tada-100/30 dark:bg-tada-600/20 text-tada-700 dark:text-tada-300'
-                  : 'bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600'
-              "
-              @click="timerMode = 'fixed'"
-            >
-              Fixed
-            </button>
-            <button
-              class="px-4 py-1.5 rounded text-sm font-medium transition-colors"
-              :class="
-                timerMode === 'unlimited'
-                  ? 'bg-tada-100/30 dark:bg-tada-600/20 text-tada-700 dark:text-tada-300'
-                  : 'bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600'
-              "
-              @click="timerMode = 'unlimited'"
-            >
-              Unlimited
-            </button>
-          </div>
-        </div>
 
         <!-- Warm-up selector -->
         <div>
@@ -1140,7 +1139,7 @@ onUnmounted(() => {
                         @input="
                           int.repeats =
                             parseInt(
-                              ($event.target as HTMLInputElement).value
+                              ($event.target as HTMLInputElement).value,
                             ) || 0
                         "
                       />

@@ -17,8 +17,8 @@
             currentStep === step
               ? 'bg-mindfulness-light dark:bg-mindfulness-dark text-white'
               : currentStep > step
-              ? 'bg-mindfulness-light/30 dark:bg-mindfulness-dark/30 text-mindfulness-light dark:text-mindfulness-dark'
-              : 'bg-pearl-mist dark:bg-cosmic-indigo text-text-light-muted dark:text-text-dark-muted',
+                ? 'bg-mindfulness-light/30 dark:bg-mindfulness-dark/30 text-mindfulness-light dark:text-mindfulness-dark'
+                : 'bg-pearl-mist dark:bg-cosmic-indigo text-text-light-muted dark:text-text-dark-muted',
           ]"
         >
           {{ step }}
@@ -1162,7 +1162,7 @@ async function loadSelectedRecipe() {
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const recipe: any = await $fetch(
-      `/api/import/recipes/${selectedRecipeId.value}`
+      `/api/import/recipes/${selectedRecipeId.value}`,
     );
 
     if (recipe.columnMapping) {
@@ -1192,19 +1192,19 @@ async function restoreVersion(versionIndex: number) {
 
   if (
     !confirm(
-      "Restore this previous version? Current configuration will be saved to history."
+      "Restore this previous version? Current configuration will be saved to history.",
     )
   )
     return;
 
   try {
-    const response = await $fetch<{ success: boolean; recipe: Record<string, unknown> }>(
-      `/api/import/recipes/${selectedRecipeId.value}/restore`,
-      {
-        method: "POST",
-        body: { versionIndex },
-      }
-    );
+    const response = await $fetch<{
+      success: boolean;
+      recipe: Record<string, unknown>;
+    }>(`/api/import/recipes/${selectedRecipeId.value}/restore`, {
+      method: "POST",
+      body: { versionIndex },
+    });
 
     if (response.success && response.recipe) {
       // Update local state with restored recipe

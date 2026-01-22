@@ -25,6 +25,7 @@ import {
   type DayStatus,
   type ChainType,
   type ChainStat,
+  type ChainUnit,
 } from "~/utils/tierCalculator";
 
 // ============================================================================
@@ -58,7 +59,7 @@ export interface CachedChainData {
   lastEntryTimestamp: string | null;
 }
 
-export type JourneyStage = "starting" | "building" | "becoming";
+export type JourneyStage = "starting" | "building" | "becoming" | "being";
 
 // ============================================================================
 // Functions
@@ -561,11 +562,17 @@ export function calculateTotals(
 }
 
 /**
- * Determine journey stage based on weeks of consistent practice
+ * Determine journey stage based on total hours of practice
+ *
+ * - Starting: < 10 hours (just getting started)
+ * - Building: 10-100 hours (developing the habit)
+ * - Becoming: 100-1000 hours (established practitioner)
+ * - Being: 1000+ hours (you ARE this - fully embodied identity)
  */
-export function getJourneyStage(weeksActive: number): JourneyStage {
-  if (weeksActive >= 4) return "becoming";
-  if (weeksActive >= 2) return "building";
+export function getJourneyStage(totalHours: number): JourneyStage {
+  if (totalHours >= 1000) return "being";
+  if (totalHours >= 100) return "becoming";
+  if (totalHours >= 10) return "building";
   return "starting";
 }
 
@@ -641,7 +648,8 @@ export async function selectEncouragement(
   const fallbacks: Record<JourneyStage, string> = {
     starting: "Every journey begins with a single step",
     building: "A practice is forming",
-    becoming: "This is who you are now",
+    becoming: "This is who you are becoming",
+    being: "This is who you are",
   };
 
   return fallbacks[stage];

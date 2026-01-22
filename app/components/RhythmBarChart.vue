@@ -1,5 +1,52 @@
 <template>
   <div class="rhythm-bar-chart">
+    <!-- Navigation header -->
+    <div class="mb-2 flex items-center justify-between">
+      <button
+        class="rounded p-1 text-stone-400 hover:bg-stone-100 hover:text-stone-600 dark:hover:bg-stone-700 dark:hover:text-stone-300"
+        @click.stop="previousPeriod"
+      >
+        <svg
+          class="h-5 w-5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M15 19l-7-7 7-7"
+          />
+        </svg>
+      </button>
+
+      <span class="text-sm font-medium text-stone-700 dark:text-stone-300">
+        {{ periodLabel }}
+      </span>
+
+      <button
+        class="rounded p-1 text-stone-400 hover:bg-stone-100 hover:text-stone-600 dark:hover:bg-stone-700 dark:hover:text-stone-300"
+        :disabled="isCurrentPeriod"
+        :class="{ 'opacity-30 cursor-not-allowed': isCurrentPeriod }"
+        @click.stop="nextPeriod"
+      >
+        <svg
+          class="h-5 w-5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 5l7 7-7 7"
+          />
+        </svg>
+      </button>
+    </div>
+
     <!-- Bars container -->
     <div class="bars-container">
       <div
@@ -17,9 +64,13 @@
             :title="getTooltip(day)"
           />
         </div>
-        <!-- Day label (show weekday initials) -->
+        <!-- Day label (date number) -->
         <span class="day-label" :class="{ 'is-today': day.isToday }">
-          {{ day.dayInitial }}
+          {{ day.dayNum }}
+        </span>
+        <!-- Month indicator (show on 1st or first visible day of month) -->
+        <span v-if="day.showMonthLabel" class="month-label">
+          {{ day.monthLabel }}
         </span>
       </div>
     </div>
@@ -27,14 +78,6 @@
     <!-- Y-axis label -->
     <div class="y-label">
       {{ goalType === "duration" ? "min" : "#" }}
-    </div>
-
-    <!-- Legend -->
-    <div class="legend">
-      <div class="legend-item">
-        <div class="legend-swatch bg-stone-200 dark:bg-stone-600" />
-        <span>Weekend</span>
-      </div>
     </div>
   </div>
 </template>
@@ -55,7 +98,9 @@ interface ChartDay {
   heightPercent: number;
   isWeekend: boolean;
   isToday: boolean;
-  dayInitial: string;
+  dayNum: number;
+  showMonthLabel: boolean;
+  monthLabel: string;
   isComplete: boolean;
 }
 
@@ -64,6 +109,47 @@ const props = defineProps<{
   goalType?: "duration" | "count"; // duration = minutes, count = moments
   thresholdSeconds?: number;
 }>();
+
+// Navigation offset (0 = current period, 1 = previous 28 days, etc.)
+const periodOffset = ref(0);
+
+// Navigation functions
+function previousPeriod() {
+  periodOffset.value++;
+}
+
+function nextPeriod() {
+  if (periodOffset.value > 0) {
+    periodOffset.value--;
+  }
+}
+
+const isCurrentPeriod = computed(() => periodOffset.value === 0);
+
+// Period label showing date range (includes year when viewing historical data)
+const periodLabel = computed(() => {
+  const today = new Date();
+  const currentYear = today.getFullYear();
+
+  const endDate = new Date();
+  endDate.setDate(endDate.getDate() - periodOffset.value * 28);
+  const startDate = new Date(endDate);
+  startDate.setDate(startDate.getDate() - 27);
+
+  // Include year if either date is not in the current year
+  const needsYear =
+    startDate.getFullYear() !== currentYear ||
+    endDate.getFullYear() !== currentYear;
+
+  const formatDate = (d: Date) =>
+    d.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      ...(needsYear && { year: "numeric" }),
+    });
+
+  return `${formatDate(startDate)} – ${formatDate(endDate)}`;
+});
 
 // Create a map for quick lookup
 const dayMap = computed(() => {
@@ -74,33 +160,61 @@ const dayMap = computed(() => {
   return map;
 });
 
-// Generate last 28 days (4 weeks)
+// Generate 28 days (4 weeks) based on offset
 const chartDays = computed(() => {
   const result: ChartDay[] = [];
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const dayInitials = ["S", "M", "T", "W", "T", "F", "S"];
+  const baseDate = new Date();
+  baseDate.setHours(0, 0, 0, 0);
+  // Shift by offset periods
+  baseDate.setDate(baseDate.getDate() - periodOffset.value * 28);
+
+  const monthNames = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
 
   // Collect values first to find max
   const tempDays: Array<{
     date: string;
     dayOfWeek: number;
+    dayNum: number;
+    month: number;
+    year: number;
     isToday: boolean;
     status?: DayStatus;
   }> = [];
 
+  const todayStr = formatDateKey(new Date());
+  const currentYear = new Date().getFullYear();
+
   for (let i = 27; i >= 0; i--) {
-    const d = new Date(today);
+    const d = new Date(baseDate);
     d.setDate(d.getDate() - i);
     const dateStr = formatDateKey(d);
     const status = dayMap.value.get(dateStr);
     tempDays.push({
       date: dateStr,
       dayOfWeek: d.getDay(),
-      isToday: i === 0,
+      dayNum: d.getDate(),
+      month: d.getMonth(),
+      year: d.getFullYear(),
+      isToday: dateStr === todayStr,
       status,
     });
   }
+
+  // Check if any dates are from a different year (need to show year in labels)
+  const hasHistoricalData = tempDays.some((td) => td.year !== currentYear);
 
   // Find max value for scaling
   let maxValue = 1;
@@ -109,16 +223,40 @@ const chartDays = computed(() => {
     if (val > maxValue) maxValue = val;
   }
 
+  // Track which months we've shown
+  let lastMonth = -1;
+  let lastYear = -1;
+
   // Build chart days with height percentages
-  for (const td of tempDays) {
+  for (let idx = 0; idx < tempDays.length; idx++) {
+    const td = tempDays[idx];
+    if (!td) continue; // Guard for TypeScript
+
     const value = getValue(td.status);
+
+    // Show month label on 1st of month or first day in the range
+    const showMonthLabel =
+      td.dayNum === 1 ||
+      (idx === 0 && (lastMonth !== td.month || lastYear !== td.year));
+    if (showMonthLabel) {
+      lastMonth = td.month;
+      lastYear = td.year;
+    }
+
+    // Include year in label if viewing historical data
+    const monthLabel = hasHistoricalData
+      ? `${monthNames[td.month]} '${String(td.year).slice(2)}`
+      : monthNames[td.month] || "";
+
     result.push({
       date: td.date,
       value,
       heightPercent: (value / maxValue) * 100,
       isWeekend: td.dayOfWeek === 0 || td.dayOfWeek === 6,
       isToday: td.isToday,
-      dayInitial: dayInitials[td.dayOfWeek] || "",
+      dayNum: td.dayNum,
+      showMonthLabel,
+      monthLabel,
       isComplete: td.status?.isComplete ?? false,
     });
   }
@@ -217,6 +355,15 @@ function getTooltip(day: ChartDay): string {
   color: #f59e0b;
 }
 
+.month-label {
+  font-size: 0.45rem;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  margin-top: 1px;
+  line-height: 1;
+}
+
 .y-label {
   position: absolute;
   left: 0;
@@ -226,28 +373,6 @@ function getTooltip(day: ChartDay): string {
   color: #9ca3af;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-}
-
-.legend {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.75rem;
-  margin-top: 0.25rem;
-  padding-right: 0.25rem;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-size: 0.5rem;
-  color: #9ca3af;
-}
-
-.legend-swatch {
-  width: 8px;
-  height: 8px;
-  border-radius: 2px;
 }
 
 /* Dark mode adjustments */
@@ -260,11 +385,11 @@ function getTooltip(day: ChartDay): string {
     color: #fbbf24;
   }
 
-  .y-label {
-    color: #6b7280;
+  .month-label {
+    color: #9ca3af;
   }
 
-  .legend-item {
+  .y-label {
     color: #6b7280;
   }
 

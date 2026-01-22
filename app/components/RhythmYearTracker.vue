@@ -1,9 +1,50 @@
 <template>
   <div class="rhythm-year-tracker">
+    <!-- Header with navigation -->
     <div class="mb-2 flex items-center justify-between">
-      <h4 class="text-sm font-medium text-stone-600 dark:text-stone-400">
-        Last 12 months
-      </h4>
+      <div class="flex items-center gap-2">
+        <button
+          class="rounded p-1 text-stone-400 hover:bg-stone-100 hover:text-stone-600 dark:hover:bg-stone-700 dark:hover:text-stone-300"
+          @click="previousYear"
+        >
+          <svg
+            class="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 19l-7-7 7-7"
+            />
+          </svg>
+        </button>
+        <h4 class="text-sm font-medium text-stone-600 dark:text-stone-400">
+          {{ periodLabel }}
+        </h4>
+        <button
+          class="rounded p-1 text-stone-400 hover:bg-stone-100 hover:text-stone-600 dark:hover:bg-stone-700 dark:hover:text-stone-300"
+          :disabled="isCurrentPeriod"
+          :class="{ 'opacity-30 cursor-not-allowed': isCurrentPeriod }"
+          @click="nextYear"
+        >
+          <svg
+            class="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 5l7 7-7 7"
+            />
+          </svg>
+        </button>
+      </div>
       <div
         class="flex items-center gap-1 text-xs text-stone-400 dark:text-stone-500"
       >
@@ -69,7 +110,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref } from "vue";
 
 interface DayStatus {
   date: string;
@@ -92,6 +133,38 @@ const props = defineProps<{
 
 const intensityLevels = [0, 1, 2, 3, 4];
 
+// Year offset (0 = current year, 1 = previous year, etc.)
+const yearOffset = ref(0);
+
+// Navigation functions
+function previousYear() {
+  yearOffset.value++;
+}
+
+function nextYear() {
+  if (yearOffset.value > 0) {
+    yearOffset.value--;
+  }
+}
+
+const isCurrentPeriod = computed(() => yearOffset.value === 0);
+
+// Period label showing date range
+const periodLabel = computed(() => {
+  const endDate = new Date();
+  endDate.setDate(endDate.getDate() - yearOffset.value * 364);
+  const startDate = new Date(endDate);
+  startDate.setDate(startDate.getDate() - 364);
+
+  const formatDate = (d: Date) =>
+    d.toLocaleDateString("en-US", {
+      month: "short",
+      year: "numeric",
+    });
+
+  return `${formatDate(startDate)} – ${formatDate(endDate)}`;
+});
+
 // Create a map for quick lookup
 const dayMap = computed(() => {
   const map = new Map<string, DayStatus>();
@@ -101,17 +174,18 @@ const dayMap = computed(() => {
   return map;
 });
 
-// Build weeks grid - 53 weeks trailing back from today (GitHub-style)
+// Build weeks grid - 53 weeks trailing back from end date (GitHub-style)
 const weeks = computed(() => {
   const result: DayData[][] = [];
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  // End on today, start ~53 weeks ago on a Sunday
+  // Calculate end date based on offset
   const endDate = new Date(today);
+  endDate.setDate(endDate.getDate() - yearOffset.value * 364);
 
-  // Find the Sunday of the week containing 52 weeks ago
-  const startDate = new Date(today);
+  // Find the Sunday of the week containing 52 weeks before end date
+  const startDate = new Date(endDate);
   startDate.setDate(startDate.getDate() - 364); // Go back ~52 weeks
   // Adjust to the previous Sunday
   const startDay = startDate.getDay();
@@ -158,6 +232,7 @@ const weeks = computed(() => {
 });
 
 // Calculate month labels with their week spans
+// Month label appears at the week containing the 1st of that month
 const monthLabels = computed(() => {
   const labels: { name: string; weeks: number }[] = [];
   const monthNames = [
@@ -175,26 +250,47 @@ const monthLabels = computed(() => {
     "Dec",
   ];
 
+  if (weeks.value.length === 0) return labels;
+
+  // Track which month each week "belongs" to for labeling
+  // A week belongs to a month if it contains the 1st of that month,
+  // OR if it's the first week and starts mid-month
   let currentMonth = -1;
   let weekCount = 0;
 
-  for (const week of weeks.value) {
-    // Get the month of the first non-empty day in the week
-    const firstDay = week.find((d) => !d.isEmpty);
-    if (firstDay) {
-      const month = firstDay.date.getMonth();
-      if (month !== currentMonth) {
-        if (currentMonth !== -1 && weekCount > 0) {
-          labels.push({
-            name: monthNames[currentMonth] || "",
-            weeks: weekCount,
-          });
-        }
-        currentMonth = month;
-        weekCount = 1;
-      } else {
-        weekCount++;
+  for (let weekIdx = 0; weekIdx < weeks.value.length; weekIdx++) {
+    const week = weeks.value[weekIdx];
+    if (!week) continue; // Guard for TypeScript
+
+    // Find if this week contains the 1st of any month
+    let monthStart = -1;
+    for (const day of week) {
+      if (!day.isEmpty && day.date.getDate() === 1) {
+        monthStart = day.date.getMonth();
+        break;
       }
+    }
+
+    if (monthStart !== -1) {
+      // This week contains a month start
+      if (currentMonth !== -1 && weekCount > 0) {
+        labels.push({
+          name: monthNames[currentMonth] || "",
+          weeks: weekCount,
+        });
+      }
+      currentMonth = monthStart;
+      weekCount = 1;
+    } else if (weekIdx === 0) {
+      // First week - use the first day's month
+      const firstDay = week.find((d) => !d.isEmpty);
+      if (firstDay) {
+        currentMonth = firstDay.date.getMonth();
+        weekCount = 1;
+      }
+    } else {
+      // Continue counting for current month
+      weekCount++;
     }
   }
 
@@ -228,14 +324,14 @@ function getIntensityLevel(day: DayData): number {
 }
 
 function getIntensityClass(level: number): string {
-  const classes = [
+  const classes: string[] = [
     "bg-stone-100 dark:bg-stone-700", // Level 0 - none
     "bg-green-100 dark:bg-green-900", // Level 1 - minimal
     "bg-green-300 dark:bg-green-700", // Level 2 - some
     "bg-green-500 dark:bg-green-500", // Level 3 - good
     "bg-green-700 dark:bg-green-300", // Level 4 - great
   ];
-  return classes[level] || classes[0];
+  return classes[level] ?? classes[0] ?? "";
 }
 
 function getDayCellClass(day: DayData): string {

@@ -23,6 +23,7 @@ import {
   calculateWeeklyProgress,
   generateNudgeMessage,
   getChainConfig,
+  CHAIN_TYPE_ORDER,
   type TierName,
   type ChainType,
   type ChainStat,
@@ -68,13 +69,6 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    // Date range for visualization (trailing 365 days)
-    const visualEndDate = new Date();
-    visualEndDate.setHours(23, 59, 59, 999);
-    const visualStartDate = new Date(visualEndDate);
-    visualStartDate.setDate(visualStartDate.getDate() - 365);
-    visualStartDate.setHours(0, 0, 0, 0);
-
     // Build conditions to find latest matching entry
     const matchConditions = [eq(entries.userId, userId)];
     if (rhythm.matchCategory) {
@@ -103,72 +97,64 @@ export default defineEventHandler(async (event) => {
 
     const latestEntryTimestamp = latestEntry?.timestamp || null;
 
-    // Get rhythm's chain type configuration
-    const chainType = (rhythm.chainType as ChainType) || "weekly_low";
-    const chainConfig = getChainConfig(chainType);
+    // Get rhythm's primary chain type configuration
+    const primaryChainType = (rhythm.chainType as ChainType) || "weekly_low";
 
-    // Check if we can use cached data
+    // Fetch ALL entries - used for visualization AND chain calculations
+    const allTimeStartDate = new Date("2000-01-01");
+    const endDate = new Date();
+    endDate.setHours(23, 59, 59, 999);
+
+    const allMatchingEntries = await getMatchingEntries(
+      db,
+      rhythm,
+      userId,
+      allTimeStartDate,
+      endDate,
+    );
+
+    // Convert ALL entries to day statuses - used for visualization and calculations
+    const allDayStatuses = entriesToDayStatuses(
+      allMatchingEntries,
+      rhythm.durationThresholdSeconds,
+    );
+
+    // Check if we can use cached chain/totals data
     const cached = rhythm.cachedChainStats as CachedChainData | null;
     const cacheValid =
       cached &&
       cached.lastEntryTimestamp === latestEntryTimestamp &&
       cached.chains &&
-      cached.chains.length > 0 &&
+      cached.chains.length === CHAIN_TYPE_ORDER.length &&
       cached.totals;
 
-    let chain: ChainStat;
+    let chains: ChainStat[];
     let totals: RhythmTotals;
 
     if (cacheValid) {
-      // Cache is up to date - use it directly
-      const cachedChain = cached.chains.find((c) => c.type === chainType);
-      if (cachedChain) {
-        chain = {
-          type: cachedChain.type as ChainType,
-          current: cachedChain.current,
-          longest: cachedChain.longest,
-          unit: cachedChain.unit as "days" | "weeks" | "months",
-        };
-      } else {
-        // Chain type changed, need recalc
-        chain = {
-          type: chainType,
-          current: 0,
-          longest: 0,
-          unit: chainConfig.unit,
-        };
-      }
+      // Cache is up to date - use cached chains and totals
+      chains = cached.chains.map((c) => ({
+        type: c.type as ChainType,
+        current: c.current,
+        longest: c.longest,
+        unit: c.unit as "days" | "weeks" | "months",
+      }));
       totals = cached.totals;
-      logger.debug("Using cached chain stats", { rhythmId, chainType });
+      logger.debug("Using cached chain stats", { rhythmId });
     } else {
       // Need full recalculation
-      logger.debug("Calculating chain stats", {
+      logger.debug("Calculating all chain stats", {
         rhythmId,
-        chainType,
-        reason: cached ? "new entries" : "no cache",
+        reason: cached ? "new entries or missing types" : "no cache",
       });
 
-      // Fetch ALL entries for complete chain calculations
-      const allTimeStartDate = new Date("2000-01-01");
-      const allMatchingEntries = await getMatchingEntries(
-        db,
-        rhythm,
-        userId,
-        allTimeStartDate,
-        visualEndDate,
-      );
-
-      // Convert ALL entries to day statuses for chain calculations
-      const allDayStatuses = entriesToDayStatuses(
-        allMatchingEntries,
-        rhythm.durationThresholdSeconds,
-      );
-
-      // Calculate the typed chain statistic
-      chain = calculateTypedChainStats(
-        allDayStatuses,
-        chainType,
-        rhythm.chainTargetMinutes || undefined,
+      // Calculate ALL chain types
+      chains = CHAIN_TYPE_ORDER.map((chainType) =>
+        calculateTypedChainStats(
+          allDayStatuses,
+          chainType,
+          rhythm.chainTargetMinutes || undefined,
+        ),
       );
 
       // Calculate totals using ALL data
@@ -176,7 +162,7 @@ export default defineEventHandler(async (event) => {
 
       // Cache the results
       const newCache: CachedChainData = {
-        chains: [chain],
+        chains,
         currentChain: {
           lastCompleteDate: null,
           lastPeriodKey: null,
@@ -198,30 +184,16 @@ export default defineEventHandler(async (event) => {
         .run();
     }
 
-    // Always fetch recent entries for visualization (lightweight - only 365 days)
-    const recentEntries = await getMatchingEntries(
-      db,
-      rhythm,
-      userId,
-      visualStartDate,
-      visualEndDate,
-    );
-
-    const visualDayStatuses = entriesToDayStatuses(
-      recentEntries,
-      rhythm.durationThresholdSeconds,
-    );
-
-    // Calculate current week progress (uses recent data)
-    const weekProgress = calculateWeeklyProgress(visualDayStatuses, new Date());
+    // Calculate current week progress
+    const weekProgress = calculateWeeklyProgress(allDayStatuses, new Date());
 
     // Generate nudge message if applicable
     const targetTier: TierName =
       rhythm.frequency === "daily" ? "daily" : "weekly";
     const nudgeMessage = generateNudgeMessage(weekProgress, targetTier);
 
-    // Determine journey stage
-    const journeyStage = getJourneyStage(totals.weeksActive);
+    // Determine journey stage based on total hours
+    const journeyStage = getJourneyStage(totals.totalHours);
 
     // Select encouragement message
     const activityType = rhythm.matchCategory || "general";
@@ -237,6 +209,9 @@ export default defineEventHandler(async (event) => {
 
     return {
       rhythmId,
+      primaryChainType,
+      chainTargetMinutes: rhythm.chainTargetMinutes || null,
+      durationThresholdSeconds: rhythm.durationThresholdSeconds,
       currentWeek: {
         startDate: weekProgress.startDate,
         daysCompleted: weekProgress.daysCompleted,
@@ -245,16 +220,19 @@ export default defineEventHandler(async (event) => {
         daysRemaining: weekProgress.daysRemaining,
         nudgeMessage: nudgeMessage || undefined,
       },
-      // Chain stat based on rhythm's configured chain type
-      chain: {
-        type: chain.type,
-        current: chain.current,
-        longest: chain.longest,
-        unit: chain.unit,
-        label: chainConfig.label,
-        description: chainConfig.description,
-      },
-      days: visualDayStatuses,
+      // All chain types with their stats
+      chains: chains.map((chain) => {
+        const config = getChainConfig(chain.type);
+        return {
+          type: chain.type,
+          current: chain.current,
+          longest: chain.longest,
+          unit: chain.unit,
+          label: config.label,
+          description: config.description,
+        };
+      }),
+      days: allDayStatuses,
       totals: {
         totalSessions: totals.totalSessions,
         totalSeconds: totals.totalSeconds,

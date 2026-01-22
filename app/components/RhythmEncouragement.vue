@@ -7,6 +7,7 @@
     </div>
 
     <!-- Totals Section -->
+    <h4 v-if="totals" class="totals-heading">All-Time</h4>
     <div v-if="totals" class="totals-grid">
       <div class="stat-card">
         <span class="stat-value">{{ totals.totalSessions }}</span>
@@ -39,7 +40,7 @@ interface RhythmTotals {
   weeksActive: number;
 }
 
-type JourneyStage = "starting" | "building" | "becoming";
+type JourneyStage = "starting" | "building" | "becoming" | "being";
 
 const props = defineProps<{
   encouragement?: string;
@@ -55,6 +56,7 @@ const journeyStageLabel = computed(() => {
     starting: "🌱 Starting",
     building: "🌿 Building",
     becoming: "🌳 Becoming",
+    being: "⭐ You Are",
   };
   return props.journeyStage ? labels[props.journeyStage] : "";
 });
@@ -119,6 +121,13 @@ function formatDate(dateStr: string): string {
   align-self: flex-start;
 }
 
+.totals-heading {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #4b5563;
+  margin: 0;
+}
+
 .totals-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -165,6 +174,10 @@ function formatDate(dateStr: string): string {
 
   .journey-badge {
     color: #86efac;
+  }
+
+  .totals-heading {
+    color: #d1d5db;
   }
 
   .stat-card {

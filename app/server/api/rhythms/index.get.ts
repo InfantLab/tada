@@ -99,6 +99,7 @@ export default defineEventHandler(async (event) => {
           currentChain: chain.current,
           longestChain: chain.longest,
           chainUnit: chain.unit,
+          chainTargetMinutes: rhythm.chainTargetMinutes || null,
           panelPreferences: panelPrefs,
           createdAt: rhythm.createdAt,
         };

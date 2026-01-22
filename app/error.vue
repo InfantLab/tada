@@ -27,7 +27,7 @@ const errorDetails = computed(() => {
       timestamp: new Date().toISOString(),
     },
     null,
-    2
+    2,
   );
 });
 

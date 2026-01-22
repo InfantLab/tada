@@ -119,7 +119,7 @@ async function saveEditPreset() {
 
     // Update local state
     const index = presets.value.findIndex(
-      (p) => p.id === editingPreset.value?.id
+      (p) => p.id === editingPreset.value?.id,
     );
     if (index !== -1) {
       presets.value[index] = {
@@ -138,11 +138,22 @@ async function saveEditPreset() {
 
 // Format duration for display
 function formatDuration(seconds: number | null): string {
-  if (!seconds) return "Open-ended";
+  if (!seconds) return "Unlimited";
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
   if (secs === 0) return `${mins} min`;
   return `${mins}:${secs.toString().padStart(2, "0")}`;
+}
+
+// Get interval info for preset display
+function getPresetIntervalInfo(preset: TimerPreset): string {
+  const bells = preset.bellConfig?.intervalBells;
+  if (!bells || bells.length === 0) return "";
+
+  const firstInterval = bells[0];
+  if (!firstInterval || !firstInterval.minutes) return "";
+
+  return `${firstInterval.minutes}m bells`;
 }
 
 // User preferences composable
@@ -228,7 +239,7 @@ async function addCustomType() {
 
   const success = await addCustomEntryType(
     newCustomType.value.name.trim(),
-    newCustomType.value.emoji
+    newCustomType.value.emoji,
   );
   if (success) {
     showSuccess(`Added "${newCustomType.value.name}"`);
@@ -285,7 +296,7 @@ const categoriesWithSubcategories = computed(() => {
 function openEmojiPickerFor(
   type: "category" | "subcategory",
   key: string,
-  name: string
+  name: string,
 ) {
   emojiPickerTarget.value = { type, key, name };
   showEmojiPicker.value = true;
@@ -515,7 +526,7 @@ async function selectDeleteCategory(category: string) {
       "/api/entries",
       {
         params: { limit: 1, category },
-      }
+      },
     );
     deleteCategoryCount.value = data.total;
   } catch (error) {
@@ -575,7 +586,7 @@ async function restoreDeletedCategoryEntries() {
   try {
     // Get IDs from deleted entries
     const ids = deletedCategoryEntries.value.map(
-      (e: unknown) => (e as { id: string }).id
+      (e: unknown) => (e as { id: string }).id,
     );
 
     await $fetch("/api/entries/bulk", {
@@ -632,7 +643,7 @@ onMounted(() => {
         }
       });
     },
-    { threshold: 0.3, rootMargin: "-80px 0px -60% 0px" }
+    { threshold: 0.3, rootMargin: "-80px 0px -60% 0px" },
   );
 
   // Observe all sections after a short delay to ensure DOM is ready
@@ -1058,6 +1069,9 @@ onMounted(() => {
                     >
                       {{ preset.category }} / {{ preset.subcategory }} ·
                       {{ formatDuration(preset.durationSeconds) }}
+                      <span v-if="getPresetIntervalInfo(preset)">
+                        · {{ getPresetIntervalInfo(preset) }}
+                      </span>
                     </p>
                   </div>
                   <div class="flex items-center gap-1 ml-2">

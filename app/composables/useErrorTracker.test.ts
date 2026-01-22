@@ -218,7 +218,7 @@ describe("useErrorTracker", () => {
       const tracker = useErrorTracker();
       tracker.addError("Error");
       vi.mocked(navigator.clipboard.writeText).mockRejectedValueOnce(
-        new Error("Permission denied")
+        new Error("Permission denied"),
       );
 
       const result = await tracker.copyAllErrors();
