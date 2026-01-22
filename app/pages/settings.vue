@@ -14,7 +14,7 @@ definePageMeta({
 });
 
 // App version
-const appVersion = "0.1.0";
+const appVersion = "0.2.0";
 const appName = "Tada";
 
 // User preferences

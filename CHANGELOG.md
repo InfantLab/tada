@@ -7,89 +7,91 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+_No unreleased changes_
+
+## [0.2.0] - 2026-01-22
+
 ### Added
 
-- **v0.2.0 Feature Completion:**
+- **Graceful Rhythms System:**
+  - New `/rhythms` page for tracking natural patterns and chains
+  - Multiple chain types: Daily, Weekly High (5+ days), Weekly Low (3+ days), Weekly Target, Monthly Target
+  - `RhythmChainTabs` component for viewing all chain types with tab navigation
+  - `RhythmBarChart` with 28-day histogram and historical navigation
+  - `RhythmYearTracker` GitHub-style heatmap with year navigation
+  - `RhythmMonthCalendar` for monthly view
+  - `RhythmEncouragement` with journey stages and motivational messages
+  - Journey stages based on total hours: Starting (<10h) → Building (10-100h) → Becoming (100-1000h) → Being (1000h+)
+  - Tier system: Starting → Steady (3 days) → Strong (5 days) → Daily (7 days)
+  - Chain caching for efficient progress calculations
+  - Encouragement messages table with context-aware selection
 
-  - **Ta-Da! Celebration**: Post-save celebration page with confetti, sound effects, streaks, and fun facts
-  - **Universal Entry Editing**: Edit any entry type (timed, dream, note, journal, ta-da) from entry detail page
-  - **Timer Presets**: Save and load timer configurations (category, subcategory, duration, bells)
-  - **Custom Emojis**: Personalize category and subcategory icons in Settings
-  - **Entry Type Visibility**: Show/hide entry types (ta-da, dream, note, journal) from journal
-  - **Subcategory Autocomplete**: Previously-used subcategories suggested in timer
-  - **Hide Categories**: Toggle visibility of timer categories you don't use
-  - **Undo Support**: "Undo" action in deletion toast with 5-15 second window
-  - **Delete Category Data**: Bulk delete all entries in a category with confirmation
-  - **Toast Notifications**: App-wide toast system with action buttons
+- **Timer Presets:**
+  - Save and load timer configurations (category, subcategory, duration, bells)
+  - Interval info displayed in preset summaries (e.g., "6m bells")
+  - Low-friction duplicate handling: replace existing preset with confirmation
+  - Settings page preset management with rename and delete
 
-- **Timeline Scaling & Multi-Zoom Views (v0.2.1):**
+- **Timer Improvements:**
+  - Unified interval system with configurable duration, repeats (including "forever"), and bell sounds
+  - Mode auto-derived from intervals (Forever = unlimited, otherwise = fixed)
+  - Removed Mode selector UI (simplified)
+  - Shows "Unlimited" instead of "Open-ended" for forever presets
+  - Collapsible accordion UI for interval configuration
+  - Warm-up countdown with "settling in" text
+  - Post-session modal for mood and reflection capture
+  - Bell rings counter during session
 
+- **Ta-Da! Celebration**: Post-save celebration page with confetti, sound effects, streaks
+- **Universal Entry Editing**: Edit any entry type from entry detail page
+- **Custom Emojis**: Personalize category and subcategory icons in Settings
+- **Entry Type Visibility**: Show/hide entry types from journal
+- **Hide Categories**: Toggle visibility of timer categories
+- **Undo Support**: "Undo" action in deletion toast with 5-15 second window
+- **Delete Category Data**: Bulk delete all entries in a category
+- **Toast Notifications**: App-wide toast system with action buttons
+
+- **Timeline Scaling & Multi-Zoom Views:**
   - Zoom toggle with Day/Week/Month/Year views
-  - YearView: Shows yearly summary cards with tap-to-zoom into months
-  - MonthView: Shows monthly summaries for selected year
-  - WeekView: Shows weekly summaries
-  - VirtualTimeline: Infinite-scrolling paginated entry list (100 entries/page)
-  - JourneyBadge: Zoom-aware stats celebration (this week/month/year)
-  - PeriodSummaryCard: Reusable component for period displays
-  - TimelineHeader: Search, category filter, time range controls
-  - Stats API (`/api/entries/stats`): Period-based statistics
-  - Summary API (`/api/entries/summary`): Aggregated period data
-  - Sticky zoom toggle that floats at top when scrolling
-  - Text selection preserved on entry cards (click navigates only if no text selected)
+  - YearView, MonthView, WeekView summary components
+  - VirtualTimeline: Infinite-scrolling paginated entry list
+  - JourneyBadge: Zoom-aware stats celebration
+  - Stats API and Summary API for period-based data
+
+- **CSV Import System:**
+  - Import wizard with column mapping and preview
+  - Built-in Insight Timer recipe
+  - Custom recipe saving with version history
+  - Batch imports (1000 rows at a time)
+  - Auto-deduplication with external IDs
 
 - **Schema Simplification:**
+  - Single `timestamp` field as canonical timeline position
+  - Removed redundant date columns
 
-  - Single `timestamp` field (NOT NULL) as canonical timeline position
-  - Removed redundant `startedAt`, `endedAt`, `date` columns
-  - Migration preserves existing data (COALESCE fallback)
-
-- **Import Optimizations:**
-
-  - Batch inserts (1000 rows at a time) instead of individual inserts
-  - Batch duplicate checking with `inArray()` query
-  - Import time reduced from ~115s to ~5-10s for 4800+ entries
-  - Honest indeterminate progress bar while waiting for server
-  - Recipe dropdown syncs when selecting from recipe cards
-  - Download error log button for failed imports
-  - Added `mindfulness` color tokens to Tailwind config
-
-- **Timer Improvements (v0.2.0):**
-  - Unified interval system with configurable duration, repeats (including "forever"), and bell sounds per interval
-  - Collapsible accordion UI for interval configuration
-  - Warm-up countdown display with negative numbers (-20, -19...) and "settling in" text
-  - "No bells" toggle for unlimited silent sessions
-  - Post-session modal for mood (1-5 scale) and reflection capture
-  - Celebratory messaging on save: "You did 47m of Sitting!" instead of generic duration
-  - Fixed vs Unlimited timer modes with overtime tracking
-  - Gray out intervals after a "forever" repeating interval
-  - Toggle-style switches for ending reflection/mood options
-  - Bell rings counter display during session
-- Test suite with working utility tests
-  - Unit tests for categoryDefaults (13 tests, 100% coverage)
-  - Unit tests for client & server logging (21 tests combined)
-  - Test infrastructure with Vitest
-  - CI integration - tests run automatically
-  - Test stubs for v0.2.0 features (rhythms, auth, E2E)
-  - Test documentation and guides
+- **Test Suite:**
+  - 133+ unit tests passing
+  - Tests for categoryDefaults, logging, error tracking
+  - Vitest infrastructure with CI integration
 
 ### Changed
 
-- Timer now defaults to "Unlimited" count-up mode instead of countdown
-- Timer settings panel redesigned with accordion-style collapsible sections
-- Ending reflection and mood capture now use toggle switches instead of checkboxes
-- GitHub CI now runs test suite (utils passing, API tests skipped)
-- AGENTS.md updated to reflect testing setup
+- Timer defaults to "Unlimited" count-up mode
+- Timer Mode is now auto-derived from interval configuration
+- Journey stage calculation now based on total practice hours (not weeks)
+- Chain statistics cached and invalidated on new entries
+- GitHub CI runs full test suite
+
+### Fixed
+
+- Timer preset 600 minutes bug (was using raw targetMinutes instead of calculating from intervals)
+- TypeScript strict mode issues with ChainUnit import and array guards
+- Duplicate preset names now handled gracefully with replace confirmation
 
 ### Removed
 
-- Timer countdown mode (replaced with Fixed/Unlimited count-up modes)
-- Deprecated timer defaults (duration, bell sound) from Settings page
-- Loop count selector (replaced with per-interval repeat configuration)
-
-### Known Issues
-
-- API endpoint tests temporarily skipped (need proper @nuxt/test-utils setup)
-- See `app/tests/KNOWN_ISSUES.md` for details
+- Mode selector from timer settings (auto-derived from intervals)
+- Deprecated timer defaults from Settings page
 
 ## [0.1.0] - 2026-01-11
 
