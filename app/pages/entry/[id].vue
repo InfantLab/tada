@@ -142,7 +142,7 @@ async function deleteEntry() {
   isDeleting.value = true;
 
   try {
-    await $fetch(`/api/entries/${entryId}`, {
+    await $fetch<unknown>(`/api/entries/${entryId}`, {
       method: "DELETE",
     });
 

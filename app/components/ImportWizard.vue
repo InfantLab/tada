@@ -1161,7 +1161,7 @@ async function loadSelectedRecipe() {
 
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const recipe: any = await $fetch(
+    const recipe: any = await $fetch<unknown>(
       `/api/import/recipes/${selectedRecipeId.value}`,
     );
 

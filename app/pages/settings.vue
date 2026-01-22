@@ -82,7 +82,7 @@ async function deletePreset(preset: TimerPreset) {
 
   isDeletingPreset.value = preset.id;
   try {
-    await $fetch(`/api/presets/${preset.id}`, { method: "DELETE" });
+    await $fetch<unknown>(`/api/presets/${preset.id}`, { method: "DELETE" });
     presets.value = presets.value.filter((p) => p.id !== preset.id);
     showSuccess(`Deleted "${preset.name}"`);
   } catch (error) {
@@ -112,7 +112,7 @@ async function saveEditPreset() {
   }
 
   try {
-    await $fetch(`/api/presets/${editingPreset.value.id}`, {
+    await $fetch<unknown>(`/api/presets/${editingPreset.value.id}`, {
       method: "PUT",
       body: { name: editPresetName.value.trim() },
     });
@@ -356,7 +356,7 @@ const emailSuccess = ref(false);
 // Fetch current user
 onMounted(async () => {
   try {
-    const session = await $fetch("/api/auth/session");
+    const session = await $fetch<{ user?: { id: string; username: string; timezone?: string; email?: string; emailVerified?: boolean } }>("/api/auth/session");
     if (session.user) {
       currentUser.value = {
         id: session.user.id,
@@ -405,7 +405,7 @@ async function changePassword() {
   isChangingPassword.value = true;
 
   try {
-    await $fetch("/api/auth/change-password", {
+    await $fetch<unknown>("/api/auth/change-password", {
       method: "POST",
       body: {
         currentPassword: passwordForm.value.currentPassword,
@@ -490,7 +490,7 @@ async function exportData() {
   isExporting.value = true;
   try {
     // Fetch all entries
-    const entries = await $fetch("/api/entries", {
+    const entries = await $fetch<Entry[]>("/api/entries", {
       params: { limit: 10000 },
     });
 
@@ -598,7 +598,7 @@ async function restoreDeletedCategoryEntries() {
       (e: unknown) => (e as { id: string }).id,
     );
 
-    await $fetch("/api/entries/bulk", {
+    await $fetch<unknown>("/api/entries/bulk", {
       method: "POST",
       body: { ids },
     });

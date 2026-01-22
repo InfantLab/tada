@@ -258,7 +258,7 @@ export const useEntrySave = (): UseEntrySaveReturn => {
     isLoading.value = true;
 
     try {
-      await $fetch(`/api/entries/${id}`, {
+      await $fetch<unknown>(`/api/entries/${id}`, {
         method: "DELETE",
       });
 

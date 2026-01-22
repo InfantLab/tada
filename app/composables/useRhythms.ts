@@ -234,7 +234,7 @@ export function useRhythms() {
     error.value = null;
 
     try {
-      await $fetch(`/api/rhythms/${id}`, { method: "delete" });
+      await $fetch<unknown>(`/api/rhythms/${id}`, { method: "delete" });
 
       // Remove from local state
       rhythms.value = rhythms.value.filter((r) => r.id !== id);

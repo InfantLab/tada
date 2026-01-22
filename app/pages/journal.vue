@@ -29,7 +29,7 @@ function handleEntryClick(entry: Entry, event: MouseEvent) {
 onMounted(async () => {
   try {
     // Fetch journal-type entries (dream, journal, tada)
-    const data = (await $fetch("/api/entries")) as Entry[];
+    const data = await $fetch<Entry[]>("/api/entries");
     entries.value = data.filter((e) =>
       ["dream", "journal", "tada", "note"].includes(e.type)
     );

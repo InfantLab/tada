@@ -16,7 +16,7 @@ const hasUsers = ref(true);
 onMounted(async () => {
   // Check if already authenticated - redirect to home
   try {
-    const session = await $fetch("/api/auth/session");
+    const session = await $fetch<{ user?: { id: string } }>("/api/auth/session");
     if (session.user) {
       navigateTo("/");
       return;
@@ -27,7 +27,7 @@ onMounted(async () => {
 
   // Check if any users exist
   try {
-    const response = await $fetch("/api/auth/has-users");
+    const response = await $fetch<{ hasUsers: boolean }>("/api/auth/has-users");
     hasUsers.value = response.hasUsers;
     if (!hasUsers.value) {
       mode.value = "register";
@@ -65,7 +65,7 @@ async function handleSubmit() {
     const endpoint =
       mode.value === "login" ? "/api/auth/login" : "/api/auth/register";
 
-    await $fetch(endpoint, {
+    await $fetch<unknown>(endpoint, {
       method: "POST",
       body: {
         username: username.value,

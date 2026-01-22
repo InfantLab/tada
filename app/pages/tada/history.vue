@@ -36,7 +36,7 @@ function handleEntryClick(entry: Entry, event: MouseEvent) {
 onMounted(async () => {
   try {
     // Fetch only Ta-Da! type entries
-    const data = (await $fetch("/api/entries")) as Entry[];
+    const data = await $fetch<Entry[]>("/api/entries");
     entries.value = data.filter((e) => e.type === "tada");
   } catch (err: unknown) {
     console.error("Failed to fetch Ta-Da! entries:", err);
@@ -82,7 +82,7 @@ async function updateEmoji(emoji: string) {
   isUpdating.value = true;
 
   try {
-    await $fetch(`/api/entries/${entry.id}`, {
+    await $fetch<unknown>(`/api/entries/${entry.id}`, {
       method: "PATCH",
       body: { emoji },
     });

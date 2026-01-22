@@ -26,7 +26,7 @@ async function handleSubmit() {
   isLoading.value = true;
 
   try {
-    await $fetch("/api/auth/forgot-password", {
+    await $fetch<unknown>("/api/auth/forgot-password", {
       method: "POST",
       body: { email: email.value },
     });

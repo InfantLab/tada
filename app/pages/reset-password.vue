@@ -73,7 +73,7 @@ async function handleSubmit() {
   isLoading.value = true;
 
   try {
-    await $fetch("/api/auth/reset-password", {
+    await $fetch<unknown>("/api/auth/reset-password", {
       method: "POST",
       body: {
         token: token.value,
