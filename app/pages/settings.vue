@@ -440,7 +440,7 @@ async function logout() {
 
   isLoggingOut.value = true;
   try {
-    await $fetch("/api/auth/logout", { method: "POST" });
+    await $fetch<unknown>("/api/auth/logout", { method: "POST" });
     navigateTo("/login");
   } catch (error: unknown) {
     console.error("Logout failed:", error);
