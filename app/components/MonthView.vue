@@ -44,7 +44,7 @@ async function fetchSummary() {
       params.set("year", props.year);
     }
     summaryData.value = await $fetch<SummaryResponse>(
-      `/api/entries/summary?${params.toString()}`
+      `/api/entries/summary?${params.toString()}`,
     );
   } catch (err: unknown) {
     console.error("Failed to fetch month summary:", err);

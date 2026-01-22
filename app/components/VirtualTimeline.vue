@@ -157,7 +157,7 @@ watch(
   ],
   () => {
     loadInitial();
-  }
+  },
 );
 
 onMounted(loadInitial);
@@ -270,7 +270,7 @@ watch(loadTrigger, (el) => {
           loadMore();
         }
       },
-      { threshold: 0.1, rootMargin: "100px" }
+      { threshold: 0.1, rootMargin: "100px" },
     );
     observer.value.observe(el);
   }

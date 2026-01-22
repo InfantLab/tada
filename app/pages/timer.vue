@@ -276,9 +276,13 @@ const intervalProgress = computed(() => {
         : [targetMinutes.value];
     const cumulative = buildCumulativeTargets(intrvls);
     const prevTarget =
-      nextIntervalIndex.value > 0 ? (cumulative[nextIntervalIndex.value - 1] ?? 0) : 0;
+      nextIntervalIndex.value > 0
+        ? (cumulative[nextIntervalIndex.value - 1] ?? 0)
+        : 0;
     const currentTarget =
-      cumulative[nextIntervalIndex.value] ?? cumulative[cumulative.length - 1] ?? 0;
+      cumulative[nextIntervalIndex.value] ??
+      cumulative[cumulative.length - 1] ??
+      0;
     const intervalLength = (currentTarget ?? 0) - (prevTarget ?? 0);
     const elapsedInInterval = elapsedSeconds.value - (prevTarget ?? 0);
     if (isOvertime.value) return 100; // Full ring during overtime
@@ -628,7 +632,8 @@ async function saveSession(includeOvertime: boolean = true) {
     `${minutes} minutes well spent on ${subcatLabel}!`,
   ];
   const celebrationMessage =
-    celebrateMessages[Math.floor(Math.random() * celebrateMessages.length)] ?? `You did ${minutes}m!`;
+    celebrateMessages[Math.floor(Math.random() * celebrateMessages.length)] ??
+    `You did ${minutes}m!`;
 
   const totalFixedSeconds = fixedIntervals.value.reduce((a, b) => a + b, 0);
   const durationToSave =

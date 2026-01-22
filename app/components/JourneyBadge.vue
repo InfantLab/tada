@@ -120,13 +120,16 @@ function formatJourneyDuration(oldestEntry: string | null): string {
         <div class="flex items-center gap-2">
           <span class="text-2xl">⌛</span>
           <span class="text-2xl font-bold text-stone-800 dark:text-stone-100">
-            {{ formatTotalHours(periodStats.hours) }} of practice {{ periodStats.label }}
+            {{ formatTotalHours(periodStats.hours) }} of practice
+            {{ periodStats.label }}
           </span>
         </div>
       </div>
 
       <!-- Total journey stats - subtle -->
-      <div class="flex items-center gap-2 text-sm text-stone-500 dark:text-stone-400">
+      <div
+        class="flex items-center gap-2 text-sm text-stone-500 dark:text-stone-400"
+      >
         <span>🪷</span>
         <span>
           {{ stats.totalSessions.toLocaleString() }} moments ·

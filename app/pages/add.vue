@@ -29,7 +29,7 @@ const notes = ref("");
 const notesTextarea = ref<HTMLTextAreaElement | null>(null);
 const category = ref<string>((route.query["category"] as string) || "journal");
 const subcategory = ref<string>(
-  (route.query["subcategory"] as string) || "reflection"
+  (route.query["subcategory"] as string) || "reflection",
 );
 const customEmoji = ref<string | null>(null);
 const showEmojiPicker = ref(false);
@@ -72,7 +72,7 @@ const subcategoryOptions = computed(() => {
 const displayEmoji = computed(() => {
   if (customEmoji.value) return customEmoji.value;
   const subcat = subcategoryOptions.value.find(
-    (s) => s.slug === subcategory.value
+    (s) => s.slug === subcategory.value,
   );
   if (subcat) return subcat.emoji;
   return CATEGORY_DEFAULTS[category.value]?.emoji || "📝";
@@ -137,7 +137,7 @@ async function submitEntry() {
       skipEmojiResolution: true,
       navigateTo: "/",
       showSuccessToast: false,
-    }
+    },
   );
 
   if (result) {
@@ -351,7 +351,7 @@ async function submitEntry() {
               @click="
                 dreamData.emotions.includes(emotion)
                   ? (dreamData.emotions = dreamData.emotions.filter(
-                      (e) => e !== emotion
+                      (e) => e !== emotion,
                     ))
                   : dreamData.emotions.push(emotion)
               "

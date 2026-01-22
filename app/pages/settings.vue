@@ -288,7 +288,9 @@ const categoriesWithSubcategories = computed(() => {
     subcategories: getSubcategoriesForCategory(cat).map((sub) => ({
       key: `${cat}:${sub.slug}`,
       name: sub.label,
-      emoji: getCustomEmoji(`${cat}:${sub.slug}`) || getSubcategoryEmoji(cat, sub.slug),
+      emoji:
+        getCustomEmoji(`${cat}:${sub.slug}`) ||
+        getSubcategoryEmoji(cat, sub.slug),
     })),
   }));
 });
