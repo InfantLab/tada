@@ -34,6 +34,10 @@ jobs:
         working-directory: ./app
         run: bun run typecheck
 
+      - name: Create test data directory
+        working-directory: ./app
+        run: mkdir -p data
+
       - name: Run tests
         working-directory: ./app
         run: bun run test:run
