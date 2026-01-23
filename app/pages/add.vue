@@ -4,13 +4,36 @@ import {
   CATEGORY_DEFAULTS,
   getSubcategoriesForCategory,
 } from "~/utils/categoryDefaults";
+import type { TranscriptionResult, VoiceRecordingStatus } from "~/types/voice";
+import type { VoiceEntryData } from "~/composables/useEntrySave";
+import type { ExtractedTada } from "~/types/extraction";
 
 // Use the unified entry save composable
-const { createEntry, isLoading: isSubmitting } = useEntrySave();
-const { success: showSuccess } = useToast();
+const {
+  createEntry,
+  createVoiceEntry,
+  createBatchTadas,
+  isLoading: isSubmitting,
+} = useEntrySave();
+const { success: showSuccess, error: showError } = useToast();
 
 // Load user preferences
 const { loadPreferences, isCategoryVisible } = usePreferences();
+
+// Voice composables
+const transcription = useTranscription();
+const llmStructure = useLLMStructure();
+
+// Voice state
+const showVoiceReviewModal = ref(false);
+const showTadaChecklist = ref(false);
+const currentTranscription = ref<TranscriptionResult | null>(null);
+const extractedTadas = ref<ExtractedTada[]>([]);
+const recordingDuration = ref(0);
+const voiceStatus = ref<VoiceRecordingStatus>("idle");
+
+// Voice mode toggle: journal (single entry) or tada (multi-extract)
+const voiceMode = ref<"journal" | "tada">("journal");
 
 // Load preferences on mount
 onMounted(() => {
@@ -143,6 +166,158 @@ async function submitEntry() {
   if (result) {
     showSuccess("Entry saved! ✨");
   }
+}
+
+// Voice recording handlers - store live transcription text
+const liveTranscriptionText = ref("");
+
+function handleVoiceLiveTranscription(text: string) {
+  liveTranscriptionText.value = text;
+}
+
+async function handleVoiceComplete(blob: Blob, duration: number) {
+  recordingDuration.value = duration;
+
+  // Use the live transcription text that was collected during recording
+  const transcriptText =
+    liveTranscriptionText.value || transcription.result.value?.text || "";
+
+  if (!transcriptText.trim()) {
+    voiceStatus.value = "error";
+    showError(
+      "No speech was detected. Please try speaking clearly into the microphone.",
+    );
+    liveTranscriptionText.value = "";
+    return;
+  }
+
+  // Create a result object from the live transcription
+  const result: TranscriptionResult = {
+    text: transcriptText,
+    provider: "web-speech",
+    processingMethod: "web-speech",
+    confidence: 0.8,
+    duration: duration,
+  };
+
+  currentTranscription.value = result;
+  liveTranscriptionText.value = ""; // Reset for next recording
+
+  if (voiceMode.value === "tada") {
+    // Tada mode: extract multiple tadas from transcription
+    voiceStatus.value = "processing";
+    const extraction = await llmStructure.extractTadas(result.text);
+
+    if (extraction && extraction.tadas.length > 0) {
+      extractedTadas.value = extraction.tadas;
+      showTadaChecklist.value = true;
+      voiceStatus.value = "idle";
+    } else if (extraction?.journalFallback) {
+      // No tadas found, offer journal fallback
+      showVoiceReviewModal.value = true;
+      voiceStatus.value = "idle";
+    } else {
+      voiceStatus.value = "error";
+      showError(
+        extraction?.error || "Could not extract tadas from your voice input",
+      );
+    }
+  } else {
+    // Journal mode: show review modal
+    showVoiceReviewModal.value = true;
+    voiceStatus.value = "idle";
+  }
+}
+
+function handleVoiceCancel() {
+  voiceStatus.value = "idle";
+}
+
+function handleVoiceError(message: string) {
+  voiceStatus.value = "error";
+  showError(message);
+}
+
+async function handleTranscriptionConfirm(
+  text: string,
+  detectedSubtype?: string,
+) {
+  if (!currentTranscription.value) return;
+
+  const voiceData: VoiceEntryData = {
+    transcription: currentTranscription.value.text,
+    sttProvider: currentTranscription.value.provider,
+    confidence: currentTranscription.value.confidence,
+    recordingDurationMs: recordingDuration.value * 1000,
+  };
+
+  const result = await createVoiceEntry(text, voiceData, {
+    navigateTo: "/",
+    subcategory: detectedSubtype,
+  });
+
+  if (result) {
+    showVoiceReviewModal.value = false;
+    currentTranscription.value = null;
+  }
+}
+
+function handleTranscriptionCancel() {
+  showVoiceReviewModal.value = false;
+  currentTranscription.value = null;
+}
+
+function handleReRecord() {
+  showVoiceReviewModal.value = false;
+  showTadaChecklist.value = false;
+  currentTranscription.value = null;
+  extractedTadas.value = [];
+  // User will tap the mic button again to re-record
+}
+
+// Tada checklist handlers
+async function handleTadaSave(selectedTadas: ExtractedTada[]) {
+  if (selectedTadas.length === 0) return;
+
+  const result = await createBatchTadas(selectedTadas);
+
+  if (result) {
+    showTadaChecklist.value = false;
+    extractedTadas.value = [];
+    currentTranscription.value = null;
+    // Navigate to home after batch save
+    await navigateTo("/");
+  }
+}
+
+async function handleTadaSaveAsJournal(text: string) {
+  if (!currentTranscription.value) return;
+
+  const voiceData: VoiceEntryData = {
+    transcription: currentTranscription.value.text,
+    sttProvider: currentTranscription.value.provider,
+    confidence: currentTranscription.value.confidence,
+    recordingDurationMs: recordingDuration.value * 1000,
+  };
+
+  const result = await createVoiceEntry(text, voiceData, {
+    navigateTo: "/",
+  });
+
+  if (result) {
+    showTadaChecklist.value = false;
+    extractedTadas.value = [];
+    currentTranscription.value = null;
+  }
+}
+
+function handleTadaCancel() {
+  showTadaChecklist.value = false;
+  extractedTadas.value = [];
+}
+
+function handleTadaUpdate(updated: ExtractedTada[]) {
+  extractedTadas.value = updated;
 }
 </script>
 
@@ -374,7 +549,98 @@ async function submitEntry() {
           <span>Save Entry</span>
         </template>
       </button>
+
+      <!-- Divider with "or" -->
+      <div class="flex items-center gap-4 my-2">
+        <div class="flex-1 h-px bg-indigo-200 dark:bg-indigo-700" />
+        <span class="text-sm text-indigo-400 dark:text-indigo-500">or</span>
+        <div class="flex-1 h-px bg-indigo-200 dark:bg-indigo-700" />
+      </div>
+
+      <!-- Voice Recording Section -->
+      <div class="flex flex-col items-center py-4">
+        <p class="text-sm text-indigo-600 dark:text-indigo-400 mb-3">
+          Speak your thoughts 🎤
+        </p>
+
+        <!-- Voice Mode Toggle -->
+        <div
+          class="flex items-center gap-2 mb-4 p-1 bg-stone-100 dark:bg-stone-700 rounded-lg"
+        >
+          <button
+            type="button"
+            class="px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
+            :class="
+              voiceMode === 'journal'
+                ? 'bg-white dark:bg-stone-600 text-indigo-600 dark:text-indigo-300 shadow-sm'
+                : 'text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-300'
+            "
+            @click="voiceMode = 'journal'"
+          >
+            📝 Journal
+          </button>
+          <button
+            type="button"
+            class="px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
+            :class="
+              voiceMode === 'tada'
+                ? 'bg-white dark:bg-stone-600 text-indigo-600 dark:text-indigo-300 shadow-sm'
+                : 'text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-300'
+            "
+            @click="voiceMode = 'tada'"
+          >
+            ⚡ Ta-Das
+          </button>
+        </div>
+
+        <p class="text-xs text-stone-500 dark:text-stone-400 mb-3">
+          {{
+            voiceMode === "journal"
+              ? "Create a single journal entry"
+              : "Extract multiple tadas from your speech"
+          }}
+        </p>
+
+        <VoiceRecorder
+          :mode="voiceMode"
+          @complete="handleVoiceComplete"
+          @cancel="handleVoiceCancel"
+          @error="handleVoiceError"
+          @transcription="handleVoiceLiveTranscription"
+        />
+        <VoiceStatusIndicator
+          v-if="voiceStatus !== 'idle'"
+          :status="voiceStatus"
+          :progress="transcription.progress.value"
+          class="mt-3"
+        />
+      </div>
     </form>
+
+    <!-- Voice Review Modal -->
+    <VoiceReviewModal
+      :visible="showVoiceReviewModal"
+      :transcription="currentTranscription"
+      :duration="recordingDuration"
+      mode="journal"
+      :loading="isSubmitting"
+      @confirm="handleTranscriptionConfirm"
+      @cancel="handleTranscriptionCancel"
+      @re-record="handleReRecord"
+    />
+
+    <!-- Tada Checklist Review -->
+    <TadaChecklistReview
+      v-if="showTadaChecklist"
+      :tadas="extractedTadas"
+      :transcription="currentTranscription?.text || ''"
+      :loading="isSubmitting"
+      @save="handleTadaSave"
+      @save-as-journal="handleTadaSaveAsJournal"
+      @cancel="handleTadaCancel"
+      @re-record="handleReRecord"
+      @update="handleTadaUpdate"
+    />
 
     <!-- Emoji Picker -->
     <EmojiPicker

@@ -6,6 +6,8 @@ import {
   getSubcategoryEmoji,
   getTimedCategories,
 } from "~/utils/categoryDefaults";
+import { extractTimerNoteData } from "~/utils/tadaExtractor";
+import type { ExtractedTada } from "~/types/extraction";
 import type { TimerPreset } from "~/server/db/schema";
 
 // Use unified entry save composable
@@ -132,6 +134,86 @@ const showPostSessionModal = ref(false);
 const sessionMood = ref<number | null>(null);
 const sessionReflection = ref("");
 const pendingIncludeOvertime = ref(true);
+
+// Voice recording for reflection
+const showVoiceRecorder = ref(false);
+const voiceTranscription = ref<string | null>(null);
+const isTranscribing = ref(false);
+const transcription = useTranscription();
+
+// Voice-extracted data for timer sessions
+const extractedQualityRating = ref<number | null>(null);
+const extractedBonusTadas = ref<ExtractedTada[]>([]);
+const showBonusTadasPanel = ref(false);
+const timerLiveTranscriptionText = ref("");
+
+// Handle live transcription during recording
+function handleVoiceLiveTranscription(text: string) {
+  timerLiveTranscriptionText.value = text;
+}
+
+// Handle voice recording complete
+async function handleVoiceComplete(_blob: Blob, _duration: number) {
+  // Use the live transcription text that was collected during recording
+  const transcriptText =
+    timerLiveTranscriptionText.value || transcription.result.value?.text || "";
+  timerLiveTranscriptionText.value = ""; // Reset for next recording
+
+  if (!transcriptText.trim()) {
+    isTranscribing.value = false;
+    showVoiceRecorder.value = false;
+    return; // Silently skip if no speech detected
+  }
+
+  // Create a result object from the live transcription
+  const result = {
+    text: transcriptText,
+    provider: "web-speech" as const,
+    processingMethod: "web-speech" as const,
+    confidence: 0.8,
+  };
+
+  // Extract structured data from voice transcription
+  const extracted = extractTimerNoteData(result.text);
+
+  // Auto-fill quality rating if detected with high confidence
+  if (extracted.quality.quality && extracted.quality.confidence >= 0.7) {
+    extractedQualityRating.value = extracted.quality.quality;
+    sessionMood.value = extracted.quality.quality; // Also set mood
+  }
+
+  // Show bonus tadas panel if any detected
+  if (extracted.bonusTadas.length > 0) {
+    extractedBonusTadas.value = extracted.bonusTadas;
+    showBonusTadasPanel.value = true;
+  }
+
+  // Set main notes (without bonus portion)
+  const cleanNotes = extracted.mainNotes;
+  sessionReflection.value = sessionReflection.value
+    ? `${sessionReflection.value}\n\n🎤 ${cleanNotes}`
+    : `🎤 ${cleanNotes}`;
+  voiceTranscription.value = result.text;
+  showVoiceRecorder.value = false;
+}
+
+function handleVoiceError(message: string) {
+  console.error("Voice recording error:", message);
+  showVoiceRecorder.value = false;
+}
+
+// Toggle selection of a bonus tada
+function toggleBonusTada(tadaId: string) {
+  const tada = extractedBonusTadas.value.find((t) => t.id === tadaId);
+  if (tada) {
+    tada.selected = !tada.selected;
+  }
+}
+
+// Dismiss bonus tadas panel
+function dismissBonusTadas() {
+  showBonusTadasPanel.value = false;
+}
 
 // Derive subcategory options from selected category
 const subcategoryOptions = computed(() => {
@@ -643,6 +725,7 @@ async function saveSession(includeOvertime: boolean = true) {
         : totalFixedSeconds
       : elapsedSeconds.value;
 
+  // Create the main timer entry
   const result = await createEntry(
     {
       type: "timed",
@@ -660,19 +743,56 @@ async function saveSession(includeOvertime: boolean = true) {
         })),
         warmUpSeconds: warmUpSeconds.value,
         mood: sessionMood.value,
+        qualityRating: extractedQualityRating.value ?? undefined,
         reflection: sessionReflection.value || undefined,
       },
       tags: [selectedCategory.value, selectedSubcategory.value],
     },
     {
-      navigateTo: "/",
+      navigateTo:
+        extractedBonusTadas.value.filter((t) => t.selected).length > 0
+          ? undefined
+          : "/",
       showSuccessToast: false, // Navigate silently
     },
   );
 
+  // If main entry saved, also create any selected bonus tadas
+  if (result && extractedBonusTadas.value.length > 0) {
+    const selectedBonusTadas = extractedBonusTadas.value.filter(
+      (t) => t.selected,
+    );
+    for (const tada of selectedBonusTadas) {
+      await createEntry(
+        {
+          type: "tada",
+          name: tada.title,
+          category: tada.category || "personal",
+          subcategory: tada.subcategory,
+          data: {
+            fromVoice: true,
+            significance: tada.significance,
+            originalText: tada.originalText,
+          },
+          tags: [tada.category || "personal"],
+        },
+        {
+          navigateTo: undefined, // Don't navigate for each bonus
+          showSuccessToast: false,
+        },
+      );
+    }
+    // Navigate after all entries created
+    navigateTo("/");
+  }
+
   // Only reset if save succeeded
   if (result) {
     resetTimer();
+    // Clear bonus tadas state
+    extractedBonusTadas.value = [];
+    extractedQualityRating.value = null;
+    showBonusTadasPanel.value = false;
   }
 }
 
@@ -1467,12 +1587,146 @@ onUnmounted(() => {
           >
             Reflection (optional)
           </label>
+
+          <!-- Voice or Text Toggle -->
+          <div class="flex gap-2 mb-2">
+            <button
+              type="button"
+              class="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg border transition-colors"
+              :class="
+                !showVoiceRecorder
+                  ? 'bg-indigo-50 dark:bg-indigo-900/30 border-indigo-300 dark:border-indigo-600 text-indigo-700 dark:text-indigo-300'
+                  : 'bg-stone-100 dark:bg-stone-700 border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-400'
+              "
+              @click="showVoiceRecorder = false"
+            >
+              ✍️ Type
+            </button>
+            <button
+              type="button"
+              class="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg border transition-colors"
+              :class="
+                showVoiceRecorder
+                  ? 'bg-indigo-50 dark:bg-indigo-900/30 border-indigo-300 dark:border-indigo-600 text-indigo-700 dark:text-indigo-300'
+                  : 'bg-stone-100 dark:bg-stone-700 border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-400'
+              "
+              @click="showVoiceRecorder = true"
+            >
+              🎤 Speak
+            </button>
+          </div>
+
+          <!-- Text input -->
           <textarea
+            v-if="!showVoiceRecorder"
             v-model="sessionReflection"
             placeholder="Any thoughts from this session?"
             rows="3"
             class="w-full px-3 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-700 text-stone-800 dark:text-stone-100 text-sm resize-none"
           />
+
+          <!-- Voice recorder -->
+          <div v-else class="flex flex-col items-center py-4">
+            <p
+              v-if="isTranscribing"
+              class="text-sm text-indigo-600 dark:text-indigo-400 mb-2"
+            >
+              Transcribing...
+            </p>
+            <VoiceRecorder
+              v-else
+              mode="journal"
+              compact
+              @complete="handleVoiceComplete"
+              @cancel="showVoiceRecorder = false"
+              @error="handleVoiceError"
+              @transcription="handleVoiceLiveTranscription"
+            />
+            <p class="text-xs text-stone-500 dark:text-stone-400 mt-2">
+              Tap to record your reflection
+            </p>
+          </div>
+
+          <!-- Show transcription preview if available -->
+          <div
+            v-if="voiceTranscription && !showVoiceRecorder"
+            class="p-2 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg text-sm text-indigo-700 dark:text-indigo-300"
+          >
+            🎤 {{ voiceTranscription }}
+          </div>
+        </div>
+
+        <!-- Bonus Tadas Panel (from voice extraction) -->
+        <div
+          v-if="extractedBonusTadas.length > 0"
+          class="space-y-2 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-700"
+        >
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-medium text-amber-800 dark:text-amber-200">
+              ✨ Bonus Ta-Das detected!
+            </h3>
+            <button
+              type="button"
+              class="text-xs text-amber-600 dark:text-amber-400 hover:underline"
+              @click="dismissBonusTadas"
+            >
+              Dismiss all
+            </button>
+          </div>
+          <p class="text-xs text-amber-700 dark:text-amber-300 mb-2">
+            We heard you mention some accomplishments. Save them too?
+          </p>
+          <div class="space-y-2">
+            <label
+              v-for="tada in extractedBonusTadas"
+              :key="tada.id"
+              class="flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors"
+              :class="
+                tada.selected
+                  ? 'bg-amber-100 dark:bg-amber-800/30'
+                  : 'bg-white dark:bg-stone-700 opacity-60'
+              "
+            >
+              <input
+                type="checkbox"
+                :checked="tada.selected"
+                class="w-4 h-4 rounded border-amber-400 text-amber-600 focus:ring-amber-500"
+                @change="toggleBonusTada(tada.id)"
+              />
+              <span class="flex-1 text-sm text-stone-800 dark:text-stone-100">
+                {{ tada.title }}
+              </span>
+              <span
+                v-if="tada.significance === 'major'"
+                class="text-xs px-1.5 py-0.5 rounded bg-amber-200 dark:bg-amber-700 text-amber-800 dark:text-amber-200"
+              >
+                Major!
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Quality Rating (if detected from voice) -->
+        <div
+          v-if="extractedQualityRating"
+          class="flex items-center gap-2 p-2 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-700"
+        >
+          <span class="text-lg">{{
+            ["😔", "😐", "🙂", "😊", "🤩"][extractedQualityRating - 1]
+          }}</span>
+          <span class="text-sm text-green-800 dark:text-green-200">
+            Quality rating auto-detected from your reflection
+          </span>
+          <button
+            type="button"
+            class="ml-auto text-xs text-green-600 dark:text-green-400 hover:underline"
+            @click="
+              extractedQualityRating = null;
+              sessionMood = null;
+            "
+          >
+            Clear
+          </button>
         </div>
 
         <!-- Actions -->

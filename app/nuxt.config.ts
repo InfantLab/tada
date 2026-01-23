@@ -35,10 +35,19 @@ export default defineNuxtConfig({
     // Server-only (not exposed to client)
     databaseUrl: "file:./data/db.sqlite",
 
+    // Voice feature API keys (server-only)
+    groqApiKey: "",
+    openaiApiKey: "",
+    anthropicApiKey: "",
+    deepgramApiKey: "",
+
     // Public (exposed to client)
     public: {
       appName: "Tada",
-      appVersion: "0.1.0",
+      appVersion: "0.3.0",
+      // Voice feature flags
+      voiceEnabled: true,
+      voiceFreeLimit: 50,
     },
   },
 
@@ -139,7 +148,13 @@ export default defineNuxtConfig({
   vite: {
     // Pre-bundle heavy dependencies
     optimizeDeps: {
-      include: ["vue", "vue-router", "@vueuse/core", "drizzle-orm", "emoji-picker-element"],
+      include: [
+        "vue",
+        "vue-router",
+        "@vueuse/core",
+        "drizzle-orm",
+        "emoji-picker-element",
+      ],
     },
     // Faster builds
     build: {

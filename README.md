@@ -22,8 +22,9 @@ Ta-Da! inverts the traditional productivity mindset:
 
 Read more: [design/philosophy.md](design/philosophy.md)
 
-## Features (v0.2.0)
+## Features (v0.3.0)
 
+- **🎤 Voice Input** — Speak your accomplishments naturally; AI extracts and structures tadas automatically
 - **🌿 Graceful Rhythms** — Track natural patterns with multiple chain types (daily, weekly, monthly targets)
 - **🧘 Meditation Timer** — Unlimited or fixed modes with interval bells, presets, and warm-up countdown
 - **⚡ Ta-Da! Accomplishments** — Celebrate wins with confetti, sound effects, and streaks

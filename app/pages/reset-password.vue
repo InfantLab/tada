@@ -36,7 +36,7 @@ onMounted(async () => {
       "/api/auth/verify-reset-token",
       {
         query: { token: token.value },
-      }
+      },
     );
 
     if (!result.valid) {

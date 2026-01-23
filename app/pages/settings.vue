@@ -357,7 +357,15 @@ const emailSuccess = ref(false);
 // Fetch current user
 onMounted(async () => {
   try {
-    const session = await $fetch<{ user?: { id: string; username: string; timezone?: string; email?: string; emailVerified?: boolean } }>("/api/auth/session");
+    const session = await $fetch<{
+      user?: {
+        id: string;
+        username: string;
+        timezone?: string;
+        email?: string;
+        emailVerified?: boolean;
+      };
+    }>("/api/auth/session");
     if (session.user) {
       currentUser.value = {
         id: session.user.id,
@@ -1131,6 +1139,11 @@ onMounted(() => {
               </div>
             </div>
           </div>
+        </section>
+
+        <!-- Voice & AI Settings -->
+        <section id="section-voice">
+          <VoiceSettings />
         </section>
 
         <!-- Emoji Customization -->
