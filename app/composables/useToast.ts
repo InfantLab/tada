@@ -76,7 +76,9 @@ export const useToast = () => {
 
   const error = (message: string, options?: ToastOptions | number) => {
     const opts = typeof options === "number" ? { duration: options } : options;
-    return showToast(message, "error", opts);
+    // Errors stay longer (10s) so users can read and copy them
+    const errorOpts = { duration: 10000, ...opts };
+    return showToast(message, "error", errorOpts);
   };
 
   const warning = (message: string, options?: ToastOptions | number) => {

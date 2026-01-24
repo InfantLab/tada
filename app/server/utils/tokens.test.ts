@@ -129,15 +129,19 @@ describe("tokens", () => {
   describe("generateId", () => {
     it("generates valid UUID v4", () => {
       const id = generateId();
+      // UUID v4 format: xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx where y is 8, 9, a, or b
       expect(id).toMatch(
         /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
       );
     });
 
     it("generates unique IDs", () => {
-      const id1 = generateId();
-      const id2 = generateId();
-      expect(id1).not.toBe(id2);
+      const ids = new Set<string>();
+      for (let i = 0; i < 100; i++) {
+        ids.add(generateId());
+      }
+      // All 100 IDs should be unique
+      expect(ids.size).toBe(100);
     });
   });
 });

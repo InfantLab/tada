@@ -630,7 +630,7 @@ function handleTadaUpdate(updated: ExtractedTada[]) {
     />
 
     <!-- Tada Checklist Review -->
-    <TadaChecklistReview
+    <VoiceTadaChecklistReview
       v-if="showTadaChecklist"
       :tadas="extractedTadas"
       :transcription="currentTranscription?.text || ''"
