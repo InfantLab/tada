@@ -9,6 +9,9 @@ import type { VoiceRecordingState, VoiceRecordingStatus } from "~/types/voice";
 /** Maximum recording duration in milliseconds (5 minutes) */
 const MAX_RECORDING_DURATION = 5 * 60 * 1000;
 
+/** Target latency for recording start (<100ms) */
+const TARGET_START_LATENCY_MS = 100;
+
 export function useVoiceCapture() {
   // State
   const status = ref<VoiceRecordingStatus>("idle");
@@ -17,6 +20,11 @@ export function useVoiceCapture() {
   const duration = ref(0);
   const error = ref<string | null>(null);
   const permissionStatus = ref<PermissionState | null>(null);
+
+  // Latency tracking
+  const lastStartLatency = ref<number | null>(null);
+  const averageStartLatency = ref<number>(0);
+  let latencyMeasurements: number[] = [];
 
   // Internal refs
   let mediaRecorder: MediaRecorder | null = null;
@@ -120,6 +128,9 @@ export function useVoiceCapture() {
    * Start recording audio
    */
   async function startRecording(): Promise<boolean> {
+    // Start latency tracking
+    const startRequestTime = performance.now();
+
     // Reset state
     error.value = null;
     audioBlob.value = null;
@@ -171,6 +182,26 @@ export function useVoiceCapture() {
       mediaRecorder.start(100); // Collect data every 100ms
       status.value = "recording";
       permissionStatus.value = "granted";
+
+      // Track start latency
+      const startLatency = performance.now() - startRequestTime;
+      lastStartLatency.value = startLatency;
+      latencyMeasurements.push(startLatency);
+
+      // Keep only last 10 measurements for rolling average
+      if (latencyMeasurements.length > 10) {
+        latencyMeasurements = latencyMeasurements.slice(-10);
+      }
+      averageStartLatency.value =
+        latencyMeasurements.reduce((a, b) => a + b, 0) /
+        latencyMeasurements.length;
+
+      // Log warning if latency exceeds target
+      if (startLatency > TARGET_START_LATENCY_MS) {
+        console.warn(
+          `[useVoiceCapture] Recording start latency ${startLatency.toFixed(0)}ms exceeds target of ${TARGET_START_LATENCY_MS}ms`,
+        );
+      }
 
       // Start audio level updates
       updateAudioLevel();
@@ -308,6 +339,10 @@ export function useVoiceCapture() {
     isRecording,
     hasRecording,
     formattedDuration,
+
+    // Latency metrics
+    lastStartLatency: readonly(lastStartLatency),
+    averageStartLatency: readonly(averageStartLatency),
 
     // Actions
     requestPermission,

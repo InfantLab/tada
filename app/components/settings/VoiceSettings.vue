@@ -6,6 +6,7 @@
  */
 
 import type { STTProvider, LLMProvider } from "~/types/voice";
+import ModelDownloadProgress from "~/components/voice/ModelDownloadProgress.vue";
 
 const voiceSettings = useVoiceSettings();
 const { success: showSuccess, error: showError } = useToast();
@@ -30,6 +31,20 @@ const showApiKeyInput = ref({
 
 const testingKey = ref<string | null>(null);
 
+// WiFi-only download preference
+const wifiOnlyDownload = ref(true);
+
+// Handle model download events
+function handleModelDownload(modelSize: "tiny" | "base" | "small"): void {
+  showSuccess(
+    `${modelSize.charAt(0).toUpperCase() + modelSize.slice(1)} model downloaded successfully!`,
+  );
+}
+
+function handleModelError(errorMessage: string): void {
+  showError(errorMessage);
+}
+
 // STT provider options
 const sttProviderOptions: Array<{
   value: STTProvider;
@@ -53,8 +68,8 @@ const sttProviderOptions: Array<{
   },
   {
     value: "whisper-cloud",
-    label: "Cloud (Groq)",
-    description: "Fast, requires API key",
+    label: "Cloud",
+    description: "Fast, uses server AI",
   },
 ];
 
@@ -66,12 +81,20 @@ const llmProviderOptions: Array<{
 }> = [
   {
     value: "auto",
-    label: "Auto",
-    description: "Automatically select best option",
+    label: "Auto (Recommended)",
+    description:
+      "Uses fast server AI (Groq), or your own keys below if configured",
   },
-  { value: "groq", label: "Groq", description: "Fast, free tier available" },
-  { value: "openai", label: "OpenAI", description: "GPT models" },
-  { value: "anthropic", label: "Anthropic", description: "Claude models" },
+  {
+    value: "openai",
+    label: "OpenAI (BYOK)",
+    description: "Always use your OpenAI key (gpt-4o-mini)",
+  },
+  {
+    value: "anthropic",
+    label: "Anthropic (BYOK)",
+    description: "Always use your Claude key (claude-3-haiku)",
+  },
 ];
 
 // Masked API key display
@@ -105,6 +128,7 @@ async function saveApiKey(
     ciphertext: key,
     iv: "",
     salt: "",
+    addedAt: new Date().toISOString(),
   };
 
   voiceSettings.setApiKey(provider, encryptedKey);
@@ -319,13 +343,100 @@ const usagePercent = computed(() => {
       </button>
     </div>
 
+    <!-- WiFi-Only Download Toggle -->
+    <div
+      class="flex items-center justify-between p-4 bg-stone-50 dark:bg-stone-800 rounded-xl"
+    >
+      <div>
+        <span class="font-medium text-stone-800 dark:text-stone-100">
+          WiFi-Only Model Download
+        </span>
+        <p class="text-sm text-stone-500 dark:text-stone-400">
+          Only download AI models when connected to WiFi
+        </p>
+      </div>
+      <button
+        type="button"
+        class="relative w-12 h-7 rounded-full transition-colors"
+        :class="
+          wifiOnlyDownload
+            ? 'bg-indigo-500 dark:bg-indigo-600'
+            : 'bg-stone-300 dark:bg-stone-600'
+        "
+        role="switch"
+        :aria-checked="wifiOnlyDownload"
+        @click="wifiOnlyDownload = !wifiOnlyDownload"
+      >
+        <span
+          class="absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform"
+          :class="wifiOnlyDownload ? 'translate-x-5' : ''"
+        />
+      </button>
+    </div>
+
+    <!-- On-Device Model Downloads (shown when On-Device STT is selected) -->
+    <div
+      v-if="voiceSettings.sttProvider.value === 'whisper-wasm'"
+      class="space-y-4"
+    >
+      <h3 class="text-sm font-medium text-stone-700 dark:text-stone-300">
+        On-Device Speech Model
+      </h3>
+      <p class="text-sm text-stone-500 dark:text-stone-400">
+        Download a Whisper model for private, on-device transcription. Larger
+        models are more accurate but take longer.
+      </p>
+      <div class="grid gap-3">
+        <ModelDownloadProgress
+          model-size="tiny"
+          :wifi-only="wifiOnlyDownload"
+          @download-complete="handleModelDownload('tiny')"
+          @download-error="handleModelError"
+        />
+        <ModelDownloadProgress
+          model-size="base"
+          :wifi-only="wifiOnlyDownload"
+          @download-complete="handleModelDownload('base')"
+          @download-error="handleModelError"
+        />
+        <ModelDownloadProgress
+          model-size="small"
+          :wifi-only="wifiOnlyDownload"
+          @download-complete="handleModelDownload('small')"
+          @download-error="handleModelError"
+        />
+      </div>
+    </div>
+
+    <!-- How It Works -->
+    <div class="p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl">
+      <div class="flex gap-3">
+        <span class="text-xl">⚡</span>
+        <div>
+          <p class="text-sm font-medium text-indigo-800 dark:text-indigo-200">
+            How AI Processing Works
+          </p>
+          <p class="text-sm text-indigo-700 dark:text-indigo-300 mt-1">
+            <strong>Default:</strong> Your transcriptions are sent to the Ta-Da
+            server, which uses Groq (Llama 3.3 70B) to extract tadas. Fast &
+            free up to 50/month.
+          </p>
+          <p class="text-sm text-indigo-700 dark:text-indigo-300 mt-1">
+            <strong>BYOK:</strong> Add your own OpenAI or Anthropic key below to
+            use your own account instead — unlimited, billed to you directly.
+          </p>
+        </div>
+      </div>
+    </div>
+
     <!-- API Keys Section -->
     <div class="space-y-4">
       <h3 class="text-sm font-medium text-stone-700 dark:text-stone-300">
-        API Keys (BYOK)
+        Bring Your Own Key (BYOK)
       </h3>
       <p class="text-sm text-stone-500 dark:text-stone-400">
-        Add your own API keys for unlimited voice processing
+        Optional: Add your OpenAI or Anthropic API key to use your own account
+        for unlimited processing
       </p>
 
       <!-- OpenAI -->
@@ -439,62 +550,6 @@ const usagePercent = computed(() => {
           </button>
         </div>
       </div>
-
-      <!-- Groq -->
-      <div class="border border-stone-200 dark:border-stone-700 rounded-xl p-4">
-        <div class="flex items-center justify-between">
-          <div>
-            <span class="font-medium text-stone-800 dark:text-stone-100"
-              >Groq</span
-            >
-            <p class="text-sm text-stone-500 dark:text-stone-400">
-              {{ getMaskedKey("groq") }}
-            </p>
-          </div>
-          <div class="flex items-center gap-2">
-            <button
-              v-if="voiceSettings.hasApiKey('groq')"
-              type="button"
-              class="px-3 py-1.5 text-sm rounded-lg bg-stone-100 dark:bg-stone-700 hover:bg-stone-200 dark:hover:bg-stone-600 transition-colors"
-              :disabled="testingKey === 'groq'"
-              @click="testConnection('groq')"
-            >
-              {{ testingKey === "groq" ? "Testing..." : "Test" }}
-            </button>
-            <button
-              v-if="voiceSettings.hasApiKey('groq')"
-              type="button"
-              class="px-3 py-1.5 text-sm rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
-              @click="removeKey('groq')"
-            >
-              Remove
-            </button>
-            <button
-              v-else
-              type="button"
-              class="px-3 py-1.5 text-sm rounded-lg bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-200 dark:hover:bg-indigo-900/50 transition-colors"
-              @click="toggleKeyInput('groq')"
-            >
-              {{ showApiKeyInput.groq ? "Cancel" : "Add Key" }}
-            </button>
-          </div>
-        </div>
-        <div v-if="showApiKeyInput.groq" class="mt-3 flex gap-2">
-          <input
-            v-model="apiKeyInputs.groq"
-            type="password"
-            placeholder="gsk_..."
-            class="flex-1 px-3 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-700 text-stone-800 dark:text-stone-100"
-          />
-          <button
-            type="button"
-            class="px-4 py-2 rounded-lg bg-indigo-500 text-white hover:bg-indigo-600 transition-colors"
-            @click="saveApiKey('groq')"
-          >
-            Save
-          </button>
-        </div>
-      </div>
     </div>
 
     <!-- Privacy Note -->
@@ -505,12 +560,26 @@ const usagePercent = computed(() => {
           <p class="text-sm font-medium text-amber-800 dark:text-amber-200">
             Privacy Note
           </p>
-          <p class="text-sm text-amber-700 dark:text-amber-300 mt-1">
-            API keys are stored locally on your device. Audio is never persisted
-            and is deleted immediately after processing. Browser speech
-            recognition may send audio to Google/Apple depending on your
-            browser.
-          </p>
+          <ul
+            class="text-sm text-amber-700 dark:text-amber-300 mt-1 space-y-1 list-disc list-inside"
+          >
+            <li>
+              <strong>Speech-to-text:</strong> Browser sends audio to
+              Google/Apple for transcription
+            </li>
+            <li>
+              <strong>AI extraction:</strong> Text sent to Ta-Da server → Groq
+              (default) or your BYOK provider
+            </li>
+            <li>
+              <strong>Your API keys:</strong> Stored locally on your device,
+              sent directly to provider
+            </li>
+            <li>
+              <strong>Audio:</strong> Never persisted — deleted immediately
+              after transcription
+            </li>
+          </ul>
         </div>
       </div>
     </div>

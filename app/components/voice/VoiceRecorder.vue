@@ -27,8 +27,8 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const emit = defineEmits<{
-  /** Emitted when recording completes with audio blob */
-  complete: [blob: Blob, duration: number];
+  /** Emitted when recording completes with audio blob and transcription */
+  complete: [blob: Blob, duration: number, transcription: string];
   /** Emitted when recording is cancelled */
   cancel: [];
   /** Emitted on error */
@@ -106,24 +106,11 @@ async function startOrStopRecording() {
 
     // Start live transcription in parallel
     liveText.value = "";
-    const transcriptionStarted = await transcription.startLiveTranscription({
+    await transcription.startLiveTranscription({
       onInterim: (text) => {
-        // Show interim results visually
         liveText.value = text;
-        console.log("[VoiceRecorder] Interim text:", text);
       },
     });
-
-    if (!transcriptionStarted && transcription.error.value) {
-      // Transcription failed but recording may have started
-      console.warn(
-        "[VoiceRecorder] Live transcription failed:",
-        transcription.error.value,
-      );
-      // Continue with recording - we'll handle this in complete
-    } else {
-      console.log("[VoiceRecorder] Live transcription started successfully");
-    }
   }
 }
 
@@ -177,69 +164,68 @@ watch(
       const transcriptText = transcription.liveTranscript.value || "";
       let finalText = resultText || liveText.value || transcriptText || "";
 
-      console.log("[VoiceRecorder] Recording complete. Transcription:", {
-        resultText,
-        liveText: liveText.value,
-        transcriptText,
-        finalText,
-        hadError: !!transcription.error.value,
-      });
+      // If we have text, emit and return
+      if (finalText.trim()) {
+        emit("transcription", finalText.trim());
+        emit("complete", blob, voiceCapture.duration.value, finalText.trim());
+        liveText.value = "";
+        return;
+      }
 
-      // If Web Speech failed and we have no text, try fallback to Whisper cloud API
-      if (!finalText.trim() && transcription.error.value) {
-        console.log(
-          "[VoiceRecorder] Web Speech failed, attempting Whisper API fallback...",
-        );
-
-        // Check if user has a Groq API key configured
-        const hasApiKey = voiceSettings.hasApiKey("groq");
-        if (hasApiKey) {
-          try {
-            const whisperResult = await transcription.transcribe(blob, {
-              forceProvider: "whisper-cloud",
-            });
-            if (whisperResult?.text) {
-              console.log(
-                "[VoiceRecorder] Whisper fallback succeeded:",
-                whisperResult.text,
-              );
-              finalText = whisperResult.text;
-            }
-          } catch (err) {
-            console.error("[VoiceRecorder] Whisper fallback failed:", err);
+      // No text captured - try Whisper fallback if available
+      const hasApiKey = voiceSettings.hasApiKey("groq");
+      if (hasApiKey) {
+        try {
+          const whisperResult = await transcription.transcribe(blob, {
+            forceProvider: "whisper-cloud",
+          });
+          if (whisperResult?.text) {
+            finalText = whisperResult.text;
+            emit("transcription", finalText.trim());
+            emit(
+              "complete",
+              blob,
+              voiceCapture.duration.value,
+              finalText.trim(),
+            );
+            liveText.value = "";
+            return;
           }
-        } else {
-          console.log(
-            "[VoiceRecorder] No Groq API key configured, cannot use Whisper fallback",
-          );
+        } catch {
+          // Whisper fallback failed, continue to error handling
         }
       }
 
-      // Emit transcription FIRST (before complete) so parent has the text when handling completion
-      if (finalText.trim()) {
-        console.log(
-          "[VoiceRecorder] Emitting transcription event:",
-          finalText.trim(),
-        );
-        emit("transcription", finalText.trim());
+      // Still no text - emit appropriate error
+      let errorMessage: string;
+      const errorLower = (transcription.error.value || "").toLowerCase();
+
+      if (voiceCapture.duration.value < 1) {
+        errorMessage =
+          "Recording was too short. Hold the button longer and speak clearly.";
+      } else if (errorLower.includes("network")) {
+        errorMessage =
+          "Speech recognition temporarily unavailable. Try speaking in shorter segments or check your internet connection.";
+      } else if (
+        errorLower.includes("not-allowed") ||
+        errorLower.includes("denied")
+      ) {
+        errorMessage =
+          "Microphone access denied. Please allow microphone access in browser settings.";
+      } else if (transcription.error.value) {
+        errorMessage = transcription.error.value;
+      } else {
+        errorMessage =
+          "No speech detected. Please speak clearly into the microphone and try again.";
       }
 
-      emit("complete", blob, voiceCapture.duration.value);
-
-      // If no text and there was an error, emit error
-      if (!finalText.trim() && transcription.error.value) {
-        console.log(
-          "[VoiceRecorder] Emitting error (no text):",
-          transcription.error.value,
-        );
-        emit("error", transcription.error.value);
-      }
+      emit("error", errorMessage);
       liveText.value = "";
     }
   },
 );
 
-// Watch for errors
+// Watch for errors from voice capture (microphone issues)
 watch(
   () => voiceCapture.error.value,
   (err) => {
@@ -249,19 +235,12 @@ watch(
   },
 );
 
-// Watch for transcription errors - only emit blocking errors
+// Watch for transcription errors - only emit if critical and no text captured
 watch(
   () => transcription.error.value,
-  (err) => {
-    if (err) {
-      console.error("[VoiceRecorder] Transcription error:", err);
-      // Network errors during live transcription are not blocking -
-      // recording can continue and we'll show the error at completion
-      // Only emit if recording is not active (i.e., this is a blocking startup error)
-      if (!voiceCapture.isRecording.value) {
-        emit("error", err);
-      }
-    }
+  (_err) => {
+    // Don't emit error here - we handle it in the audioBlob watcher
+    // This prevents duplicate errors and allows fallback to work
   },
 );
 

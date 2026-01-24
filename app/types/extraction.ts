@@ -15,6 +15,7 @@ export type JournalSubcategory = "dream" | "reflection" | "gratitude" | "note";
 export interface ExtractedTada {
   id: string;
   title: string;
+  notes?: string;
   category: string;
   subcategory?: string;
   significance: TadaSignificance;

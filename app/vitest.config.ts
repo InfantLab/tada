@@ -28,7 +28,7 @@ export default defineVitestConfig({
       "**/tests/api/**", // Exclude integration tests (need @nuxt/test-utils e2e rewrite)
     ],
     coverage: {
-      provider: "v8",
+      provider: "istanbul",
       reporter: ["text", "json", "html"],
       exclude: [
         "node_modules/",

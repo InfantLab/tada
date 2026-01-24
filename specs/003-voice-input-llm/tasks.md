@@ -249,18 +249,18 @@
 
 - [x] T119 [US4] Add quality rating extraction from phrases in app/utils/tadaExtractor.ts
 - [x] T120 [US4] Map "great session" → 5, "okay" → 3, "difficult" → 2 in app/utils/tadaExtractor.ts
-- [X] T121 [US4] Auto-fill quality rating in timer entry in app/pages/timer.vue
+- [x] T121 [US4] Auto-fill quality rating in timer entry in app/pages/timer.vue
 
 ### Bonus Tada Detection
 
 - [x] T122 [US4] Detect bonus tadas in timer notes ("also I fixed...") in app/utils/tadaExtractor.ts
-- [X] T123 [US4] Show quick-accept for bonus tadas in timer flow in app/pages/timer.vue
-- [X] T124 [US4] Create both timer entry and bonus tada entries in app/pages/timer.vue
+- [x] T123 [US4] Show quick-accept for bonus tadas in timer flow in app/pages/timer.vue
+- [x] T124 [US4] Create both timer entry and bonus tada entries in app/pages/timer.vue
 
 ### Entry Notes
 
 - [x] T125 [US4] Add voice transcription to timer entry notes field in app/pages/timer.vue
-- [X] T126 [US4] Format voice note nicely in entry display in app/pages/entry/[id].vue
+- [x] T126 [US4] Format voice note nicely in entry display in app/pages/entry/[id].vue
 
 **Checkpoint**: User Story 4 complete - voice notes work in timer flow.
 
@@ -400,14 +400,14 @@
 
 ### Whisper WASM Worker (Advanced Offline)
 
-- [ ] T196 [P] Create whisper.worker.ts skeleton in app/workers/whisper.worker.ts
-- [ ] T197 Add transformers.js Whisper model loading in app/workers/whisper.worker.ts
-- [ ] T198 Implement transcribe message handler in app/workers/whisper.worker.ts
-- [ ] T199 Add model download progress reporting in app/workers/whisper.worker.ts
-- [ ] T200 Create model download UI with progress bar in app/components/voice/ModelDownloadProgress.vue
-- [ ] T201 Add WiFi-only download option in app/components/settings/VoiceSettings.vue
-- [ ] T202 Cache model in IndexedDB "model_cache" store in app/workers/whisper.worker.ts
-- [ ] T203 Add Whisper WASM tier to useTranscription in app/composables/useTranscription.ts
+- [x] T196 [P] Create whisper.worker.ts skeleton in app/workers/whisper.worker.ts
+- [x] T197 Add transformers.js Whisper model loading in app/workers/whisper.worker.ts
+- [x] T198 Implement transcribe message handler in app/workers/whisper.worker.ts
+- [x] T199 Add model download progress reporting in app/workers/whisper.worker.ts
+- [x] T200 Create model download UI with progress bar in app/components/voice/ModelDownloadProgress.vue
+- [x] T201 Add WiFi-only download option in app/components/settings/VoiceSettings.vue
+- [x] T202 Cache model in IndexedDB "model_cache" store in app/workers/whisper.worker.ts
+- [x] T203 Add Whisper WASM tier to useTranscription in app/composables/useTranscription.ts
 
 ### Browser Compatibility
 
@@ -430,20 +430,20 @@
 ### Performance
 
 - [x] T213 # Nuxt auto-imports handle code splitting Lazy load voice components (code splitting) in app/pages/add.vue
-- [ ] T214 Preload Whisper model on settings page visit in app/pages/settings.vue
-- [ ] T215 Add recording start latency tracking (<100ms goal) in app/composables/useVoiceCapture.ts
+- [x] T214 Preload Whisper model on settings page visit in app/pages/settings.vue
+- [x] T215 Add recording start latency tracking (<100ms goal) in app/composables/useVoiceCapture.ts
 
 ### Documentation
 
-- [X] T216 [P] Update quickstart.md Definition of Done checklist in specs/003-voice-input-llm/quickstart.md
-- [X] T217 [P] Add voice feature to DEVELOPER_GUIDE.md in docs/DEVELOPER_GUIDE.md
-- [X] T218 [P] Add voice API to README if user-facing in README.md
+- [x] T216 [P] Update quickstart.md Definition of Done checklist in specs/003-voice-input-llm/quickstart.md
+- [x] T217 [P] Add voice feature to DEVELOPER_GUIDE.md in docs/DEVELOPER_GUIDE.md
+- [x] T218 [P] Add voice API to README if user-facing in README.md
 
 ### Final Validation
 
-- [ ] T219 Run full E2E test: tap mic → speak → see entry in journal in app/tests/
-- [ ] T220 Verify 80% unit test coverage on extraction logic via bun run test:coverage
-- [ ] T221 Test in Chrome, Safari, Edge - verify browser matrix from plan.md
+- [x] T219 Run full E2E test: tap mic → speak → see entry in journal in app/tests/
+- [x] T220 Verify 80% unit test coverage on extraction logic via bun run test:coverage
+- [x] T221 Test in Chrome, Safari, Edge - verify browser matrix from plan.md
 
 **Checkpoint**: All polish complete - feature ready for release.
 

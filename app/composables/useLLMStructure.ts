@@ -1,16 +1,13 @@
 /**
  * useLLMStructure Composable
  * Handles LLM integration for structured extraction from transcriptions
+ * Uses server-side API for LLM calls (Groq managed server-side, BYOK for OpenAI/Anthropic)
  * @composable
  */
 
 import type { LLMProvider } from "~/types/voice";
-import type { ExtractionResult } from "~/types/extraction";
-import {
-  EXTRACTION_PROMPT,
-  parseExtractionResponse,
-  extractTadasRuleBased,
-} from "~/utils/tadaExtractor";
+import type { ExtractionResult, ExtractedTada } from "~/types/extraction";
+import { extractTadasRuleBased } from "~/utils/tadaExtractor";
 
 /**
  * Get the raw API key string from encrypted key
@@ -19,7 +16,7 @@ import {
  */
 function getApiKeyString(
   voiceSettings: ReturnType<typeof useVoiceSettings>,
-  provider: "openai" | "anthropic" | "groq" | "deepgram",
+  provider: "openai" | "anthropic",
 ): string | null {
   const encryptedKey = voiceSettings.getApiKey(provider);
   if (!encryptedKey) return null;
@@ -46,6 +43,19 @@ export interface UseLLMStructureReturn {
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 1000;
 
+/** Response from server structure API */
+interface ServerStructureResponse {
+  tadas: Array<{
+    name: string;
+    category?: string;
+    significance?: "minor" | "normal" | "major";
+  }>;
+  journalType?: string;
+  title?: string;
+  provider: string;
+  tokensUsed?: number;
+}
+
 /**
  * LLM integration for structured data extraction
  */
@@ -63,32 +73,6 @@ export function useLLMStructure(): UseLLMStructureReturn {
   } | null>(null);
 
   /**
-   * Determine which LLM provider to use
-   */
-  function resolveProvider(): LLMProvider {
-    const preferred = voiceSettings.preferences.value.llmProvider;
-
-    if (preferred === "auto") {
-      // Check for Groq API key first (fastest)
-      if (voiceSettings.getApiKey("groq")) {
-        return "groq";
-      }
-      // Check for OpenAI key
-      if (voiceSettings.getApiKey("openai")) {
-        return "openai";
-      }
-      // Check for Anthropic key
-      if (voiceSettings.getApiKey("anthropic")) {
-        return "anthropic";
-      }
-      // No API keys - use rule-based fallback
-      return "on-device";
-    }
-
-    return preferred;
-  }
-
-  /**
    * Sleep for retry delay
    */
   function sleep(ms: number): Promise<void> {
@@ -96,7 +80,39 @@ export function useLLMStructure(): UseLLMStructureReturn {
   }
 
   /**
-   * Extract tadas from transcription with retry logic
+   * Determine if user has their own API key configured (BYOK)
+   */
+  function getUserApiKey(): {
+    provider: "openai" | "anthropic";
+    key: string;
+  } | null {
+    const preferred = voiceSettings.preferences.value.llmProvider;
+
+    // If user specifically chose a provider and has a key, use it
+    if (preferred === "openai") {
+      const key = getApiKeyString(voiceSettings, "openai");
+      if (key) return { provider: "openai", key };
+    }
+    if (preferred === "anthropic") {
+      const key = getApiKeyString(voiceSettings, "anthropic");
+      if (key) return { provider: "anthropic", key };
+    }
+
+    // In auto mode, check if user has any BYOK configured
+    if (preferred === "auto") {
+      const openaiKey = getApiKeyString(voiceSettings, "openai");
+      if (openaiKey) return { provider: "openai", key: openaiKey };
+
+      const anthropicKey = getApiKeyString(voiceSettings, "anthropic");
+      if (anthropicKey) return { provider: "anthropic", key: anthropicKey };
+    }
+
+    return null;
+  }
+
+  /**
+   * Extract tadas from transcription using server API
+   * Server uses Groq (managed), or user's BYOK if configured
    */
   async function extractTadas(
     transcription: string,
@@ -104,39 +120,82 @@ export function useLLMStructure(): UseLLMStructureReturn {
     status.value = "extracting";
     error.value = null;
     tokenUsage.value = null;
+    const startTime = Date.now();
 
-    const provider = resolveProvider();
-    activeProvider.value = provider;
+    console.log(
+      "[useLLMStructure] extractTadas called with:",
+      transcription.substring(0, 100) + "...",
+    );
 
-    // If no LLM available, use rule-based extraction
-    if (provider === "on-device") {
-      const tadas = extractTadasRuleBased(transcription);
-      status.value = "idle";
-      return {
-        tadas,
-        provider: "on-device",
-        success: true,
-        processingTimeMs: 0,
-      };
-    }
+    // Check if user has BYOK configured
+    const userKey = getUserApiKey();
 
-    // Try LLM extraction with retries
-    let lastError: Error | null = null;
-
+    // Try server API (server has Groq key configured)
     for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
       try {
-        const result = await callLLMProvider(provider, transcription);
+        console.log(
+          `[useLLMStructure] Calling server API, attempt ${attempt + 1}`,
+        );
+
+        const headers: Record<string, string> = {};
+        if (userKey) {
+          headers["X-User-Api-Key"] = userKey.key;
+        }
+
+        const response = await $fetch<ServerStructureResponse>(
+          "/api/voice/structure",
+          {
+            method: "POST",
+            body: {
+              text: transcription,
+              mode: "tada",
+              provider: userKey?.provider, // undefined = let server choose (Groq)
+            },
+            headers: Object.keys(headers).length > 0 ? headers : undefined,
+          },
+        );
+
+        console.log("[useLLMStructure] Server response:", response);
+
+        // Convert server response to ExtractedTada format
+        const tadas: ExtractedTada[] = response.tadas.map((t, i) => ({
+          id: `extracted-${i}`,
+          title: t.name,
+          category: t.category || "life",
+          significance: t.significance || "normal",
+          selected: true,
+          confidence: 0.85,
+        }));
+
+        activeProvider.value = response.provider as LLMProvider;
+        if (response.tokensUsed) {
+          tokenUsage.value = {
+            prompt: 0,
+            completion: 0,
+            total: response.tokensUsed,
+          };
+        }
         status.value = "idle";
-        return result;
+
+        return {
+          tadas,
+          provider: response.provider as LLMProvider,
+          success: true,
+          processingTimeMs: Date.now() - startTime,
+        };
       } catch (err) {
-        lastError = err instanceof Error ? err : new Error(String(err));
         console.error(`[useLLMStructure] Attempt ${attempt + 1} failed:`, err);
 
-        // Don't retry on auth errors
+        // Check if it's a service unavailable error
+        const errMessage = err instanceof Error ? err.message : String(err);
         if (
-          lastError.message.includes("401") ||
-          lastError.message.includes("403")
+          errMessage.includes("503") ||
+          errMessage.includes("not configured")
         ) {
+          // Server doesn't have LLM configured, fall back to rule-based
+          console.log(
+            "[useLLMStructure] Server LLM not configured, using rule-based",
+          );
           break;
         }
 
@@ -147,259 +206,22 @@ export function useLLMStructure(): UseLLMStructureReturn {
       }
     }
 
-    // All retries failed - try fallback provider
-    const fallbackProvider = getFallbackProvider(provider);
-    if (fallbackProvider) {
-      try {
-        activeProvider.value = fallbackProvider;
-        const result = await callLLMProvider(fallbackProvider, transcription);
-        status.value = "idle";
-        return result;
-      } catch (err) {
-        console.error("[useLLMStructure] Fallback provider also failed:", err);
-        // Fallback also failed
-      }
-    }
-
-    // Use rule-based as final fallback
+    // Fallback to rule-based extraction
+    console.log("[useLLMStructure] Falling back to rule-based extraction");
     const tadas = extractTadasRuleBased(transcription);
+    activeProvider.value = "on-device";
     status.value = "idle";
 
     return {
       tadas,
       provider: "on-device",
       success: tadas.length > 0,
-      error: lastError?.message,
-      processingTimeMs: 0,
-    };
-  }
-
-  /**
-   * Get fallback provider
-   */
-  function getFallbackProvider(primary: LLMProvider): LLMProvider | null {
-    switch (primary) {
-      case "groq":
-        return voiceSettings.getApiKey("openai") ? "openai" : null;
-      case "openai":
-        return voiceSettings.getApiKey("anthropic") ? "anthropic" : null;
-      default:
-        return null;
-    }
-  }
-
-  /**
-   * Call specific LLM provider
-   */
-  async function callLLMProvider(
-    provider: LLMProvider,
-    transcription: string,
-  ): Promise<ExtractionResult> {
-    const startTime = Date.now();
-
-    switch (provider) {
-      case "groq":
-        return await callGroq(transcription, startTime);
-      case "openai":
-        return await callOpenAI(transcription, startTime);
-      case "anthropic":
-        return await callAnthropic(transcription, startTime);
-      default:
-        throw new Error(`Unknown LLM provider: ${provider}`);
-    }
-  }
-
-  /**
-   * Call Groq API
-   */
-  async function callGroq(
-    transcription: string,
-    startTime: number,
-  ): Promise<ExtractionResult> {
-    const apiKey = getApiKeyString(voiceSettings, "groq");
-    if (!apiKey) {
-      throw new Error("Groq API key not configured");
-    }
-
-    const response = await fetch(
-      "https://api.groq.com/openai/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "llama-3.3-70b-versatile",
-          messages: [
-            { role: "system", content: EXTRACTION_PROMPT },
-            {
-              role: "user",
-              content: `Extract tadas from this transcription:\n\n${transcription}`,
-            },
-          ],
-          temperature: 0.3,
-          max_tokens: 1024,
-          response_format: { type: "json_object" },
-        }),
-      },
-    );
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Groq API error: ${response.status} - ${errorText}`);
-    }
-
-    const data = (await response.json()) as GroqResponse;
-
-    // Track token usage
-    if (data.usage) {
-      tokenUsage.value = {
-        prompt: data.usage.prompt_tokens,
-        completion: data.usage.completion_tokens,
-        total: data.usage.total_tokens,
-      };
-    }
-
-    const content = data.choices?.[0]?.message?.content || "";
-    const parsed = parseExtractionResponse(content);
-
-    return {
-      tadas: parsed.tadas,
-      journalFallback: parsed.journalFallback,
-      provider: "groq",
-      success: parsed.tadas.length > 0 || !!parsed.journalFallback,
-      error: parsed.error,
       processingTimeMs: Date.now() - startTime,
     };
   }
 
   /**
-   * Call OpenAI API
-   */
-  async function callOpenAI(
-    transcription: string,
-    startTime: number,
-  ): Promise<ExtractionResult> {
-    const apiKey = getApiKeyString(voiceSettings, "openai");
-    if (!apiKey) {
-      throw new Error("OpenAI API key not configured");
-    }
-
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        messages: [
-          { role: "system", content: EXTRACTION_PROMPT },
-          {
-            role: "user",
-            content: `Extract tadas from this transcription:\n\n${transcription}`,
-          },
-        ],
-        temperature: 0.3,
-        max_tokens: 1024,
-        response_format: { type: "json_object" },
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
-    }
-
-    const data = (await response.json()) as OpenAIResponse;
-
-    // Track token usage
-    if (data.usage) {
-      tokenUsage.value = {
-        prompt: data.usage.prompt_tokens,
-        completion: data.usage.completion_tokens,
-        total: data.usage.total_tokens,
-      };
-    }
-
-    const content = data.choices?.[0]?.message?.content || "";
-    const parsed = parseExtractionResponse(content);
-
-    return {
-      tadas: parsed.tadas,
-      journalFallback: parsed.journalFallback,
-      provider: "openai",
-      success: parsed.tadas.length > 0 || !!parsed.journalFallback,
-      error: parsed.error,
-      processingTimeMs: Date.now() - startTime,
-    };
-  }
-
-  /**
-   * Call Anthropic API
-   */
-  async function callAnthropic(
-    transcription: string,
-    startTime: number,
-  ): Promise<ExtractionResult> {
-    const apiKey = getApiKeyString(voiceSettings, "anthropic");
-    if (!apiKey) {
-      throw new Error("Anthropic API key not configured");
-    }
-
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "x-api-key": apiKey,
-        "Content-Type": "application/json",
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model: "claude-3-haiku-20240307",
-        max_tokens: 1024,
-        system: EXTRACTION_PROMPT,
-        messages: [
-          {
-            role: "user",
-            content: `Extract tadas from this transcription (respond in JSON only):\n\n${transcription}`,
-          },
-        ],
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Anthropic API error: ${response.status} - ${errorText}`);
-    }
-
-    const data = (await response.json()) as AnthropicResponse;
-
-    // Track token usage
-    if (data.usage) {
-      tokenUsage.value = {
-        prompt: data.usage.input_tokens,
-        completion: data.usage.output_tokens,
-        total: data.usage.input_tokens + data.usage.output_tokens,
-      };
-    }
-
-    const content =
-      data.content?.[0]?.type === "text" ? data.content[0].text : "";
-    const parsed = parseExtractionResponse(content);
-
-    return {
-      tadas: parsed.tadas,
-      journalFallback: parsed.journalFallback,
-      provider: "anthropic",
-      success: parsed.tadas.length > 0 || !!parsed.journalFallback,
-      error: parsed.error,
-      processingTimeMs: Date.now() - startTime,
-    };
-  }
-
-  /**
-   * Reset state
+   * Reset composable state
    */
   function reset(): void {
     status.value = "idle";
@@ -415,43 +237,5 @@ export function useLLMStructure(): UseLLMStructureReturn {
     activeProvider,
     tokenUsage,
     reset,
-  };
-}
-
-// Type definitions for API responses
-interface GroqResponse {
-  choices?: Array<{
-    message?: {
-      content?: string;
-    };
-  }>;
-  usage?: {
-    prompt_tokens: number;
-    completion_tokens: number;
-    total_tokens: number;
-  };
-}
-
-interface OpenAIResponse {
-  choices?: Array<{
-    message?: {
-      content?: string;
-    };
-  }>;
-  usage?: {
-    prompt_tokens: number;
-    completion_tokens: number;
-    total_tokens: number;
-  };
-}
-
-interface AnthropicResponse {
-  content?: Array<{
-    type: string;
-    text: string;
-  }>;
-  usage?: {
-    input_tokens: number;
-    output_tokens: number;
   };
 }

@@ -1,10 +1,29 @@
 <script setup lang="ts">
 // Dedicated Ta-Da! entry page - celebrate accomplishments with positive reinforcement
 import { getSubcategoriesForCategory } from "~/utils/categoryDefaults";
+import type { TranscriptionResult, VoiceRecordingStatus } from "~/types/voice";
+import type { VoiceEntryData } from "~/composables/useEntrySave";
+import type { ExtractedTada } from "~/types/extraction";
 
 // Use the unified entry save composable
-const { createEntry, isLoading: isSubmitting } = useEntrySave();
-const { success: showSuccess } = useToast();
+const {
+  createEntry,
+  createBatchTadas,
+  isLoading: isSubmitting,
+} = useEntrySave();
+const { success: showSuccess, error: showError } = useToast();
+
+// Voice composables
+const transcription = useTranscription();
+const llmStructure = useLLMStructure();
+
+// Voice state
+const showTadaChecklist = ref(false);
+const currentTranscription = ref<TranscriptionResult | null>(null);
+const extractedTadas = ref<ExtractedTada[]>([]);
+const recordingDuration = ref(0);
+const voiceStatus = ref<VoiceRecordingStatus>("idle");
+const liveTranscriptionText = ref("");
 
 // User preferences for custom emojis (for emoji resolution in composable)
 const { loadPreferences } = usePreferences();
@@ -28,10 +47,16 @@ definePageMeta({
   layout: "default",
 });
 
-// Form state
+// Form state - support multiple ta-das
 const title = ref("");
 const notes = ref("");
 const notesTextarea = ref<HTMLTextAreaElement | null>(null);
+
+// Multi-ta-da mode: when user enters multiple lines or uses voice
+const multiTadaMode = ref(false);
+const multiTadaList = ref<
+  Array<{ title: string; notes: string; emoji: string }>
+>([]);
 
 // Celebration state
 const showCelebration = ref(false);
@@ -62,10 +87,29 @@ function handleEmojiSelect(emoji: string) {
   customEmoji.value = emoji;
 }
 
-// Play celebration sound - using the correct tada fanfare
+// Get the user's preferred ta-da sound
+function getTadaSoundFile(): string {
+  try {
+    const saved = localStorage.getItem("tada-settings");
+    if (saved) {
+      const settings = JSON.parse(saved);
+      const soundMap: Record<string, string> = {
+        "tada-short": "/sounds/tada-f-versionD.mp3",
+        "tada-long": "/sounds/tada-f-versionA.mp3",
+        twinkle: "/sounds/twinkle.mp3",
+      };
+      return soundMap[settings.tadaSound] || "/sounds/tada-f-versionD.mp3";
+    }
+  } catch {
+    // Ignore errors
+  }
+  return "/sounds/tada-f-versionD.mp3";
+}
+
+// Play celebration sound - using user's preferred sound
 function playCelebrationSound() {
   try {
-    const audio = new Audio("/sounds/tada-f-versionD.mp3");
+    const audio = new Audio(getTadaSoundFile());
     audio.volume = 0.7;
     audio.play().catch(() => {
       // Audio play failed (user hasn't interacted with page yet)
@@ -88,7 +132,104 @@ function celebrate() {
   }, 2000);
 }
 
+/**
+ * Parse text for multiple ta-das
+ * Detects lines that look like separate accomplishments
+ */
+function parseMultipleTadas(
+  text: string,
+): Array<{ title: string; notes: string; emoji: string }> {
+  // Split by newlines, filter empty lines
+  const lines = text
+    .split(/\n/)
+    .map((l) => l.trim())
+    .filter(Boolean);
+
+  // If just one line or all lines together are short, not multi-mode
+  if (lines.length <= 1) return [];
+
+  // Each line becomes a tada
+  return lines
+    .map((line) => {
+      // Remove common list markers
+      const cleaned = line
+        .replace(/^[-*•]\s*/, "")
+        .replace(/^\d+[.)]\s*/, "")
+        .trim();
+      return {
+        title: cleaned.slice(0, 100),
+        notes: cleaned.length > 100 ? cleaned : "",
+        emoji: "⚡",
+      };
+    })
+    .filter((t) => t.title.length > 0);
+}
+
+/**
+ * Check if text contains multiple ta-das and switch to multi mode
+ */
+function checkForMultipleTadas() {
+  const tadas = parseMultipleTadas(title.value);
+  if (tadas.length > 1) {
+    multiTadaList.value = tadas;
+    multiTadaMode.value = true;
+    title.value = "";
+  }
+}
+
+/**
+ * Exit multi-tada mode
+ */
+function exitMultiMode() {
+  multiTadaMode.value = false;
+  multiTadaList.value = [];
+}
+
+/**
+ * Remove a ta-da from the list
+ */
+function removeFromList(index: number) {
+  multiTadaList.value.splice(index, 1);
+  if (multiTadaList.value.length === 0) {
+    exitMultiMode();
+  }
+}
+
+/**
+ * Update a ta-da in the list
+ */
+function updateListItem(index: number, value: string) {
+  if (multiTadaList.value[index]) {
+    multiTadaList.value[index].title = value;
+  }
+}
+
 async function submitEntry() {
+  // Handle multi-tada mode
+  if (multiTadaMode.value && multiTadaList.value.length > 0) {
+    const tadas: ExtractedTada[] = multiTadaList.value
+      .filter((t) => t.title.trim())
+      .map((t) => ({
+        title: t.title.trim(),
+        notes: t.notes || undefined,
+        emoji: t.emoji || customEmoji.value || "⚡",
+        subcategory: tadaSubcategory.value,
+        confidence: 1.0,
+      }));
+
+    if (tadas.length === 0) return;
+
+    const extractionId = crypto.randomUUID();
+    const result = await createBatchTadas(tadas, extractionId);
+
+    if (result && result.length > 0) {
+      exitMultiMode();
+      celebrate();
+    }
+    return;
+  }
+
+  // Single ta-da mode
   if (!title.value.trim() && !notes.value.trim()) return;
 
   const result = await createEntry(
@@ -101,13 +242,13 @@ async function submitEntry() {
       notes: notes.value.trim() || null,
       data: {},
       tags: ["accomplishment", tadaSubcategory.value].filter(
-        Boolean
+        Boolean,
       ) as string[],
     },
     {
       skipEmojiResolution: true, // Use the emoji we have
       showSuccessToast: false, // We handle celebration ourselves
-    }
+    },
   );
 
   // Only celebrate if save succeeded
@@ -115,32 +256,180 @@ async function submitEntry() {
     celebrate();
   }
 }
+
+// Voice recording handlers
+function handleVoiceLiveTranscription(text: string) {
+  liveTranscriptionText.value = text;
+}
+
+async function handleVoiceComplete(
+  _blob: Blob,
+  duration: number,
+  transcriptionText: string,
+) {
+  recordingDuration.value = duration;
+
+  // Use the transcription text passed directly from VoiceRecorder (most reliable)
+  const transcriptText =
+    transcriptionText ||
+    liveTranscriptionText.value ||
+    transcription.result.value?.text ||
+    "";
+
+  if (!transcriptText.trim()) {
+    // No text but also no error means user just didn't speak
+    // (If there was an error, VoiceRecorder would have emitted error event instead)
+    voiceStatus.value = "idle";
+    showError("No speech detected. Please speak clearly and try again.");
+    liveTranscriptionText.value = "";
+    return;
+  }
+
+  const result: TranscriptionResult = {
+    text: transcriptText,
+    provider: "web-speech",
+    processingMethod: "web-speech",
+    confidence: 0.8,
+    duration: duration,
+  };
+
+  currentTranscription.value = result;
+  liveTranscriptionText.value = "";
+
+  // Extract tadas from speech
+  voiceStatus.value = "processing";
+  console.log("[tada/index.vue] Extracting tadas from:", result.text);
+
+  try {
+    const extraction = await llmStructure.extractTadas(result.text);
+    console.log("[tada/index.vue] Extraction result:", extraction);
+
+    if (extraction && extraction.tadas.length > 0) {
+      extractedTadas.value = extraction.tadas;
+      showTadaChecklist.value = true;
+    } else {
+      // No tadas found - split text between title and notes for manual entry
+      splitTextForManualEntry(result.text);
+      showSuccess("No tadas detected - you can edit and save manually");
+    }
+    voiceStatus.value = "idle";
+  } catch {
+    // On error, split text between title and notes for manual entry
+    splitTextForManualEntry(transcriptText);
+    voiceStatus.value = "idle";
+  }
+}
+
+/**
+ * Split transcription text between title (short) and notes (full context)
+ */
+function splitTextForManualEntry(text: string) {
+  const trimmedText = text.trim();
+
+  // Try to find a natural break point (first sentence, first 60 chars, etc.)
+  const sentenceMatch = trimmedText.match(/^[^.!?]+[.!?]?/);
+  const firstSentence = sentenceMatch ? sentenceMatch[0].trim() : trimmedText;
+
+  // Title should be max ~60 chars, prefer first sentence if shorter
+  if (firstSentence.length <= 60) {
+    title.value = firstSentence;
+    // Put the rest in notes if there's more content
+    const remaining = trimmedText.slice(firstSentence.length).trim();
+    if (remaining) {
+      notes.value = remaining;
+    } else if (firstSentence !== trimmedText) {
+      // No remaining after first sentence, but there was more - put full text in notes
+      notes.value = trimmedText;
+    }
+  } else {
+    // First sentence too long - truncate for title, full text in notes
+    const truncated = trimmedText.slice(0, 57) + "...";
+    title.value = truncated;
+    notes.value = trimmedText;
+  }
+}
+
+function handleVoiceCancel() {
+  voiceStatus.value = "idle";
+}
+
+function handleVoiceError(message: string) {
+  voiceStatus.value = "error";
+  showError(message);
+}
+
+async function handleTadaSave(tadas: ExtractedTada[]) {
+  if (!currentTranscription.value) return;
+
+  const voiceData: VoiceEntryData = {
+    transcription: currentTranscription.value.text,
+    sttProvider: currentTranscription.value.provider,
+    confidence: currentTranscription.value.confidence,
+    recordingDurationMs: recordingDuration.value * 1000,
+  };
+
+  const result = await createBatchTadas(tadas, voiceData);
+
+  if (result && result.length > 0) {
+    showTadaChecklist.value = false;
+    extractedTadas.value = [];
+    currentTranscription.value = null;
+    celebrate();
+  }
+}
+
+function handleTadaCancel() {
+  showTadaChecklist.value = false;
+  extractedTadas.value = [];
+}
+
+function handleTadaUpdate(updated: ExtractedTada[]) {
+  extractedTadas.value = updated;
+}
+
+function handleReRecord() {
+  showTadaChecklist.value = false;
+  extractedTadas.value = [];
+  currentTranscription.value = null;
+}
 </script>
 
 <template>
   <div class="max-w-lg mx-auto">
-    <!-- Page header with Ta-Da! branding -->
-    <div class="flex items-center gap-4 mb-6">
-      <NuxtLink
-        to="/"
-        class="p-2 -ml-2 rounded-lg text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-700"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-6 w-6"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
+    <!-- Page header with Ta-Da! branding and mic button -->
+    <div class="flex items-center justify-between mb-6">
+      <div class="flex items-center gap-4">
+        <NuxtLink
+          to="/"
+          class="p-2 -ml-2 rounded-lg text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-700"
         >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M15 19l-7-7 7-7"
-          />
-        </svg>
-      </NuxtLink>
-      <img src="/icons/tada-logotype.png" alt="TA-DA" class="h-12 w-auto" />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 19l-7-7 7-7"
+            />
+          </svg>
+        </NuxtLink>
+        <img src="/icons/tada-logotype.png" alt="TA-DA" class="h-12 w-auto" />
+      </div>
+
+      <!-- Compact Voice Recorder in header -->
+      <VoiceRecorder
+        compact
+        mode="tada"
+        @complete="handleVoiceComplete"
+        @cancel="handleVoiceCancel"
+        @error="handleVoiceError"
+        @transcription="handleVoiceLiveTranscription"
+      />
     </div>
 
     <!-- Main Ta-Da Entry Area -->
@@ -149,7 +438,7 @@ async function submitEntry() {
       @submit.prevent="submitEntry"
     >
       <!-- Large Emoji + Title Input - The Hero Section -->
-      <div>
+      <div v-if="!multiTadaMode">
         <!-- Clickable Emoji -->
         <div class="flex justify-center mb-4">
           <button
@@ -162,19 +451,73 @@ async function submitEntry() {
           </button>
         </div>
 
-        <!-- Large Title Input -->
-        <input
+        <!-- Textarea for multiple ta-das (each line = one ta-da) -->
+        <textarea
           id="title"
           v-model="title"
-          type="text"
-          placeholder="What did you accomplish?"
-          class="w-full px-4 py-4 text-2xl font-bold text-center rounded-xl border-2 border-amber-300 dark:border-amber-600 bg-white/80 dark:bg-stone-800/80 text-stone-800 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-500 focus:outline-none focus:ring-4 focus:ring-amber-400/50 dark:focus:ring-amber-500/50 focus:border-amber-400 dark:focus:border-amber-500"
+          placeholder="What did you accomplish?&#10;&#10;Tip: Enter one per line for multiple!"
+          rows="3"
+          class="w-full px-4 py-4 text-xl font-bold text-center rounded-xl border-2 border-amber-300 dark:border-amber-600 bg-white/80 dark:bg-stone-800/80 text-stone-800 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-500 focus:outline-none focus:ring-4 focus:ring-amber-400/50 dark:focus:ring-amber-500/50 focus:border-amber-400 dark:focus:border-amber-500 resize-none"
           autofocus
+          @blur="checkForMultipleTadas"
         />
 
         <p class="text-center text-sm text-amber-600 dark:text-amber-400 mt-3">
           Tap the emoji to customize it ☝️
         </p>
+      </div>
+
+      <!-- Multi Ta-Da Mode: List of items to save -->
+      <div v-else class="space-y-3">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-lg font-bold text-amber-700 dark:text-amber-300">
+            🎉 {{ multiTadaList.length }} Ta-Das Ready!
+          </span>
+          <button
+            type="button"
+            class="text-sm text-stone-500 hover:text-stone-700 dark:hover:text-stone-300"
+            @click="exitMultiMode"
+          >
+            ← Back to single
+          </button>
+        </div>
+
+        <div
+          v-for="(tada, index) in multiTadaList"
+          :key="index"
+          class="flex items-center gap-2 bg-white/60 dark:bg-stone-800/60 rounded-lg p-3"
+        >
+          <span class="text-2xl">{{ tada.emoji }}</span>
+          <input
+            :value="tada.title"
+            type="text"
+            class="flex-1 px-3 py-2 text-sm rounded-lg border border-amber-200 dark:border-amber-700 bg-white dark:bg-stone-800 text-stone-800 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-amber-400/50"
+            @input="
+              (e) => updateListItem(index, (e.target as HTMLInputElement).value)
+            "
+          />
+          <button
+            type="button"
+            class="p-1.5 text-stone-400 hover:text-red-500 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"
+            title="Remove"
+            @click="removeFromList(index)"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
       </div>
 
       <!-- Subcategory for Tadas -->
@@ -203,8 +546,8 @@ async function submitEntry() {
         </div>
       </div>
 
-      <!-- Notes -->
-      <div>
+      <!-- Notes (only in single mode) -->
+      <div v-if="!multiTadaMode">
         <label
           for="notes"
           class="block text-sm font-medium text-amber-700 dark:text-amber-300 mb-2"
@@ -225,10 +568,19 @@ async function submitEntry() {
       <!-- Submit button with celebration styling -->
       <button
         type="submit"
-        :disabled="isSubmitting || (!title.trim() && !notes.trim())"
+        :disabled="
+          isSubmitting ||
+          (multiTadaMode
+            ? multiTadaList.length === 0
+            : !title.trim() && !notes.trim())
+        "
         class="w-full py-4 px-4 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 disabled:from-stone-300 disabled:to-stone-300 dark:disabled:from-stone-600 dark:disabled:to-stone-600 text-white font-bold text-xl rounded-xl transition-all transform hover:scale-105 disabled:hover:scale-100 shadow-lg disabled:shadow-none flex items-center justify-center gap-3"
       >
         <span v-if="isSubmitting">Saving...</span>
+        <template v-else-if="multiTadaMode">
+          <span class="text-3xl">🎉</span>
+          <span>Save {{ multiTadaList.length }} Ta-Das!</span>
+        </template>
         <template v-else>
           <span class="text-3xl">⚡</span>
           <span>Ta-Da!</span>
@@ -245,6 +597,30 @@ async function submitEntry() {
         View all your accomplishments →
       </NuxtLink>
     </div>
+
+    <!-- Voice Status Indicator (floats when recording/processing) -->
+    <div
+      v-if="voiceStatus !== 'idle'"
+      class="fixed bottom-24 left-1/2 -translate-x-1/2 z-50"
+    >
+      <VoiceStatusIndicator
+        :status="voiceStatus"
+        :progress="transcription.progress.value"
+        class="bg-white dark:bg-stone-800 rounded-full shadow-lg px-4 py-2"
+      />
+    </div>
+
+    <!-- Tada Checklist Review (from voice input) -->
+    <VoiceTadaChecklistReview
+      v-if="showTadaChecklist"
+      :tadas="extractedTadas"
+      :transcription="currentTranscription?.text || ''"
+      :loading="isSubmitting"
+      @save="handleTadaSave"
+      @cancel="handleTadaCancel"
+      @re-record="handleReRecord"
+      @update="handleTadaUpdate"
+    />
 
     <!-- Emoji Picker Component -->
     <EmojiPicker
@@ -274,7 +650,7 @@ async function submitEntry() {
                   '--x': `${Math.random() * 100}%`,
                   '--rotation': `${Math.random() * 360}deg`,
                 }"
-              />
+              ></span>
             </div>
           </div>
         </div>

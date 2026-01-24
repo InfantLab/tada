@@ -69,6 +69,8 @@ export interface BatchTadaInput {
   significance: "minor" | "normal" | "major";
   /** Original text from transcription */
   originalText?: string;
+  /** Additional notes/context */
+  notes?: string;
   /** Extraction confidence */
   confidence: number;
 }
@@ -303,6 +305,7 @@ export const useEntrySave = (): UseEntrySaveReturn => {
           category: "accomplishment",
           subcategory: tada.category, // Use extraction category as subcategory
           source: "voice",
+          notes: tada.notes || null,
           data: {
             voice: {
               autoExtracted: true,

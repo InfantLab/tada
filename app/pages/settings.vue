@@ -25,6 +25,7 @@ const settings = ref({
   timezone: "UTC",
   captureMood: true,
   captureReflection: true,
+  tadaSound: "tada-short" as "tada-long" | "tada-short" | "twinkle",
 });
 
 const isSaving = ref(false);
@@ -626,15 +627,52 @@ function cancelDeleteCategory() {
   deleteCategoryCount.value = 0;
 }
 
+// Ta-Da sound options
+const tadaSoundOptions = [
+  {
+    value: "tada-short",
+    label: "Ta-Da Short",
+    description: "Quick celebratory fanfare",
+    file: "/sounds/tada-f-versionD.mp3",
+  },
+  {
+    value: "tada-long",
+    label: "Ta-Da Long",
+    description: "Extended triumphant fanfare",
+    file: "/sounds/tada-f-versionA.mp3",
+  },
+  {
+    value: "twinkle",
+    label: "Twinkle",
+    description: "Gentle refresh chime",
+    file: "/sounds/twinkle.mp3",
+  },
+];
+
+// Preview sound
+function previewTadaSound(file: string) {
+  try {
+    const audio = new Audio(file);
+    audio.volume = 0.7;
+    audio.play().catch(() => {
+      // Audio play failed
+    });
+  } catch {
+    // Audio not supported
+  }
+}
+
 // Sidebar navigation
 const sidebarNavItems = [
   { id: "account", label: "Account", icon: "👤" },
   { id: "security", label: "Security", icon: "🔒" },
   { id: "appearance", label: "Appearance", icon: "🎨" },
+  { id: "voice", label: "Voice & AI", icon: "🎤" },
   { id: "timer", label: "Timer", icon: "⏱️" },
   { id: "presets", label: "Presets", icon: "⚡" },
   { id: "categories", label: "Categories", icon: "📁" },
   { id: "entry-types", label: "Entry Types", icon: "📝" },
+  { id: "sounds", label: "Sounds", icon: "🔊" },
   { id: "notifications", label: "Notifications", icon: "🔔" },
   { id: "data", label: "Data", icon: "💾" },
   { id: "about", label: "About", icon: "ℹ️" },
@@ -943,6 +981,11 @@ onMounted(() => {
           </div>
         </section>
 
+        <!-- Voice & AI Settings -->
+        <section id="section-voice">
+          <SettingsVoiceSettings />
+        </section>
+
         <!-- Timer -->
         <section id="section-timer">
           <h2
@@ -1139,11 +1182,6 @@ onMounted(() => {
               </div>
             </div>
           </div>
-        </section>
-
-        <!-- Voice & AI Settings -->
-        <section id="section-voice">
-          <VoiceSettings />
         </section>
 
         <!-- Emoji Customization -->
@@ -1386,6 +1424,65 @@ onMounted(() => {
                     Cancel
                   </button>
                 </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Sounds -->
+        <section id="section-sounds">
+          <h2
+            class="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-4"
+          >
+            Sounds
+          </h2>
+          <div
+            class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700"
+          >
+            <div class="p-4">
+              <label
+                class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-3"
+              >
+                Ta-Da! celebration sound
+              </label>
+              <div class="space-y-2">
+                <label
+                  v-for="option in tadaSoundOptions"
+                  :key="option.value"
+                  class="flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors"
+                  :class="
+                    settings.tadaSound === option.value
+                      ? 'border-tada-500 bg-tada-50 dark:bg-tada-900/20'
+                      : 'border-stone-200 dark:border-stone-600 hover:bg-stone-50 dark:hover:bg-stone-700'
+                  "
+                >
+                  <input
+                    v-model="settings.tadaSound"
+                    type="radio"
+                    name="tadaSound"
+                    :value="option.value"
+                    class="w-4 h-4 text-tada-600"
+                    @change="saveSettings"
+                  />
+                  <div class="flex-1">
+                    <span
+                      class="text-sm font-medium text-stone-800 dark:text-stone-100"
+                    >
+                      {{ option.label }}
+                    </span>
+                    <p class="text-xs text-stone-500 dark:text-stone-400">
+                      {{ option.description }}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    class="p-2 rounded-lg bg-stone-100 dark:bg-stone-600 hover:bg-stone-200 dark:hover:bg-stone-500 transition-colors"
+                    title="Preview sound"
+                    @click.prevent="previewTadaSound(option.file)"
+                  >
+                    🔊
+                  </button>
+                </label>
               </div>
             </div>
           </div>

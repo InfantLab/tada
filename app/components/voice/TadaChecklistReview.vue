@@ -101,7 +101,7 @@ function expandTada(id: string): void {
 function updateTada(id: string, updates: Partial<ExtractedTada>): void {
   const index = localTadas.value.findIndex((t) => t.id === id);
   if (index !== -1) {
-    localTadas.value[index] = { ...localTadas.value[index], ...updates };
+    Object.assign(localTadas.value[index], updates);
     // Emit full updated array
     emit("update", [...localTadas.value]);
   }
@@ -232,6 +232,13 @@ function getConfidenceColor(confidence: number): string {
               @click="expandTada(tada.id)"
             >
               <span class="tada-checklist__item-title">{{ tada.title }}</span>
+              <p v-if="tada.notes" class="tada-checklist__item-notes">
+                {{
+                  tada.notes.length > 80
+                    ? tada.notes.slice(0, 77) + "..."
+                    : tada.notes
+                }}
+              </p>
               <div class="tada-checklist__item-meta">
                 <span class="tada-checklist__item-category">
                   {{ tada.category }}
@@ -320,6 +327,23 @@ function getConfidenceColor(confidence: number): string {
                 <option value="errands">Errands</option>
                 <option value="personal">Personal</option>
               </select>
+            </label>
+
+            <label class="tada-checklist__edit-label">
+              Notes
+              <textarea
+                :value="tada.notes || ''"
+                class="tada-checklist__edit-input"
+                rows="2"
+                placeholder="Additional details..."
+                @input="
+                  (e) =>
+                    updateTada(tada.id, {
+                      notes:
+                        (e.target as HTMLTextAreaElement).value || undefined,
+                    })
+                "
+              />
             </label>
 
             <label class="tada-checklist__edit-label">
@@ -476,6 +500,10 @@ function getConfidenceColor(confidence: number): string {
 
 .tada-checklist__item-title {
   @apply block text-gray-900 font-medium truncate;
+}
+
+.tada-checklist__item-notes {
+  @apply text-xs text-gray-500 mt-0.5 line-clamp-1;
 }
 
 .tada-checklist__item-meta {

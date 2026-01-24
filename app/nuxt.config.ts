@@ -31,23 +31,25 @@ export default defineNuxtConfig({
   },
 
   // Runtime config (environment variables)
+  // Nuxt auto-maps NUXT_* env vars, but we also support legacy names
   runtimeConfig: {
     // Server-only (not exposed to client)
-    databaseUrl: "file:./data/db.sqlite",
+    databaseUrl: process.env["DATABASE_URL"] || "file:./data/db.sqlite",
 
     // Voice feature API keys (server-only)
-    groqApiKey: "",
-    openaiApiKey: "",
-    anthropicApiKey: "",
-    deepgramApiKey: "",
+    // Nuxt will auto-read NUXT_GROQ_API_KEY, but we also support GROQ_API_KEY
+    groqApiKey: process.env["GROQ_API_KEY"] || "",
+    openaiApiKey: process.env["OPENAI_API_KEY"] || "",
+    anthropicApiKey: process.env["ANTHROPIC_API_KEY"] || "",
+    deepgramApiKey: process.env["DEEPGRAM_API_KEY"] || "",
 
     // Public (exposed to client)
     public: {
       appName: "Tada",
       appVersion: "0.3.0",
       // Voice feature flags
-      voiceEnabled: true,
-      voiceFreeLimit: 50,
+      voiceEnabled: process.env["VOICE_ENABLED"] !== "false",
+      voiceFreeLimit: parseInt(process.env["VOICE_FREE_LIMIT"] || "50", 10),
     },
   },
 

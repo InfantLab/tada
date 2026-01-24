@@ -15,6 +15,7 @@ export interface LLMExtractionResponse {
 
 interface ExtractedTadaRaw {
   title: string;
+  notes?: string;
   category?: string;
   subcategory?: string;
   significance?: "minor" | "normal" | "major";
@@ -32,13 +33,14 @@ Your task is to extract discrete accomplishments ("tadas") from natural speech t
 RULES:
 1. Each tada should be a single, specific accomplishment
 2. Split compound sentences into separate tadas (e.g., "I fixed the sink and called my mom" → 2 tadas)
-3. Use the EXACT wording from the transcription when possible, but clean up filler words
-4. Words like "finally", "at last", "after so long" indicate MAJOR significance
-5. Quick/routine tasks are MINOR significance
-6. Everything else is NORMAL significance
-7. Detect category from context (home, work, health, social, creative, learning, etc.)
-8. If no clear tadas are found, provide a journal_fallback summary
-9. Detect journal_type from content clues:
+3. Title should be SHORT (5-10 words max) - summarize the accomplishment concisely
+4. Put any additional context, details, or the original phrasing in the "notes" field
+5. Words like "finally", "at last", "after so long" indicate MAJOR significance
+6. Quick/routine tasks are MINOR significance
+7. Everything else is NORMAL significance
+8. Detect category from context (home, work, health, social, creative, learning, etc.)
+9. If no clear tadas are found, provide a journal_fallback summary
+10. Detect journal_type from content clues:
    - "dream", "dreamed", "nightmare", "sleeping" → "dream"
    - "grateful", "thankful", "appreciate" → "gratitude"
    - "thinking about", "realized", "wondering" → "reflection"
@@ -49,6 +51,7 @@ OUTPUT FORMAT (JSON):
   "tadas": [
     {
       "title": "Fixed the kitchen sink",
+      "notes": "Finally got around to fixing that leaky kitchen sink that's been bothering me for weeks",
       "category": "home",
       "subcategory": "maintenance",
       "significance": "major",
@@ -91,6 +94,7 @@ export function validateExtractedTada(
   return {
     id: crypto.randomUUID(),
     title: raw.title.trim(),
+    notes: raw.notes?.trim() || raw.original_text?.trim() || undefined,
     category: normalizeCategory(raw.category),
     subcategory: raw.subcategory?.toLowerCase().trim() || undefined,
     significance: normalizeSignificance(raw.significance),
@@ -203,20 +207,41 @@ export function parseExtractionResponse(responseText: string): {
 export function extractTadasRuleBased(transcription: string): ExtractedTada[] {
   const tadas: ExtractedTada[] = [];
 
+  console.log("[extractTadasRuleBased] Input:", transcription);
+
   // Split by common conjunctions and punctuation
   const segments = transcription
     .split(/[,;]|\band\b|\bthen\b|\balso\b/i)
     .map((s) => s.trim())
     .filter((s) => s.length > 3);
 
+  console.log("[extractTadasRuleBased] Segments:", segments);
+
   // Look for action verbs that indicate accomplishments
+  // Expanded to catch more natural speech patterns
   const actionPatterns = [
-    /\b(finished|completed|did|made|fixed|cleaned|called|sent|wrote|read|cooked|bought|paid|went|visited|met|helped|learned|started|ended|organized|created|built|resolved)\b/i,
+    // Past tense accomplishment verbs
+    /\b(finished|completed|did|done|made|fixed|cleaned|called|sent|wrote|read|cooked|bought|paid|went|visited|met|helped|learned|started|ended|organized|created|built|resolved|worked|figured|managed|got|succeeded|accomplished|achieved|handled|tackled|nailed|crushed|smashed)\b/i,
+    // Present perfect ("I have...")
+    /\b(have|'ve)\s+(finished|completed|done|made|fixed|cleaned|called|sent|written|read|cooked|bought|paid|gone|visited|met|helped|learned|started|ended|organized|created|built|resolved|worked|figured|managed|got)\b/i,
+    // "I [verb]ed the..." patterns
+    /\bI\s+\w+ed\b/i,
+    // Success indicators
+    /\b(success|tada|ta-da|yay|woo|finally|at last)\b/i,
+    // Recording/journaling context (for test transcriptions)
+    /\b(record|journal|entry|logged|tracked|noted)\b/i,
   ];
 
   for (const segment of segments) {
     // Check if segment contains action verb
     const hasAction = actionPatterns.some((pattern) => pattern.test(segment));
+
+    console.log(
+      "[extractTadasRuleBased] Segment:",
+      segment,
+      "hasAction:",
+      hasAction,
+    );
 
     if (hasAction) {
       // Detect significance from keywords
@@ -229,9 +254,13 @@ export function extractTadasRuleBased(transcription: string): ExtractedTada[] {
       // Detect category from keywords
       const category = detectCategoryFromText(segment);
 
+      // Create a clean title (short) and put the full segment in notes
+      const cleanedTitle = cleanTadaTitle(segment);
+
       tadas.push({
         id: crypto.randomUUID(),
-        title: cleanTadaTitle(segment),
+        title: cleanedTitle,
+        notes: segment !== cleanedTitle ? segment : undefined, // Only add notes if different from title
         category,
         significance: isMajor ? "major" : isMinor ? "minor" : "normal",
         confidence: 0.6, // Lower confidence for rule-based
@@ -241,6 +270,11 @@ export function extractTadasRuleBased(transcription: string): ExtractedTada[] {
     }
   }
 
+  console.log(
+    "[extractTadasRuleBased] Extracted tadas:",
+    tadas.length,
+    tadas.map((t) => t.title),
+  );
   return tadas;
 }
 
