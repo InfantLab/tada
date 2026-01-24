@@ -31,7 +31,7 @@ export const useToast = () => {
   const showToast = (
     message: string,
     type: ToastType = "info",
-    options: ToastOptions = {}
+    options: ToastOptions = {},
   ) => {
     const id = `toast-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     const duration = options.duration ?? 5000;

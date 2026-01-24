@@ -36,6 +36,8 @@ export interface UseTranscriptionReturn {
   isTranscribing: Ref<boolean>;
   /** Active provider being used */
   activeProvider: Ref<STTProvider | null>;
+  /** Live transcript text (from Web Speech API) */
+  liveTranscript: Ref<string>;
   /** Start transcription from audio blob */
   transcribe: (
     blob: Blob,
@@ -63,6 +65,13 @@ interface SpeechRecognitionInstance extends EventTarget {
   onresult: ((event: Event) => void) | null;
   onerror: ((event: Event) => void) | null;
   onend: (() => void) | null;
+  onstart: (() => void) | null;
+  onaudiostart: (() => void) | null;
+  onsoundstart: (() => void) | null;
+  onspeechstart: (() => void) | null;
+  onspeechend: (() => void) | null;
+  onsoundend: (() => void) | null;
+  onaudioend: (() => void) | null;
 }
 
 /** Maximum retry attempts for transient failures */
@@ -390,6 +399,7 @@ export function useTranscription(): UseTranscriptionReturn {
     options: TranscriptionOptions = {},
   ): Promise<boolean> {
     if (recognitionInstance.value) {
+      console.log("[useTranscription] Already running, returning false");
       return false; // Already running
     }
 
@@ -400,25 +410,85 @@ export function useTranscription(): UseTranscriptionReturn {
     }
 
     try {
-      const recognition = new SpeechRecognition();
+      const recognition = new SpeechRecognition() as SpeechRecognitionInstance;
       recognition.continuous = true;
       recognition.interimResults = true;
       recognition.lang = options.language || "en-US";
 
+      console.log(
+        "[useTranscription] Starting live transcription with lang:",
+        recognition.lang,
+      );
+      console.log("[useTranscription] Page context:", {
+        url: typeof window !== "undefined" ? window.location.href : "N/A",
+        protocol:
+          typeof window !== "undefined" ? window.location.protocol : "N/A",
+        isSecureContext:
+          typeof window !== "undefined" ? window.isSecureContext : "N/A",
+      });
+
       status.value = "transcribing";
       activeProvider.value = "web-speech";
       liveTranscript.value = "";
+
+      recognition.onstart = () => {
+        console.log(
+          "[useTranscription] Recognition started - listening for speech",
+        );
+      };
+
+      recognition.onaudiostart = () => {
+        console.log("[useTranscription] Audio capture started");
+      };
+
+      recognition.onsoundstart = () => {
+        console.log("[useTranscription] Sound detected");
+      };
+
+      recognition.onspeechstart = () => {
+        console.log("[useTranscription] Speech detected");
+      };
+
+      recognition.onspeechend = () => {
+        console.log("[useTranscription] Speech ended");
+      };
+
+      recognition.onsoundend = () => {
+        console.log("[useTranscription] Sound ended");
+      };
+
+      recognition.onaudioend = () => {
+        console.log("[useTranscription] Audio capture ended");
+      };
 
       recognition.onresult = (event: Event) => {
         const speechEvent = event as SpeechRecognitionEvent;
         let interim = "";
         let final = "";
 
+        console.log(
+          "[useTranscription] Got result event, results count:",
+          speechEvent.results.length,
+          "resultIndex:",
+          speechEvent.resultIndex,
+        );
+
         for (let i = 0; i < speechEvent.results.length; i++) {
           const result = speechEvent.results[i];
           if (!result) continue;
           const alternative = result[0];
           if (!alternative) continue;
+
+          console.log(
+            "[useTranscription] Result",
+            i,
+            "isFinal:",
+            result.isFinal,
+            "transcript:",
+            JSON.stringify(alternative.transcript),
+            "confidence:",
+            alternative.confidence,
+          );
 
           if (result.isFinal) {
             final += alternative.transcript;
@@ -427,31 +497,98 @@ export function useTranscription(): UseTranscriptionReturn {
           }
         }
 
-        liveTranscript.value = final;
+        console.log(
+          "[useTranscription] Processed results - final:",
+          JSON.stringify(final),
+          "interim:",
+          JSON.stringify(interim),
+        );
+
+        // Store both final and interim - use interim as fallback if no final yet
+        liveTranscript.value = final || interim;
 
         if (options.onInterim) {
-          options.onInterim(interim);
+          options.onInterim(interim || final);
         }
 
-        // Update result with current transcript
+        // Update result with current best transcript (final preferred, interim as fallback)
         result.value = {
-          text: final.trim(),
+          text: (final || interim).trim(),
           provider: "web-speech",
           processingMethod: "web-speech",
-          confidence: 0.8,
+          confidence: final ? 0.8 : 0.5, // Lower confidence for interim
           duration: 0,
         };
+
+        console.log(
+          "[useTranscription] Updated liveTranscript:",
+          JSON.stringify(liveTranscript.value),
+          "result.text:",
+          JSON.stringify(result.value.text),
+        );
       };
 
       recognition.onerror = (event: Event) => {
         const errorEvent = event as SpeechRecognitionErrorEvent;
+        console.error("[useTranscription] Recognition error details:", {
+          error: errorEvent.error,
+          message: errorEvent.message,
+          type: errorEvent.type,
+          timeStamp: errorEvent.timeStamp,
+          currentTranscript: liveTranscript.value,
+          resultText: result.value?.text,
+        });
+
+        // "no-speech" is not a fatal error - it just means we haven't detected speech yet
+        // The recognition will continue and may detect speech later
+        if (errorEvent.error === "no-speech") {
+          console.log(
+            "[useTranscription] No speech detected yet, continuing...",
+          );
+          // Don't set error state - just let it continue
+          return;
+        }
+
+        // "aborted" happens when we intentionally stop - not an error
+        if (errorEvent.error === "aborted") {
+          console.log(
+            "[useTranscription] Recognition aborted (intentional stop)",
+          );
+          return;
+        }
+
+        // "network" error - but we may already have partial results
+        if (errorEvent.error === "network") {
+          console.log(
+            "[useTranscription] Network error, but checking if we have transcript:",
+            {
+              liveTranscript: liveTranscript.value,
+              resultText: result.value?.text,
+            },
+          );
+          // If we already captured some text, don't treat as error
+          if (liveTranscript.value || result.value?.text) {
+            console.log(
+              "[useTranscription] Have transcript despite network error, continuing...",
+            );
+            return;
+          }
+        }
+
         error.value = getSpeechErrorMessage(errorEvent.error);
         status.value = "error";
       };
 
       recognition.onend = () => {
+        console.log(
+          "[useTranscription] Recognition ended, status:",
+          status.value,
+          "transcript:",
+          liveTranscript.value,
+        );
         if (status.value === "transcribing") {
           // Restart if still expected to be running
+          console.log("[useTranscription] Restarting recognition...");
           recognition.start();
         }
       };
@@ -465,6 +602,7 @@ export function useTranscription(): UseTranscriptionReturn {
         err instanceof Error
           ? err.message
           : "Failed to start live transcription";
+      console.error("[useTranscription] Failed to start:", err);
       error.value = message;
       status.value = "error";
       return false;
@@ -475,6 +613,15 @@ export function useTranscription(): UseTranscriptionReturn {
    * Stop live transcription
    */
   function stopLiveTranscription(): void {
+    console.log(
+      "[useTranscription] stopLiveTranscription called, current state:",
+      {
+        hasInstance: !!recognitionInstance.value,
+        status: status.value,
+        liveTranscript: liveTranscript.value,
+        resultText: result.value?.text,
+      },
+    );
     if (recognitionInstance.value) {
       status.value = "idle"; // Set before stop to prevent restart in onend
       recognitionInstance.value.stop();
@@ -507,6 +654,7 @@ export function useTranscription(): UseTranscriptionReturn {
     error,
     isTranscribing,
     activeProvider,
+    liveTranscript,
     transcribe,
     startLiveTranscription,
     stopLiveTranscription,

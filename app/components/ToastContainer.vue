@@ -33,7 +33,7 @@
                 class="text-xs px-2 py-1 rounded bg-red-100 dark:bg-red-800/50 hover:bg-red-200 dark:hover:bg-red-800 transition-colors"
                 @click="copyError(toast)"
               >
-                {{ copiedId === toast.id ? '✓ Copied' : '📋 Copy' }}
+                {{ copiedId === toast.id ? "✓ Copied" : "📋 Copy" }}
               </button>
               <button
                 v-if="toast.action"

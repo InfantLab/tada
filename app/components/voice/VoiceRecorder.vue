@@ -93,12 +93,16 @@ async function startOrStopRecording() {
     transcription.stopLiveTranscription();
     voiceCapture.stopRecording();
   } else {
-    // Start recording
+    // Start recording first
     const success = await voiceCapture.startRecording();
     if (!success && voiceCapture.error.value) {
       emit("error", voiceCapture.error.value);
       return;
     }
+
+    // Small delay to ensure microphone is fully active before starting speech recognition
+    // This helps avoid race conditions between MediaRecorder and Web Speech API
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Start live transcription in parallel
     liveText.value = "";
@@ -106,6 +110,7 @@ async function startOrStopRecording() {
       onInterim: (text) => {
         // Show interim results visually
         liveText.value = text;
+        console.log("[VoiceRecorder] Interim text:", text);
       },
     });
 
@@ -116,6 +121,8 @@ async function startOrStopRecording() {
         transcription.error.value,
       );
       // Continue with recording - we'll handle this in complete
+    } else {
+      console.log("[VoiceRecorder] Live transcription started successfully");
     }
   }
 }
@@ -161,15 +168,71 @@ function handleCancel() {
 // Watch for recording completion
 watch(
   () => voiceCapture.audioBlob.value,
-  (blob) => {
+  async (blob) => {
     if (blob) {
-      // Get the final transcription text
-      const finalText =
-        transcription.result.value?.text || liveText.value || "";
+      // Get the best available transcription text
+      // Priority: result.text (includes final+interim), liveText (last interim from callback),
+      // liveTranscript (ref from composable), or empty
+      const resultText = transcription.result.value?.text || "";
+      const transcriptText = transcription.liveTranscript.value || "";
+      let finalText = resultText || liveText.value || transcriptText || "";
+
+      console.log("[VoiceRecorder] Recording complete. Transcription:", {
+        resultText,
+        liveText: liveText.value,
+        transcriptText,
+        finalText,
+        hadError: !!transcription.error.value,
+      });
+
+      // If Web Speech failed and we have no text, try fallback to Whisper cloud API
+      if (!finalText.trim() && transcription.error.value) {
+        console.log(
+          "[VoiceRecorder] Web Speech failed, attempting Whisper API fallback...",
+        );
+
+        // Check if user has a Groq API key configured
+        const hasApiKey = voiceSettings.hasApiKey("groq");
+        if (hasApiKey) {
+          try {
+            const whisperResult = await transcription.transcribe(blob, {
+              forceProvider: "whisper-cloud",
+            });
+            if (whisperResult?.text) {
+              console.log(
+                "[VoiceRecorder] Whisper fallback succeeded:",
+                whisperResult.text,
+              );
+              finalText = whisperResult.text;
+            }
+          } catch (err) {
+            console.error("[VoiceRecorder] Whisper fallback failed:", err);
+          }
+        } else {
+          console.log(
+            "[VoiceRecorder] No Groq API key configured, cannot use Whisper fallback",
+          );
+        }
+      }
+
+      // Emit transcription FIRST (before complete) so parent has the text when handling completion
+      if (finalText.trim()) {
+        console.log(
+          "[VoiceRecorder] Emitting transcription event:",
+          finalText.trim(),
+        );
+        emit("transcription", finalText.trim());
+      }
+
       emit("complete", blob, voiceCapture.duration.value);
-      // Also emit the transcription if available
-      if (finalText) {
-        emit("transcription", finalText);
+
+      // If no text and there was an error, emit error
+      if (!finalText.trim() && transcription.error.value) {
+        console.log(
+          "[VoiceRecorder] Emitting error (no text):",
+          transcription.error.value,
+        );
+        emit("error", transcription.error.value);
       }
       liveText.value = "";
     }
@@ -186,13 +249,18 @@ watch(
   },
 );
 
-// Watch for transcription errors
+// Watch for transcription errors - only emit blocking errors
 watch(
   () => transcription.error.value,
   (err) => {
     if (err) {
       console.error("[VoiceRecorder] Transcription error:", err);
-      emit("error", err);
+      // Network errors during live transcription are not blocking -
+      // recording can continue and we'll show the error at completion
+      // Only emit if recording is not active (i.e., this is a blocking startup error)
+      if (!voiceCapture.isRecording.value) {
+        emit("error", err);
+      }
     }
   },
 );
