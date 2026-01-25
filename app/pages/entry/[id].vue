@@ -225,19 +225,21 @@ const entryData = computed(() => {
   if (!entry.value?.data) return null;
   const data = entry.value.data as Record<string, unknown>;
   return {
-    mood: typeof data.mood === "number" ? (data.mood as number) : null,
+    mood: typeof data["mood"] === "number" ? (data["mood"] as number) : null,
     qualityRating:
-      typeof data.qualityRating === "number"
-        ? (data.qualityRating as number)
+      typeof data["qualityRating"] === "number"
+        ? (data["qualityRating"] as number)
         : null,
     reflection:
-      typeof data.reflection === "string" ? (data.reflection as string) : null,
-    fromVoice: data.fromVoice === true,
-    significance:
-      typeof data.significance === "string"
-        ? (data.significance as string)
+      typeof data["reflection"] === "string"
+        ? (data["reflection"] as string)
         : null,
-    mode: typeof data.mode === "string" ? (data.mode as string) : null,
+    fromVoice: data["fromVoice"] === true,
+    significance:
+      typeof data["significance"] === "string"
+        ? (data["significance"] as string)
+        : null,
+    mode: typeof data["mode"] === "string" ? (data["mode"] as string) : null,
   };
 });
 

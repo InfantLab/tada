@@ -196,10 +196,10 @@
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T060 [P] Update `app/composables/useEntrySave.ts` to mark deprecated methods
-- [ ] T061 [P] Add JSDoc comments to all new services and composables
-- [ ] T062 Run `bun run lint:fix` on all modified files
-- [ ] T063 Run `bun run typecheck` to verify no type errors
+- [x] T060 [P] Update `app/composables/useEntrySave.ts` to mark deprecated methods
+- [x] T061 [P] Add JSDoc comments to all new services and composables
+- [x] T062 Run `bun run lint:fix` on all modified files
+- [x] T063 Run `bun run typecheck` to verify no type errors
 - [ ] T064 Validate against quickstart.md examples
 - [ ] T065 Manual QA: test all entry paths end-to-end
 

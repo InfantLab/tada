@@ -7,7 +7,7 @@
  * @module tests/integration/entry-engine
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect } from "vitest";
 import { validateEntryInput, type EntryInput } from "~/utils/entrySchemas";
 
 describe("Entry Engine Integration", () => {

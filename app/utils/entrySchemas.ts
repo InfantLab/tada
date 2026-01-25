@@ -137,6 +137,7 @@ export const OverlappingEntrySchema = z.object({
   name: z.string(),
   timestamp: z.string(),
   durationSeconds: z.number().optional(),
+  emoji: z.string().optional(),
   overlapType: OverlapTypeSchema,
 });
 export type OverlappingEntry = z.infer<typeof OverlappingEntrySchema>;

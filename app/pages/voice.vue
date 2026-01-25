@@ -5,6 +5,7 @@
  */
 
 import type { ExtractedTada } from "~/types/extraction";
+import type { ProcessingMethod, STTProvider } from "~/types/voice";
 
 definePageMeta({
   layout: "default",
@@ -18,9 +19,13 @@ const voiceMode = ref<"journal" | "tada">("tada");
 const voiceStatus = ref<"idle" | "recording" | "transcribing" | "processing">(
   "idle",
 );
-const currentTranscription = ref<{ text: string; confidence?: number } | null>(
-  null,
-);
+const currentTranscription = ref<{
+  text: string;
+  confidence: number;
+  processingMethod: ProcessingMethod;
+  duration: number;
+  provider: STTProvider;
+} | null>(null);
 const recordingDuration = ref(0);
 const showVoiceReviewModal = ref(false);
 const showTadaChecklist = ref(false);
@@ -80,7 +85,13 @@ function celebrate() {
 
 // Handle live transcription updates
 function handleVoiceLiveTranscription(text: string): void {
-  currentTranscription.value = { text, confidence: 0.8 };
+  currentTranscription.value = {
+    text,
+    confidence: 0.8,
+    processingMethod: "web-speech",
+    duration: 0,
+    provider: "web-speech",
+  };
 }
 
 // Handle voice recording completion
@@ -137,15 +148,15 @@ function handleVoiceError(error: string): void {
 }
 
 // Handle transcription confirm (journal mode)
-async function handleTranscriptionConfirm(data: {
-  title: string;
-  category: string;
-  subcategory?: string;
-}): Promise<void> {
+// Handle transcription confirmation from VoiceReviewModal
+async function handleTranscriptionConfirm(
+  text: string,
+  subtype?: string,
+): Promise<void> {
   isSubmitting.value = true;
   try {
     await entrySave.createVoiceEntry(
-      data.title,
+      text,
       {
         transcription: currentTranscription.value?.text || "",
         recordingDurationMs: recordingDuration.value,
@@ -154,7 +165,7 @@ async function handleTranscriptionConfirm(data: {
         llmProvider: undefined,
       },
       {
-        subcategory: data.subcategory,
+        subcategory: subtype,
       },
     );
     success("Journal entry saved!");

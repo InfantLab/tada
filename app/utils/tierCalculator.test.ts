@@ -173,24 +173,28 @@ describe("tierCalculator", () => {
           totalSeconds: 600,
           isComplete: true,
           entryCount: 1,
+          totalCount: 0,
         },
         {
           date: "2026-01-13",
           totalSeconds: 0,
           isComplete: false,
           entryCount: 0,
+          totalCount: 0,
         },
         {
           date: "2026-01-14",
           totalSeconds: 720,
           isComplete: true,
           entryCount: 2,
+          totalCount: 0,
         },
         {
           date: "2026-01-15",
           totalSeconds: 360,
           isComplete: true,
           entryCount: 1,
+          totalCount: 0,
         },
       ];
 

@@ -7,7 +7,7 @@
  * @module server/services/entryEngine
  */
 
-import { eq, and, gte, lte, isNull } from "drizzle-orm";
+import { eq, and, isNull } from "drizzle-orm";
 import type { Entry } from "../db/schema";
 import { entries, activityHistory } from "../db/schema";
 import { createLogger } from "../utils/logger";

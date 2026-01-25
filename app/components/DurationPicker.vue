@@ -80,7 +80,7 @@ function parseInputValue(input: string): number | null {
 
   // Try duration parser
   const result = parseDuration(input);
-  if (result !== null) return result;
+  if (result !== null) return result.seconds;
 
   // Fallback: treat bare numbers as minutes
   const bareNumber = parseInt(input.trim(), 10);

@@ -7,7 +7,7 @@
  * @module server/services/conflictDetector
  */
 
-import { eq, and, gte, lte, isNull, or } from "drizzle-orm";
+import { eq, and, gte, lte, isNull } from "drizzle-orm";
 import { entries } from "../db/schema";
 import { createLogger } from "../utils/logger";
 import type {

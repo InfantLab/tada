@@ -121,12 +121,14 @@ function handleKeydown(event: KeyboardEvent) {
       event.preventDefault();
       selectedIndex.value = Math.max(selectedIndex.value - 1, 0);
       break;
-    case "Enter":
+    case "Enter": {
       event.preventDefault();
-      if (selectedIndex.value >= 0) {
-        selectSuggestion(suggestions.value[selectedIndex.value]);
+      const selectedSuggestion = suggestions.value[selectedIndex.value];
+      if (selectedIndex.value >= 0 && selectedSuggestion) {
+        selectSuggestion(selectedSuggestion);
       }
       break;
+    }
     case "Escape":
       event.preventDefault();
       isOpen.value = false;

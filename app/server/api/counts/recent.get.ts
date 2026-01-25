@@ -10,7 +10,7 @@
  * - activity: Filter by activity name (optional)
  */
 
-import { eq, desc, and, isNotNull, sql } from "drizzle-orm";
+import { eq, desc, and, isNotNull } from "drizzle-orm";
 import { db } from "~/server/db";
 import { entries } from "~/server/db/schema";
 import { createLogger } from "~/utils/logger";

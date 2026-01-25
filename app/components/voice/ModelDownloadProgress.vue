@@ -156,13 +156,11 @@ const speedLabel = computed(() => {
 
 // Check network type for WiFi-only downloads
 function checkNetworkType(): void {
-   
+  // Navigator connection API is not standardized, so we need to cast
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const nav = navigator as any;
   const connection =
-    (navigator as any).connection ||
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (navigator as any).mozConnection ||
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (navigator as any).webkitConnection;
+    nav.connection || nav.mozConnection || nav.webkitConnection;
 
   if (connection) {
     // WiFi, ethernet, or unknown (assume WiFi for desktop)

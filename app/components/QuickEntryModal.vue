@@ -121,14 +121,19 @@ watch(
 );
 
 // Check for conflicts when timestamp or duration changes (for timed entries)
-watch(
-  [timestamp, durationSeconds, mode],
-  async () => {
-    if (mode.value !== "timed" || !durationSeconds.value) {
-      conflicts.value = null;
-      return;
-    }
+// Watch for changes that might cause conflicts (debounced)
+let conflictCheckTimeout: ReturnType<typeof setTimeout> | null = null;
+watch([timestamp, durationSeconds, mode], async () => {
+  if (mode.value !== "timed" || !durationSeconds.value) {
+    conflicts.value = null;
+    return;
+  }
 
+  // Debounce conflict check
+  if (conflictCheckTimeout) {
+    clearTimeout(conflictCheckTimeout);
+  }
+  conflictCheckTimeout = setTimeout(async () => {
     // Build a temporary entry input for conflict check
     const entryInput = buildEntryInput();
     try {
@@ -137,9 +142,8 @@ watch(
     } catch {
       conflicts.value = null;
     }
-  },
-  { debounce: 500 } as unknown as { debounce: number },
-);
+  }, 500);
+});
 
 // Compute if form is valid
 const isValid = computed(() => {
@@ -152,6 +156,8 @@ const isValid = computed(() => {
       return count.value !== null && count.value > 0;
     case "moment":
       return true; // Just need a name
+    default:
+      return false;
   }
 });
 
@@ -491,7 +497,7 @@ const modeLabels: Record<EntryMode, string> = {
                 type="button"
                 :disabled="!isValid || isLoading"
                 class="flex-1 px-4 py-2 rounded-lg font-medium text-white bg-tada-600 hover:bg-tada-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                @click="handleSave"
+                @click="handleSave()"
               >
                 <span v-if="isLoading">Saving...</span>
                 <span v-else>Save</span>

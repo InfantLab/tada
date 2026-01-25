@@ -2,7 +2,6 @@
 // Dedicated Ta-Da! entry page - celebrate accomplishments with positive reinforcement
 import { getSubcategoriesForCategory } from "~/utils/categoryDefaults";
 import type { TranscriptionResult, VoiceRecordingStatus } from "~/types/voice";
-import type { VoiceEntryData } from "~/composables/useEntrySave";
 import type { ExtractedTada } from "~/types/extraction";
 import type { EntryInput } from "~/utils/entrySchemas";
 
@@ -377,14 +376,10 @@ function handleVoiceError(message: string) {
 async function handleTadaSave(tadas: ExtractedTada[]) {
   if (!currentTranscription.value) return;
 
-  const voiceData: VoiceEntryData = {
-    transcription: currentTranscription.value.text,
-    sttProvider: currentTranscription.value.provider,
-    confidence: currentTranscription.value.confidence,
-    recordingDurationMs: recordingDuration.value * 1000,
-  };
+  // Pass the transcription text as extractionId for voice metadata tracking
+  const extractionId = currentTranscription.value.text.slice(0, 100);
 
-  const result = await createBatchTadas(tadas, voiceData);
+  const result = await createBatchTadas(tadas, extractionId);
 
   if (result && result.length > 0) {
     showTadaChecklist.value = false;

@@ -22,8 +22,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: "confirm", edited: ParsedEntry): void;
-  (e: "edit"): void;
-  (e: "cancel"): void;
+  (e: "edit" | "cancel"): void;
   (
     e: "save-draft",
     data: {
@@ -101,12 +100,15 @@ function getConfidenceColor(confidence: number): string {
 
 // Handle confirm
 function handleConfirm() {
+  // Map "moment" to "journal" for entry type (moment is UI shorthand for journal)
+  const mappedType =
+    editedType.value === "moment" ? "journal" : editedType.value;
   const editedParsed: ParsedEntry = {
     ...props.parsed,
     input: {
       ...props.parsed.input,
       name: editedName.value,
-      type: editedType.value,
+      type: mappedType as "timed" | "reps" | "journal" | "tada",
       durationSeconds: editedDuration.value || undefined,
       count: editedCount.value || undefined,
     },
