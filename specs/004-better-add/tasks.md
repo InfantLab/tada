@@ -15,9 +15,9 @@
 
 **Purpose**: Project initialization and shared infrastructure
 
-- [ ] T001 Create `app/utils/entrySchemas.ts` with EntryInput Zod schema from data-model.md
-- [ ] T002 [P] Create `app/utils/durationParser.ts` with parseDuration/formatDuration utilities
-- [ ] T003 [P] Create `app/utils/naturalLanguageParser.ts` stub for time/count extraction
+- [x] T001 Create `app/utils/entrySchemas.ts` with EntryInput Zod schema from data-model.md
+- [x] T002 [P] Create `app/utils/durationParser.ts` with parseDuration/formatDuration utilities
+- [x] T003 [P] Create `app/utils/naturalLanguageParser.ts` stub for time/count extraction
 
 ---
 
@@ -27,13 +27,13 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T004 Create `app/server/services/entryEngine.ts` with validate() method
-- [ ] T005 Create `app/server/services/conflictDetector.ts` with checkOverlap() method
-- [ ] T006 [P] Add entry_drafts table migration in `app/server/db/schema.ts`
-- [ ] T007 [P] Add activity_history table migration in `app/server/db/schema.ts`
-- [ ] T008 Create `app/composables/useEntryEngine.ts` composable wrapping server service
-- [ ] T009 Add unit tests for entryEngine in `app/server/services/entryEngine.test.ts`
-- [ ] T010 Add unit tests for conflictDetector in `app/server/services/conflictDetector.test.ts`
+- [x] T004 Create `app/server/services/entryEngine.ts` with validate() method
+- [x] T005 Create `app/server/services/conflictDetector.ts` with checkOverlap() method
+- [x] T006 [P] Add entry_drafts table migration in `app/server/db/schema.ts`
+- [x] T007 [P] Add activity_history table migration in `app/server/db/schema.ts`
+- [x] T008 Create `app/composables/useEntryEngine.ts` composable wrapping server service
+- [x] T009 Add unit tests for entryEngine in `app/server/services/entryEngine.test.ts`
+- [x] T010 Add unit tests for conflictDetector in `app/server/services/conflictDetector.test.ts`
 
 **Checkpoint**: Foundation ready - user story implementation can now begin
 

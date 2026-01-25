@@ -193,19 +193,19 @@ await createEntry({
 
 ## File Locations
 
-| Purpose              | Location                                  |
-| -------------------- | ----------------------------------------- |
-| Entry engine service | `app/server/services/entryEngine.ts`      |
-| Conflict detector    | `app/server/services/conflictDetector.ts` |
-| NLP parser           | `app/utils/naturalLanguageParser.ts`      |
-| Duration parser      | `app/utils/durationParser.ts`             |
-| Vue composable       | `app/composables/useEntryEngine.ts`       |
-| Zod schemas          | `app/utils/entrySchemas.ts`               |
-| Quick entry modal    | `app/components/QuickEntryModal.vue`      |
-| Shared value picker  | `app/components/QuickValuePicker.vue`     |
-| Duration picker      | `app/components/DurationPicker.vue`       |
-| Count picker         | `app/components/CountPicker.vue`          |
-| Activity autocomplete| `app/components/ActivityAutocomplete.vue` |
+| Purpose               | Location                                  |
+| --------------------- | ----------------------------------------- |
+| Entry engine service  | `app/server/services/entryEngine.ts`      |
+| Conflict detector     | `app/server/services/conflictDetector.ts` |
+| NLP parser            | `app/utils/naturalLanguageParser.ts`      |
+| Duration parser       | `app/utils/durationParser.ts`             |
+| Vue composable        | `app/composables/useEntryEngine.ts`       |
+| Zod schemas           | `app/utils/entrySchemas.ts`               |
+| Quick entry modal     | `app/components/QuickEntryModal.vue`      |
+| Shared value picker   | `app/components/QuickValuePicker.vue`     |
+| Duration picker       | `app/components/DurationPicker.vue`       |
+| Count picker          | `app/components/CountPicker.vue`          |
+| Activity autocomplete | `app/components/ActivityAutocomplete.vue` |
 
 ## DurationPicker Component
 

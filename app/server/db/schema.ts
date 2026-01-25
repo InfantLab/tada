@@ -500,6 +500,58 @@ export const importLogs = sqliteTable("import_logs", {
 });
 
 // ============================================================================
+// Entry Drafts - Partially complete entries awaiting confirmation
+// ============================================================================
+
+export const entryDrafts = sqliteTable("entry_drafts", {
+  id: text("id").primaryKey(), // UUID
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+
+  // Draft content (JSON)
+  input: text("input", { mode: "json" })
+    .$type<Record<string, unknown>>()
+    .notNull(),
+
+  // Voice context
+  parsedFrom: text("parsed_from"), // Original transcribed text
+  confidence: integer("confidence"), // 0-100 (stored as int, divide by 100)
+
+  // Timestamps
+  createdAt: text("created_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
+  expiresAt: text("expires_at").notNull(), // Auto-cleanup after 24h
+});
+
+// ============================================================================
+// Activity History - For autocomplete suggestions
+// ============================================================================
+
+export const activityHistory = sqliteTable("activity_history", {
+  id: text("id").primaryKey(), // UUID
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+
+  // Activity info
+  activityName: text("activity_name").notNull(),
+  category: text("category"),
+  subcategory: text("subcategory"),
+  entryType: text("entry_type").notNull(), // 'timed', 'reps', etc.
+
+  // Usage tracking
+  useCount: integer("use_count").notNull().default(1),
+  lastUsedAt: text("last_used_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
+
+  // Soft delete
+  deletedAt: text("deleted_at"),
+});
+
+// ============================================================================
 // Type exports for use in application code
 // ============================================================================
 
@@ -541,3 +593,9 @@ export type NewImportRecipe = typeof importRecipes.$inferInsert;
 
 export type ImportLog = typeof importLogs.$inferSelect;
 export type NewImportLog = typeof importLogs.$inferInsert;
+
+export type EntryDraft = typeof entryDrafts.$inferSelect;
+export type NewEntryDraft = typeof entryDrafts.$inferInsert;
+
+export type ActivityHistory = typeof activityHistory.$inferSelect;
+export type NewActivityHistory = typeof activityHistory.$inferInsert;
