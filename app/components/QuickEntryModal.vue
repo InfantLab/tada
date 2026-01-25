@@ -14,6 +14,7 @@
 import type { EntryMode } from "./EntryTypeToggle.vue";
 import type { DurationContext } from "./DurationPicker.vue";
 import type { EntryInput } from "~/utils/entrySchemas";
+import type { CreateEntryOptions } from "~/composables/useEntryEngine";
 
 const props = withDefaults(
   defineProps<{
@@ -43,7 +44,7 @@ const emit = defineEmits<{
 }>();
 
 // Entry engine for saving
-const { createEntry, isLoading } = useEntryEngine();
+const { createEntry, checkConflicts, isLoading } = useEntryEngine();
 const toast = useToast();
 
 // Form state
@@ -54,6 +55,10 @@ const timestamp = ref(new Date().toISOString());
 const durationSeconds = ref<number | null>(null);
 const count = ref<number | null>(null);
 const notes = ref("");
+
+// Conflict state
+const conflicts = ref<{ hasConflict: boolean; overlappingEntries: Array<{ id: string; name: string; emoji?: string; timestamp: string; durationSeconds?: number }>; suggestedResolution: string } | null>(null);
+const conflictResolution = ref<"allow-both" | "replace" | null>(null);
 
 // Reset form when modal opens
 watch(
@@ -67,8 +72,31 @@ watch(
       durationSeconds.value = null;
       count.value = null;
       notes.value = "";
+      conflicts.value = null;
+      conflictResolution.value = null;
     }
   }
+);
+
+// Check for conflicts when timestamp or duration changes (for timed entries)
+watch(
+  [timestamp, durationSeconds, mode],
+  async () => {
+    if (mode.value !== "timed" || !durationSeconds.value) {
+      conflicts.value = null;
+      return;
+    }
+    
+    // Build a temporary entry input for conflict check
+    const entryInput = buildEntryInput();
+    try {
+      const result = await checkConflicts(entryInput);
+      conflicts.value = result || null;
+    } catch {
+      conflicts.value = null;
+    }
+  },
+  { debounce: 500 } as unknown as { debounce: number }
 );
 
 // Compute if form is valid
@@ -130,12 +158,21 @@ function buildEntryInput(): EntryInput {
 }
 
 // Save entry
-async function handleSave() {
+async function handleSave(resolution?: "allow-both" | "replace") {
   if (!isValid.value || isLoading.value) return;
 
   try {
     const entryInput = buildEntryInput();
-    const result = await createEntry(entryInput, { skipEmojiResolution: false });
+    
+    // Determine resolution based on conflict state
+    const saveOptions: CreateEntryOptions = { skipEmojiResolution: false };
+    if (resolution === "replace") {
+      saveOptions.resolution = "replace";
+    } else if (resolution === "allow-both" || conflictResolution.value === "allow-both") {
+      saveOptions.resolution = "allow-both";
+    }
+    
+    const result = await createEntry(entryInput, saveOptions);
 
     if (result) {
       toast.success("Entry saved!");
@@ -146,6 +183,17 @@ async function handleSave() {
     console.error("Failed to save entry:", error);
     toast.error("Failed to save entry");
   }
+}
+
+// Handle conflict resolution from ConflictWarning component
+function handleConflictResolve(action: "allow-both" | "replace" | "cancel") {
+  if (action === "cancel") {
+    closeModal();
+    return;
+  }
+  
+  conflictResolution.value = action;
+  handleSave(action);
 }
 
 // Close modal
@@ -300,6 +348,14 @@ const modeLabels: Record<EntryMode, string> = {
               <DateTimePicker
                 v-model="timestamp"
                 label="When?"
+              />
+
+              <!-- Conflict Warning -->
+              <ConflictWarning
+                v-if="conflicts && conflicts.hasConflict"
+                :conflict="conflicts"
+                :is-loading="isLoading"
+                @resolve="handleConflictResolve"
               />
 
               <!-- Notes (optional) -->

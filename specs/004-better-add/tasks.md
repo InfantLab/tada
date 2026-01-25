@@ -109,14 +109,14 @@
 
 ### Implementation for User Story 4
 
-- [ ] T034 [US4] Implement duration parsing in `app/utils/naturalLanguageParser.ts` ("20 min", "1h 30m")
-- [ ] T035 [US4] Implement count parsing in `app/utils/naturalLanguageParser.ts` ("30 burpees")
-- [ ] T036 [US4] Implement time reference parsing ("this morning", "at 7am", "yesterday")
-- [ ] T037 [US4] Add `POST /api/entries/parse` endpoint in `app/server/api/entries/parse.post.ts`
-- [ ] T038 [US4] Integrate parsed entry confirmation UI in voice flow
-- [ ] T039 [P] [US4] Create `app/components/ConflictWarning.vue` for overlap display
-- [ ] T040 [US4] Add conflict detection to entry creation flow in QuickEntryModal
-- [ ] T041 [US4] Add unit tests for naturalLanguageParser in `app/utils/naturalLanguageParser.test.ts`
+- [x] T034 [US4] Implement duration parsing in `app/utils/naturalLanguageParser.ts` ("20 min", "1h 30m")
+- [x] T035 [US4] Implement count parsing in `app/utils/naturalLanguageParser.ts` ("30 burpees")
+- [x] T036 [US4] Implement time reference parsing ("this morning", "at 7am", "yesterday")
+- [x] T037 [US4] Add `POST /api/entries/parse` endpoint in `app/server/api/entries/parse.post.ts`
+- [x] T038 [US4] Integrate parsed entry confirmation UI in voice flow (VoiceEntryConfirmation.vue)
+- [x] T039 [P] [US4] Create `app/components/ConflictWarning.vue` for overlap display
+- [x] T040 [US4] Add conflict detection to entry creation flow in QuickEntryModal
+- [x] T041 [US4] Add unit tests for naturalLanguageParser in `app/utils/naturalLanguageParser.test.ts` (12 tests passing)
 
 **Checkpoint**: User Story 4 complete - voice parsing works independently
 
