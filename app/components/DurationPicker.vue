@@ -44,7 +44,7 @@ const props = withDefaults(
     maxDuration: undefined,
     disabled: false,
     label: undefined,
-  }
+  },
 );
 
 const emit = defineEmits<{

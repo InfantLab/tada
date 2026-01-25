@@ -88,6 +88,7 @@ import { computed } from "vue";
 interface DayStatus {
   date: string;
   totalSeconds: number;
+  totalCount?: number; // For reps-based rhythms
   isComplete: boolean;
   entryCount: number;
 }
@@ -106,7 +107,7 @@ interface ChartDay {
 
 const props = defineProps<{
   days: DayStatus[];
-  goalType?: "duration" | "count"; // duration = minutes, count = moments
+  goalType?: "duration" | "count"; // duration = minutes, count = reps
   thresholdSeconds?: number;
 }>();
 
@@ -267,7 +268,8 @@ const chartDays = computed(() => {
 function getValue(status?: DayStatus): number {
   if (!status) return 0;
   if (props.goalType === "count") {
-    return status.entryCount;
+    // For count mode, prefer totalCount (reps) if available, fall back to entryCount
+    return status.totalCount ?? status.entryCount;
   }
   // Duration: return minutes
   return Math.round(status.totalSeconds / 60);

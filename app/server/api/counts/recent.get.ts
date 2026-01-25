@@ -42,7 +42,7 @@ export default defineEventHandler(async (event) => {
   const query = getQuery(event);
   const limit = Math.min(
     Math.max(parseInt(String(query["limit"] || "10"), 10), 1),
-    50
+    50,
   );
   const activity = query["activity"] as string | undefined;
 
@@ -73,7 +73,10 @@ export default defineEventHandler(async (event) => {
       .limit(100); // Get more for aggregation
 
     // Aggregate by count value
-    const countMap = new Map<number, { frequency: number; lastUsed: string; activity?: string }>();
+    const countMap = new Map<
+      number,
+      { frequency: number; lastUsed: string; activity?: string }
+    >();
 
     for (const entry of recentEntries) {
       if (!entry.data || typeof entry.data !== "object") continue;

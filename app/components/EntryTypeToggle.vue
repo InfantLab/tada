@@ -27,7 +27,7 @@ const props = withDefaults(
     availableModes: () => ["timed", "reps", "moment"],
     compact: false,
     disabled: false,
-  }
+  },
 );
 
 const emit = defineEmits<{
@@ -109,7 +109,7 @@ function isSelected(mode: EntryMode): boolean {
     >
       <!-- Icon -->
       <span class="text-base" aria-hidden="true">{{ mode.icon }}</span>
-      
+
       <!-- Label (hidden in compact mode) -->
       <span v-if="!compact" class="hidden sm:inline">
         {{ mode.label }}

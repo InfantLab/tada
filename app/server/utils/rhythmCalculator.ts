@@ -39,6 +39,7 @@ export interface RhythmTotals {
   totalSessions: number;
   totalSeconds: number;
   totalHours: number;
+  totalCount: number; // For reps-based rhythms
   firstEntryDate: string | null;
   weeksActive: number;
   monthsActive: number;
@@ -116,14 +117,22 @@ export function entriesToDayStatuses(
 ): DayStatus[] {
   const dayMap = new Map<
     string,
-    { totalSeconds: number; entryCount: number }
+    { totalSeconds: number; totalCount: number; entryCount: number }
   >();
 
   for (const entry of matchingEntries) {
     const datePart = entry.timestamp.split("T")[0];
     if (!datePart) continue; // Skip invalid timestamps
-    const existing = dayMap.get(datePart) || { totalSeconds: 0, entryCount: 0 };
+    const existing = dayMap.get(datePart) || {
+      totalSeconds: 0,
+      totalCount: 0,
+      entryCount: 0,
+    };
     existing.totalSeconds += entry.durationSeconds || 0;
+    // Extract count from entry data
+    const data = entry.data as Record<string, unknown> | null;
+    const count = data?.["count"];
+    existing.totalCount += typeof count === "number" ? count : 0;
     existing.entryCount += 1;
     dayMap.set(datePart, existing);
   }
@@ -133,6 +142,7 @@ export function entriesToDayStatuses(
     dayStatuses.push({
       date,
       totalSeconds: data.totalSeconds,
+      totalCount: data.totalCount,
       isComplete: data.totalSeconds >= durationThresholdSeconds,
       entryCount: data.entryCount,
     });
@@ -533,6 +543,13 @@ export function calculateTotals(
   );
   const totalHours = Math.round((totalSeconds / 3600) * 100) / 100;
 
+  // Sum counts from entry data (for reps-based entries)
+  const totalCount = matchingEntries.reduce((sum, e) => {
+    const data = e.data as Record<string, unknown> | null;
+    const count = data?.["count"];
+    return sum + (typeof count === "number" ? count : 0);
+  }, 0);
+
   // First entry date
   const firstEntry = matchingEntries[0];
   const firstEntryDate: string | null = firstEntry
@@ -555,6 +572,7 @@ export function calculateTotals(
     totalSessions,
     totalSeconds,
     totalHours,
+    totalCount,
     firstEntryDate,
     weeksActive: activeWeeks.size,
     monthsActive: activeMonths.size,

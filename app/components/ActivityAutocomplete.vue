@@ -36,7 +36,7 @@ const props = withDefaults(
     disabled: false,
     label: undefined,
     entryType: undefined,
-  }
+  },
 );
 
 const emit = defineEmits<{
@@ -69,7 +69,7 @@ async function fetchSuggestions(query: string) {
     }
 
     const response = await $fetch<{ suggestions: ActivitySuggestion[] }>(
-      `/api/entries/suggestions?${params.toString()}`
+      `/api/entries/suggestions?${params.toString()}`,
     );
     suggestions.value = response.suggestions || [];
     selectedIndex.value = -1;
@@ -114,7 +114,7 @@ function handleKeydown(event: KeyboardEvent) {
       event.preventDefault();
       selectedIndex.value = Math.min(
         selectedIndex.value + 1,
-        suggestions.value.length - 1
+        suggestions.value.length - 1,
       );
       break;
     case "ArrowUp":
@@ -191,10 +191,7 @@ onUnmounted(() => {
       />
 
       <!-- Loading indicator -->
-      <div
-        v-if="isLoading"
-        class="absolute right-2 top-1/2 -translate-y-1/2"
-      >
+      <div v-if="isLoading" class="absolute right-2 top-1/2 -translate-y-1/2">
         <svg
           class="animate-spin h-4 w-4 text-stone-400"
           xmlns="http://www.w3.org/2000/svg"
@@ -237,9 +234,7 @@ onUnmounted(() => {
           type="button"
           class="w-full px-3 py-2 text-left flex items-center justify-between hover:bg-stone-50 dark:hover:bg-stone-700 transition-colors"
           :class="
-            index === selectedIndex
-              ? 'bg-tada-50 dark:bg-tada-900/20'
-              : ''
+            index === selectedIndex ? 'bg-tada-50 dark:bg-tada-900/20' : ''
           "
           @mousedown.prevent
           @click="selectSuggestion(suggestion)"
@@ -255,9 +250,7 @@ onUnmounted(() => {
               {{ suggestion.category }}
             </span>
           </div>
-          <span class="text-xs text-stone-400">
-            {{ suggestion.count }}×
-          </span>
+          <span class="text-xs text-stone-400"> {{ suggestion.count }}× </span>
         </button>
       </div>
     </Transition>

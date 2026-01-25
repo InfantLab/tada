@@ -24,7 +24,14 @@ const emit = defineEmits<{
   (e: "confirm", edited: ParsedEntry): void;
   (e: "edit"): void;
   (e: "cancel"): void;
-  (e: "save-draft", data: { input: Record<string, unknown>; parsedFrom: string; confidence: number }): void;
+  (
+    e: "save-draft",
+    data: {
+      input: Record<string, unknown>;
+      parsedFrom: string;
+      confidence: number;
+    },
+  ): void;
 }>();
 
 // Auto-save draft when user cancels (with unsaved changes)
@@ -56,9 +63,11 @@ function handleCancel() {
 const isEditing = ref(false);
 const editedName = ref(props.parsed.input.name || "");
 const editedType = ref<EntryMode>(
-  (props.parsed.input.type as EntryMode) || "timed"
+  (props.parsed.input.type as EntryMode) || "timed",
 );
-const editedDuration = ref<number | null>(props.parsed.input.durationSeconds || null);
+const editedDuration = ref<number | null>(
+  props.parsed.input.durationSeconds || null,
+);
 const editedCount = ref<number | null>(props.parsed.input.count || null);
 
 // Sync with prop changes
@@ -69,14 +78,14 @@ watch(
     editedType.value = (newParsed.input.type as EntryMode) || "timed";
     editedDuration.value = newParsed.input.durationSeconds || null;
     editedCount.value = newParsed.input.count || null;
-  }
+  },
 );
 
 // Format duration for display
 function formatDuration(seconds: number): string {
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
-  
+
   if (hours > 0) {
     return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
   }
@@ -115,18 +124,19 @@ function toggleEdit() {
 </script>
 
 <template>
-  <div class="bg-white dark:bg-stone-800 rounded-lg border border-stone-200 dark:border-stone-700 overflow-hidden">
+  <div
+    class="bg-white dark:bg-stone-800 rounded-lg border border-stone-200 dark:border-stone-700 overflow-hidden"
+  >
     <!-- Header -->
-    <div class="px-4 py-3 bg-stone-50 dark:bg-stone-800/50 border-b border-stone-200 dark:border-stone-700">
+    <div
+      class="px-4 py-3 bg-stone-50 dark:bg-stone-800/50 border-b border-stone-200 dark:border-stone-700"
+    >
       <div class="flex items-center justify-between">
         <h3 class="font-medium text-stone-900 dark:text-white">
           Confirm Entry
         </h3>
         <div class="flex items-center gap-2">
-          <span
-            class="text-xs"
-            :class="getConfidenceColor(parsed.confidence)"
-          >
+          <span class="text-xs" :class="getConfidenceColor(parsed.confidence)">
             {{ Math.round(parsed.confidence * 100) }}% confident
           </span>
         </div>
@@ -145,7 +155,13 @@ function toggleEdit() {
           <EntryTypeToggle v-model="editedType" :compact="true" />
         </div>
         <span v-else class="text-sm font-medium text-stone-900 dark:text-white">
-          {{ editedType === "timed" ? "⏱️ Timed" : editedType === "reps" ? "🔢 Count" : "✨ Moment" }}
+          {{
+            editedType === "timed"
+              ? "⏱️ Timed"
+              : editedType === "reps"
+                ? "🔢 Count"
+                : "✨ Moment"
+          }}
         </span>
       </div>
 
@@ -168,7 +184,10 @@ function toggleEdit() {
       </div>
 
       <!-- Duration (for timed) -->
-      <div v-if="editedType === 'timed'" class="flex items-center justify-between">
+      <div
+        v-if="editedType === 'timed'"
+        class="flex items-center justify-between"
+      >
         <span class="text-sm text-stone-500 dark:text-stone-400">Duration</span>
         <input
           v-if="isEditing"
@@ -188,7 +207,10 @@ function toggleEdit() {
       </div>
 
       <!-- Count (for reps) -->
-      <div v-if="editedType === 'reps'" class="flex items-center justify-between">
+      <div
+        v-if="editedType === 'reps'"
+        class="flex items-center justify-between"
+      >
         <span class="text-sm text-stone-500 dark:text-stone-400">Count</span>
         <input
           v-if="isEditing"
@@ -208,7 +230,9 @@ function toggleEdit() {
     </div>
 
     <!-- Actions -->
-    <div class="flex gap-2 px-4 py-3 bg-stone-50 dark:bg-stone-800/50 border-t border-stone-200 dark:border-stone-700">
+    <div
+      class="flex gap-2 px-4 py-3 bg-stone-50 dark:bg-stone-800/50 border-t border-stone-200 dark:border-stone-700"
+    >
       <button
         type="button"
         :disabled="isLoading"

@@ -73,10 +73,28 @@ eslint --fix path/to/file.vue
 
 # Project-wide (only when needed)
 bun run lint:fix          # All files
-bun run typecheck         # Full type check
 bun run db:generate       # After schema change
 bun run db:migrate        # Apply migrations
 bun run db:studio         # DB UI on :4983
+
+# ⚠️ TYPECHECK STRATEGY (slow - use sparingly!)
+# Full typecheck takes 30-60 seconds. Use this strategy:
+#
+# 1. RELY ON DEV SERVER: The running Nuxt dev server shows type errors in terminal
+# 2. USE VS CODE: Red squiggles show errors in real-time
+# 3. USE get_errors TOOL: Check specific files for errors without running typecheck
+# 4. BATCH TYPECHECKS: Run once per phase/commit, not after every file
+#
+# When to run full typecheck:
+# - Before committing (required)
+# - After schema.ts changes
+# - After creating new API endpoints
+# - When VS Code errors seem stale
+#
+# DO NOT run typecheck:
+# - After every file edit
+# - Multiple times in a row
+# - Just to "verify" - trust VS Code and dev server
 
 # ⚠️ IMPORTANT: Never run `bun run test` in CLI - it blocks terminal!
 # Use VS Code Test Explorer or runTests tool with limits instead

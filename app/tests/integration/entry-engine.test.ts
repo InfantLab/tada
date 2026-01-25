@@ -112,7 +112,9 @@ describe("Entry Engine Integration", () => {
       expect(result.valid).toBe(true);
       expect(result.data?.type).toBe("timed");
       expect(result.data?.durationSeconds).toBe(1200);
-      expect((result.data?.data as Record<string, unknown>)?.["mode"]).toBe("unlimited");
+      expect((result.data?.data as Record<string, unknown>)?.["mode"]).toBe(
+        "unlimited",
+      );
     });
 
     it("should produce consistent entry structure for journal entries", () => {

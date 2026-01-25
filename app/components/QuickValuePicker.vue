@@ -63,7 +63,7 @@ const props = withDefaults(
     showRecent: true,
     disabled: false,
     label: undefined,
-  }
+  },
 );
 
 const emit = defineEmits<{
@@ -87,7 +87,7 @@ watch(
       inputText.value = "";
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 // Parse and emit on input
@@ -184,13 +184,26 @@ function isSelected(value: number): boolean {
       <button
         v-if="showStepper"
         type="button"
-        :disabled="disabled || modelValue === null || (modelValue ?? 0) <= (min ?? 0)"
+        :disabled="
+          disabled || modelValue === null || (modelValue ?? 0) <= (min ?? 0)
+        "
         class="p-2 rounded-lg bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
         :title="`-${stepLarge}`"
         @click="stepDown(stepLarge)"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 12H6" />
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-4 w-4"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M18 12H6"
+          />
         </svg>
       </button>
 
@@ -198,13 +211,26 @@ function isSelected(value: number): boolean {
       <button
         v-if="showStepper"
         type="button"
-        :disabled="disabled || modelValue === null || (modelValue ?? 0) <= (min ?? 0)"
+        :disabled="
+          disabled || modelValue === null || (modelValue ?? 0) <= (min ?? 0)
+        "
         class="p-1.5 rounded-md bg-stone-50 dark:bg-stone-800 text-stone-500 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
         :title="`-${stepSmall}`"
         @click="stepDown(stepSmall)"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-3 w-3"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M20 12H4"
+          />
         </svg>
       </button>
 
@@ -221,7 +247,10 @@ function isSelected(value: number): boolean {
           @input="handleInput"
           @blur="handleBlur"
         />
-        <span v-if="unit" class="text-sm text-stone-500 dark:text-stone-400 whitespace-nowrap">
+        <span
+          v-if="unit"
+          class="text-sm text-stone-500 dark:text-stone-400 whitespace-nowrap"
+        >
           {{ unit }}
         </span>
       </div>
@@ -235,8 +264,19 @@ function isSelected(value: number): boolean {
         :title="`+${stepSmall}`"
         @click="stepUp(stepSmall)"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-3 w-3"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 4v16m8-8H4"
+          />
         </svg>
       </button>
 
@@ -249,8 +289,19 @@ function isSelected(value: number): boolean {
         :title="`+${stepLarge}`"
         @click="stepUp(stepLarge)"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-4 w-4"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 4v16m8-8H4"
+          />
         </svg>
       </button>
 
@@ -263,8 +314,19 @@ function isSelected(value: number): boolean {
         title="Clear"
         @click="clear"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-4 w-4"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M6 18L18 6M6 6l12 12"
+          />
         </svg>
       </button>
     </div>

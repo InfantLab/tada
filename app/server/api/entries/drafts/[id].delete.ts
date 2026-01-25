@@ -55,12 +55,7 @@ export default defineEventHandler(async (event) => {
     // Delete draft (only if owned by user)
     const result = await db
       .delete(entryDrafts)
-      .where(
-        and(
-          eq(entryDrafts.id, draftId),
-          eq(entryDrafts.userId, userId)
-        )
-      )
+      .where(and(eq(entryDrafts.id, draftId), eq(entryDrafts.userId, userId)))
       .returning({ id: entryDrafts.id });
 
     // Check if draft was found

@@ -26,7 +26,7 @@ const emit = defineEmits<{
 function formatDuration(seconds: number): string {
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
-  
+
   if (hours > 0) {
     return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
   }
@@ -94,8 +94,9 @@ const iconClass = computed(() => {
           Time Conflict Detected
         </h4>
         <p class="text-xs text-stone-600 dark:text-stone-400 mt-0.5">
-          This entry overlaps with {{ conflict.overlappingEntries.length }}
-          existing {{ conflict.overlappingEntries.length === 1 ? "entry" : "entries" }}
+          This entry overlaps with
+          {{ conflict.overlappingEntries.length }} existing
+          {{ conflict.overlappingEntries.length === 1 ? "entry" : "entries" }}
         </p>
       </div>
     </div>

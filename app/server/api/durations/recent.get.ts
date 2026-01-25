@@ -56,7 +56,10 @@ export default defineEventHandler(async (event) => {
 
   const userId = user.id;
   const query = getQuery(event);
-  const limit = Math.min(Math.max(parseInt(String(query["limit"] || "10"), 10), 1), 50);
+  const limit = Math.min(
+    Math.max(parseInt(String(query["limit"] || "10"), 10), 1),
+    50,
+  );
   const category = query["category"] as string | undefined;
 
   logger.debug("Fetching recent durations", { userId, limit, category });
@@ -89,7 +92,7 @@ export default defineEventHandler(async (event) => {
 
     for (const entry of recentEntries) {
       if (entry.durationSeconds === null) continue;
-      
+
       const existing = durationMap.get(entry.durationSeconds);
       if (existing) {
         existing.count++;

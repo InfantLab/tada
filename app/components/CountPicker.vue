@@ -46,7 +46,7 @@ const props = withDefaults(
     disabled: false,
     label: undefined,
     unit: "reps",
-  }
+  },
 );
 
 const emit = defineEmits<{

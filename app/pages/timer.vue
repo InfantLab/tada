@@ -727,29 +727,27 @@ async function saveSession(includeOvertime: boolean = true) {
       : elapsedSeconds.value;
 
   // Create the main timer entry
-  const result = await createEntry(
-    {
-      type: "timed",
-      name: celebrationMessage,
-      category: selectedCategory.value,
-      subcategory: selectedSubcategory.value,
-      // Emoji resolved automatically by composable from category/subcategory
-      durationSeconds: durationToSave,
-      data: {
-        mode: timerMode.value,
-        intervals: intervals.value.map((int) => ({
-          durationMinutes: int.durationMinutes,
-          repeats: int.repeats,
-          bellSound: int.bellSound,
-        })),
-        warmUpSeconds: warmUpSeconds.value,
-        mood: sessionMood.value,
-        qualityRating: extractedQualityRating.value ?? undefined,
-        reflection: sessionReflection.value || undefined,
-      },
-      tags: [selectedCategory.value, selectedSubcategory.value],
-    } as EntryInput,
-  );
+  const result = await createEntry({
+    type: "timed",
+    name: celebrationMessage,
+    category: selectedCategory.value,
+    subcategory: selectedSubcategory.value,
+    // Emoji resolved automatically by composable from category/subcategory
+    durationSeconds: durationToSave,
+    data: {
+      mode: timerMode.value,
+      intervals: intervals.value.map((int) => ({
+        durationMinutes: int.durationMinutes,
+        repeats: int.repeats,
+        bellSound: int.bellSound,
+      })),
+      warmUpSeconds: warmUpSeconds.value,
+      mood: sessionMood.value,
+      qualityRating: extractedQualityRating.value ?? undefined,
+      reflection: sessionReflection.value || undefined,
+    },
+    tags: [selectedCategory.value, selectedSubcategory.value],
+  } as EntryInput);
 
   // If main entry saved, also create any selected bonus tadas
   if (result && extractedBonusTadas.value.length > 0) {
@@ -1716,6 +1714,11 @@ onUnmounted(() => {
           >
             Clear
           </button>
+        </div>
+
+        <!-- Attachment Placeholder -->
+        <div class="flex justify-start">
+          <AttachmentPlaceholder />
         </div>
 
         <!-- Actions -->

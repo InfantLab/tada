@@ -557,6 +557,11 @@ function handleTadaUpdate(updated: ExtractedTada[]) {
         </div>
       </template>
 
+      <!-- Attachment Placeholder -->
+      <div class="flex justify-start -mt-2">
+        <AttachmentPlaceholder />
+      </div>
+
       <!-- Submit button -->
       <button
         type="submit"

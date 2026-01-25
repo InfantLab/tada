@@ -59,10 +59,7 @@ export default defineEventHandler(async (event) => {
     // Build query conditions
     const conditions = includeExpired
       ? eq(entryDrafts.userId, userId)
-      : and(
-          eq(entryDrafts.userId, userId),
-          gte(entryDrafts.expiresAt, now)
-        );
+      : and(eq(entryDrafts.userId, userId), gte(entryDrafts.expiresAt, now));
 
     // Fetch drafts
     const drafts = await db

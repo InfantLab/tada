@@ -5,11 +5,13 @@ interface Props {
   period: string;
   entryCount: number;
   totalHours: number;
+  totalCount?: number; // For reps-based rhythms
   isClickable?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   isClickable: true,
+  totalCount: 0,
 });
 
 const emit = defineEmits<{
@@ -40,6 +42,12 @@ function formatHours(hours: number): string {
   return `${days} days`;
 }
 
+// Format count/reps
+function formatCount(count: number): string {
+  if (count === 0) return "";
+  return count === 1 ? "1 rep" : `${count.toLocaleString()} reps`;
+}
+
 function handleClick() {
   if (props.isClickable) {
     emit("click", props.period);
@@ -67,7 +75,10 @@ function handleClick() {
         <p class="text-sm text-stone-500 dark:text-stone-400 mt-1">
           {{ entryCount.toLocaleString() }}
           {{ entryCount === 1 ? "moment" : "moments" }}
-          <span v-if="totalHours > 0" class="ml-2">
+          <span v-if="totalCount > 0" class="ml-2">
+            · {{ formatCount(totalCount) }}
+          </span>
+          <span v-else-if="totalHours > 0" class="ml-2">
             · {{ formatHours(totalHours) }}
           </span>
         </p>

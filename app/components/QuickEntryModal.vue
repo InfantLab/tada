@@ -41,7 +41,7 @@ const props = withDefaults(
     initialCategory: "",
     durationContext: "general",
     resumeDraft: null,
-  }
+  },
 );
 
 const emit = defineEmits<{
@@ -68,7 +68,17 @@ const resumingDraftId = ref<string | null>(null);
 const showDraftBanner = ref(false);
 
 // Conflict state
-const conflicts = ref<{ hasConflict: boolean; overlappingEntries: Array<{ id: string; name: string; emoji?: string; timestamp: string; durationSeconds?: number }>; suggestedResolution: string } | null>(null);
+const conflicts = ref<{
+  hasConflict: boolean;
+  overlappingEntries: Array<{
+    id: string;
+    name: string;
+    emoji?: string;
+    timestamp: string;
+    durationSeconds?: number;
+  }>;
+  suggestedResolution: string;
+} | null>(null);
 const conflictResolution = ref<"allow-both" | "replace" | null>(null);
 
 // Reset form when modal opens
@@ -81,13 +91,14 @@ watch(
         const draft = props.resumeDraft;
         resumingDraftId.value = draft.id;
         showDraftBanner.value = true;
-        
+
         // Populate from draft
         const input = draft.input;
         mode.value = (input["type"] as EntryMode) || props.initialMode;
         name.value = (input["name"] as string) || props.initialName;
         category.value = (input["category"] as string) || props.initialCategory;
-        timestamp.value = (input["timestamp"] as string) || new Date().toISOString();
+        timestamp.value =
+          (input["timestamp"] as string) || new Date().toISOString();
         durationSeconds.value = (input["durationSeconds"] as number) || null;
         count.value = (input["count"] as number) || null;
         notes.value = (input["notes"] as string) || "";
@@ -106,7 +117,7 @@ watch(
       conflicts.value = null;
       conflictResolution.value = null;
     }
-  }
+  },
 );
 
 // Check for conflicts when timestamp or duration changes (for timed entries)
@@ -117,7 +128,7 @@ watch(
       conflicts.value = null;
       return;
     }
-    
+
     // Build a temporary entry input for conflict check
     const entryInput = buildEntryInput();
     try {
@@ -127,7 +138,7 @@ watch(
       conflicts.value = null;
     }
   },
-  { debounce: 500 } as unknown as { debounce: number }
+  { debounce: 500 } as unknown as { debounce: number },
 );
 
 // Compute if form is valid
@@ -158,7 +169,9 @@ function buildEntryInput(): EntryInput {
     case "timed": {
       // Calculate startedAt from timestamp and duration
       const endTime = new Date(timestamp.value);
-      const startTime = new Date(endTime.getTime() - (durationSeconds.value || 0) * 1000);
+      const startTime = new Date(
+        endTime.getTime() - (durationSeconds.value || 0) * 1000,
+      );
       return {
         ...baseEntry,
         type: "timed",
@@ -194,30 +207,36 @@ async function handleSave(resolution?: "allow-both" | "replace") {
 
   try {
     const entryInput = buildEntryInput();
-    
+
     // Determine resolution based on conflict state
     const saveOptions: CreateEntryOptions = { skipEmojiResolution: false };
     if (resolution === "replace") {
       saveOptions.resolution = "replace";
-    } else if (resolution === "allow-both" || conflictResolution.value === "allow-both") {
+    } else if (
+      resolution === "allow-both" ||
+      conflictResolution.value === "allow-both"
+    ) {
       saveOptions.resolution = "allow-both";
     }
-    
+
     const result = await createEntry(entryInput, saveOptions);
 
     if (result) {
       // If resuming from draft, delete the draft
       if (resumingDraftId.value) {
         try {
-          await $fetch<{ success: boolean }>(`/api/entries/drafts/${resumingDraftId.value}`, {
-            method: "DELETE",
-          });
+          await $fetch<{ success: boolean }>(
+            `/api/entries/drafts/${resumingDraftId.value}`,
+            {
+              method: "DELETE",
+            },
+          );
         } catch {
           // Draft deletion is not critical, don't fail the save
           console.warn("Failed to delete draft after save");
         }
       }
-      
+
       toast.success("Entry saved!");
       emit("saved", entryInput);
       closeModal();
@@ -234,7 +253,7 @@ function handleConflictResolve(action: "allow-both" | "replace" | "cancel") {
     closeModal();
     return;
   }
-  
+
   conflictResolution.value = action;
   handleSave(action);
 }
@@ -421,10 +440,7 @@ const modeLabels: Record<EntryMode, string> = {
               </div>
 
               <!-- When -->
-              <DateTimePicker
-                v-model="timestamp"
-                label="When?"
-              />
+              <DateTimePicker v-model="timestamp" label="When?" />
 
               <!-- Conflict Warning -->
               <ConflictWarning
@@ -445,9 +461,18 @@ const modeLabels: Record<EntryMode, string> = {
                 <textarea
                   v-model="notes"
                   :rows="2"
-                  :placeholder="mode === 'moment' ? 'What\'s on your mind?' : 'Any notes about this session?'"
+                  :placeholder="
+                    mode === 'moment'
+                      ? 'What\'s on your mind?'
+                      : 'Any notes about this session?'
+                  "
                   class="w-full px-3 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 text-stone-900 dark:text-white placeholder-stone-400 focus:ring-2 focus:ring-tada-500 focus:border-transparent resize-none"
                 />
+              </div>
+
+              <!-- Attachment Placeholder -->
+              <div class="flex justify-start">
+                <AttachmentPlaceholder />
               </div>
             </div>
 

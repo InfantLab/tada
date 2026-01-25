@@ -150,9 +150,9 @@
 
 ### Implementation for User Story 5
 
-- [ ] T049 [US5] Add moment capture mode to QuickEntryModal in `app/components/QuickEntryModal.vue`
-- [ ] T050 [US5] Implement keyword-based category inference in `app/utils/naturalLanguageParser.ts`
-- [ ] T051 [US5] Add keyboard shortcut or gesture to open moment capture quickly
+- [x] T049 [US5] Add moment capture mode to QuickEntryModal in `app/components/QuickEntryModal.vue` (already implemented)
+- [x] T050 [US5] Implement keyword-based category inference in `app/utils/naturalLanguageParser.ts` (already implemented)
+- [x] T051 [US5] Add keyboard shortcut or gesture to open moment capture quickly (n/m keys + Cmd+N)
 
 **Checkpoint**: User Story 5 complete - moment capture works independently
 
@@ -166,10 +166,10 @@
 
 ### Implementation for User Story 6
 
-- [ ] T052 [US6] Extend `GET /api/rhythms/[id]/stats` to return totalCount for reps in `app/server/api/rhythms/[id]/stats.get.ts`
-- [ ] T053 [US6] Update `app/components/RhythmBarChart.vue` to display counts vs duration based on entry type
-- [ ] T054 [US6] Update `app/components/PeriodSummaryCard.vue` to show "X reps" for count-based rhythms
-- [ ] T055 [US6] Handle mixed entry types in rhythm display (timed + reps gracefully)
+- [x] T052 [US6] Extend `GET /api/rhythms/[id]/stats` to return totalCount for reps in `app/server/api/rhythms/[id]/stats.get.ts`
+- [x] T053 [US6] Update `app/components/RhythmBarChart.vue` to display counts vs duration based on entry type
+- [x] T054 [US6] Update `app/components/PeriodSummaryCard.vue` to show "X reps" for count-based rhythms
+- [x] T055 [US6] Handle mixed entry types in rhythm display (timed + reps gracefully)
 
 **Checkpoint**: User Story 6 complete - rhythm counts work independently
 
@@ -183,10 +183,10 @@
 
 ### Implementation for User Story 7
 
-- [ ] T056 [P] [US7] Create `app/components/AttachmentPlaceholder.vue` with "coming soon" UI
-- [ ] T057 [US7] Add AttachmentPlaceholder to QuickEntryModal
-- [ ] T058 [US7] Add AttachmentPlaceholder to timer.vue post-session form
-- [ ] T059 [US7] Add AttachmentPlaceholder to add.vue entry form
+- [x] T056 [P] [US7] Create `app/components/AttachmentPlaceholder.vue` with "coming soon" UI
+- [x] T057 [US7] Add AttachmentPlaceholder to QuickEntryModal
+- [x] T058 [US7] Add AttachmentPlaceholder to timer.vue post-session form
+- [x] T059 [US7] Add AttachmentPlaceholder to add.vue entry form
 
 **Checkpoint**: User Story 7 complete - attachment placeholder visible
 

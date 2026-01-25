@@ -237,6 +237,7 @@ export default defineEventHandler(async (event) => {
         totalSessions: totals.totalSessions,
         totalSeconds: totals.totalSeconds,
         totalHours: totals.totalHours,
+        totalCount: totals.totalCount,
         firstEntryDate: totals.firstEntryDate,
         weeksActive: totals.weeksActive,
         monthsActive: totals.monthsActive,

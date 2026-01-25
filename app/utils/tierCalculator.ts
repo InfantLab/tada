@@ -88,6 +88,7 @@ export interface DayStatus {
   date: string; // YYYY-MM-DD
   totalSeconds: number;
   isComplete: boolean;
+  totalCount: number; // Total reps/counts for the day
   entryCount: number;
 }
 
@@ -172,6 +173,7 @@ export interface DayStatus {
   date: string; // YYYY-MM-DD
   totalSeconds: number;
   isComplete: boolean;
+  totalCount: number; // Total reps/counts for the day
   entryCount: number;
 }
 

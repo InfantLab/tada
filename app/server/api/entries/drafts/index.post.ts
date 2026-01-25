@@ -25,10 +25,11 @@ const logger = createLogger("api:entries:drafts:post");
 
 // Request body validation
 const createDraftSchema = z.object({
-  input: z.record(z.unknown()).refine(
-    (obj) => Object.keys(obj).length > 0,
-    { message: "Input must not be empty" }
-  ),
+  input: z
+    .record(z.unknown())
+    .refine((obj) => Object.keys(obj).length > 0, {
+      message: "Input must not be empty",
+    }),
   parsedFrom: z.string().max(1000).optional(),
   confidence: z.number().min(0).max(1).optional(),
   expiresInHours: z.number().min(1).max(168).default(24),
@@ -59,7 +60,11 @@ export default defineEventHandler(async (event) => {
 
   const { input, parsedFrom, confidence, expiresInHours } = validation.data;
 
-  logger.debug("Creating draft", { userId, hasInput: !!input, parsedFrom: !!parsedFrom });
+  logger.debug("Creating draft", {
+    userId,
+    hasInput: !!input,
+    parsedFrom: !!parsedFrom,
+  });
 
   try {
     const id = randomUUID();
@@ -76,7 +81,11 @@ export default defineEventHandler(async (event) => {
       expiresAt: expiresAt.toISOString(),
     });
 
-    logger.debug("Draft created", { userId, draftId: id, expiresAt: expiresAt.toISOString() });
+    logger.debug("Draft created", {
+      userId,
+      draftId: id,
+      expiresAt: expiresAt.toISOString(),
+    });
 
     return {
       id,

@@ -30,9 +30,11 @@ const paramsSchema = z.object({
 });
 
 // Request body validation
-const commitBodySchema = z.object({
-  overrides: z.record(z.unknown()).optional(),
-}).optional();
+const commitBodySchema = z
+  .object({
+    overrides: z.record(z.unknown()).optional(),
+  })
+  .optional();
 
 export default defineEventHandler(async (event) => {
   // Get authenticated user
@@ -62,21 +64,22 @@ export default defineEventHandler(async (event) => {
   // Parse optional body
   const body = await readBody(event);
   const bodyValidation = commitBodySchema.safeParse(body);
-  const overrides = bodyValidation.success ? bodyValidation.data?.overrides : undefined;
+  const overrides = bodyValidation.success
+    ? bodyValidation.data?.overrides
+    : undefined;
 
-  logger.debug("Committing draft", { userId, draftId, hasOverrides: !!overrides });
+  logger.debug("Committing draft", {
+    userId,
+    draftId,
+    hasOverrides: !!overrides,
+  });
 
   try {
     // Fetch the draft
     const [draft] = await db
       .select()
       .from(entryDrafts)
-      .where(
-        and(
-          eq(entryDrafts.id, draftId),
-          eq(entryDrafts.userId, userId)
-        )
-      )
+      .where(and(eq(entryDrafts.id, draftId), eq(entryDrafts.userId, userId)))
       .limit(1);
 
     if (!draft) {
@@ -104,11 +107,10 @@ export default defineEventHandler(async (event) => {
     // Extract fields using bracket notation (required for index signatures)
     const count = mergedInput["count"] as number | undefined;
     const dataField = (mergedInput["data"] as Record<string, unknown>) || {};
-    
+
     // If count exists but not in data, add it to data
-    const entryData = count && !dataField["count"]
-      ? { ...dataField, count }
-      : dataField;
+    const entryData =
+      count && !dataField["count"] ? { ...dataField, count } : dataField;
 
     // Create the entry
     const entryId = randomUUID();
@@ -132,9 +134,7 @@ export default defineEventHandler(async (event) => {
     });
 
     // Delete the draft
-    await db
-      .delete(entryDrafts)
-      .where(eq(entryDrafts.id, draftId));
+    await db.delete(entryDrafts).where(eq(entryDrafts.id, draftId));
 
     logger.debug("Draft committed", { userId, draftId, entryId });
 

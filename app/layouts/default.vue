@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { EntryMode } from "~/components/EntryTypeToggle.vue";
+
 const navigation = [
   { name: "Timeline", href: "/", icon: "i-heroicons-clock" },
   { name: "Timer", href: "/timer", icon: "i-heroicons-play-circle" },
@@ -11,6 +13,61 @@ const route = useRoute();
 
 // Quick entry modal state
 const showQuickEntryModal = ref(false);
+const quickEntryMode = ref<EntryMode>("timed");
+
+// Keyboard shortcuts for quick entry
+function handleKeydown(event: KeyboardEvent) {
+  // Ignore if user is typing in an input/textarea
+  const target = event.target as HTMLElement;
+  if (
+    target.tagName === "INPUT" ||
+    target.tagName === "TEXTAREA" ||
+    target.isContentEditable
+  ) {
+    return;
+  }
+
+  // Cmd/Ctrl + N: Open quick entry (timed mode)
+  if ((event.metaKey || event.ctrlKey) && event.key === "n") {
+    event.preventDefault();
+    quickEntryMode.value = "timed";
+    showQuickEntryModal.value = true;
+    return;
+  }
+
+  // Cmd/Ctrl + Shift + N: Open quick entry (moment mode)
+  if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key === "N") {
+    event.preventDefault();
+    quickEntryMode.value = "moment";
+    showQuickEntryModal.value = true;
+    return;
+  }
+
+  // "n" key alone: Open quick entry (when not in input)
+  if (event.key === "n" && !event.metaKey && !event.ctrlKey && !event.altKey) {
+    event.preventDefault();
+    quickEntryMode.value = "timed";
+    showQuickEntryModal.value = true;
+    return;
+  }
+
+  // "m" key alone: Open moment capture
+  if (event.key === "m" && !event.metaKey && !event.ctrlKey && !event.altKey) {
+    event.preventDefault();
+    quickEntryMode.value = "moment";
+    showQuickEntryModal.value = true;
+    return;
+  }
+}
+
+// Add keyboard listener on mount
+onMounted(() => {
+  window.addEventListener("keydown", handleKeydown);
+});
+
+onUnmounted(() => {
+  window.removeEventListener("keydown", handleKeydown);
+});
 </script>
 
 <template>
@@ -216,6 +273,7 @@ const showQuickEntryModal = ref(false);
     <!-- Quick Entry Modal -->
     <QuickEntryModal
       v-model:open="showQuickEntryModal"
+      :initial-mode="quickEntryMode"
       @saved="showQuickEntryModal = false"
     />
 

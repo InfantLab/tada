@@ -44,7 +44,7 @@ export default defineEventHandler(async (event) => {
   const type = queryParams["type"] as string | undefined;
   const limit = Math.min(
     Math.max(parseInt(String(queryParams["limit"] || "10"), 10), 1),
-    50
+    50,
   );
 
   if (!query) {

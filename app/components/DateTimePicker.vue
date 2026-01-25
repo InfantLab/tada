@@ -29,7 +29,7 @@ const props = withDefaults(
     disabled: false,
     maxDate: undefined,
     showTimePresets: true,
-  }
+  },
 );
 
 const emit = defineEmits<{
@@ -91,7 +91,7 @@ function setToday() {
   const currentTime =
     timeValue.value ||
     `${String(now.getHours()).padStart(2, "0")}:${String(
-      now.getMinutes()
+      now.getMinutes(),
     ).padStart(2, "0")}`;
   const newDate = new Date(`${dateStr}T${currentTime}`);
   emit("update:modelValue", newDate.toISOString());
@@ -132,8 +132,7 @@ const timePresets = [
 ];
 
 function setTimePreset(time: string) {
-  const currentDate =
-    dateValue.value || new Date().toISOString().split("T")[0];
+  const currentDate = dateValue.value || new Date().toISOString().split("T")[0];
   const newDate = new Date(`${currentDate}T${time}`);
   if (!isNaN(newDate.getTime())) {
     emit("update:modelValue", newDate.toISOString());
