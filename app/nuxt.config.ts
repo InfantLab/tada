@@ -162,6 +162,17 @@ export default defineNuxtConfig({
     build: {
       // Use esbuild for minification (faster than terser)
       minify: "esbuild",
+      rollupOptions: {
+        // Externalize the Whisper WASM dependency - it's optional and loaded dynamically
+        // The package is huge (~2GB with models) and only used if user opts into local transcription
+        external: ["@xenova/transformers"],
+      },
+    },
+    // Worker bundling - externalize heavy optional deps
+    worker: {
+      rollupOptions: {
+        external: ["@xenova/transformers"],
+      },
     },
     // Reduce logging noise
     server: {
