@@ -26,14 +26,23 @@
             <div class="text-sm font-medium">
               {{ toast.message }}
             </div>
-            <!-- Action button -->
-            <button
-              v-if="toast.action"
-              class="mt-2 text-sm font-semibold underline hover:no-underline transition-all"
-              @click="handleAction(toast)"
-            >
-              {{ toast.action.label }}
-            </button>
+            <!-- Copy and Action buttons -->
+            <div class="flex gap-2 mt-2">
+              <button
+                v-if="toast.type === 'error'"
+                class="text-xs px-2 py-1 rounded bg-red-100 dark:bg-red-800/50 hover:bg-red-200 dark:hover:bg-red-800 transition-colors"
+                @click="copyError(toast)"
+              >
+                {{ copiedId === toast.id ? "✓ Copied" : "📋 Copy" }}
+              </button>
+              <button
+                v-if="toast.action"
+                class="text-sm font-semibold underline hover:no-underline transition-all"
+                @click="handleAction(toast)"
+              >
+                {{ toast.action.label }}
+              </button>
+            </div>
           </div>
 
           <!-- Dismiss button -->
@@ -56,10 +65,27 @@ import type { Toast } from "~/composables/useToast";
 
 const { toasts, dismissToast } = useToast();
 
+// Track which toast was copied
+const copiedId = ref<string | null>(null);
+
 const handleAction = async (toast: Toast) => {
   if (toast.action) {
     await toast.action.onClick();
     dismissToast(toast.id);
+  }
+};
+
+const copyError = async (toast: Toast) => {
+  try {
+    const errorDetails = `Error: ${toast.message}\nTime: ${new Date().toISOString()}`;
+    await navigator.clipboard.writeText(errorDetails);
+    copiedId.value = toast.id;
+    // Reset after 2 seconds
+    setTimeout(() => {
+      copiedId.value = null;
+    }, 2000);
+  } catch {
+    console.error("Failed to copy error to clipboard");
   }
 };
 

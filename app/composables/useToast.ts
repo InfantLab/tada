@@ -31,7 +31,7 @@ export const useToast = () => {
   const showToast = (
     message: string,
     type: ToastType = "info",
-    options: ToastOptions = {}
+    options: ToastOptions = {},
   ) => {
     const id = `toast-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     const duration = options.duration ?? 5000;
@@ -76,7 +76,9 @@ export const useToast = () => {
 
   const error = (message: string, options?: ToastOptions | number) => {
     const opts = typeof options === "number" ? { duration: options } : options;
-    return showToast(message, "error", opts);
+    // Errors stay longer (10s) so users can read and copy them
+    const errorOpts = { duration: 10000, ...opts };
+    return showToast(message, "error", errorOpts);
   };
 
   const warning = (message: string, options?: ToastOptions | number) => {

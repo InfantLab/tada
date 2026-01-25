@@ -1,0 +1,275 @@
+openapi: 3.1.0
+info:
+  title: Tada Voice API
+  version: 0.3.0
+  description: |
+    Cloud fallback endpoints for voice transcription and LLM structuring.
+    These are optional - the app works with on-device processing when available.
+
+servers:
+  - url: /api/voice
+    description: Voice processing endpoints
+
+paths:
+  /transcribe:
+    post:
+      summary: Transcribe audio to text
+      description: |
+        Cloud fallback for speech-to-text when on-device unavailable.
+        Supports BYOK (user's API key) or managed premium tier.
+      operationId: transcribeAudio
+      tags:
+        - Transcription
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - audio
+              properties:
+                audio:
+                  type: string
+                  format: binary
+                  description: Audio file (WAV, WebM, or MP3)
+                mimeType:
+                  type: string
+                  default: audio/webm
+                  description: MIME type of audio file
+                provider:
+                  type: string
+                  enum: [whisper, deepgram, assemblyai]
+                  default: whisper
+                  description: STT provider to use
+                userApiKey:
+                  type: string
+                  description: User's own API key (BYOK mode)
+      responses:
+        "200":
+          description: Transcription successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TranscribeResponse"
+        "400":
+          description: Invalid audio format
+        "401":
+          description: Unauthorized (no valid subscription or API key)
+        "402":
+          description: Free tier limit exceeded
+        "429":
+          description: Rate limited
+        "500":
+          description: Transcription failed
+
+  /structure:
+    post:
+      summary: Extract structured data from transcription
+      description: |
+        Uses LLM to extract tadas, detect journal type, suggest categories.
+        Supports multi-tada extraction from rambling speech.
+      operationId: structureTranscription
+      tags:
+        - LLM Processing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StructureRequest"
+      responses:
+        "200":
+          description: Extraction successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StructureResponse"
+        "400":
+          description: Invalid request
+        "401":
+          description: Unauthorized
+        "402":
+          description: Free tier limit exceeded
+        "429":
+          description: Rate limited
+        "500":
+          description: LLM processing failed
+
+  /usage:
+    get:
+      summary: Get voice feature usage stats
+      description: Returns current month's usage for rate limiting display
+      operationId: getVoiceUsage
+      tags:
+        - Usage
+      responses:
+        "200":
+          description: Usage stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UsageResponse"
+
+components:
+  schemas:
+    TranscribeResponse:
+      type: object
+      required:
+        - text
+        - confidence
+        - duration
+        - provider
+      properties:
+        text:
+          type: string
+          description: Transcribed text
+          example: "Today I fixed the sink and called my mom"
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Transcription confidence score
+          example: 0.95
+        duration:
+          type: number
+          description: Audio duration in seconds
+          example: 12.5
+        provider:
+          type: string
+          description: Provider used for transcription
+          example: whisper
+
+    StructureRequest:
+      type: object
+      required:
+        - text
+        - context
+      properties:
+        text:
+          type: string
+          description: Transcribed text to analyze
+          example: "Today I fixed the sink, called mom, and finally finished that book"
+        context:
+          type: string
+          enum: [tada, journal, timer-note]
+          description: Entry context for better extraction
+        provider:
+          type: string
+          enum: [groq, openai, anthropic]
+          default: groq
+          description: LLM provider to use
+        userApiKey:
+          type: string
+          description: User's own API key (BYOK mode)
+
+    StructureResponse:
+      type: object
+      required:
+        - tadas
+        - confidence
+      properties:
+        tadas:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExtractedTada"
+        journalType:
+          $ref: "#/components/schemas/JournalDetection"
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Overall extraction confidence
+        tokensUsed:
+          type: integer
+          description: LLM tokens consumed (for billing)
+
+    ExtractedTada:
+      type: object
+      required:
+        - tempId
+        - title
+        - significance
+        - confidence
+      properties:
+        tempId:
+          type: string
+          format: uuid
+          description: Temporary ID for UI tracking
+        title:
+          type: string
+          description: Extracted accomplishment text
+          example: "Fixed the sink"
+        category:
+          type: string
+          nullable: true
+          description: Suggested category
+          example: "home"
+        subcategory:
+          type: string
+          nullable: true
+          description: Suggested subcategory
+        significance:
+          type: string
+          enum: [minor, normal, major]
+          default: normal
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+        originalText:
+          type: string
+          description: Portion of transcription this came from
+
+    JournalDetection:
+      type: object
+      required:
+        - subcategory
+        - confidence
+      properties:
+        subcategory:
+          type: string
+          enum: [dream, reflection, gratitude, note]
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+        signals:
+          type: array
+          items:
+            type: string
+          description: Keywords/patterns that triggered detection
+
+    UsageResponse:
+      type: object
+      properties:
+        voiceEntriesThisMonth:
+          type: integer
+          description: Voice entries created this billing period
+        voiceEntriesLimit:
+          type: integer
+          description: Monthly limit (null if unlimited)
+        resetDate:
+          type: string
+          format: date
+          description: When usage counter resets
+        tier:
+          type: string
+          enum: [free, premium, byok]
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Standard session auth
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Transcription
+    description: Speech-to-text endpoints
+  - name: LLM Processing
+    description: Structured data extraction
+  - name: Usage
+    description: Rate limiting and billing

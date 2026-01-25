@@ -31,7 +31,7 @@ onMounted(async () => {
     // Fetch journal-type entries (dream, journal, tada)
     const data = await $fetch<Entry[]>("/api/entries");
     entries.value = data.filter((e) =>
-      ["dream", "journal", "tada", "note"].includes(e.type)
+      ["dream", "journal", "tada", "note"].includes(e.type),
     );
   } catch (err: unknown) {
     console.error("Failed to fetch journal entries:", err);

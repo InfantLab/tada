@@ -16,7 +16,9 @@ const hasUsers = ref(true);
 onMounted(async () => {
   // Check if already authenticated - redirect to home
   try {
-    const session = await $fetch<{ user?: { id: string } }>("/api/auth/session");
+    const session = await $fetch<{ user?: { id: string } }>(
+      "/api/auth/session",
+    );
     if (session.user) {
       navigateTo("/");
       return;

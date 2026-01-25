@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
   generateSecureToken,
   hashToken,
@@ -8,7 +8,27 @@ import {
   generateId,
 } from "./tokens";
 
+// Mock crypto.randomUUID if not available in test environment
+let uuidCounter = 0;
+const mockRandomUUID = vi.fn(() => {
+  uuidCounter++;
+  return `550e8400-e29b-41d4-a716-44665544000${uuidCounter}`;
+});
+
+if (typeof crypto === "undefined" || !crypto.randomUUID) {
+  Object.defineProperty(globalThis, "crypto", {
+    value: {
+      ...globalThis.crypto,
+      randomUUID: mockRandomUUID,
+    },
+    writable: true,
+  });
+}
+
 describe("tokens", () => {
+  beforeEach(() => {
+    uuidCounter = 0;
+  });
   describe("generateSecureToken", () => {
     it("generates a URL-safe token", () => {
       const token = generateSecureToken();
@@ -109,15 +129,19 @@ describe("tokens", () => {
   describe("generateId", () => {
     it("generates valid UUID v4", () => {
       const id = generateId();
+      // UUID v4 format: xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx where y is 8, 9, a, or b
       expect(id).toMatch(
-        /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+        /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
       );
     });
 
     it("generates unique IDs", () => {
-      const id1 = generateId();
-      const id2 = generateId();
-      expect(id1).not.toBe(id2);
+      const ids = new Set<string>();
+      for (let i = 0; i < 100; i++) {
+        ids.add(generateId());
+      }
+      // All 100 IDs should be unique
+      expect(ids.size).toBe(100);
     });
   });
 });

@@ -146,6 +146,7 @@ See [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) for complete codebase organizat
 - **PWA**: @vite-pwa/nuxt
 - **Styling**: Tailwind CSS
 - **Runtime**: Bun 1.3.5 (not Node.js!)
+- **Voice Input**: Web Speech API, MediaRecorder API, Web Crypto API
 
 ### Unified Entry Model
 
@@ -275,6 +276,55 @@ iOS Safari limits background execution for PWAs. Our solution:
 - Save timer state to IndexedDB every second
 - Resume gracefully if app was killed
 - Push notification on completion (iOS 16.4+ when PWA installed)
+
+### Voice Input (v0.3.0+)
+
+Voice input allows users to capture tadas and journals by speaking naturally. The system extracts structured data from transcribed speech.
+
+**Architecture:**
+
+```
+User speaks → MediaRecorder (WebM/mp4) → Transcription → LLM Extraction → Entry
+                                              ↓
+                                    Web Speech API (free)
+                                         OR
+                                    Whisper Cloud (BYOK)
+```
+
+**Key Components:**
+
+- `app/components/voice/VoiceRecorder.vue` — Main recording UI with mic button
+- `app/composables/useVoiceCapture.ts` — MediaRecorder abstraction
+- `app/composables/useTranscription.ts` — STT with tiered fallback
+- `app/composables/useVoiceQueue.ts` — IndexedDB queue for offline resilience
+- `app/utils/tadaExtractor.ts` — Rule-based and LLM extraction logic
+
+**Transcription Tiers:**
+
+1. **Web Speech API** (free, on-device where available)
+2. **Whisper Cloud** via Groq/OpenAI (BYOK - bring your own key)
+
+**API Endpoints:**
+
+- `POST /api/voice/transcribe` — Audio to text (rate limited: 1/10s, 50/month free)
+- `POST /api/voice/structure` — Text to structured entry via LLM
+- `POST /api/voice/validate-key` — Validate user's API key
+- `GET /api/voice/usage` — Usage statistics and billing period
+
+**Security:**
+
+- API keys encrypted client-side with AES-GCM before localStorage
+- PBKDF2 key derivation with 100k iterations
+- Keys never sent to our servers (BYOK model)
+
+**Browser Support:**
+
+| Browser | MediaRecorder | Web Speech API | Status |
+|---------|--------------|----------------|--------|
+| Chrome  | ✅ webm/opus | ✅ | Full support |
+| Safari  | ✅ mp4/aac   | ✅ (webkit prefix) | Full support |
+| Firefox | ✅ webm/opus | ❌ | Cloud transcription only |
+| Edge    | ✅ webm/opus | ✅ | Full support |
 
 ## Development Workflow
 

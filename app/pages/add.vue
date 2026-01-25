@@ -4,13 +4,32 @@ import {
   CATEGORY_DEFAULTS,
   getSubcategoriesForCategory,
 } from "~/utils/categoryDefaults";
+import type { TranscriptionResult, VoiceRecordingStatus } from "~/types/voice";
+import type { VoiceEntryData } from "~/composables/useEntrySave";
+import type { ExtractedTada } from "~/types/extraction";
 
 // Use the unified entry save composable
-const { createEntry, isLoading: isSubmitting } = useEntrySave();
-const { success: showSuccess } = useToast();
+const {
+  createEntry,
+  createVoiceEntry,
+  createBatchTadas,
+  isLoading: isSubmitting,
+} = useEntrySave();
+const { success: showSuccess, error: showError } = useToast();
 
 // Load user preferences
 const { loadPreferences, isCategoryVisible } = usePreferences();
+
+// Voice composables
+const transcription = useTranscription();
+const llmStructure = useLLMStructure();
+
+// Voice state
+const showTadaChecklist = ref(false);
+const currentTranscription = ref<TranscriptionResult | null>(null);
+const extractedTadas = ref<ExtractedTada[]>([]);
+const recordingDuration = ref(0);
+const voiceStatus = ref<VoiceRecordingStatus>("idle");
 
 // Load preferences on mount
 onMounted(() => {
@@ -144,34 +163,215 @@ async function submitEntry() {
     showSuccess("Entry saved! ✨");
   }
 }
+
+// Voice recording handlers - store live transcription text
+const liveTranscriptionText = ref("");
+
+function handleVoiceLiveTranscription(text: string) {
+  liveTranscriptionText.value = text;
+}
+
+async function handleVoiceComplete(
+  blob: Blob,
+  duration: number,
+  transcriptionText: string,
+) {
+  recordingDuration.value = duration;
+
+  // Use the transcription text passed directly from VoiceRecorder (most reliable)
+  // Fall back to liveTranscriptionText or composable result if not provided
+  const transcriptText =
+    transcriptionText ||
+    liveTranscriptionText.value ||
+    transcription.result.value?.text ||
+    "";
+
+  if (!transcriptText.trim()) {
+    voiceStatus.value = "idle";
+    showError("No speech detected. Please speak clearly and try again.");
+    liveTranscriptionText.value = "";
+    return;
+  }
+
+  // Store for potential ta-da extraction
+  currentTranscription.value = {
+    text: transcriptText,
+    provider: "web-speech",
+    processingMethod: "web-speech",
+    confidence: 0.8,
+    duration: duration,
+  };
+  liveTranscriptionText.value = "";
+
+  // ALWAYS populate the journal form first with the transcription
+  populateJournalForm(transcriptText);
+
+  // Try to detect ta-das in the background
+  voiceStatus.value = "processing";
+
+  try {
+    const extraction = await llmStructure.extractTadas(transcriptText);
+
+    if (extraction && extraction.tadas.length > 0) {
+      // Found ta-das - show checklist as an optional popup
+      // User can choose to save them as tadas OR continue editing the journal
+      extractedTadas.value = extraction.tadas;
+      showTadaChecklist.value = true;
+      showSuccess(
+        `Also found ${extraction.tadas.length} ta-da${extraction.tadas.length > 1 ? "s" : ""}! Review the popup to save them.`,
+      );
+    } else {
+      showSuccess("Journal populated! Edit and save below.");
+    }
+    voiceStatus.value = "idle";
+  } catch (err) {
+    console.error("[add.vue] Extraction error:", err);
+    // On error, journal form is already populated, just continue
+    showSuccess("Journal populated! Edit and save below.");
+    voiceStatus.value = "idle";
+  }
+}
+
+/**
+ * Populate the journal form with transcribed text
+ */
+function populateJournalForm(text: string) {
+  // If there's already content, append to notes
+  if (title.value.trim() || notes.value.trim()) {
+    notes.value = notes.value.trim()
+      ? `${notes.value.trim()}\n\n${text}`
+      : text;
+  } else {
+    // Extract first sentence or short phrase as title, rest as notes
+    const firstSentenceMatch = text.match(/^([^.!?]+[.!?]?)\s*/);
+    if (firstSentenceMatch && firstSentenceMatch[1]) {
+      const firstPart = firstSentenceMatch[1].trim();
+      const rest = text.slice(firstSentenceMatch[0].length).trim();
+
+      // If first sentence is short enough, use as title
+      if (firstPart.length <= 60) {
+        title.value = firstPart;
+        notes.value = rest;
+      } else {
+        // Long first sentence - put everything in notes
+        notes.value = text;
+      }
+    } else {
+      // No clear sentence - put in notes
+      notes.value = text;
+    }
+  }
+
+  // Focus notes for easy editing
+  nextTick(() => {
+    notesTextarea.value?.focus();
+    autoGrow();
+  });
+}
+
+function handleVoiceCancel() {
+  voiceStatus.value = "idle";
+}
+
+function handleVoiceError(message: string) {
+  voiceStatus.value = "error";
+  showError(message);
+}
+
+function handleReRecord() {
+  showTadaChecklist.value = false;
+  currentTranscription.value = null;
+  extractedTadas.value = [];
+  title.value = "";
+  notes.value = "";
+  // User will tap the mic button again to re-record
+}
+
+// Tada checklist handlers
+async function handleTadaSave(selectedTadas: ExtractedTada[]) {
+  if (selectedTadas.length === 0) return;
+
+  // Generate an extraction ID for linking these tadas together
+  const extractionId = crypto.randomUUID();
+  const result = await createBatchTadas(selectedTadas, extractionId);
+
+  if (result) {
+    showTadaChecklist.value = false;
+    extractedTadas.value = [];
+    currentTranscription.value = null;
+    // Navigate to home after batch save
+    await navigateTo("/");
+  }
+}
+
+async function handleTadaSaveAsJournal(text: string) {
+  if (!currentTranscription.value) return;
+
+  const voiceData: VoiceEntryData = {
+    transcription: currentTranscription.value.text,
+    sttProvider: currentTranscription.value.provider,
+    confidence: currentTranscription.value.confidence,
+    recordingDurationMs: recordingDuration.value * 1000,
+  };
+
+  const result = await createVoiceEntry(text, voiceData, {
+    navigateTo: "/",
+  });
+
+  if (result) {
+    showTadaChecklist.value = false;
+    extractedTadas.value = [];
+    currentTranscription.value = null;
+  }
+}
+
+function handleTadaCancel() {
+  showTadaChecklist.value = false;
+  extractedTadas.value = [];
+}
+
+function handleTadaUpdate(updated: ExtractedTada[]) {
+  extractedTadas.value = updated;
+}
 </script>
 
 <template>
   <div class="max-w-lg mx-auto">
-    <!-- Page header -->
-    <div class="flex items-center gap-4 mb-6">
-      <NuxtLink
-        to="/"
-        class="p-2 -ml-2 rounded-lg text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-700"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-6 w-6"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
+    <!-- Page header with mic button -->
+    <div class="flex items-center justify-between mb-6">
+      <div class="flex items-center gap-4">
+        <NuxtLink
+          to="/"
+          class="p-2 -ml-2 rounded-lg text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-700"
         >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M15 19l-7-7 7-7"
-          />
-        </svg>
-      </NuxtLink>
-      <h1 class="text-2xl font-bold text-stone-800 dark:text-stone-100">
-        New Entry
-      </h1>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 19l-7-7 7-7"
+            />
+          </svg>
+        </NuxtLink>
+        <h1 class="text-2xl font-bold text-stone-800 dark:text-stone-100">
+          New Entry
+        </h1>
+      </div>
+
+      <!-- Compact Voice Recorder in header -->
+      <VoiceRecorder
+        compact
+        @complete="handleVoiceComplete"
+        @cancel="handleVoiceCancel"
+        @error="handleVoiceError"
+        @transcription="handleVoiceLiveTranscription"
+      />
     </div>
 
     <form
@@ -375,6 +575,31 @@ async function submitEntry() {
         </template>
       </button>
     </form>
+
+    <!-- Voice Status Indicator (floats when recording) -->
+    <div
+      v-if="voiceStatus !== 'idle'"
+      class="fixed bottom-24 left-1/2 -translate-x-1/2 z-50"
+    >
+      <VoiceStatusIndicator
+        :status="voiceStatus"
+        :progress="transcription.progress.value"
+        class="bg-white dark:bg-stone-800 rounded-full shadow-lg px-4 py-2"
+      />
+    </div>
+
+    <!-- Tada Checklist Review -->
+    <VoiceTadaChecklistReview
+      v-if="showTadaChecklist"
+      :tadas="extractedTadas"
+      :transcription="currentTranscription?.text || ''"
+      :loading="isSubmitting"
+      @save="handleTadaSave"
+      @save-as-journal="handleTadaSaveAsJournal"
+      @cancel="handleTadaCancel"
+      @re-record="handleReRecord"
+      @update="handleTadaUpdate"
+    />
 
     <!-- Emoji Picker -->
     <EmojiPicker

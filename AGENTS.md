@@ -18,16 +18,19 @@
 - **❌ NEVER modify persistent volume paths** without checking `docs/DEPLOY_CAPROVER.md`
 
 **Why `/data` and not `/app/data`?**
+
 - CapRover mounts host directory `/var/lib/caprover/appsdata/tadata` to container path `/data`
 - The `/app` directory is ephemeral (rebuilt on each deploy)
 - The `/data` directory persists across container rebuilds
 
 **Before ANY Dockerfile changes:**
+
 1. Check `docs/DEPLOY_CAPROVER.md` for current production configuration
 2. Verify the DATABASE_URL path matches CapRover's "Path in App" setting
 3. If unsure, ASK the user before making changes
 
 **If you accidentally change database paths:**
+
 - Data may still exist on host at `/var/lib/caprover/appsdata/tadata/db.sqlite`
 - Revert the path change and redeploy to recover
 
@@ -171,6 +174,7 @@ The CI pipeline runs in `.github/workflows/ci.yml`:
    - Fix: Always use explicit types: `$fetch<ResponseType>("/api/...")` or `$fetch<unknown>(...)` for fire-and-forget
 
 **To test like CI locally:**
+
 ```bash
 cd app
 rm -rf .nuxt node_modules
