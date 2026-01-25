@@ -164,14 +164,40 @@ watch(
       const transcriptText = transcription.liveTranscript.value || "";
       let finalText = resultText || liveText.value || transcriptText || "";
 
+      console.log(
+        `[VoiceRecorder] Recording complete, evaluating transcription`,
+        {
+          timestamp: new Date().toISOString(),
+          blobSize: blob.size,
+          blobType: blob.type,
+          duration: voiceCapture.duration.value,
+          resultText: resultText ? resultText.slice(0, 50) + "..." : "(empty)",
+          liveTextValue: liveText.value
+            ? liveText.value.slice(0, 50) + "..."
+            : "(empty)",
+          transcriptText: transcriptText
+            ? transcriptText.slice(0, 50) + "..."
+            : "(empty)",
+          finalText: finalText ? finalText.slice(0, 50) + "..." : "(empty)",
+          transcriptionStatus: transcription.status.value,
+          transcriptionError: transcription.error.value,
+        },
+      );
+
       // If we have text, emit and return
       if (finalText.trim()) {
+        console.log(
+          `[VoiceRecorder] Success - emitting transcription: "${finalText.slice(0, 80)}..."`,
+        );
         emit("transcription", finalText.trim());
         emit("complete", blob, voiceCapture.duration.value, finalText.trim());
         liveText.value = "";
         return;
       }
 
+      console.log(
+        `[VoiceRecorder] No text captured, attempting Whisper fallback`,
+      );
       // No text captured - try Whisper fallback if available
       const hasApiKey = voiceSettings.hasApiKey("groq");
       if (hasApiKey) {

@@ -207,13 +207,13 @@ function updateListItem(index: number, value: string) {
 async function submitEntry() {
   // Handle multi-tada mode
   if (multiTadaMode.value && multiTadaList.value.length > 0) {
-    const tadas: ExtractedTada[] = multiTadaList.value
+    const tadas = multiTadaList.value
       .filter((t) => t.title.trim())
       .map((t) => ({
         title: t.title.trim(),
+        category: tadaSubcategory.value,
+        significance: "normal" as const,
         notes: t.notes || undefined,
-        emoji: t.emoji || customEmoji.value || "⚡",
-        subcategory: tadaSubcategory.value,
         confidence: 1.0,
       }));
 
@@ -305,19 +305,39 @@ async function handleVoiceComplete(
     console.log("[tada/index.vue] Extraction result:", extraction);
 
     if (extraction && extraction.tadas.length > 0) {
-      extractedTadas.value = extraction.tadas;
-      showTadaChecklist.value = true;
+      // Populate the multi-tada list UI directly (same as text entry)
+      populateMultiTadaMode(extraction.tadas);
+      showSuccess(
+        `Found ${extraction.tadas.length} ta-da${extraction.tadas.length > 1 ? "s" : ""}! Review and save below.`,
+      );
     } else {
       // No tadas found - split text between title and notes for manual entry
       splitTextForManualEntry(result.text);
-      showSuccess("No tadas detected - you can edit and save manually");
+      showSuccess("Ready to edit - add your ta-da details below");
     }
     voiceStatus.value = "idle";
-  } catch {
+  } catch (err) {
+    console.error("[tada/index.vue] Extraction error:", err);
     // On error, split text between title and notes for manual entry
     splitTextForManualEntry(transcriptText);
     voiceStatus.value = "idle";
   }
+}
+
+/**
+ * Populate the multi-tada mode from extracted tadas
+ * This uses the same UI as when user types multiple lines manually
+ */
+function populateMultiTadaMode(tadas: ExtractedTada[]) {
+  multiTadaList.value = tadas.map((t) => ({
+    title: t.title,
+    notes: t.notes || "",
+    emoji: "⚡",
+  }));
+  multiTadaMode.value = true;
+  // Clear single-mode fields
+  title.value = "";
+  notes.value = "";
 }
 
 /**

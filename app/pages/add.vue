@@ -203,25 +203,31 @@ async function handleVoiceComplete(
   };
   liveTranscriptionText.value = "";
 
-  // Try to detect ta-das first
+  // ALWAYS populate the journal form first with the transcription
+  populateJournalForm(transcriptText);
+
+  // Try to detect ta-das in the background
   voiceStatus.value = "processing";
 
   try {
     const extraction = await llmStructure.extractTadas(transcriptText);
 
     if (extraction && extraction.tadas.length > 0) {
-      // Found ta-das - show checklist for those
+      // Found ta-das - show checklist as an optional popup
+      // User can choose to save them as tadas OR continue editing the journal
       extractedTadas.value = extraction.tadas;
       showTadaChecklist.value = true;
-      voiceStatus.value = "idle";
+      showSuccess(
+        `Also found ${extraction.tadas.length} ta-da${extraction.tadas.length > 1 ? "s" : ""}! Review the popup to save them.`,
+      );
     } else {
-      // No ta-das - populate journal form directly
-      populateJournalForm(transcriptText);
-      voiceStatus.value = "idle";
+      showSuccess("Journal populated! Edit and save below.");
     }
-  } catch {
-    // On error, just populate journal form directly
-    populateJournalForm(transcriptText);
+    voiceStatus.value = "idle";
+  } catch (err) {
+    console.error("[add.vue] Extraction error:", err);
+    // On error, journal form is already populated, just continue
+    showSuccess("Journal populated! Edit and save below.");
     voiceStatus.value = "idle";
   }
 }

@@ -497,15 +497,60 @@ export function useTranscription(): UseTranscriptionReturn {
   }
 
   /**
+   * Safely cleanup any existing recognition instance
+   * This MUST be called before creating a new instance to prevent
+   * stale instances from causing network errors
+   */
+  function cleanupRecognitionInstance(): void {
+    const instance = recognitionInstance.value;
+    if (instance) {
+      console.log(
+        `[useTranscription] Cleaning up existing recognition instance`,
+        {
+          timestamp: new Date().toISOString(),
+        },
+      );
+
+      // Remove all event handlers to prevent callbacks during cleanup
+      instance.onresult = null;
+      instance.onerror = null;
+      instance.onend = null;
+      instance.onstart = null;
+      instance.onaudiostart = null;
+      instance.onsoundstart = null;
+      instance.onspeechstart = null;
+      instance.onspeechend = null;
+      instance.onsoundend = null;
+      instance.onaudioend = null;
+
+      // Abort the recognition (more forceful than stop())
+      try {
+        instance.abort();
+      } catch {
+        // Ignore errors during abort - instance may already be stopped
+      }
+
+      recognitionInstance.value = null;
+    }
+  }
+
+  /**
    * Start live transcription from microphone
+   * IMPORTANT: Creates a fresh SpeechRecognition instance every time
+   * to avoid stale session issues with Chrome's remote speech service
    */
   async function startLiveTranscription(
     options: TranscriptionOptions = {},
   ): Promise<boolean> {
-    if (recognitionInstance.value) {
-      console.log("[useTranscription] Already running, returning false");
-      return false;
-    }
+    console.log(`[useTranscription] startLiveTranscription called`, {
+      timestamp: new Date().toISOString(),
+      hasExistingInstance: !!recognitionInstance.value,
+      currentStatus: status.value,
+    });
+
+    // CRITICAL: Always cleanup any existing instance first
+    // This prevents stale session errors when navigating between pages
+    cleanupRecognitionInstance();
 
     const SpeechRecognition = getSpeechRecognition();
     if (!SpeechRecognition) {
@@ -514,6 +559,7 @@ export function useTranscription(): UseTranscriptionReturn {
     }
 
     try {
+      // Always create a FRESH instance - never reuse old ones
       const recognition = new SpeechRecognition() as SpeechRecognitionInstance;
       recognition.continuous = true;
       recognition.interimResults = true;
@@ -526,9 +572,16 @@ export function useTranscription(): UseTranscriptionReturn {
       liveTranscript.value = "";
       result.value = null;
 
+      // Track if this instance is still active (for async callbacks)
+      // This prevents race conditions if a new instance is created
+      const instanceId = crypto.randomUUID();
+      let isActive = true;
+
       // Simple transcript accumulation following MDN pattern
       // Web Speech API accumulates all results in event.results
       recognition.onresult = (event: Event) => {
+        if (!isActive) return;
+
         const speechEvent = event as SpeechRecognitionEvent;
         let finalTranscript = "";
         let interimTranscript = "";
@@ -548,6 +601,17 @@ export function useTranscription(): UseTranscriptionReturn {
         // Full text = all finals + current interim
         const fullText = (finalTranscript + interimTranscript).trim();
 
+        console.log(`[useTranscription] onresult`, {
+          timestamp: new Date().toISOString(),
+          instanceId: instanceId.slice(0, 8),
+          resultIndex: speechEvent.resultIndex,
+          resultsLength: speechEvent.results.length,
+          finalTranscriptLength: finalTranscript.length,
+          interimTranscriptLength: interimTranscript.length,
+          fullTextPreview:
+            fullText.slice(0, 80) + (fullText.length > 80 ? "..." : ""),
+        });
+
         // Update our refs
         liveTranscript.value = fullText;
         result.value = {
@@ -565,70 +629,170 @@ export function useTranscription(): UseTranscriptionReturn {
       };
 
       recognition.onerror = (event: Event) => {
+        if (!isActive) return;
+
         const errorEvent = event as SpeechRecognitionErrorEvent;
+        const timestamp = new Date().toISOString();
 
-        // Ignore non-fatal errors
-        if (
-          errorEvent.error === "no-speech" ||
-          errorEvent.error === "aborted"
-        ) {
+        console.log(`[useTranscription] onerror fired`, {
+          timestamp,
+          instanceId: instanceId.slice(0, 8),
+          errorCode: errorEvent.error,
+          errorMessage: errorEvent.message,
+          currentStatus: status.value,
+          hasLiveTranscript: !!liveTranscript.value,
+          liveTranscriptLength: liveTranscript.value?.length || 0,
+          liveTranscriptPreview:
+            liveTranscript.value?.slice(0, 50) || "(empty)",
+        });
+
+        // Ignore non-fatal errors - these happen normally during speech recognition
+        if (errorEvent.error === "no-speech") {
+          console.log(
+            `[useTranscription] No speech detected, continuing to listen...`,
+          );
           return;
         }
 
-        // Network error with existing transcript is OK
-        if (errorEvent.error === "network" && liveTranscript.value) {
+        if (errorEvent.error === "aborted") {
+          console.log(
+            `[useTranscription] Recognition aborted (expected during cleanup)`,
+          );
           return;
         }
 
+        // Network error is often transient - if we have transcript, consider it success
+        if (errorEvent.error === "network") {
+          if (liveTranscript.value) {
+            console.log(
+              `[useTranscription] Network error but have transcript - treating as success`,
+            );
+            // Don't set error state, the transcript is valid
+            return;
+          }
+          // Network error with no transcript - this is the problematic case
+          // Mark instance as inactive to prevent auto-restart
+          isActive = false;
+          console.warn(
+            `[useTranscription] Network error with no transcript - stopping recognition`,
+            {
+              errorCode: errorEvent.error,
+            },
+          );
+        }
+
+        console.error(`[useTranscription] Fatal error, setting error state`, {
+          errorCode: errorEvent.error,
+          mappedMessage: getSpeechErrorMessage(errorEvent.error),
+        });
         error.value = getSpeechErrorMessage(errorEvent.error);
         status.value = "error";
+        isActive = false;
+        cleanupRecognitionInstance();
       };
 
       recognition.onend = () => {
-        // Auto-restart if we're still supposed to be transcribing
-        if (status.value === "transcribing" && recognitionInstance.value) {
-          recognition.start();
+        console.log(`[useTranscription] onend fired`, {
+          timestamp: new Date().toISOString(),
+          instanceId: instanceId.slice(0, 8),
+          isActive,
+          status: status.value,
+          hasRecognitionInstance: !!recognitionInstance.value,
+          liveTranscriptLength: liveTranscript.value?.length || 0,
+        });
+
+        // Only auto-restart if this instance is still active and we're still transcribing
+        if (
+          isActive &&
+          status.value === "transcribing" &&
+          recognitionInstance.value === recognition
+        ) {
+          console.log(`[useTranscription] Auto-restarting recognition`);
+          try {
+            recognition.start();
+          } catch (err) {
+            console.error(
+              `[useTranscription] Failed to restart recognition`,
+              err,
+            );
+            // If restart fails, create a completely fresh instance
+            isActive = false;
+            error.value =
+              "Speech recognition temporarily unavailable. Try speaking in shorter segments or check your internet connection.";
+            status.value = "error";
+            cleanupRecognitionInstance();
+          }
+        } else {
+          console.log(
+            `[useTranscription] Not restarting - session ended normally`,
+          );
         }
       };
+
+      console.log(`[useTranscription] Starting recognition`, {
+        timestamp: new Date().toISOString(),
+        instanceId: instanceId.slice(0, 8),
+        language: recognition.lang,
+        continuous: recognition.continuous,
+        interimResults: recognition.interimResults,
+      });
 
       recognition.start();
       recognitionInstance.value = recognition as SpeechRecognitionInstance;
       return true;
     } catch (err) {
+      console.error(`[useTranscription] Failed to start recognition`, err);
       error.value =
         err instanceof Error ? err.message : "Failed to start transcription";
       status.value = "error";
+      cleanupRecognitionInstance();
       return false;
     }
   }
 
   /**
    * Stop live transcription
+   * Properly cleans up the recognition instance to prevent stale session issues
    */
   function stopLiveTranscription(): void {
-    if (recognitionInstance.value) {
-      status.value = "idle";
-      recognitionInstance.value.stop();
-      recognitionInstance.value = null;
-    }
+    console.log(`[useTranscription] stopLiveTranscription called`, {
+      timestamp: new Date().toISOString(),
+      hasInstance: !!recognitionInstance.value,
+      currentStatus: status.value,
+      liveTranscriptLength: liveTranscript.value?.length || 0,
+    });
+
+    // Set status to idle FIRST to prevent auto-restart in onend handler
+    status.value = "idle";
+
+    // Then cleanup the instance (this will abort and null out the handlers)
+    cleanupRecognitionInstance();
   }
 
   /**
    * Reset all state
    */
   function reset(): void {
-    stopLiveTranscription();
-    result.value = null;
+    console.log(`[useTranscription] reset called`, {
+      timestamp: new Date().toISOString(),
+    });
     status.value = "idle";
+    cleanupRecognitionInstance();
+    result.value = null;
     progress.value = 0;
     error.value = null;
     activeProvider.value = null;
     liveTranscript.value = "";
   }
 
-  // Cleanup on unmount
+  // Cleanup on unmount - critical for preventing stale instances after navigation
   onUnmounted(() => {
-    stopLiveTranscription();
+    console.log(`[useTranscription] Component unmounting, cleaning up`, {
+      timestamp: new Date().toISOString(),
+      hasInstance: !!recognitionInstance.value,
+    });
+    status.value = "idle";
+    cleanupRecognitionInstance();
   });
 
   return {

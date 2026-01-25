@@ -156,7 +156,7 @@ const speedLabel = computed(() => {
 
 // Check network type for WiFi-only downloads
 function checkNetworkType(): void {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const connection =
     (navigator as any).connection ||
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
