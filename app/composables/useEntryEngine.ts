@@ -129,7 +129,8 @@ export function useEntryEngine() {
       });
 
       if (!result.success) {
-        error.value = result.error || "Failed to create entry";
+        const errorMsg = result.error || "Failed to create entry";
+        error.value = errorMsg;
 
         // Show conflict warning if applicable
         if (result.conflicts?.hasConflict) {
@@ -137,7 +138,9 @@ export function useEntryEngine() {
             `Entry overlaps with ${result.conflicts.overlappingEntries.length} existing entry(s)`,
           );
         } else {
-          toast.error(result.error || "Failed to create entry");
+          toast.error(errorMsg, {
+            details: `Type: ${input.type}, Name: ${input.name}, Category: ${input.category || 'none'}`,
+          });
         }
 
         return null;
@@ -149,7 +152,17 @@ export function useEntryEngine() {
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
       error.value = message;
-      toast.error(message);
+      
+      // Include more context in the toast for debugging
+      const details = [
+        `Type: ${input.type}`,
+        `Name: ${input.name}`,
+        input.category ? `Category: ${input.category}` : null,
+        input.durationSeconds ? `Duration: ${input.durationSeconds}s` : null,
+        input.count ? `Count: ${input.count}` : null,
+      ].filter(Boolean).join(', ');
+      
+      toast.error(message, { details });
       return null;
     } finally {
       isLoading.value = false;

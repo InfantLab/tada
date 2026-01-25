@@ -77,8 +77,17 @@ const handleAction = async (toast: Toast) => {
 
 const copyError = async (toast: Toast) => {
   try {
-    const errorDetails = `Error: ${toast.message}\nTime: ${new Date().toISOString()}`;
-    await navigator.clipboard.writeText(errorDetails);
+    const lines = [
+      `Error: ${toast.message}`,
+      `Time: ${new Date().toISOString()}`,
+    ];
+    if (toast.details) {
+      lines.push(`Details: ${toast.details}`);
+    }
+    lines.push(`URL: ${window.location.href}`);
+    lines.push(`User-Agent: ${navigator.userAgent}`);
+    
+    await navigator.clipboard.writeText(lines.join('\n'));
     copiedId.value = toast.id;
     // Reset after 2 seconds
     setTimeout(() => {

@@ -106,7 +106,11 @@ export default defineEventHandler(async (event) => {
       body && typeof body === "object" && "type" in body
         ? (body as { type?: unknown }).type
         : undefined;
-    logger.error("Failed to create entry", error, { type: bodyType });
+    const bodyName =
+      body && typeof body === "object" && "name" in body
+        ? (body as { name?: unknown }).name
+        : undefined;
+    logger.error("Failed to create entry", error, { type: bodyType, name: bodyName });
 
     if (error && typeof error === "object" && "statusCode" in error) {
       throw error;
@@ -115,8 +119,8 @@ export default defineEventHandler(async (event) => {
     const message = error instanceof Error ? error.message : "Unknown error";
     throw createError({
       statusCode: 500,
-      statusMessage: "Failed to create entry",
-      data: { error: message },
+      statusMessage: `Failed to create entry: ${message}`,
+      data: { error: message, type: bodyType, name: bodyName },
     });
   }
 });

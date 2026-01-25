@@ -17,12 +17,16 @@ export interface Toast {
   duration: number;
   dismissible: boolean;
   action?: ToastAction;
+  /** Additional details for error debugging (shown on copy) */
+  details?: string;
 }
 
 export interface ToastOptions {
   duration?: number;
   dismissible?: boolean;
   action?: ToastAction;
+  /** Additional details for error debugging */
+  details?: string;
 }
 
 const toasts = ref<Toast[]>([]);
@@ -43,6 +47,7 @@ export const useToast = () => {
       duration,
       dismissible: options.dismissible ?? true,
       action: options.action,
+      details: options.details,
     };
 
     toasts.value.push(toast);
