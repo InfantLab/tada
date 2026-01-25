@@ -133,7 +133,7 @@ _Target: Q2 2026_
 - [ ] **Email verification** (optional for self-hosted, required for cloud)
 - [ ] Timezone selector UI for imports (backend ready)
 - [ ] Settings page autosave
-- [ ] Fix pre-existing logger test failures (7 tests)
+- [x] Fix pre-existing logger test failures (7 tests)
 - [ ] Rewrite integration tests with @nuxt/test-utils/e2e
 
 ### 🔗 Practice Links
@@ -168,11 +168,11 @@ Optional "magic" layer for those who want it, completely invisible to those who 
 
 ### 🎙️ Voice Input with LLM
 
-- [ ] Dictate entries via voice
-- [ ] LLM processing to structure dictated content
+- [x] Dictate entries via voice
+- [x] LLM processing to structure dictated content
 - [ ] Extract category, mood, key details automatically
-- [ ] Review/edit before saving
-- [ ] Works offline with on-device processing (where possible)
+- [x] Review/edit before saving
+- [x] Works offline with on-device processing (where possible)
 
 ---
 

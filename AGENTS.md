@@ -8,6 +8,7 @@
 - **❌ NEVER commit automatically** — Wait for the user to explicitly say "commit" or "commit this" before running git commit.
 - **❌ Create documentation sparingly** — Only create documentation when there are major changes in function. Strongly favour updating existing files in /docs folder.
 - **❌ NEVER use interactive commands** — Always use `--run`, `--reporter=dot`, or similar flags to prevent commands from waiting for user input.
+- **❌ NEVER write large files in one go** — LLM output limits cause truncation. Break into sections: create file with first section, then append remaining sections with separate edits.
 
 ## 🔴 PRODUCTION DATA PROTECTION - READ BEFORE MODIFYING DOCKERFILE
 
