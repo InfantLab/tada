@@ -8,6 +8,9 @@ const navigation = [
 ];
 
 const route = useRoute();
+
+// Quick entry modal state
+const showQuickEntryModal = ref(false);
 </script>
 
 <template>
@@ -185,6 +188,37 @@ const route = useRoute();
         </NuxtLink>
       </div>
     </nav>
+
+    <!-- Quick Entry FAB (Floating Action Button) -->
+    <button
+      type="button"
+      class="fixed right-4 bottom-20 sm:bottom-6 z-50 w-14 h-14 rounded-full bg-tada-600 hover:bg-tada-700 text-white shadow-lg hover:shadow-xl transition-all transform hover:scale-105 flex items-center justify-center"
+      title="Quick Add Entry"
+      aria-label="Quick add entry"
+      @click="showQuickEntryModal = true"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-7 w-7"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M12 4v16m8-8H4"
+        />
+      </svg>
+    </button>
+
+    <!-- Quick Entry Modal -->
+    <QuickEntryModal
+      v-model:open="showQuickEntryModal"
+      @saved="showQuickEntryModal = false"
+    />
+
     <ToastContainer />
     <ErrorTrackerPanel />
   </div>

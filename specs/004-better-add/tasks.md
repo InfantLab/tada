@@ -68,14 +68,14 @@
 
 ### Implementation for User Story 2
 
-- [ ] T019 [P] [US2] Create `app/components/QuickValuePicker.vue` as shared base for Duration/Count pickers
-- [ ] T020 [P] [US2] Create `app/components/DurationPicker.vue` extending QuickValuePicker with smart text parsing
-- [ ] T021 [P] [US2] Create `app/components/DateTimePicker.vue` for combined date + time selection
-- [ ] T022 [P] [US2] Create `app/components/EntryTypeToggle.vue` for timed/count/moment modes
-- [ ] T023 [US2] Create `app/components/QuickEntryModal.vue` with past-timer mode
-- [ ] T024 [US2] Add `GET /api/durations/recent` endpoint in `app/server/api/durations/recent.get.ts`
-- [ ] T025 [US2] Wire QuickEntryModal to useEntryEngine for saving past entries
-- [ ] T026 [US2] Add entry point to QuickEntryModal from main navigation/FAB
+- [x] T019 [P] [US2] Create `app/components/QuickValuePicker.vue` as shared base for Duration/Count pickers
+- [x] T020 [P] [US2] Create `app/components/DurationPicker.vue` extending QuickValuePicker with smart text parsing
+- [x] T021 [P] [US2] Create `app/components/DateTimePicker.vue` for combined date + time selection
+- [x] T022 [P] [US2] Create `app/components/EntryTypeToggle.vue` for timed/count/moment modes
+- [x] T023 [US2] Create `app/components/QuickEntryModal.vue` with past-timer mode
+- [x] T024 [US2] Add `GET /api/durations/recent` endpoint in `app/server/api/durations/recent.get.ts`
+- [x] T025 [US2] Wire QuickEntryModal to useEntryEngine for saving past entries
+- [x] T026 [US2] Add entry point to QuickEntryModal from main navigation/FAB
 
 **Checkpoint**: User Story 2 complete - past timer entry works independently
 
