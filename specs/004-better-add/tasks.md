@@ -89,13 +89,13 @@
 
 ### Implementation for User Story 3
 
-- [ ] T027 [P] [US3] Create `app/components/CountPicker.vue` extending QuickValuePicker with exercise context presets
-- [ ] T028 [P] [US3] Create `app/components/ActivityAutocomplete.vue` with suggestion dropdown
-- [ ] T029 [US3] Add `GET /api/entries/suggestions` endpoint in `app/server/api/entries/suggestions.get.ts`
-- [ ] T030 [US3] Add `GET /api/counts/recent` endpoint in `app/server/api/counts/recent.get.ts`
-- [ ] T031 [US3] Add count/reps mode to QuickEntryModal in `app/components/QuickEntryModal.vue`
-- [ ] T032 [US3] Ensure reps entries save with count in data field via useEntryEngine
-- [ ] T033 [US3] Add activity_history tracking on entry save in entryEngine
+- [x] T027 [P] [US3] Create `app/components/CountPicker.vue` extending QuickValuePicker with exercise context presets
+- [x] T028 [P] [US3] Create `app/components/ActivityAutocomplete.vue` with suggestion dropdown
+- [x] T029 [US3] Add `GET /api/entries/suggestions` endpoint in `app/server/api/entries/suggestions.get.ts`
+- [x] T030 [US3] Add `GET /api/counts/recent` endpoint in `app/server/api/counts/recent.get.ts`
+- [x] T031 [US3] Add count/reps mode to QuickEntryModal in `app/components/QuickEntryModal.vue` (done in T023)
+- [x] T032 [US3] Ensure reps entries save with count in data field via useEntryEngine
+- [x] T033 [US3] Add activity_history tracking on entry save in entryEngine (already implemented)
 
 **Checkpoint**: User Story 3 complete - count entry works independently
 
