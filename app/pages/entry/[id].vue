@@ -4,11 +4,14 @@ import {
   CATEGORY_DEFAULTS,
   getSubcategoriesForCategory,
 } from "~/utils/categoryDefaults";
+import type { EntryInput, EntryType } from "~/utils/entrySchemas";
 
 const { error: showError, success: showSuccess } = useToast();
 
-// Use unified entry save composable for updates
-const { updateEntry, createEntry, isLoading: isSaving } = useEntrySave();
+// Use unified entry engine for entry restoration
+const { createEntry } = useEntryEngine();
+// Keep useEntrySave for update/delete until migration
+const { updateEntry, isLoading: isSaving } = useEntrySave();
 
 // Undo composable for deletion recovery
 const { addToUndo } = useUndo({
@@ -175,7 +178,7 @@ async function deleteEntry() {
 async function restoreEntry(data: Entry) {
   const result = await createEntry(
     {
-      type: data.type,
+      type: data.type as EntryType,
       name: data.name,
       category: data.category ?? undefined,
       subcategory: data.subcategory ?? undefined,
@@ -185,15 +188,14 @@ async function restoreEntry(data: Entry) {
       data: data.data as Record<string, unknown> | undefined,
       tags: data.tags ?? undefined,
       notes: data.notes ?? undefined,
-    },
-    {
-      skipEmojiResolution: true, // Preserve original emoji
-      successMessage: "Entry restored!",
-    },
+    } as EntryInput,
+    { skipEmojiResolution: true },
   );
 
-  if (!result) {
-    console.error("Failed to restore entry");
+  if (result) {
+    showSuccess("Entry restored!");
+  } else {
+    showError("Failed to restore entry");
   }
 }
 
@@ -223,12 +225,19 @@ const entryData = computed(() => {
   if (!entry.value?.data) return null;
   const data = entry.value.data as Record<string, unknown>;
   return {
-    mood: typeof data.mood === "number" ? data.mood as number : null,
-    qualityRating: typeof data.qualityRating === "number" ? data.qualityRating as number : null,
-    reflection: typeof data.reflection === "string" ? data.reflection as string : null,
+    mood: typeof data.mood === "number" ? (data.mood as number) : null,
+    qualityRating:
+      typeof data.qualityRating === "number"
+        ? (data.qualityRating as number)
+        : null,
+    reflection:
+      typeof data.reflection === "string" ? (data.reflection as string) : null,
     fromVoice: data.fromVoice === true,
-    significance: typeof data.significance === "string" ? data.significance as string : null,
-    mode: typeof data.mode === "string" ? data.mode as string : null,
+    significance:
+      typeof data.significance === "string"
+        ? (data.significance as string)
+        : null,
+    mode: typeof data.mode === "string" ? (data.mode as string) : null,
   };
 });
 
@@ -341,13 +350,23 @@ function getMoodEmoji(mood: number): string {
 
         <!-- Voice/Timer Metadata (if present) -->
         <div
-          v-if="entryData && (entryData.mood || entryData.qualityRating || entryData.reflection || entryData.fromVoice)"
+          v-if="
+            entryData &&
+            (entryData.mood ||
+              entryData.qualityRating ||
+              entryData.reflection ||
+              entryData.fromVoice)
+          "
           class="space-y-3 p-4 bg-gradient-to-r from-indigo-50 to-violet-50 dark:from-indigo-900/20 dark:to-violet-900/20 rounded-xl border border-indigo-100 dark:border-indigo-800"
         >
-          <div class="flex items-center gap-2 text-sm font-medium text-indigo-700 dark:text-indigo-300">
+          <div
+            class="flex items-center gap-2 text-sm font-medium text-indigo-700 dark:text-indigo-300"
+          >
             <span v-if="entryData.fromVoice">🎤</span>
             <span v-else>📊</span>
-            <span>{{ entryData.fromVoice ? 'Voice Captured' : 'Session Details' }}</span>
+            <span>{{
+              entryData.fromVoice ? "Voice Captured" : "Session Details"
+            }}</span>
           </div>
 
           <!-- Mood / Quality Rating -->
@@ -355,23 +374,35 @@ function getMoodEmoji(mood: number): string {
             v-if="entryData.mood || entryData.qualityRating"
             class="flex items-center gap-3"
           >
-            <span class="text-2xl">{{ getMoodEmoji(entryData.qualityRating || entryData.mood || 3) }}</span>
+            <span class="text-2xl">{{
+              getMoodEmoji(entryData.qualityRating || entryData.mood || 3)
+            }}</span>
             <div>
-              <div class="text-sm font-medium text-stone-700 dark:text-stone-200">
-                {{ entryData.qualityRating ? 'Session Quality' : 'Mood' }}
+              <div
+                class="text-sm font-medium text-stone-700 dark:text-stone-200"
+              >
+                {{ entryData.qualityRating ? "Session Quality" : "Mood" }}
               </div>
               <div class="text-xs text-stone-500 dark:text-stone-400">
-                {{ ['Difficult', 'Challenging', 'Okay', 'Good', 'Great'][(entryData.qualityRating || entryData.mood || 3) - 1] }}
+                {{
+                  ["Difficult", "Challenging", "Okay", "Good", "Great"][
+                    (entryData.qualityRating || entryData.mood || 3) - 1
+                  ]
+                }}
               </div>
             </div>
           </div>
 
           <!-- Reflection (from voice) -->
           <div v-if="entryData.reflection" class="space-y-1">
-            <div class="text-xs font-medium text-stone-500 dark:text-stone-400 uppercase tracking-wider">
+            <div
+              class="text-xs font-medium text-stone-500 dark:text-stone-400 uppercase tracking-wider"
+            >
               Reflection
             </div>
-            <p class="text-sm text-stone-700 dark:text-stone-200 leading-relaxed italic">
+            <p
+              class="text-sm text-stone-700 dark:text-stone-200 leading-relaxed italic"
+            >
               "{{ entryData.reflection }}"
             </p>
           </div>
@@ -381,13 +412,19 @@ function getMoodEmoji(mood: number): string {
             v-if="entryData.significance && entryData.significance !== 'normal'"
             class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium"
             :class="{
-              'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200': entryData.significance === 'major',
-              'bg-stone-100 text-stone-600 dark:bg-stone-700 dark:text-stone-300': entryData.significance === 'minor',
+              'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200':
+                entryData.significance === 'major',
+              'bg-stone-100 text-stone-600 dark:bg-stone-700 dark:text-stone-300':
+                entryData.significance === 'minor',
             }"
           >
             <span v-if="entryData.significance === 'major'">⭐</span>
             <span v-else>·</span>
-            <span>{{ entryData.significance === 'major' ? 'Major accomplishment!' : 'Quick win' }}</span>
+            <span>{{
+              entryData.significance === "major"
+                ? "Major accomplishment!"
+                : "Quick win"
+            }}</span>
           </div>
         </div>
 

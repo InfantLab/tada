@@ -29,6 +29,7 @@ const isSubmitting = ref(false);
 const showCelebration = ref(false);
 
 // Composables
+// TODO: Migrate to useEntryEngine once createVoiceEntry/createBatchTadas are implemented
 const entrySave = useEntrySave();
 const transcription = useTranscription();
 const llmStructure = useLLMStructure();

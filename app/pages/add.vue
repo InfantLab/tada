@@ -7,14 +7,12 @@ import {
 import type { TranscriptionResult, VoiceRecordingStatus } from "~/types/voice";
 import type { VoiceEntryData } from "~/composables/useEntrySave";
 import type { ExtractedTada } from "~/types/extraction";
+import type { EntryInput } from "~/utils/entrySchemas";
 
-// Use the unified entry save composable
-const {
-  createEntry,
-  createVoiceEntry,
-  createBatchTadas,
-  isLoading: isSubmitting,
-} = useEntrySave();
+// Use unified entry engine for main entry creation
+const { createEntry, isLoading: isSubmitting } = useEntryEngine();
+// Keep useEntrySave for voice-specific methods until migration
+const { createVoiceEntry, createBatchTadas } = useEntrySave();
 const { success: showSuccess, error: showError } = useToast();
 
 // Load user preferences
@@ -143,24 +141,21 @@ async function submitEntry() {
 
   const result = await createEntry(
     {
-      type: entryType.value,
+      type: entryType.value as "journal" | "tada" | "timed" | "reps",
       name: title.value.trim() || "Journal entry",
       category: category.value,
       subcategory: subcategory.value || undefined,
       emoji: customEmoji.value || displayEmoji.value,
-      notes: notes.value.trim() || null,
+      notes: notes.value.trim() || undefined,
       data: subcategory.value === "dream" ? dreamData.value : {},
       tags: subcategory.value === "dream" ? ["dream"] : [],
-    },
-    {
-      skipEmojiResolution: true,
-      navigateTo: "/",
-      showSuccessToast: false,
-    },
+    } as EntryInput,
+    { skipEmojiResolution: true },
   );
 
   if (result) {
     showSuccess("Entry saved! ✨");
+    navigateTo("/");
   }
 }
 

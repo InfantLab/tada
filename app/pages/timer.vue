@@ -9,9 +9,10 @@ import {
 import { extractTimerNoteData } from "~/utils/tadaExtractor";
 import type { ExtractedTada } from "~/types/extraction";
 import type { TimerPreset } from "~/server/db/schema";
+import type { EntryInput } from "~/utils/entrySchemas";
 
-// Use unified entry save composable
-const { createEntry, isLoading: isSaving } = useEntrySave();
+// Use unified entry engine composable
+const { createEntry, createTadaEntry, isLoading: isSaving } = useEntryEngine();
 
 definePageMeta({
   layout: "default",
@@ -747,14 +748,7 @@ async function saveSession(includeOvertime: boolean = true) {
         reflection: sessionReflection.value || undefined,
       },
       tags: [selectedCategory.value, selectedSubcategory.value],
-    },
-    {
-      navigateTo:
-        extractedBonusTadas.value.filter((t) => t.selected).length > 0
-          ? undefined
-          : "/",
-      showSuccessToast: false, // Navigate silently
-    },
+    } as EntryInput,
   );
 
   // If main entry saved, also create any selected bonus tadas
@@ -763,9 +757,8 @@ async function saveSession(includeOvertime: boolean = true) {
       (t) => t.selected,
     );
     for (const tada of selectedBonusTadas) {
-      await createEntry(
+      await createTadaEntry(
         {
-          type: "tada",
           name: tada.title,
           category: tada.category || "personal",
           subcategory: tada.subcategory,
@@ -776,18 +769,14 @@ async function saveSession(includeOvertime: boolean = true) {
           },
           tags: [tada.category || "personal"],
         },
-        {
-          navigateTo: undefined, // Don't navigate for each bonus
-          showSuccessToast: false,
-        },
+        { skipEmojiResolution: true },
       );
     }
-    // Navigate after all entries created
-    navigateTo("/");
   }
 
-  // Only reset if save succeeded
+  // Navigate after all entries created
   if (result) {
+    navigateTo("/");
     resetTimer();
     // Clear bonus tadas state
     extractedBonusTadas.value = [];

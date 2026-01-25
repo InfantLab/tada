@@ -4,13 +4,12 @@ import { getSubcategoriesForCategory } from "~/utils/categoryDefaults";
 import type { TranscriptionResult, VoiceRecordingStatus } from "~/types/voice";
 import type { VoiceEntryData } from "~/composables/useEntrySave";
 import type { ExtractedTada } from "~/types/extraction";
+import type { EntryInput } from "~/utils/entrySchemas";
 
-// Use the unified entry save composable
-const {
-  createEntry,
-  createBatchTadas,
-  isLoading: isSubmitting,
-} = useEntrySave();
+// Use unified entry engine for main entry creation
+const { createEntry, isLoading: isSubmitting } = useEntryEngine();
+// Keep useEntrySave for voice-specific methods until migration
+const { createBatchTadas } = useEntrySave();
 const { success: showSuccess, error: showError } = useToast();
 
 // Voice composables
@@ -239,16 +238,13 @@ async function submitEntry() {
       category: "accomplishment",
       subcategory: tadaSubcategory.value,
       emoji: customEmoji.value || "⚡",
-      notes: notes.value.trim() || null,
+      notes: notes.value.trim() || undefined,
       data: {},
       tags: ["accomplishment", tadaSubcategory.value].filter(
         Boolean,
       ) as string[],
-    },
-    {
-      skipEmojiResolution: true, // Use the emoji we have
-      showSuccessToast: false, // We handle celebration ourselves
-    },
+    } as EntryInput,
+    { skipEmojiResolution: true },
   );
 
   // Only celebrate if save succeeded

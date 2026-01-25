@@ -166,11 +166,17 @@ export const useEntrySave = (): UseEntrySaveReturn => {
 
   /**
    * Create a new entry
+   * @deprecated Use useEntryEngine().createEntry() instead for new code
    */
   const createEntry = async (
     data: EntryData,
     options: SaveOptions = {},
   ): Promise<Entry | null> => {
+    if (process.env["NODE_ENV"] !== "production") {
+      console.warn(
+        "[useEntrySave] createEntry is deprecated. Use useEntryEngine().createEntry() instead.",
+      );
+    }
     error.value = null;
 
     // Validate
