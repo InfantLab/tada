@@ -200,7 +200,7 @@
 - [x] T061 [P] Add JSDoc comments to all new services and composables
 - [x] T062 Run `bun run lint:fix` on all modified files
 - [x] T063 Run `bun run typecheck` to verify no type errors
-- [ ] T064 Validate against quickstart.md examples
+- [x] T064 Validate against quickstart.md examples
 - [ ] T065 Manual QA: test all entry paths end-to-end
 
 ---
