@@ -153,7 +153,6 @@ export default defineNuxtConfig({
       include: [
         "vue",
         "vue-router",
-        "@vueuse/core",
         "drizzle-orm",
         "emoji-picker-element",
       ],

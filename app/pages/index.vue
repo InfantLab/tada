@@ -140,28 +140,6 @@ watch(zoomLevel, (newLevel) => {
           Your moments, captured
         </p>
       </div>
-
-      <!-- Quick add button -->
-      <NuxtLink
-        to="/add"
-        class="flex items-center gap-2 px-4 py-2 bg-tada-600 hover:opacity-90 text-black rounded-lg font-medium transition-colors shadow-sm dark:bg-tada-600 dark:text-white"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-5 w-5"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M12 4v16m8-8H4"
-          />
-        </svg>
-        <span class="hidden sm:inline">Add Entry</span>
-      </NuxtLink>
     </div>
 
     <!-- Journey Badge - Accumulated time celebration -->

@@ -80,6 +80,19 @@ const maxDateValue = computed(() => {
   return new Date().toISOString().split("T")[0];
 });
 
+// Ref for programmatic date picker opening
+const dateInputRef = ref<HTMLInputElement | null>(null);
+
+// Open native date picker
+function openDatePicker() {
+  if (dateInputRef.value && 'showPicker' in dateInputRef.value) {
+    (dateInputRef.value as HTMLInputElement & { showPicker: () => void }).showPicker();
+  } else {
+    // Fallback: focus the input
+    dateInputRef.value?.focus();
+  }
+}
+
 // Date presets
 function setNow() {
   emit("update:modelValue", new Date().toISOString());
@@ -157,15 +170,26 @@ function isTimeSelected(preset: string): boolean {
 
     <!-- Date and Time inputs -->
     <div class="flex gap-2">
-      <!-- Date input -->
-      <div class="flex-1">
+      <!-- Date input with calendar button -->
+      <div class="flex-1 relative">
         <input
+          ref="dateInputRef"
           v-model="dateValue"
           type="date"
           :max="maxDateValue"
           :disabled="disabled"
-          class="w-full px-3 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-900 text-stone-900 dark:text-white focus:ring-2 focus:ring-tada-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+          class="w-full px-3 py-2 pr-10 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-900 text-stone-900 dark:text-white focus:ring-2 focus:ring-tada-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
         />
+        <button
+          type="button"
+          :disabled="disabled"
+          class="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-stone-400 hover:text-stone-600 dark:text-stone-500 dark:hover:text-stone-300 disabled:opacity-50"
+          @click="openDatePicker"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        </button>
       </div>
 
       <!-- Time input -->
