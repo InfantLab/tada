@@ -63,6 +63,51 @@ const durationSeconds = ref<number | null>(null);
 const count = ref<number | null>(null);
 const notes = ref("");
 
+// Category suggestions state
+const categorySuggestions = ref<Array<{ category: string; count: number }>>([]);
+const showCategorySuggestions = ref(false);
+const categoryInputRef = ref<HTMLInputElement | null>(null);
+
+// Fetch category suggestions
+async function fetchCategorySuggestions(query: string = "") {
+  try {
+    const entryType = mode.value === "timed" ? "timed" : mode.value === "reps" ? "reps" : undefined;
+    const params = new URLSearchParams();
+    if (query) params.set("query", query);
+    if (entryType) params.set("type", entryType);
+    params.set("limit", "8");
+    
+    const response = await $fetch<{ suggestions: Array<{ category: string; count: number }> }>(
+      `/api/categories/recent?${params.toString()}`
+    );
+    categorySuggestions.value = response.suggestions || [];
+  } catch {
+    categorySuggestions.value = [];
+  }
+}
+
+// Handle activity selection from autocomplete
+function handleActivitySelect(suggestion: { name: string; category?: string }) {
+  name.value = suggestion.name;
+  if (suggestion.category) {
+    category.value = suggestion.category;
+  }
+}
+
+// Handle category input
+function handleCategoryInput(event: Event) {
+  const target = event.target as HTMLInputElement;
+  category.value = target.value;
+  fetchCategorySuggestions(target.value);
+  showCategorySuggestions.value = true;
+}
+
+// Select a category suggestion
+function selectCategory(cat: string) {
+  category.value = cat;
+  showCategorySuggestions.value = false;
+}
+
 // Draft tracking
 const resumingDraftId = ref<string | null>(null);
 const showDraftBanner = ref(false);
@@ -388,23 +433,17 @@ const modeLabels: Record<EntryMode, string> = {
                 <EntryTypeToggle v-model="mode" />
               </div>
 
-              <!-- Activity name -->
-              <div class="space-y-1">
-                <label
-                  class="block text-sm font-medium text-stone-700 dark:text-stone-300"
-                >
-                  What did you do?
-                </label>
-                <input
-                  v-model="name"
-                  type="text"
-                  placeholder="Meditation, Push-ups, etc."
-                  class="w-full px-3 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 text-stone-900 dark:text-white placeholder-stone-400 focus:ring-2 focus:ring-tada-500 focus:border-transparent"
-                />
-              </div>
+              <!-- Activity name with autocomplete -->
+              <ActivityAutocomplete
+                v-model="name"
+                label="What did you do?"
+                placeholder="Meditation, Push-ups, etc."
+                :entry-type="mode === 'timed' ? 'timed' : mode === 'reps' ? 'reps' : undefined"
+                @select="handleActivitySelect"
+              />
 
-              <!-- Category (optional) -->
-              <div class="space-y-1">
+              <!-- Category with suggestions -->
+              <div class="space-y-1 relative">
                 <label
                   class="block text-sm font-medium text-stone-700 dark:text-stone-300"
                 >
@@ -412,11 +451,32 @@ const modeLabels: Record<EntryMode, string> = {
                   <span class="text-stone-400 font-normal">(optional)</span>
                 </label>
                 <input
-                  v-model="category"
+                  ref="categoryInputRef"
+                  :value="category"
                   type="text"
                   placeholder="Exercise, Mindfulness, etc."
                   class="w-full px-3 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 text-stone-900 dark:text-white placeholder-stone-400 focus:ring-2 focus:ring-tada-500 focus:border-transparent"
+                  @input="handleCategoryInput"
+                  @focus="fetchCategorySuggestions(category); showCategorySuggestions = true"
+                  @blur="setTimeout(() => showCategorySuggestions = false, 150)"
                 />
+                
+                <!-- Category suggestions dropdown -->
+                <div
+                  v-if="showCategorySuggestions && categorySuggestions.length > 0"
+                  class="absolute z-10 w-full mt-1 bg-white dark:bg-stone-800 rounded-lg border border-stone-200 dark:border-stone-700 shadow-lg max-h-48 overflow-y-auto"
+                >
+                  <button
+                    v-for="suggestion in categorySuggestions"
+                    :key="suggestion.category"
+                    type="button"
+                    class="w-full px-3 py-2 text-left text-sm hover:bg-stone-100 dark:hover:bg-stone-700 flex items-center justify-between"
+                    @mousedown.prevent="selectCategory(suggestion.category)"
+                  >
+                    <span class="text-stone-900 dark:text-white">{{ suggestion.category }}</span>
+                    <span class="text-xs text-stone-400">{{ suggestion.count }}×</span>
+                  </button>
+                </div>
               </div>
 
               <!-- Duration (timed mode) -->
