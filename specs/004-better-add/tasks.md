@@ -130,13 +130,13 @@
 
 ### Implementation for User Story 4b
 
-- [ ] T042 [US4] Add `GET /api/entries/drafts` endpoint in `app/server/api/entries/drafts/index.get.ts`
-- [ ] T043 [US4] Add `POST /api/entries/drafts` endpoint in `app/server/api/entries/drafts/index.post.ts`
-- [ ] T044 [US4] Add `DELETE /api/entries/drafts/[id]` endpoint in `app/server/api/entries/drafts/[id].delete.ts`
-- [ ] T045 [US4] Add `POST /api/entries/drafts/[id]/commit` endpoint in `app/server/api/entries/drafts/[id]/commit.post.ts`
-- [ ] T046 [P] [US4] Create `app/components/DraftIndicator.vue` showing "N unsaved entries"
-- [ ] T047 [US4] Add draft auto-save to voice parsing flow when user abandons confirmation
-- [ ] T048 [US4] Add draft resume UI in QuickEntryModal
+- [x] T042 [US4] Add `GET /api/entries/drafts` endpoint in `app/server/api/entries/drafts/index.get.ts`
+- [x] T043 [US4] Add `POST /api/entries/drafts` endpoint in `app/server/api/entries/drafts/index.post.ts`
+- [x] T044 [US4] Add `DELETE /api/entries/drafts/[id]` endpoint in `app/server/api/entries/drafts/[id].delete.ts`
+- [x] T045 [US4] Add `POST /api/entries/drafts/[id]/commit` endpoint in `app/server/api/entries/drafts/[id]/commit.post.ts`
+- [x] T046 [P] [US4] Create `app/components/DraftIndicator.vue` showing "N unsaved entries"
+- [x] T047 [US4] Add draft auto-save to voice parsing flow when user abandons confirmation
+- [x] T048 [US4] Add draft resume UI in QuickEntryModal
 
 **Checkpoint**: User Story 4b complete - drafts work independently
 

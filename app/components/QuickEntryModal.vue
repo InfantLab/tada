@@ -28,12 +28,19 @@ const props = withDefaults(
     initialCategory?: string;
     /** Context for duration presets */
     durationContext?: DurationContext;
+    /** Draft to resume (from DraftIndicator) */
+    resumeDraft?: {
+      id: string;
+      input: Record<string, unknown>;
+      parsedFrom?: string | null;
+    } | null;
   }>(),
   {
     initialMode: "timed",
     initialName: "",
     initialCategory: "",
     durationContext: "general",
+    resumeDraft: null,
   }
 );
 
@@ -56,6 +63,10 @@ const durationSeconds = ref<number | null>(null);
 const count = ref<number | null>(null);
 const notes = ref("");
 
+// Draft tracking
+const resumingDraftId = ref<string | null>(null);
+const showDraftBanner = ref(false);
+
 // Conflict state
 const conflicts = ref<{ hasConflict: boolean; overlappingEntries: Array<{ id: string; name: string; emoji?: string; timestamp: string; durationSeconds?: number }>; suggestedResolution: string } | null>(null);
 const conflictResolution = ref<"allow-both" | "replace" | null>(null);
@@ -65,13 +76,33 @@ watch(
   () => props.open,
   (isOpen) => {
     if (isOpen) {
-      mode.value = props.initialMode;
-      name.value = props.initialName;
-      category.value = props.initialCategory;
-      timestamp.value = new Date().toISOString();
-      durationSeconds.value = null;
-      count.value = null;
-      notes.value = "";
+      // Check if resuming from draft
+      if (props.resumeDraft) {
+        const draft = props.resumeDraft;
+        resumingDraftId.value = draft.id;
+        showDraftBanner.value = true;
+        
+        // Populate from draft
+        const input = draft.input;
+        mode.value = (input["type"] as EntryMode) || props.initialMode;
+        name.value = (input["name"] as string) || props.initialName;
+        category.value = (input["category"] as string) || props.initialCategory;
+        timestamp.value = (input["timestamp"] as string) || new Date().toISOString();
+        durationSeconds.value = (input["durationSeconds"] as number) || null;
+        count.value = (input["count"] as number) || null;
+        notes.value = (input["notes"] as string) || "";
+      } else {
+        // Normal reset
+        resumingDraftId.value = null;
+        showDraftBanner.value = false;
+        mode.value = props.initialMode;
+        name.value = props.initialName;
+        category.value = props.initialCategory;
+        timestamp.value = new Date().toISOString();
+        durationSeconds.value = null;
+        count.value = null;
+        notes.value = "";
+      }
       conflicts.value = null;
       conflictResolution.value = null;
     }
@@ -175,6 +206,18 @@ async function handleSave(resolution?: "allow-both" | "replace") {
     const result = await createEntry(entryInput, saveOptions);
 
     if (result) {
+      // If resuming from draft, delete the draft
+      if (resumingDraftId.value) {
+        try {
+          await $fetch<{ success: boolean }>(`/api/entries/drafts/${resumingDraftId.value}`, {
+            method: "DELETE",
+          });
+        } catch {
+          // Draft deletion is not critical, don't fail the save
+          console.warn("Failed to delete draft after save");
+        }
+      }
+      
       toast.success("Entry saved!");
       emit("saved", entryInput);
       closeModal();
@@ -278,6 +321,39 @@ const modeLabels: Record<EntryMode, string> = {
                   />
                 </svg>
               </button>
+            </div>
+
+            <!-- Draft Resume Banner -->
+            <div
+              v-if="showDraftBanner"
+              class="px-4 py-2 bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800"
+            >
+              <div class="flex items-center gap-2">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-4 w-4 text-amber-500 dark:text-amber-400 flex-shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                  />
+                </svg>
+                <span class="text-sm text-amber-700 dark:text-amber-300">
+                  Resuming saved draft
+                </span>
+                <button
+                  type="button"
+                  class="ml-auto text-xs text-amber-600 dark:text-amber-400 hover:underline"
+                  @click="showDraftBanner = false"
+                >
+                  Dismiss
+                </button>
+              </div>
             </div>
 
             <!-- Content -->

@@ -24,7 +24,33 @@ const emit = defineEmits<{
   (e: "confirm", edited: ParsedEntry): void;
   (e: "edit"): void;
   (e: "cancel"): void;
+  (e: "save-draft", data: { input: Record<string, unknown>; parsedFrom: string; confidence: number }): void;
 }>();
+
+// Auto-save draft when user cancels (with unsaved changes)
+const hasPendingChanges = computed(() => {
+  return editedName.value || editedDuration.value || editedCount.value;
+});
+
+// Handle cancel with draft save option
+function handleCancel() {
+  // If there are pending changes, offer to save as draft
+  if (hasPendingChanges.value) {
+    const draftData = {
+      input: {
+        name: editedName.value || undefined,
+        type: editedType.value,
+        durationSeconds: editedDuration.value || undefined,
+        count: editedCount.value || undefined,
+        timestamp: new Date().toISOString(),
+      },
+      parsedFrom: props.parsed.originalText,
+      confidence: props.parsed.confidence,
+    };
+    emit("save-draft", draftData);
+  }
+  emit("cancel");
+}
 
 // Local state for editing
 const isEditing = ref(false);
@@ -187,9 +213,9 @@ function toggleEdit() {
         type="button"
         :disabled="isLoading"
         class="flex-1 px-3 py-2 text-sm font-medium rounded-lg text-stone-700 dark:text-stone-300 bg-stone-200 dark:bg-stone-700 hover:bg-stone-300 dark:hover:bg-stone-600 disabled:opacity-50 transition-colors"
-        @click="emit('cancel')"
+        @click="handleCancel"
       >
-        Cancel
+        {{ hasPendingChanges ? "Save Draft" : "Cancel" }}
       </button>
       <button
         type="button"
