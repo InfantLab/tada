@@ -2,8 +2,8 @@
 
 _Defining the category hierarchy, type system, and emoji conventions for lifelogging entries._
 
-**Status:** v0.1.0 Initial Design  
-**Last Updated:** 2026-01-11
+**Status:** v0.3.0 Refined  
+**Last Updated:** 2026-01-26
 
 ---
 
@@ -25,11 +25,11 @@ _Defining the category hierarchy, type system, and emoji conventions for lifelog
 
 Tada uses a **unified Entry model** where every piece of life data is stored as a single entry type with flexible metadata. This ontology defines how entries are classified across three dimensions:
 
-| Dimension       | Purpose                   | Examples                        | Editable        |
-| --------------- | ------------------------- | ------------------------------- | --------------- |
-| **Type**        | Data structure + behavior | `timed`, `tada`, `journal`      | System-defined  |
-| **Category**    | Life domain               | `mindfulness`, `accomplishment` | User-extensible |
-| **Subcategory** | Specific activity         | `sitting`, `work`, `piano`      | User-extensible |
+| Dimension       | Purpose           | Examples                           | Editable        |
+| --------------- | ----------------- | ---------------------------------- | --------------- |
+| **Type**        | Capture behavior  | `timed`, `tada`, `moment`, `tally` | System-defined  |
+| **Category**    | Life domain       | `mindfulness`, `accomplishment`    | User-extensible |
+| **Subcategory** | Specific activity | `sitting`, `work`, `piano`         | User-extensible |
 
 ### Design Principles
 
@@ -42,32 +42,32 @@ Tada uses a **unified Entry model** where every piece of life data is stored as 
 ### Why Three Levels?
 
 - **Type alone** conflates structure with domain (is "meditation" a timer behavior or a mindfulness practice?)
-- **Category alone** loses behavioral distinction (tada accomplishments need different UI than journal entries)
+- **Category alone** loses behavioral distinction (tada celebrations need different UI than moment reflections)
 - **Three levels** provide: consistent behavior (type) + domain grouping (category) + specificity (subcategory)
 
 ---
 
 ## Type System
 
-Types define **how an entry is recorded** and **what behavior it exhibits**. Each type has a specific data schema and UI treatment.
+Types define **how an entry is captured** — the behavior mode. Each type has a specific data schema and UI treatment.
 
-### Core Types (v0.10)
+### Core Types (v0.3.0)
 
-| Type      | Behavior                | Data Schema   | Primary Use                             |
-| --------- | ----------------------- | ------------- | --------------------------------------- |
-| `timed`   | Duration-based activity | `TimedData`   | Meditation, exercise, practice sessions |
-| `tada`    | Accomplishment capture  | `TadaData`    | Celebrating wins, productivity logging  |
-| `journal` | Reflective text entry   | `JournalData` | Dreams, gratitude, notes, reflections   |
+| Type     | Behavior            | Verb      | Data Schema  | Primary Use                             |
+| -------- | ------------------- | --------- | ------------ | --------------------------------------- |
+| `timed`  | Duration-based      | Practice  | `TimedData`  | Meditation, exercise, practice sessions |
+| `tada`   | Celebration capture | Celebrate | `TadaData`   | Celebrating wins, gratitude, milestones |
+| `moment` | Reflective text     | Reflect   | `MomentData` | Dreams, notes, reflections, memories    |
+| `tally`  | Count-based         | Count     | `TallyData`  | Push-ups, glasses of water, reps        |
 
-### Planned Types (v0.20+)
+### Planned Types (v0.4.0+)
 
-| Type          | Behavior                  | Data Schema       | Primary Use                            |
-| ------------- | ------------------------- | ----------------- | -------------------------------------- |
-| `reps`        | Count-based activity      | `RepsData`        | Push-ups, squats, repetitive exercises |
-| `measurement` | Point-in-time value       | `MeasurementData` | Weight, blood pressure, sleep hours    |
-| `experience`  | Event attended            | `ExperienceData`  | Concerts, movies, exhibitions          |
-| `consumption` | Media consumed            | `ConsumptionData` | Books, podcasts, articles              |
-| `gps_tracked` | Location-tracked activity | `GpsData`         | Runs, walks, bike rides with route     |
+| Type          | Behavior                  | Data Schema       | Primary Use                         |
+| ------------- | ------------------------- | ----------------- | ----------------------------------- |
+| `measurement` | Point-in-time value       | `MeasurementData` | Weight, blood pressure, sleep hours |
+| `experience`  | Event attended            | `ExperienceData`  | Concerts, movies, exhibitions       |
+| `consumption` | Media consumed            | `ConsumptionData` | Books, podcasts, articles           |
+| `gps_tracked` | Location-tracked activity | `GpsData`         | Runs, walks, bike rides with route  |
 
 ### Type Data Schemas
 
@@ -80,29 +80,35 @@ interface TimedData {
   targetDuration?: number; // planned duration in seconds
 }
 
-// Accomplishments (the app's namesake!)
+// Celebrations (the app's namesake!)
 interface TadaData {
   content: string;
   significance?: "minor" | "normal" | "major";
   voiceTranscription?: string; // original if voice-captured
 }
 
-// Journal entries (dreams, gratitude, notes)
-interface JournalData {
+// Moments (inner life reflections)
+interface MomentData {
   content: string;
   mood?: number; // 1-5 scale
   themes?: string[]; // e.g., ["lucid", "flying"] for dreams
+}
+
+// Tallies (count-based activities)
+interface TallyData {
+  count: number; // the number recorded
+  unit?: string; // e.g., "reps", "glasses", "pages"
 }
 ```
 
 ### Why Tada is a Type, Not a Category
 
-**Tada is the philosophical foundation of this app** — the inversion of the anxiety-inducing todo list into a celebration of accomplishment. It deserves first-class type status because:
+**Tada is the philosophical foundation of this app** — the inversion of the anxiety-inducing todo list into a celebration of life. It deserves first-class type status because:
 
 1. **Unique behavior**: Quick capture, voice input, significance levels, calendar visualization
-2. **Different data schema**: `TadaData` has fields (significance, voiceTranscription) that don't belong in journal
+2. **Different data schema**: `TadaData` has fields (significance, voiceTranscription) that don't belong in moments
 3. **Namesake status**: The app is literally named after this concept
-4. **Philosophical distinction**: Tadas are _extrospective_ (what I did to the world) vs journals are _introspective_ (what happened in me)
+4. **Philosophical distinction**: Tadas are _celebratory_ (noticing what matters) — they can be accomplishments, gratitude, or any moment worth celebrating
 
 ---
 
@@ -110,7 +116,7 @@ interface JournalData {
 
 Categories represent **life domains** — broad areas of human activity that entries belong to. They enable cross-type grouping and provide visual consistency through shared colors and emojis.
 
-### Core Categories (v0.10)
+### Core Categories (v0.3.0)
 
 | Category         | Emoji | Color              | Description                                    |
 | ---------------- | ----- | ------------------ | ---------------------------------------------- |
@@ -118,7 +124,7 @@ Categories represent **life domains** — broad areas of human activity that ent
 | `movement`       | 🏃    | `#059669` (green)  | Physical exercise, sports, body practices      |
 | `creative`       | 🎵    | `#D97706` (amber)  | Music, art, writing, making things             |
 | `learning`       | 📚    | `#2563EB` (blue)   | Study, courses, skill acquisition              |
-| `journal`        | 📝    | `#6366F1` (indigo) | Dreams, reflections, personal notes            |
+| `moments`        | 💭    | `#6366F1` (indigo) | Inner life: dreams, reflections, memories      |
 | `accomplishment` | ⚡    | `#F59E0B` (yellow) | Tadas, wins, completed tasks                   |
 | `events`         | 🎭    | `#EC4899` (pink)   | Concerts, movies, attended experiences         |
 
@@ -126,15 +132,15 @@ Categories represent **life domains** — broad areas of human activity that ent
 
 Categories can span multiple types. The relationship is suggestive, not restrictive:
 
-| Category         | Primary Types                  | Example Entries                   |
-| ---------------- | ------------------------------ | --------------------------------- |
-| `mindfulness`    | `timed`                        | 10-minute sitting meditation      |
-| `movement`       | `timed`, `reps`, `gps_tracked` | Yoga session, 50 push-ups, 5k run |
-| `creative`       | `timed`                        | 30-minute piano practice          |
-| `learning`       | `timed`                        | Language lesson, reading session  |
-| `journal`        | `journal`                      | Dream record, gratitude entry     |
-| `accomplishment` | `tada`                         | "Fixed the leaky tap" ⚡          |
-| `events`         | `experience`                   | Concert at Royal Albert Hall      |
+| Category         | Primary Types                   | Example Entries                   |
+| ---------------- | ------------------------------- | --------------------------------- |
+| `mindfulness`    | `timed`                         | 10-minute sitting meditation      |
+| `movement`       | `timed`, `tally`, `gps_tracked` | Yoga session, 50 push-ups, 5k run |
+| `creative`       | `timed`                         | 30-minute piano practice          |
+| `learning`       | `timed`                         | Language lesson, reading session  |
+| `moments`        | `moment`                        | Dream record, reflection entry    |
+| `accomplishment` | `tada`                          | "Fixed the leaky tap" ⚡          |
+| `events`         | `experience`                    | Concert at Royal Albert Hall      |
 
 ### User Extension
 
@@ -195,16 +201,16 @@ Subcategories provide **specific activity identification** within a category. Th
 | `course`    | 🎓    | Online course, MOOC       |
 | `practice`  | 🎯    | Deliberate skill practice |
 
-### Journal Subcategories
+### Moments Subcategories
 
-| Subcategory   | Emoji | Description            |
-| ------------- | ----- | ---------------------- |
-| `dream`       | 🌙    | Dream journal          |
-| `gratitude`   | 🙏    | Gratitude entries      |
-| `reflection`  | 💭    | Personal reflection    |
-| `note`        | 📝    | Quick notes            |
-| `serendipity` | ✨    | Unexpected discoveries |
-| `memory`      | 📸    | Memory capture         |
+| Subcategory  | Emoji | Description                                 |
+| ------------ | ----- | ------------------------------------------- |
+| `journal`    | 📝    | Personal diary entries                      |
+| `dream`      | 🌙    | Dream journal                               |
+| `gratitude`  | 🙏    | Gratitude entries                           |
+| `reflection` | 💭    | Personal reflection                         |
+| `magic`      | 🪄    | Joy, delight, serendipity, zen, wonder, awe |
+| `memory`     | 📸    | Memory capture                              |
 
 ### Accomplishment Subcategories
 
@@ -236,6 +242,15 @@ Some subcategories appear in multiple categories (e.g., `walking` in mindfulness
 - `category: "movement", subcategory: "walking"` → fitness walking 🚶
 
 Same activity, different intention and framing.
+
+### Gratitude: Category vs Tada Type
+
+Note that gratitude can appear in two places:
+
+- **As a subcategory under `moments`**: A reflective journal entry about what you're thankful for
+- **As a `tada` type entry**: A quick celebratory capture — "Tada! I'm grateful for..."
+
+The distinction is behavioral: moments are reflective (you sit and write), tadas are celebratory (quick capture of a spark).
 
 ---
 
@@ -296,7 +311,7 @@ When creating a new entry, resolve the emoji to assign:
 function resolveEmojiForNewEntry(
   category: string,
   subcategory: string,
-  userCustomEmojis: Record<string, string>
+  userCustomEmojis: Record<string, string>,
 ): string {
   // 1. Check user's custom subcategory emoji
   const customSubcatKey = `${category}:${subcategory}`;
@@ -350,7 +365,7 @@ function getEntryEmoji(entry: Entry): string {
 | `movement`       | 🏃    | Active motion                  |
 | `creative`       | 🎵    | Music as archetypal creativity |
 | `learning`       | 📚    | Books = knowledge              |
-| `journal`        | 📝    | Writing/notes                  |
+| `moments`        | 💭    | Thought bubble = inner life    |
 | `accomplishment` | ⚡    | Energy, spark, "tada!"         |
 | `events`         | 🎭    | Theatre masks = performance    |
 
@@ -375,7 +390,7 @@ Each category has an assigned color for consistent UI treatment across timeline 
 | `movement`       | Green  | `#059669` | `emerald-600`  |
 | `creative`       | Amber  | `#D97706` | `amber-600`    |
 | `learning`       | Blue   | `#2563EB` | `blue-600`     |
-| `journal`        | Indigo | `#6366F1` | `indigo-500`   |
+| `moments`        | Indigo | `#6366F1` | `indigo-500`   |
 | `accomplishment` | Yellow | `#F59E0B` | `amber-500`    |
 | `events`         | Pink   | `#EC4899` | `pink-500`     |
 
@@ -405,9 +420,9 @@ export const entries = sqliteTable("entries", {
   // ... existing fields ...
 
   // Classification
-  type: text("type").notNull(), // "timed", "tada", "journal"
-  category: text("category"), // "mindfulness", "accomplishment"
-  subcategory: text("subcategory"), // "sitting", "work"
+  type: text("type").notNull(), // "timed", "tada", "moment", "tally"
+  category: text("category"), // "mindfulness", "accomplishment", "moments"
+  subcategory: text("subcategory"), // "sitting", "work", "journal"
   emoji: text("emoji"), // Per-entry override (nullable)
 
   // ... other fields ...
@@ -485,14 +500,14 @@ interface DisplayProps {
 
 function getEntryDisplayProps(
   entry: Entry,
-  userSettings?: CategorySettings[]
+  userSettings?: CategorySettings[],
 ): DisplayProps {
   // Check user overrides first (v0.20)
   const userSubcatSetting = userSettings?.find(
-    (s) => s.category === entry.category && s.subcategory === entry.subcategory
+    (s) => s.category === entry.category && s.subcategory === entry.subcategory,
   );
   const userCatSetting = userSettings?.find(
-    (s) => s.category === entry.category && !s.subcategory
+    (s) => s.category === entry.category && !s.subcategory,
   );
 
   // Resolve emoji: entry → user subcategory → user category → default subcategory → default category → fallback
@@ -533,7 +548,7 @@ function getEntryDisplayProps(
 │    accomplishment • home                │
 ├─────────────────────────────────────────┤
 │ 🌙 Flying dream                         │ ← emoji from subcategory "dream"
-│    journal • dream                      │
+│    moments • dream                      │
 └─────────────────────────────────────────┘
 ```
 

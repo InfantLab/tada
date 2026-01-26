@@ -13,6 +13,7 @@ export default defineVitestConfig({
     poolOptions: {
       forks: {
         singleFork: true,
+        isolate: true, // Ensure test isolation to prevent module pollution
       },
     },
     env: {

@@ -478,14 +478,21 @@
           >
             Timezone
           </label>
-          <input
+          <select
             v-model="transforms.timezone"
-            type="text"
             class="w-full px-3 py-2 border border-pearl-mist dark:border-cosmic-indigo-light rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-            placeholder="e.g., America/New_York"
-          />
+          >
+            <option
+              v-for="tz in commonTimezones"
+              :key="tz.value"
+              :value="tz.value"
+            >
+              {{ tz.label }}
+            </option>
+          </select>
           <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
-            Detected: {{ Intl.DateTimeFormat().resolvedOptions().timeZone }}
+            Your browser timezone:
+            {{ Intl.DateTimeFormat().resolvedOptions().timeZone }}
           </p>
         </div>
         <div>
@@ -890,6 +897,40 @@ const transforms = ref({
   durationFormat: "H:mm:ss",
   defaultCategory: "mindfulness",
   defaultSubcategory: "",
+});
+
+// Common timezone options
+const browserTimezone =
+  Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+const commonTimezones = computed(() => {
+  const zones = [
+    { value: browserTimezone, label: `${browserTimezone} (your browser)` },
+    { value: "UTC", label: "UTC" },
+    { value: "America/New_York", label: "America/New_York (ET)" },
+    { value: "America/Chicago", label: "America/Chicago (CT)" },
+    { value: "America/Denver", label: "America/Denver (MT)" },
+    { value: "America/Los_Angeles", label: "America/Los_Angeles (PT)" },
+    { value: "America/Toronto", label: "America/Toronto" },
+    { value: "America/Vancouver", label: "America/Vancouver" },
+    { value: "Europe/London", label: "Europe/London (GMT/BST)" },
+    { value: "Europe/Paris", label: "Europe/Paris (CET)" },
+    { value: "Europe/Berlin", label: "Europe/Berlin (CET)" },
+    { value: "Europe/Amsterdam", label: "Europe/Amsterdam (CET)" },
+    { value: "Asia/Tokyo", label: "Asia/Tokyo (JST)" },
+    { value: "Asia/Shanghai", label: "Asia/Shanghai (CST)" },
+    { value: "Asia/Singapore", label: "Asia/Singapore (SGT)" },
+    { value: "Asia/Kolkata", label: "Asia/Kolkata (IST)" },
+    { value: "Australia/Sydney", label: "Australia/Sydney (AEST)" },
+    { value: "Australia/Melbourne", label: "Australia/Melbourne (AEST)" },
+    { value: "Pacific/Auckland", label: "Pacific/Auckland (NZST)" },
+  ];
+  // Deduplicate if browser timezone matches one of our presets
+  const seen = new Set<string>();
+  return zones.filter((z) => {
+    if (seen.has(z.value)) return false;
+    seen.add(z.value);
+    return true;
+  });
 });
 
 // Preview data

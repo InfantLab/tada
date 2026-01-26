@@ -240,6 +240,14 @@ const entryData = computed(() => {
         ? (data["significance"] as string)
         : null,
     mode: typeof data["mode"] === "string" ? (data["mode"] as string) : null,
+    practiceUrl:
+      typeof data["practiceUrl"] === "string"
+        ? (data["practiceUrl"] as string)
+        : null,
+    practiceTitle:
+      typeof data["practiceTitle"] === "string"
+        ? (data["practiceTitle"] as string)
+        : null,
   };
 });
 
@@ -407,6 +415,39 @@ function getMoodEmoji(mood: number): string {
             >
               "{{ entryData.reflection }}"
             </p>
+          </div>
+
+          <!-- Practice Link (for sessions) -->
+          <div v-if="entryData.practiceUrl" class="space-y-1">
+            <div
+              class="text-xs font-medium text-stone-500 dark:text-stone-400 uppercase tracking-wider"
+            >
+              Practice
+            </div>
+            <a
+              :href="entryData.practiceUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center gap-2 text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                />
+              </svg>
+              <span>{{
+                entryData.practiceTitle || entryData.practiceUrl
+              }}</span>
+            </a>
           </div>
 
           <!-- Significance badge (for voice-captured tadas) -->

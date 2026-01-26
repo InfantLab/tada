@@ -66,12 +66,16 @@ File-based routing — each `.vue` file becomes a route:
 ```
 pages/
 ├── index.vue                     # Timeline (/) — Home feed
-├── timer.vue                     # Timer (/timer) — Meditation/activity timer
+├── sessions.vue                  # Sessions (/sessions) — Timed activities
+├── tally.vue                     # Tally (/tally) — Count/reps tracking
+├── moments.vue                   # Moments (/moments) — Dreams, notes, reflections
 ├── add.vue                       # Add Entry (/add) — Quick capture
-├── journal.vue                   # Journal (/journal) — Journal entries
-├── rhythms.vue                   # Rhythms (/rhythms) — Pattern tracking (placeholder)
+├── rhythms.vue                   # Rhythms (/rhythms) — Habit tracking
 ├── settings.vue                  # Settings (/settings) — Export, bells, auth
 ├── login.vue                     # Login (/login) — Authentication
+├── tada/
+│   ├── index.vue                 # Ta-Da! (/tada) — Accomplishments
+│   └── history.vue               # Ta-Da! History (/tada/history)
 └── entry/
     └── [id].vue                  # Entry Detail (/entry/123) — Single entry view
 ```

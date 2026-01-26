@@ -37,6 +37,11 @@
     "**/dist": true,
     "**/.output": true
   },
+  "peacock.remoteColor": "#2B0F3A",
+  "chat.promptFilesLocations": {
+    ".github/prompts": true,
+    "C:\\Users\\caspar\\.github\\prompts\\": true
+  },
   "workbench.colorCustomizations": {
     "activityBar.activeBackground": "#491963",
     "activityBar.background": "#491963",
@@ -55,10 +60,5 @@
     "titleBar.activeForeground": "#e7e7e7",
     "titleBar.inactiveBackground": "#2b0f3a99",
     "titleBar.inactiveForeground": "#e7e7e799"
-  },
-  "peacock.remoteColor": "#2B0F3A",
-  "chat.promptFilesLocations": {
-    ".github/prompts": true,
-    "C:\\Users\\caspar\\.github\\prompts\\": true
   }
 }

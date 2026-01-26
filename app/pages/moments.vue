@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Journal page - dream journaling and free-form entries
+// Moments page - dreams, notes, magic moments, and freeform entries
 import type { Entry } from "~/server/db/schema";
 
 definePageMeta({
@@ -12,7 +12,9 @@ const router = useRouter();
 const entries = ref<Entry[]>([]);
 const isLoading = ref(true);
 const error = ref<string | null>(null);
-const selectedType = ref<"all" | "dream" | "journal" | "tada">("all");
+const selectedType = ref<"all" | "dream" | "magic" | "note" | "gratitude">(
+  "all",
+);
 
 // Navigate to entry only if no text was selected
 function handleEntryClick(entry: Entry, event: MouseEvent) {
@@ -28,13 +30,22 @@ function handleEntryClick(entry: Entry, event: MouseEvent) {
 
 onMounted(async () => {
   try {
-    // Fetch journal-type entries (dream, journal, tada)
+    // Fetch moment-type entries (journal subcategories)
     const data = await $fetch<Entry[]>("/api/entries");
-    entries.value = data.filter((e) =>
-      ["dream", "journal", "tada", "note"].includes(e.type),
+    entries.value = data.filter(
+      (e) =>
+        [
+          "dream",
+          "journal",
+          "note",
+          "gratitude",
+          "magic",
+          "reflection",
+          "memory",
+        ].includes(e.type) || e.category === "journal",
     );
   } catch (err: unknown) {
-    console.error("Failed to fetch journal entries:", err);
+    console.error("Failed to fetch moment entries:", err);
     error.value = err instanceof Error ? err.message : "Failed to load entries";
   } finally {
     isLoading.value = false;
@@ -43,7 +54,10 @@ onMounted(async () => {
 
 const filteredEntries = computed(() => {
   if (selectedType.value === "all") return entries.value;
-  return entries.value.filter((e) => e.type === selectedType.value);
+  return entries.value.filter(
+    (e) =>
+      e.type === selectedType.value || e.subcategory === selectedType.value,
+  );
 });
 
 function formatDate(dateStr: string): string {
@@ -57,16 +71,23 @@ function formatDate(dateStr: string): string {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-function getTypeIcon(type: string): string {
-  switch (type) {
+function getTypeIcon(type: string, subcategory?: string | null): string {
+  const sub = subcategory || type;
+  switch (sub) {
     case "dream":
       return "🌙";
-    case "tada":
-      return "⚡";
+    case "magic":
+      return "🪄";
+    case "gratitude":
+      return "🙏";
+    case "reflection":
+      return "💭";
+    case "memory":
+      return "📸";
     case "note":
       return "📝";
     default:
-      return "💭";
+      return "✨";
   }
 }
 </script>
@@ -74,13 +95,13 @@ function getTypeIcon(type: string): string {
 <template>
   <div>
     <!-- Page header -->
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex items-center justify-between mb-4">
       <div>
         <h1 class="text-2xl font-bold text-stone-800 dark:text-stone-100">
-          Journal
+          Moments
         </h1>
         <p class="text-sm text-stone-500 dark:text-stone-400">
-          Dreams, notes & accomplishments
+          Dreams, magic & reflections
         </p>
       </div>
 
@@ -103,16 +124,56 @@ function getTypeIcon(type: string): string {
             d="M12 4v16m8-8H4"
           />
         </svg>
-        <span class="hidden sm:inline">New Entry</span>
+        <span class="hidden sm:inline">New</span>
+      </NuxtLink>
+    </div>
+
+    <!-- Quick capture buttons -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-6">
+      <NuxtLink
+        to="/add?type=journal&subcategory=magic"
+        class="flex items-center gap-2 px-3 py-3 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded-lg border border-purple-200 dark:border-purple-800 transition-colors"
+      >
+        <span class="text-xl">🪄</span>
+        <span class="text-sm font-medium text-purple-700 dark:text-purple-300"
+          >Magic</span
+        >
+      </NuxtLink>
+      <NuxtLink
+        to="/add?type=journal&subcategory=dream"
+        class="flex items-center gap-2 px-3 py-3 bg-indigo-50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 rounded-lg border border-indigo-200 dark:border-indigo-800 transition-colors"
+      >
+        <span class="text-xl">🌙</span>
+        <span class="text-sm font-medium text-indigo-700 dark:text-indigo-300"
+          >Dream</span
+        >
+      </NuxtLink>
+      <NuxtLink
+        to="/add?type=journal&subcategory=gratitude"
+        class="flex items-center gap-2 px-3 py-3 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/30 rounded-lg border border-amber-200 dark:border-amber-800 transition-colors"
+      >
+        <span class="text-xl">🙏</span>
+        <span class="text-sm font-medium text-amber-700 dark:text-amber-300"
+          >Gratitude</span
+        >
+      </NuxtLink>
+      <NuxtLink
+        to="/add?type=journal&subcategory=note"
+        class="flex items-center gap-2 px-3 py-3 bg-stone-50 dark:bg-stone-800 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-lg border border-stone-200 dark:border-stone-700 transition-colors"
+      >
+        <span class="text-xl">📝</span>
+        <span class="text-sm font-medium text-stone-700 dark:text-stone-300"
+          >Note</span
+        >
       </NuxtLink>
     </div>
 
     <!-- Type filter -->
     <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
       <button
-        v-for="type in ['all', 'dream', 'tada', 'note']"
+        v-for="type in ['all', 'magic', 'dream', 'gratitude', 'note']"
         :key="type"
-        class="px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors"
+        class="px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors"
         :class="
           selectedType === type
             ? 'bg-tada-600 text-black dark:bg-tada-600 dark:text-white'
@@ -121,8 +182,9 @@ function getTypeIcon(type: string): string {
         @click="selectedType = type as any"
       >
         <span v-if="type === 'all'">All</span>
+        <span v-else-if="type === 'magic'">🪄 Magic</span>
         <span v-else-if="type === 'dream'">🌙 Dreams</span>
-        <span v-else-if="type === 'tada'">⚡ Ta-Da!</span>
+        <span v-else-if="type === 'gratitude'">🙏 Gratitude</span>
         <span v-else>📝 Notes</span>
       </button>
     </div>
@@ -136,30 +198,32 @@ function getTypeIcon(type: string): string {
 
     <!-- Empty state -->
     <div v-else-if="filteredEntries.length === 0" class="text-center py-12">
-      <div class="text-6xl mb-4">📖</div>
+      <div class="text-6xl mb-4">✨</div>
       <h2 class="text-xl font-semibold text-stone-700 dark:text-stone-200 mb-2">
-        No entries yet
+        No moments yet
       </h2>
       <p class="text-stone-500 dark:text-stone-400 max-w-md mx-auto mb-6">
-        Capture your dreams, celebrate your accomplishments, or jot down
+        Capture magic moments, record dreams, practice gratitude, or jot down
         thoughts.
       </p>
       <div class="flex flex-col sm:flex-row gap-3 justify-center">
-        <button
+        <NuxtLink
+          to="/add?type=journal&subcategory=magic"
+          class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-medium transition-colors"
+        >
+          🪄 Capture magic
+        </NuxtLink>
+        <NuxtLink
+          to="/add?type=journal&subcategory=dream"
           class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg font-medium transition-colors"
         >
           🌙 Record a dream
-        </button>
-        <button
-          class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-tada-600 hover:opacity-90 text-black dark:bg-tada-600 dark:text-white rounded-lg font-medium transition-colors"
-        >
-          ⚡ Celebrate a win
-        </button>
+        </NuxtLink>
       </div>
     </div>
 
     <!-- Entries list -->
-    <div v-else class="space-y-4">
+    <div v-else class="space-y-3">
       <div
         v-for="entry in filteredEntries"
         :key="entry.id"
@@ -171,7 +235,7 @@ function getTypeIcon(type: string): string {
           <div
             class="flex-shrink-0 w-10 h-10 rounded-lg bg-stone-100 dark:bg-stone-700 flex items-center justify-center text-xl"
           >
-            {{ getTypeIcon(entry.type) }}
+            {{ getTypeIcon(entry.type, entry.subcategory) }}
           </div>
 
           <!-- Content -->

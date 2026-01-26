@@ -224,11 +224,11 @@ Decisions made during design, with rationale. This complements the SDR.
 
 **Decision:** Three-level classification system for entries.
 
-| Field         | Purpose                   | Examples                        |
-| ------------- | ------------------------- | ------------------------------- |
-| `type`        | Data structure + behavior | `timed`, `tada`, `journal`      |
-| `category`    | Life domain               | `mindfulness`, `accomplishment` |
-| `subcategory` | Specific activity         | `sitting`, `work`, `piano`      |
+| Field         | Purpose           | Examples                           |
+| ------------- | ----------------- | ---------------------------------- |
+| `type`        | Capture behavior  | `timed`, `tada`, `moment`, `tally` |
+| `category`    | Life domain       | `mindfulness`, `accomplishment`    |
+| `subcategory` | Specific activity | `sitting`, `work`, `piano`         |
 
 **Rationale:**
 
@@ -244,14 +244,14 @@ See [ontology.md](ontology.md) for full details.
 
 ### Tada as a First-Class Type
 
-**Decision:** `tada` is a distinct entry type, not `type: "journal", category: "accomplishment"`.
+**Decision:** `tada` is a distinct entry type, not `type: "moment", category: "accomplishment"`.
 
 **Rationale:**
 
 - Tada is the app's namesake and philosophical foundation
 - Distinct behavior: quick capture, voice input, significance levels, calendar view
 - Distinct data schema: `TadaData` has `significance`, `voiceTranscription`
-- Philosophical distinction: extrospective (what I did) vs introspective (what I felt)
+- Philosophical distinction: Tadas are _celebratory_ — noticing what matters, whether accomplishments or gratitude
 
 ---
 
@@ -284,7 +284,7 @@ See [ontology.md](ontology.md) for full details.
 | `movement`       | Green (#059669)  |
 | `creative`       | Amber (#D97706)  |
 | `learning`       | Blue (#2563EB)   |
-| `journal`        | Indigo (#6366F1) |
+| `moments`        | Indigo (#6366F1) |
 | `accomplishment` | Yellow (#F59E0B) |
 | `events`         | Pink (#EC4899)   |
 
@@ -484,6 +484,59 @@ These will be revisited later:
 - Flows — too abstract
 - Patterns — accurate but analytical/cold
 - Threads — poetic but unclear
+
+---
+
+## Ontology Clarification: Types vs Categories
+
+**Decision:** Separate capture behavior (types) from life domains (categories) with clear naming.
+
+**Date:** January 2026
+
+**Problem:**
+
+The original ontology had `journal` appearing at both the type level AND the category level. This caused confusion:
+
+- The Moments page filtered for `type: "journal"` and `category: "journal"`
+- The word "journal" didn't match the page name "Moments"
+- Users were confused about what level they were operating at
+
+**Solution:**
+
+| Before    | After     | Level       | Meaning                      |
+| --------- | --------- | ----------- | ---------------------------- |
+| `journal` | `moment`  | Type        | Reflective capture behavior  |
+| `reps`    | `tally`   | Type        | Count-based capture behavior |
+| `journal` | `moments` | Category    | Inner life domain            |
+| `note`    | `journal` | Subcategory | Personal diary entries       |
+
+**Types are now behavior-first:**
+
+| Type     | Verb      | What it captures          |
+| -------- | --------- | ------------------------- |
+| `timed`  | Practice  | Duration-based activities |
+| `tada`   | Celebrate | Celebrations and wins     |
+| `moment` | Reflect   | Reflective text entries   |
+| `tally`  | Count     | Count-based activities    |
+
+**Rationale:**
+
+- Types answer "how am I capturing this?" (behavior)
+- Categories answer "what domain of life is this?" (content)
+- Subcategories answer "what specific activity?" (specificity)
+- Tada is "celebrate" — not just accomplishments, but any moment worth celebrating
+
+**Impact:**
+
+- Database migration needed (with backward compatibility)
+- UI code updated to use new type/category values
+- Moments page now shows `type: "moment"` entries
+- Tally page now shows `type: "tally"` entries
+- Legacy `journal` type accepted in filters for backward compat
+
+**Future consideration:**
+
+Tada as "celebrate" opens the door to celebratory gratitude entries — quick captures of thankfulness using the tada flow, distinct from reflective gratitude moments.
 
 ---
 

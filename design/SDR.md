@@ -89,38 +89,38 @@ Everything in Tada is an **Entry**—a moment worth recording. The schema is del
 
 #### Built-in Entry Types
 
-Types define **how an entry is recorded** (data structure and behavior). These are examples, not a closed set:
+Types define **how an entry is captured** (behavior mode). These are examples, not a closed set:
 
-| Type          | Description                           | Example                              |
-| ------------- | ------------------------------------- | ------------------------------------ |
-| `timed`       | Duration-based activities             | Meditation, music practice, tai chi  |
-| `tada`        | Accomplishments (the app's namesake!) | "Fixed the leaky tap", "Called mum"  |
-| `journal`     | Reflective text entries               | Dream journal, gratitude, reflection |
-| `reps`        | Count-based activities                | 20 press-ups, 3 sets of squats       |
-| `gps_tracked` | Activities with GPS route             | Running, cycling, walking            |
-| `measurement` | Point-in-time values                  | Weight, heart rate, blood pressure   |
-| `experience`  | Events attended                       | Film, concert, play, exhibition      |
-| `consumption` | Media consumed                        | Book, album, podcast, article        |
+| Type          | Description                        | Example                              |
+| ------------- | ---------------------------------- | ------------------------------------ |
+| `timed`       | Duration-based activities          | Meditation, music practice, tai chi  |
+| `tada`        | Celebrations (the app's namesake!) | "Fixed the leaky tap", "Called mum"  |
+| `moment`      | Reflective text entries            | Dream journal, gratitude, reflection |
+| `tally`       | Count-based activities             | 20 press-ups, 3 glasses of water     |
+| `gps_tracked` | Activities with GPS route          | Running, cycling, walking            |
+| `measurement` | Point-in-time values               | Weight, heart rate, blood pressure   |
+| `experience`  | Events attended                    | Film, concert, play, exhibition      |
+| `consumption` | Media consumed                     | Book, album, podcast, article        |
 
 #### Category Hierarchy
 
 In addition to type, entries have **category** (life domain) and **subcategory** (specific activity) for cross-type grouping and visual consistency. See [ontology.md](ontology.md) for the full hierarchy.
 
-| Field         | Purpose                 | Examples                                    |
-| ------------- | ----------------------- | ------------------------------------------- |
-| `type`        | Data structure/behavior | `timed`, `tada`, `journal`                  |
-| `category`    | Life domain             | `mindfulness`, `accomplishment`, `creative` |
-| `subcategory` | Specific activity       | `sitting`, `work`, `piano`                  |
-| `emoji`       | Per-entry override      | 🎹 (optional)                               |
+| Field         | Purpose            | Examples                                    |
+| ------------- | ------------------ | ------------------------------------------- |
+| `type`        | Capture behavior   | `timed`, `tada`, `moment`, `tally`          |
+| `category`    | Life domain        | `mindfulness`, `accomplishment`, `creative` |
+| `subcategory` | Specific activity  | `sitting`, `work`, `piano`                  |
+| `emoji`       | Per-entry override | 🎹 (optional)                               |
 
-Default categories: `mindfulness`, `movement`, `creative`, `learning`, `journal`, `accomplishment`, `events`
+Default categories: `mindfulness`, `movement`, `creative`, `learning`, `moments`, `accomplishment`, `events`
 
 #### Core Entry Schema
 
 ```typescript
 interface Entry {
   id: string; // UUID
-  type: string; // Behavior: "timed", "tada", "journal", etc.
+  type: string; // Behavior: "timed", "tada", "moment", "tally", etc.
   name: string; // Human label: "Morning Sit", "Fixed tap"
 
   // Category hierarchy (see ontology.md)
@@ -221,11 +221,12 @@ interface TimedData {
 
 // Note: category/subcategory are now top-level Entry fields, not in TimedData
 
-// Rep-based activities
-interface RepsData {
+// Tally-based activities (count-based)
+interface TallyData {
   count: number;
+  unit?: string; // "reps", "glasses", "pages"
   sets?: number;
-  exercise: string; // "press-up", "squat", "pull-up"
+  exercise?: string; // "press-up", "squat", "pull-up" (for movement tallies)
   weightKg?: number;
   resistanceBand?: string;
 }
@@ -249,23 +250,23 @@ interface MeasurementData {
   components?: Record<string, number>; // e.g., {systolic: 120, diastolic: 80}
 }
 
-// Journal entries
-interface JournalData {
+// Moment entries (inner life reflections)
+interface MomentData {
   content: string; // Markdown supported
   mood?: number; // 1-5
   themes?: string[]; // e.g., ["lucid", "flying"] for dreams
 }
 
-// Note: journalType (dream/gratitude/reflection) is now the subcategory field
+// Note: momentType (dream/gratitude/reflection/journal) is now the subcategory field
 
-// Tada (accomplishments) — the app's namesake!
+// Tada (celebrations) — the app's namesake!
 interface TadaData {
   content: string;
   voiceTranscription?: string; // Original voice input
   significance?: "minor" | "normal" | "major";
 }
 
-// Note: category (home/work/personal) is now a top-level subcategory field
+// Note: Tada can celebrate accomplishments, gratitude, or any moment worth noticing
 ```
 
 ### 3.2 Rhythm Tracking (Seinfeld Method)
@@ -482,11 +483,11 @@ Container:    Docker → CapRover deployment
 
 ### 4.4 Notifications
 
-| Method        | Use Case                           | Requirement                    |
-| ------------- | ---------------------------------- | ------------------------------ |
-| **Web Push**  | Rhythm reminders, streak warnings  | HTTPS, VAPID keys, user opt-in |
-| **PWA Badge** | Unread notifications count       | Supported browsers             |
-| **Email**     | Weekly summaries (cloud only)    | SMTP integration               |
+| Method        | Use Case                          | Requirement                    |
+| ------------- | --------------------------------- | ------------------------------ |
+| **Web Push**  | Rhythm reminders, streak warnings | HTTPS, VAPID keys, user opt-in |
+| **PWA Badge** | Unread notifications count        | Supported browsers             |
+| **Email**     | Weekly summaries (cloud only)     | SMTP integration               |
 
 ### 4.5 Performance Targets
 

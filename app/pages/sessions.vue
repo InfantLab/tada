@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Timer page - meditation and timed activity timer
+// Sessions page - timed activities (meditation, practice, focus)
 import {
   CATEGORY_DEFAULTS,
   getSubcategoriesForCategory,
@@ -80,6 +80,10 @@ const milestoneInterval = computed(() => {
 // Category hierarchy - parent category and subcategory
 const selectedCategory = ref("mindfulness");
 const selectedSubcategory = ref("sitting");
+
+// Practice URL - optional link to what you're practicing
+const practiceUrl = ref("");
+const practiceTitle = ref(""); // Auto-extracted or user-provided title
 
 // User preferences for filtering categories and custom emojis
 const {
@@ -745,6 +749,8 @@ async function saveSession(includeOvertime: boolean = true) {
       mood: sessionMood.value,
       qualityRating: extractedQualityRating.value ?? undefined,
       reflection: sessionReflection.value || undefined,
+      practiceUrl: practiceUrl.value || undefined,
+      practiceTitle: practiceTitle.value || undefined,
     },
     tags: [selectedCategory.value, selectedSubcategory.value],
   } as EntryInput);
@@ -1045,6 +1051,43 @@ onUnmounted(() => {
               <span>{{ cat.label }}</span>
             </button>
           </div>
+        </div>
+
+        <!-- Practice URL (optional) -->
+        <div>
+          <label
+            class="block text-xs font-medium text-stone-600 dark:text-stone-300 mb-2"
+          >
+            Practice Link
+            <span class="text-stone-400 font-normal">(optional)</span>
+          </label>
+          <div class="flex gap-2">
+            <input
+              v-model="practiceUrl"
+              type="url"
+              placeholder="YouTube, Insight Timer, Spotify..."
+              class="flex-1 px-3 py-2 rounded-lg text-sm border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-700 text-stone-800 dark:text-stone-100 placeholder-stone-400"
+            />
+            <button
+              v-if="practiceUrl"
+              type="button"
+              class="px-3 py-2 rounded-lg text-sm bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600"
+              title="Clear"
+              @click="
+                practiceUrl = '';
+                practiceTitle = '';
+              "
+            >
+              ✕
+            </button>
+          </div>
+          <input
+            v-if="practiceUrl"
+            v-model="practiceTitle"
+            type="text"
+            placeholder="Title (optional - describe what you're practicing)"
+            class="mt-2 w-full px-3 py-2 rounded-lg text-sm border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-700 text-stone-800 dark:text-stone-100 placeholder-stone-400"
+          />
         </div>
 
         <hr class="border-stone-200 dark:border-stone-700" />

@@ -483,14 +483,19 @@ onMounted(() => {
   }
 });
 
+// Track last save for autosave indicator
+const lastSaved = ref<Date | null>(null);
+
 async function saveSettings() {
   isSaving.value = true;
   try {
     // Save to localStorage for now (Phase 2: save to user profile)
     localStorage.setItem("tada-settings", JSON.stringify(settings.value));
+    lastSaved.value = new Date();
     console.log("Settings saved");
   } catch (error) {
     console.error("Failed to save settings:", error);
+    showError("Failed to save settings");
   } finally {
     isSaving.value = false;
   }
@@ -1709,14 +1714,39 @@ onMounted(() => {
           </div>
         </section>
 
-        <!-- Save button -->
-        <button
-          :disabled="isSaving"
-          class="w-full py-3 bg-tada-600 hover:opacity-90 text-black dark:bg-tada-600 dark:text-white dark:hover:opacity-90 disabled:bg-stone-300 disabled:cursor-not-allowed font-medium rounded-lg transition-colors"
-          @click="saveSettings"
-        >
-          {{ isSaving ? "Saving..." : "Save Settings" }}
-        </button>
+        <!-- Autosave status indicator -->
+        <div class="flex items-center justify-center gap-2 py-4 text-sm">
+          <template v-if="isSaving">
+            <div
+              class="animate-spin h-4 w-4 border-2 border-tada-600 border-t-transparent rounded-full"
+            />
+            <span class="text-stone-500 dark:text-stone-400">Saving...</span>
+          </template>
+          <template v-else-if="lastSaved">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-4 w-4 text-green-500"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+            <span class="text-stone-500 dark:text-stone-400"
+              >Settings autosaved</span
+            >
+          </template>
+          <template v-else>
+            <span class="text-stone-400 dark:text-stone-500"
+              >Settings will autosave when changed</span
+            >
+          </template>
+        </div>
       </div>
     </div>
 

@@ -8,7 +8,7 @@
 import { defineEventHandler, readBody, createError } from "h3";
 import { db } from "~/server/db";
 import { entries } from "~/server/db/schema";
-import { eq, and, ne, isNull, gte, lte, or } from "drizzle-orm";
+import { eq, and, ne, isNull, gte, lte } from "drizzle-orm";
 import { createLogger } from "~/server/utils/logger";
 import type {
   ConflictResult,

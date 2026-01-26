@@ -15,8 +15,8 @@ Feature ideas and future plans, organized by version releases.
 | **v0.2.0** | Graceful Rhythms            | ✅ Shipped Jan 2026 |
 | **v0.3.0** | Magic & Voice               | Feb 2026            |
 | **v0.4.0** | Cloud Service (tada.living) | Mar 2026            |
-| **v0.5.0** | Rituals & AI Insights       | Apr 2026            |
-| **v0.6.0** | Integrations                | May 2026            |
+| **v0.5.0** | Rituals, Celestial & AI     | Q4 2026             |
+| **v0.6.0** | Integrations                | 2027+               |
 
 ---
 
@@ -126,53 +126,70 @@ See [CHANGELOG.md](../CHANGELOG.md) and [RELEASE_NOTES_v0.2.0.md](../RELEASE_NOT
 
 ## v0.3.0: Magic & Voice
 
-_Target: Q2 2026_
+_Target: Feb 2026_
 
-### Moved from v0.2.0 (not completed)
+**Theme:** Polish the core experience. Magic Moments for capturing life's special instants. Voice input for friction-free entry. Practice links to connect sessions with resources.
 
-- [ ] **Email verification** (optional for self-hosted, required for cloud)
-- [ ] Timezone selector UI for imports (backend ready)
-- [ ] Settings page autosave
-- [x] Fix pre-existing logger test failures (7 tests)
-- [ ] Rewrite integration tests with @nuxt/test-utils/e2e
+### ✅ Completed This Version
 
-### 🔗 Practice Links
+- [x] Navigation restructure: Timeline → Ta-Da! → Moments → Sessions → Tally → Rhythms
+- [x] Tally page for quick count/reps entries
+- [x] Rename Timer → Sessions, Journal → Moments
+- [x] Fix pre-existing test failures (logger + tokens module isolation, vitest config)
+- [x] Remove unused `or` import in validate.post.ts
+- [x] All 361 unit tests passing
 
-- [ ] Link timer sessions to specific practices/resources
-- [ ] "I'm practicing X" with optional URL (YouTube video, Insight Timer guided, etc.)
-- [ ] Practice history: return to what worked
-- [ ] Share practice links between users (future)
+### ✨ Magic Moments
 
-### 📸 Photo Attachments
+Enhance Moments with special "Magic" captures — life's delightful surprises.
 
-- [ ] Attach photos to entries (priority feature)
-- [ ] Photo gallery view for visual entries
-- [ ] Capture from camera or select from library
+Magic moments include: **joy, delight, serendipity, zen, wonder, awe, gratitude, synchronicity**
 
-### 🌙 Celestial Calendar Module
-
-Optional "magic" layer for those who want it, completely invisible to those who don't.
-
-- [ ] Moon phase display and tracking
-- [ ] Lunar calendar integration (new moon, full moon, quarters)
-- [ ] Optional: planetary hours, astrological transits
-- [ ] Ritual timing suggestions (opt-in)
-- [ ] Celestial data in entry metadata (moon phase when entry was created)
-
-### ✨ Serendipity Capture
-
-- [ ] Quick capture for synchronicities and meaningful coincidences
-- [ ] "Just noticed something" minimal friction entry
-- [ ] Pattern recognition over time (opt-in insights)
-- [ ] Tag-based connections between serendipitous moments
+- [x] Add "Magic" subcategory to Moments (emoji: 🪄)
+- [x] Quick-capture button: "Something magical just happened" (on Moments page)
+- [x] Minimal friction: just a text field + optional photo placeholder
+- [x] Tag suggestions: joy, delight, serendipity, zen, wonder, awe, synchronicity, gratitude
+- [ ] Optional: Pattern view over time (see your magic moments together)
 
 ### 🎙️ Voice Input with LLM
 
 - [x] Dictate entries via voice
 - [x] LLM processing to structure dictated content
-- [ ] Extract category, mood, key details automatically
 - [x] Review/edit before saving
 - [x] Works offline with on-device processing (where possible)
+- [ ] Extract category, mood, key details automatically
+- [ ] Voice-to-Moment: speak a quick thought, save as moment
+- [ ] Voice-to-Session: describe what you practiced after a session
+
+### 🔗 Practice Links
+
+Connect sessions to specific practices, resources, or guided content.
+
+- [x] Optional URL field on Sessions: "What were you practicing?"
+- [ ] Auto-detect YouTube, Insight Timer, Spotify links → show title/thumbnail
+- [ ] Practice history: "Return to this practice" quick-launch
+- [ ] Suggested practices based on category/subcategory
+- [x] Link display on entry detail page
+
+### 📸 Photo Attachments (Frontend Only)
+
+Prepare the UI for photo attachments. Backend storage deferred to v0.4.0 (hosted version).
+
+- [x] Photo placeholder component in Moments and Ta-Da! entries
+- [ ] Camera capture button (stores locally/shows preview)
+- [ ] Photo gallery UI mockup in entry detail
+- [ ] Design for cloud storage integration (S3/R2)
+- [ ] Note: actual upload/storage requires hosted infrastructure
+
+### 🧹 Polish & Fixes
+
+Moved from v0.2.0 or newly identified:
+
+- [ ] Email verification (optional for self-hosted, required for cloud)
+- [x] Timezone selector UI for imports (dropdown with common timezones)
+- [x] Settings page autosave (removed save button, added autosave indicator)
+- [ ] Rewrite integration tests with @nuxt/test-utils/e2e
+- [ ] Home screen design (configurable dashboard - see docs/plans/landingpage.md)
 
 ---
 
@@ -194,7 +211,7 @@ A soft, welcoming introduction that respects the user's intelligence and curiosi
 **Initial Welcome (first visit):**
 
 - [ ] Soft welcome overlay: "Welcome to Ta-Da! — a place to notice your life"
-- [ ] Highlight top navigation row gently (Timer, Add, Tada, Journal)
+- [ ] Highlight top navigation row gently (Sessions, Add, Tada, Moments)
 - [ ] Single-sentence hints: "Start a meditation timer" / "Capture a win" / etc.
 - [ ] Dismiss with any interaction — no forced clicks
 - [ ] Remember dismissal (localStorage + user preference)
@@ -329,11 +346,21 @@ Transform self-hosted app into hosted service at tada.living.
 
 ---
 
-## v0.5.0: Rituals & AI Insights
+## v0.5.0: Rituals, Celestial & AI
 
 _Target: Q4 2026_
 
-### � Smarter Conflict Resolution
+### 🌙 Celestial Calendar Module
+
+Optional "magic" layer for those who want it, completely invisible to those who don't.
+
+- [ ] Moon phase display and tracking
+- [ ] Lunar calendar integration (new moon, full moon, quarters)
+- [ ] Optional: planetary hours, astrological transits
+- [ ] Ritual timing suggestions (opt-in)
+- [ ] Celestial data in entry metadata (moon phase when entry was created)
+
+### 🔧 Smarter Conflict Resolution
 
 Current "Replace" wipes all overlapping entries. Need more intelligent approach:
 
@@ -344,7 +371,7 @@ Current "Replace" wipes all overlapping entries. Need more intelligent approach:
 - [ ] Import integration: Same UI for CSV import duplicate handling
 - [ ] Merge option: Combine durations/counts instead of replacing
 
-### �🌅 Routines & Rituals
+### 🌅 Routines & Rituals
 
 - [ ] Morning/evening routine builder
 - [ ] Flexible ritual sequences (not rigid schedules)
@@ -407,8 +434,9 @@ _Target: 2027+_
 The unified Entry model supports any `type` value. Current types:
 
 - `timed` — Timer session (meditation, focus, etc.)
-- `tada` — Accomplishment/celebration
-- `journal` — Dream, note, reflection (uses subcategory)
+- `tada` — Celebration (accomplishments, gratitude, wins)
+- `moment` — Reflective entry (dream, journal, reflection)
+- `tally` — Count-based entry (reps, glasses of water)
 - `rhythm` — Rhythm completion (auto-created by rhythm rules)
 
 ### Future Candidates
@@ -446,7 +474,7 @@ Adding a new type requires no schema changes — just use it!
 _Parked: Conflicts with philosophy — we're not productivity hackers._
 
 - **Category breakdown in journey stats:**
-  - Show counts per entry type (timed, tada, dream, journal, note)
+  - Show counts per entry type (timed, tada, moment, tally)
   - Show hours per category (mindfulness, accomplishment, etc.)
   - Show subcategory distribution within categories
 - **Interactive stats dashboard:**

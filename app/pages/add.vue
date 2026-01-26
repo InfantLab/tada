@@ -124,6 +124,19 @@ const dreamData = ref({
   emotions: [] as string[],
 });
 
+// Magic moment tags (shown when subcategory is magic)
+const magicTags = ref<string[]>([]);
+const magicTagOptions = [
+  "joy",
+  "delight",
+  "serendipity",
+  "zen",
+  "wonder",
+  "awe",
+  "synchronicity",
+  "gratitude",
+];
+
 const emotionOptions = [
   "joy",
   "fear",
@@ -139,6 +152,18 @@ const emotionOptions = [
 async function submitEntry() {
   if (!title.value.trim() && !notes.value.trim()) return;
 
+  // Build data and tags based on subcategory
+  let entryData: Record<string, unknown> = {};
+  let entryTags: string[] = [];
+
+  if (subcategory.value === "dream") {
+    entryData = dreamData.value;
+    entryTags = ["dream"];
+  } else if (subcategory.value === "magic") {
+    entryData = { magicType: magicTags.value };
+    entryTags = ["magic", ...magicTags.value];
+  }
+
   const result = await createEntry(
     {
       type: entryType.value as "journal" | "tada" | "timed" | "reps",
@@ -147,8 +172,8 @@ async function submitEntry() {
       subcategory: subcategory.value || undefined,
       emoji: customEmoji.value || displayEmoji.value,
       notes: notes.value.trim() || undefined,
-      data: subcategory.value === "dream" ? dreamData.value : {},
-      tags: subcategory.value === "dream" ? ["dream"] : [],
+      data: entryData,
+      tags: entryTags,
     } as EntryInput,
     { skipEmojiResolution: true },
   );
@@ -554,6 +579,40 @@ function handleTadaUpdate(updated: ExtractedTada[]) {
               {{ emotion }}
             </button>
           </div>
+        </div>
+      </template>
+
+      <!-- Magic moment tags -->
+      <template v-if="subcategory === 'magic'">
+        <div>
+          <label
+            class="block text-sm font-medium text-purple-700 dark:text-purple-300 mb-2"
+          >
+            What kind of magic? ✨
+          </label>
+          <div class="flex flex-wrap gap-2">
+            <button
+              v-for="tag in magicTagOptions"
+              :key="tag"
+              type="button"
+              class="px-3 py-1.5 rounded-full text-sm font-medium transition-colors"
+              :class="
+                magicTags.includes(tag)
+                  ? 'bg-purple-500 text-white dark:bg-purple-600'
+                  : 'bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/50 border border-purple-200 dark:border-purple-700'
+              "
+              @click="
+                magicTags.includes(tag)
+                  ? (magicTags = magicTags.filter((t) => t !== tag))
+                  : magicTags.push(tag)
+              "
+            >
+              {{ tag }}
+            </button>
+          </div>
+          <p class="text-xs text-purple-500 dark:text-purple-400 mt-2">
+            Optional — add tags to find patterns in your magic moments later
+          </p>
         </div>
       </template>
 

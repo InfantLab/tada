@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { createLogger } from "./logger";
 import * as fs from "node:fs";
 
 vi.mock("node:fs");
@@ -7,16 +6,26 @@ vi.mock("node:fs");
 describe("logger (server-side)", () => {
   let consoleLogSpy: ReturnType<typeof vi.spyOn>;
   let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
+  let createLogger: typeof import("./logger").createLogger;
 
-  beforeEach(() => {
-    consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
-    consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+  beforeEach(async () => {
+    // Reset module cache to get fresh logger instance with mocks
+    vi.resetModules();
+
+    // Set up mocks BEFORE importing the logger module
     vi.mocked(fs.mkdirSync).mockImplementation(() => undefined);
     vi.mocked(fs.appendFileSync).mockImplementation(() => {});
     vi.mocked(fs.statSync).mockReturnValue({
       size: 1024,
       isFile: () => true,
     } as unknown as fs.Stats);
+
+    consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    // Now import the logger module
+    const loggerModule = await import("./logger");
+    createLogger = loggerModule.createLogger;
   });
 
   afterEach(() => {
@@ -29,7 +38,7 @@ describe("logger (server-side)", () => {
       logger.info("test message");
 
       expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('"prefix":"tada:test-module"')
+        expect.stringContaining('"prefix":"tada:test-module"'),
       );
     });
 
@@ -38,7 +47,7 @@ describe("logger (server-side)", () => {
       logger.info("test message");
 
       expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('"prefix":"tada:test"')
+        expect.stringContaining('"prefix":"tada:test"'),
       );
     });
   });
@@ -155,7 +164,7 @@ describe("logger (server-side)", () => {
 
       expect(fs.mkdirSync).toHaveBeenCalledWith(
         expect.stringContaining("data/logs"),
-        { recursive: true }
+        { recursive: true },
       );
     });
 
@@ -166,7 +175,7 @@ describe("logger (server-side)", () => {
       expect(fs.appendFileSync).toHaveBeenCalledWith(
         expect.stringContaining("combined.log"),
         expect.stringContaining("test message"),
-        "utf8"
+        "utf8",
       );
     });
 

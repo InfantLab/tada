@@ -3,9 +3,10 @@ import type { EntryMode } from "~/components/EntryTypeToggle.vue";
 
 const navigation = [
   { name: "Timeline", href: "/", icon: "i-heroicons-clock" },
-  { name: "Timer", href: "/timer", icon: "i-heroicons-play-circle" },
   { name: "Ta-Da!", href: "/tada", icon: "i-heroicons-bolt" },
-  { name: "Journal", href: "/add", icon: "i-heroicons-book-open" },
+  { name: "Moments", href: "/moments", icon: "i-heroicons-sparkles" },
+  { name: "Sessions", href: "/sessions", icon: "i-heroicons-play-circle" },
+  { name: "Tally", href: "/tally", icon: "i-heroicons-hashtag" },
   { name: "Rhythms", href: "/rhythms", icon: "i-heroicons-chart-bar" },
 ];
 
@@ -152,12 +153,12 @@ onUnmounted(() => {
     <nav
       class="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-pearl-cream/90 dark:bg-cosmic-void/90 backdrop-blur-sm border-t border-text-light-muted/20 dark:border-text-dark-muted/20 safe-area-bottom"
     >
-      <div class="grid grid-cols-5 h-16">
+      <div class="grid grid-cols-6 h-16">
         <NuxtLink
           v-for="item in navigation"
           :key="item.name"
           :to="item.href"
-          class="flex flex-col items-center justify-center gap-1 transition-colors"
+          class="flex flex-col items-center justify-center gap-0.5 transition-colors"
           :class="
             route.path === item.href ||
             (item.href === '/tada' &&
@@ -170,7 +171,7 @@ onUnmounted(() => {
           <svg
             v-if="item.name === 'Timeline'"
             xmlns="http://www.w3.org/2000/svg"
-            class="h-6 w-6"
+            class="h-5 w-5"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -183,9 +184,9 @@ onUnmounted(() => {
             />
           </svg>
           <svg
-            v-else-if="item.name === 'Timer'"
+            v-else-if="item.name === 'Sessions'"
             xmlns="http://www.w3.org/2000/svg"
-            class="h-6 w-6"
+            class="h-5 w-5"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -206,7 +207,7 @@ onUnmounted(() => {
           <svg
             v-else-if="item.name === 'Ta-Da!'"
             xmlns="http://www.w3.org/2000/svg"
-            class="h-6 w-6"
+            class="h-5 w-5"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -219,9 +220,9 @@ onUnmounted(() => {
             />
           </svg>
           <svg
-            v-else-if="item.name === 'Journal'"
+            v-else-if="item.name === 'Tally'"
             xmlns="http://www.w3.org/2000/svg"
-            class="h-6 w-6"
+            class="h-5 w-5"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -230,13 +231,28 @@ onUnmounted(() => {
               stroke-linecap="round"
               stroke-linejoin="round"
               stroke-width="2"
-              d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+              d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"
+            />
+          </svg>
+          <svg
+            v-else-if="item.name === 'Moments'"
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
             />
           </svg>
           <svg
             v-else-if="item.name === 'Rhythms'"
             xmlns="http://www.w3.org/2000/svg"
-            class="h-6 w-6"
+            class="h-5 w-5"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -248,7 +264,7 @@ onUnmounted(() => {
               d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
             />
           </svg>
-          <span class="text-xs font-medium">{{ item.name }}</span>
+          <span class="text-[10px] font-medium truncate">{{ item.name }}</span>
         </NuxtLink>
       </div>
     </nav>

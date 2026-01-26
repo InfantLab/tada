@@ -173,7 +173,7 @@ export default defineNuxtConfig({
       warmup: {
         clientFiles: [
           "./pages/index.vue",
-          "./pages/timer.vue",
+          "./pages/sessions.vue",
           "./layouts/default.vue",
         ],
       },

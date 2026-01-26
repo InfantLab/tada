@@ -1,34 +1,60 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import {
-  generateSecureToken,
-  hashToken,
-  verifyToken,
-  generateTokenExpiry,
-  isTokenExpired,
-  generateId,
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import type {
+  generateSecureToken as GenerateSecureTokenType,
+  hashToken as HashTokenType,
+  verifyToken as VerifyTokenType,
+  generateTokenExpiry as GenerateTokenExpiryType,
+  isTokenExpired as IsTokenExpiredType,
+  generateId as GenerateIdType,
 } from "./tokens";
 
-// Mock crypto.randomUUID if not available in test environment
-let uuidCounter = 0;
-const mockRandomUUID = vi.fn(() => {
-  uuidCounter++;
-  return `550e8400-e29b-41d4-a716-44665544000${uuidCounter}`;
-});
-
-if (typeof crypto === "undefined" || !crypto.randomUUID) {
-  Object.defineProperty(globalThis, "crypto", {
-    value: {
-      ...globalThis.crypto,
-      randomUUID: mockRandomUUID,
-    },
-    writable: true,
-  });
-}
-
 describe("tokens", () => {
-  beforeEach(() => {
+  // Dynamic imports to ensure fresh module state after mocks are set up
+  let generateSecureToken: typeof GenerateSecureTokenType;
+  let hashToken: typeof HashTokenType;
+  let verifyToken: typeof VerifyTokenType;
+  let generateTokenExpiry: typeof GenerateTokenExpiryType;
+  let isTokenExpired: typeof IsTokenExpiredType;
+  let generateId: typeof GenerateIdType;
+
+  // Track UUID counter for mock
+  let uuidCounter = 0;
+
+  beforeEach(async () => {
+    // Reset module cache and counter
+    vi.resetModules();
     uuidCounter = 0;
+
+    // Mock crypto.randomUUID if not available in test environment
+    const mockRandomUUID = vi.fn(() => {
+      uuidCounter++;
+      return `550e8400-e29b-41d4-a716-44665544000${uuidCounter}`;
+    });
+
+    if (typeof crypto === "undefined" || !crypto.randomUUID) {
+      Object.defineProperty(globalThis, "crypto", {
+        value: {
+          ...globalThis.crypto,
+          randomUUID: mockRandomUUID,
+        },
+        writable: true,
+      });
+    }
+
+    // Now import the tokens module
+    const tokensModule = await import("./tokens");
+    generateSecureToken = tokensModule.generateSecureToken;
+    hashToken = tokensModule.hashToken;
+    verifyToken = tokensModule.verifyToken;
+    generateTokenExpiry = tokensModule.generateTokenExpiry;
+    isTokenExpired = tokensModule.isTokenExpired;
+    generateId = tokensModule.generateId;
   });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   describe("generateSecureToken", () => {
     it("generates a URL-safe token", () => {
       const token = generateSecureToken();

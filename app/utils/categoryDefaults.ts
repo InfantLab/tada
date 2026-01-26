@@ -88,7 +88,7 @@ export const CATEGORY_DEFAULTS: Record<string, CategoryDefinition> = {
       { slug: "gratitude", emoji: "🙏", label: "Gratitude" },
       { slug: "reflection", emoji: "💭", label: "Reflection" },
       { slug: "note", emoji: "📝", label: "Note" },
-      { slug: "serendipity", emoji: "✨", label: "Serendipity" },
+      { slug: "magic", emoji: "🪄", label: "Magic" },
       { slug: "memory", emoji: "📸", label: "Memory" },
     ],
   },
