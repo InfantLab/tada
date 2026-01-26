@@ -36,7 +36,11 @@ function handleEntryClick(entry: Entry, event: MouseEvent) {
 onMounted(async () => {
   try {
     // Fetch only Ta-Da! type entries
-    const data = await $fetch<{ entries: Entry[]; nextCursor: string | null; hasMore: boolean }>("/api/entries");
+    const data = await $fetch<{
+      entries: Entry[];
+      nextCursor: string | null;
+      hasMore: boolean;
+    }>("/api/entries");
     entries.value = data.entries.filter((e) => e.type === "tada");
   } catch (err: unknown) {
     console.error("Failed to fetch Ta-Da! entries:", err);

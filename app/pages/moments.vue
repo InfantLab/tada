@@ -31,7 +31,11 @@ function handleEntryClick(entry: Entry, event: MouseEvent) {
 onMounted(async () => {
   try {
     // Fetch moment-type entries (journal subcategories)
-    const data = await $fetch<{ entries: Entry[]; nextCursor: string | null; hasMore: boolean }>("/api/entries");
+    const data = await $fetch<{
+      entries: Entry[];
+      nextCursor: string | null;
+      hasMore: boolean;
+    }>("/api/entries");
     entries.value = data.entries.filter(
       (e) =>
         [

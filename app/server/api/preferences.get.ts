@@ -40,6 +40,7 @@ export default defineEventHandler(async (event) => {
         hiddenEntryTypes: [],
         customEmojis: {},
         customEntryTypes: [],
+        tallyPresets: [],
         createdAt: null,
         updatedAt: null,
       };

@@ -50,6 +50,7 @@ const category = ref<string | null>(null);
 const subcategory = ref<string | null>(null);
 const emoji = ref<string | null>(null);
 const durationSeconds = ref<number | null>(null);
+const tallyCount = ref<number | null>(null);
 
 // Auto-grow textarea as user types
 function autoGrow() {
@@ -78,6 +79,16 @@ async function loadEntry() {
     subcategory.value = data.subcategory || null;
     emoji.value = data.emoji || null;
     durationSeconds.value = data.durationSeconds || null;
+
+    // Load tally count from data field if this is a tally entry
+    if (
+      data.type === "tally" &&
+      data.data &&
+      typeof data.data === "object" &&
+      "count" in data.data
+    ) {
+      tallyCount.value = Number(data.data["count"]) || null;
+    }
   } catch (err: unknown) {
     console.error("Failed to load entry:", err);
     error.value = err instanceof Error ? err.message : "Failed to load entry";
@@ -113,18 +124,26 @@ const subcategoryOptions = computed(() => {
 async function saveEntry() {
   if (!entry.value) return;
 
+  // Build update object
+  const updateData: Record<string, unknown> = {
+    name: name.value,
+    notes: notes.value || null,
+    timestamp: timestamp.value,
+    tags: tags.value.length > 0 ? tags.value : undefined,
+    category: category.value,
+    subcategory: subcategory.value,
+    emoji: emoji.value,
+    durationSeconds: durationSeconds.value,
+  };
+
+  // For tally entries, include the count in the data field
+  if (entry.value.type === "tally" && tallyCount.value !== null) {
+    updateData["data"] = { count: tallyCount.value };
+  }
+
   const result = await updateEntry(
     entryId,
-    {
-      name: name.value,
-      notes: notes.value || null,
-      timestamp: timestamp.value,
-      tags: tags.value.length > 0 ? tags.value : undefined,
-      category: category.value,
-      subcategory: subcategory.value,
-      emoji: emoji.value,
-      durationSeconds: durationSeconds.value,
-    },
+    updateData,
     {
       navigateTo: "/",
       successMessage: "Entry saved!",
@@ -468,6 +487,45 @@ function getMoodEmoji(mood: number): string {
                 ? "Major accomplishment!"
                 : "Quick win"
             }}</span>
+          </div>
+        </div>
+
+        <!-- Tally Count Editor (for tally entries) -->
+        <div
+          v-if="entry.type === 'tally' && tallyCount !== null"
+          class="space-y-2 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-xl border border-emerald-100 dark:border-emerald-800"
+        >
+          <label
+            class="block text-sm font-medium text-emerald-700 dark:text-emerald-300"
+          >
+            💪 Count
+          </label>
+          <div class="flex items-center gap-4">
+            <!-- Decrement -->
+            <button
+              type="button"
+              class="w-10 h-10 rounded-lg bg-white dark:bg-stone-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 text-stone-700 dark:text-stone-200 font-bold text-lg transition-colors border border-emerald-200 dark:border-emerald-700"
+              @click="tallyCount = Math.max(1, (tallyCount || 0) - 1)"
+            >
+              −
+            </button>
+
+            <!-- Count input -->
+            <input
+              v-model.number="tallyCount"
+              type="number"
+              min="1"
+              class="flex-1 text-center text-3xl font-bold text-stone-800 dark:text-stone-100 bg-white dark:bg-stone-800 border border-emerald-200 dark:border-emerald-700 rounded-lg py-2 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            />
+
+            <!-- Increment -->
+            <button
+              type="button"
+              class="w-10 h-10 rounded-lg bg-white dark:bg-stone-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 text-stone-700 dark:text-stone-200 font-bold text-lg transition-colors border border-emerald-200 dark:border-emerald-700"
+              @click="tallyCount = (tallyCount || 0) + 1"
+            >
+              +
+            </button>
           </div>
         </div>
 

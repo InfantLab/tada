@@ -1,0 +1,1 @@
+ALTER TABLE `user_preferences` ADD `tally_presets` text DEFAULT '[]';

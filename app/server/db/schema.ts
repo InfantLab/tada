@@ -353,6 +353,12 @@ export const userPreferences = sqliteTable("user_preferences", {
     .$type<Array<{ name: string; emoji: string }>>()
     .default([]),
 
+  // User-defined tally activity presets
+  // Default: ['Press-ups', 'Squats', 'Pull-ups', 'Kettlebells']
+  tallyPresets: text("tally_presets", { mode: "json" })
+    .$type<Array<{ name: string; category?: string; emoji?: string }>>()
+    .default([]),
+
   createdAt: text("created_at")
     .notNull()
     .default(sql`(datetime('now'))`),

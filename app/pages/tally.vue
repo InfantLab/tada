@@ -6,7 +6,7 @@
  * - Quick-add counter with +/- buttons
  * - Recent tally entries list
  * - Activity suggestions from history
- * - One-tap presets for common activities
+ * - One-tap presets for common activities (user-editable)
  */
 import type { Entry } from "~/server/db/schema";
 
@@ -17,11 +17,13 @@ definePageMeta({
 const router = useRouter();
 const toast = useToast();
 const { createEntry, isLoading: isSaving } = useEntryEngine();
+const { loadPreferences, getTallyPresets, addTallyPreset } = usePreferences();
 
 // Form state
 const activityName = ref("");
 const count = ref(10);
-const category = ref("");
+const category = ref("movement"); // Default category for tallies
+const emoji = ref<string | undefined>(undefined);
 const notes = ref("");
 
 // Recent tally entries
@@ -29,7 +31,12 @@ const entries = ref<Entry[]>([]);
 const isLoading = ref(true);
 const error = ref<string | null>(null);
 
-// Activity suggestions
+// Activity presets (user-editable)
+const activityPresets = ref<
+  Array<{ name: string; category?: string; emoji?: string }>
+>([]);
+
+// Activity suggestions from history
 const suggestions = ref<
   Array<{ name: string; category?: string; count: number }>
 >([]);
@@ -45,13 +52,19 @@ const quickPresets = [
 
 // Fetch recent tally entries and suggestions
 onMounted(async () => {
+  await loadPreferences();
+  activityPresets.value = getTallyPresets();
   await Promise.all([fetchEntries(), fetchSuggestions()]);
 });
 
 async function fetchEntries() {
   try {
     isLoading.value = true;
-    const data = await $fetch<{ entries: Entry[]; nextCursor: string | null; hasMore: boolean }>("/api/entries", {
+    const data = await $fetch<{
+      entries: Entry[];
+      nextCursor: string | null;
+      hasMore: boolean;
+    }>("/api/entries", {
       query: { type: "tally", limit: 20 },
     });
     entries.value = data.entries;
@@ -86,7 +99,22 @@ function setCount(value: number) {
   count.value = value;
 }
 
-// Select a suggestion
+// Select a preset activity
+function selectPreset(preset: {
+  name: string;
+  category?: string;
+  emoji?: string;
+}) {
+  activityName.value = preset.name;
+  if (preset.category) {
+    category.value = preset.category;
+  }
+  if (preset.emoji) {
+    emoji.value = preset.emoji;
+  }
+}
+
+// Select a suggestion from history
 function selectSuggestion(suggestion: { name: string; category?: string }) {
   activityName.value = suggestion.name;
   if (suggestion.category) {
@@ -105,11 +133,36 @@ function hideSuggestions() {
 // Quick repeat from recent entry
 function repeatEntry(entry: Entry) {
   activityName.value = entry.name;
-  category.value = entry.category || "";
+  category.value = entry.category || "movement";
+  emoji.value = entry.emoji || undefined;
   // Use the same count as before
   if (entry.data && typeof entry.data === "object" && "count" in entry.data) {
     count.value = Number(entry.data["count"]) || 10;
   }
+}
+
+// Check if current activity is already a preset
+const isActivityAPreset = computed(() => {
+  const name = activityName.value.trim();
+  return activityPresets.value.some(
+    (p) => p.name.toLowerCase() === name.toLowerCase()
+  );
+});
+
+// Save current activity as a new preset
+async function saveAsPreset() {
+  const name = activityName.value.trim();
+  if (!name || isActivityAPreset.value) return;
+
+  await addTallyPreset({
+    name,
+    category: category.value || "movement",
+    emoji: emoji.value,
+  });
+
+  // Refresh presets
+  activityPresets.value = getTallyPresets();
+  toast.success(`"${name}" saved as preset!`);
 }
 
 // Save entry
@@ -120,7 +173,8 @@ async function handleSave() {
     const result = await createEntry({
       type: "tally",
       name: activityName.value.trim(),
-      category: category.value.trim() || undefined,
+      category: category.value.trim() || "movement",
+      emoji: emoji.value,
       count: count.value,
       notes: notes.value.trim() || undefined,
       timestamp: new Date().toISOString(),
@@ -135,6 +189,8 @@ async function handleSave() {
       activityName.value = "";
       notes.value = "";
       count.value = 10;
+      emoji.value = undefined;
+      category.value = "movement";
       // Refresh entries
       await fetchEntries();
     }
@@ -249,6 +305,49 @@ function getEntryCount(entry: Entry): number {
             </div>
           </Transition>
         </div>
+
+        <!-- Activity preset buttons -->
+        <div class="flex flex-wrap gap-2 mt-3">
+          <button
+            v-for="preset in activityPresets"
+            :key="preset.name"
+            type="button"
+            class="px-3 py-1.5 rounded-full text-sm font-medium transition-colors flex items-center gap-1"
+            :class="
+              activityName === preset.name
+                ? 'bg-tada-600 text-white'
+                : 'bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600'
+            "
+            @click="selectPreset(preset)"
+          >
+            <span v-if="preset.emoji">{{ preset.emoji }}</span>
+            <span>{{ preset.name }}</span>
+          </button>
+        </div>
+
+        <!-- Save as preset option (when typing new activity) -->
+        <button
+          v-if="activityName.trim() && !isActivityAPreset"
+          type="button"
+          class="mt-2 text-xs text-tada-600 dark:text-tada-400 hover:underline flex items-center gap-1"
+          @click="saveAsPreset"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-3 w-3"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 4v16m8-8H4"
+            />
+          </svg>
+          Save "{{ activityName.trim() }}" as preset
+        </button>
       </div>
 
       <!-- Count selector -->

@@ -10,6 +10,7 @@ export interface PreferencesState {
   hiddenEntryTypes: string[];
   customEmojis: Record<string, string>;
   customEntryTypes: Array<{ name: string; emoji: string }>;
+  tallyPresets: Array<{ name: string; category?: string; emoji?: string }>;
 }
 
 const preferences = ref<PreferencesState>({
@@ -17,6 +18,7 @@ const preferences = ref<PreferencesState>({
   hiddenEntryTypes: [],
   customEmojis: {},
   customEntryTypes: [],
+  tallyPresets: [],
 });
 
 const isLoaded = ref(false);
@@ -38,6 +40,7 @@ export const usePreferences = () => {
           hiddenEntryTypes: data.hiddenEntryTypes || [],
           customEmojis: data.customEmojis || {},
           customEntryTypes: data.customEntryTypes || [],
+          tallyPresets: data.tallyPresets || [],
         };
       }
       isLoaded.value = true;
@@ -65,6 +68,7 @@ export const usePreferences = () => {
         hiddenEntryTypes: data.hiddenEntryTypes || [],
         customEmojis: data.customEmojis || {},
         customEntryTypes: data.customEntryTypes || [],
+        tallyPresets: data.tallyPresets || [],
       };
 
       return true;
@@ -218,6 +222,59 @@ export const usePreferences = () => {
     }
   };
 
+  // Default tally presets when user has none
+  const DEFAULT_TALLY_PRESETS: Array<{
+    name: string;
+    category?: string;
+    emoji?: string;
+  }> = [
+    { name: "Press-ups", category: "movement", emoji: "💪" },
+    { name: "Squats", category: "movement", emoji: "🦵" },
+    { name: "Pull-ups", category: "movement", emoji: "💪" },
+    { name: "Kettlebells", category: "movement", emoji: "🏋️" },
+  ];
+
+  /**
+   * Get tally presets (user's or defaults)
+   */
+  const getTallyPresets = () => {
+    const userPresets = preferences.value.tallyPresets;
+    return userPresets.length > 0 ? userPresets : DEFAULT_TALLY_PRESETS;
+  };
+
+  /**
+   * Save tally presets
+   */
+  const saveTallyPresets = async (
+    presets: Array<{ name: string; category?: string; emoji?: string }>
+  ) => {
+    return savePreferences({ tallyPresets: presets });
+  };
+
+  /**
+   * Add a tally preset
+   */
+  const addTallyPreset = async (preset: {
+    name: string;
+    category?: string;
+    emoji?: string;
+  }) => {
+    // Get current presets (or defaults if empty)
+    const current = getTallyPresets();
+    // Avoid duplicates
+    if (current.some((p) => p.name === preset.name)) return true;
+    const tallyPresets = [...current, preset];
+    return savePreferences({ tallyPresets });
+  };
+
+  /**
+   * Remove a tally preset
+   */
+  const removeTallyPreset = async (name: string) => {
+    const tallyPresets = getTallyPresets().filter((p) => p.name !== name);
+    return savePreferences({ tallyPresets });
+  };
+
   return {
     preferences: readonly(preferences),
     isLoaded: readonly(isLoaded),
@@ -241,5 +298,10 @@ export const usePreferences = () => {
     loadSubcategorySuggestions,
     getSubcategorySuggestions,
     addSubcategorySuggestion,
+    // Tally presets
+    getTallyPresets,
+    saveTallyPresets,
+    addTallyPreset,
+    removeTallyPreset,
   };
 };

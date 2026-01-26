@@ -505,7 +505,11 @@ async function exportData() {
   isExporting.value = true;
   try {
     // Fetch all entries
-    const response = await $fetch<{ entries: Entry[]; nextCursor: string | null; hasMore: boolean }>("/api/entries", {
+    const response = await $fetch<{
+      entries: Entry[];
+      nextCursor: string | null;
+      hasMore: boolean;
+    }>("/api/entries", {
       params: { limit: 10000 },
     });
 

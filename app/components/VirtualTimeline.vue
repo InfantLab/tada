@@ -207,6 +207,24 @@ function formatDuration(seconds: number): string {
   return secs === 1 ? "1 sec" : `${secs} secs`;
 }
 
+// Get count from tally entry data
+function getTallyCount(entry: Entry): number | null {
+  if (entry.type !== "tally") return null;
+  if (entry.data && typeof entry.data === "object" && "count" in entry.data) {
+    return Number(entry.data["count"]) || null;
+  }
+  return null;
+}
+
+// Get display title for entry (includes count for tally entries)
+function getEntryTitle(entry: Entry): string {
+  const count = getTallyCount(entry);
+  if (count !== null) {
+    return `${count} ${entry.name}`;
+  }
+  return entry.name;
+}
+
 // Get icon for entry type - checking custom emojis first
 function getEntryEmoji(entry: Entry): string {
   // First check if entry has its own emoji
@@ -360,7 +378,7 @@ defineExpose({ loadInitial, entries });
               <div class="flex-1 min-w-0">
                 <div class="flex items-center justify-between gap-2 mb-1">
                   <h4 class="font-semibold text-stone-800 dark:text-stone-100">
-                    {{ entry.name }}
+                    {{ getEntryTitle(entry) }}
                   </h4>
                   <span
                     class="text-xs text-stone-500 dark:text-stone-400 flex-shrink-0"

@@ -16,6 +16,7 @@ interface PreferencesUpdate {
   hiddenEntryTypes?: string[];
   customEmojis?: Record<string, string>;
   customEntryTypes?: Array<{ name: string; emoji: string }>;
+  tallyPresets?: Array<{ name: string; category?: string; emoji?: string }>;
 }
 
 export default defineEventHandler(async (event) => {
@@ -50,6 +51,12 @@ export default defineEventHandler(async (event) => {
     throw createError({
       statusCode: 400,
       message: "customEntryTypes must be an array",
+    });
+  }
+  if (body.tallyPresets && !Array.isArray(body.tallyPresets)) {
+    throw createError({
+      statusCode: 400,
+      message: "tallyPresets must be an array",
     });
   }
 
@@ -99,6 +106,9 @@ export default defineEventHandler(async (event) => {
       if (body.customEntryTypes !== undefined) {
         updateData["customEntryTypes"] = body.customEntryTypes;
       }
+      if (body.tallyPresets !== undefined) {
+        updateData["tallyPresets"] = body.tallyPresets;
+      }
 
       await db
         .update(userPreferences)
@@ -115,6 +125,7 @@ export default defineEventHandler(async (event) => {
         hiddenEntryTypes: body.hiddenEntryTypes || [],
         customEmojis: body.customEmojis || {},
         customEntryTypes: body.customEntryTypes || [],
+        tallyPresets: body.tallyPresets || [],
         createdAt: now,
         updatedAt: now,
       });
