@@ -12,7 +12,7 @@ const router = useRouter();
 const entries = ref<Entry[]>([]);
 const isLoading = ref(true);
 const error = ref<string | null>(null);
-const selectedType = ref<"all" | "dream" | "magic" | "note" | "gratitude">(
+const selectedType = ref<"all" | "dream" | "magic" | "journal" | "gratitude">(
   "all",
 );
 
@@ -37,12 +37,14 @@ onMounted(async () => {
         [
           "dream",
           "journal",
-          "note",
+          "note", // backward compat for old data
           "gratitude",
           "magic",
           "reflection",
           "memory",
-        ].includes(e.type) || e.category === "moments",
+        ].includes(e.type) ||
+        e.category === "moments" ||
+        e.subcategory === "journal",
     );
   } catch (err: unknown) {
     console.error("Failed to fetch moment entries:", err);
@@ -84,7 +86,8 @@ function getTypeIcon(type: string, subcategory?: string | null): string {
       return "💭";
     case "memory":
       return "📸";
-    case "note":
+    case "journal":
+    case "note": // backward compat
       return "📝";
     default:
       return "✨";
@@ -107,7 +110,7 @@ function getTypeIcon(type: string, subcategory?: string | null): string {
 
       <!-- Add entry button -->
       <NuxtLink
-        to="/add?type=journal"
+        to="/add?type=moment"
         class="flex items-center gap-2 px-4 py-2 bg-tada-600 hover:opacity-90 text-black dark:bg-tada-600 dark:text-white rounded-lg font-medium transition-colors shadow-sm"
       >
         <svg
@@ -131,7 +134,7 @@ function getTypeIcon(type: string, subcategory?: string | null): string {
     <!-- Quick capture buttons -->
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-6">
       <NuxtLink
-        to="/add?type=journal&subcategory=magic"
+        to="/add?type=moment&subcategory=magic"
         class="flex items-center gap-2 px-3 py-3 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded-lg border border-purple-200 dark:border-purple-800 transition-colors"
       >
         <span class="text-xl">🪄</span>
@@ -140,7 +143,7 @@ function getTypeIcon(type: string, subcategory?: string | null): string {
         >
       </NuxtLink>
       <NuxtLink
-        to="/add?type=journal&subcategory=dream"
+        to="/add?type=moment&subcategory=dream"
         class="flex items-center gap-2 px-3 py-3 bg-indigo-50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 rounded-lg border border-indigo-200 dark:border-indigo-800 transition-colors"
       >
         <span class="text-xl">🌙</span>
@@ -149,7 +152,7 @@ function getTypeIcon(type: string, subcategory?: string | null): string {
         >
       </NuxtLink>
       <NuxtLink
-        to="/add?type=journal&subcategory=gratitude"
+        to="/add?type=moment&subcategory=gratitude"
         class="flex items-center gap-2 px-3 py-3 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/30 rounded-lg border border-amber-200 dark:border-amber-800 transition-colors"
       >
         <span class="text-xl">🙏</span>
@@ -158,12 +161,12 @@ function getTypeIcon(type: string, subcategory?: string | null): string {
         >
       </NuxtLink>
       <NuxtLink
-        to="/add?type=journal&subcategory=note"
+        to="/add?type=moment&subcategory=journal"
         class="flex items-center gap-2 px-3 py-3 bg-stone-50 dark:bg-stone-800 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-lg border border-stone-200 dark:border-stone-700 transition-colors"
       >
         <span class="text-xl">📝</span>
         <span class="text-sm font-medium text-stone-700 dark:text-stone-300"
-          >Note</span
+          >Journal</span
         >
       </NuxtLink>
     </div>
@@ -171,7 +174,7 @@ function getTypeIcon(type: string, subcategory?: string | null): string {
     <!-- Type filter -->
     <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
       <button
-        v-for="type in ['all', 'magic', 'dream', 'gratitude', 'note']"
+        v-for="type in ['all', 'magic', 'dream', 'gratitude', 'journal']"
         :key="type"
         class="px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors"
         :class="
@@ -185,7 +188,7 @@ function getTypeIcon(type: string, subcategory?: string | null): string {
         <span v-else-if="type === 'magic'">🪄 Magic</span>
         <span v-else-if="type === 'dream'">🌙 Dreams</span>
         <span v-else-if="type === 'gratitude'">🙏 Gratitude</span>
-        <span v-else>📝 Notes</span>
+        <span v-else>📝 Journal</span>
       </button>
     </div>
 
@@ -208,13 +211,13 @@ function getTypeIcon(type: string, subcategory?: string | null): string {
       </p>
       <div class="flex flex-col sm:flex-row gap-3 justify-center">
         <NuxtLink
-          to="/add?type=journal&subcategory=magic"
+          to="/add?type=moment&subcategory=magic"
           class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-medium transition-colors"
         >
           🪄 Capture magic
         </NuxtLink>
         <NuxtLink
-          to="/add?type=journal&subcategory=dream"
+          to="/add?type=moment&subcategory=dream"
           class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg font-medium transition-colors"
         >
           🌙 Record a dream
