@@ -113,13 +113,8 @@ export function useEntryEngine() {
         emoji,
       };
 
-      // Create entry via API
-      const result = await $fetch<{
-        success: boolean;
-        entry?: Entry;
-        error?: string;
-        conflicts?: ConflictResult;
-      }>("/api/entries", {
+      // Create entry via API - server returns the entry directly
+      const entry = await $fetch<Entry>("/api/entries", {
         method: "POST",
         body: {
           ...preparedInput,
@@ -128,31 +123,22 @@ export function useEntryEngine() {
         },
       });
 
-      if (!result.success) {
-        const errorMsg = result.error || "Failed to create entry";
-        error.value = errorMsg;
-
-        // Show conflict warning if applicable
-        if (result.conflicts?.hasConflict) {
-          toast.warning(
-            `Entry overlaps with ${result.conflicts.overlappingEntries.length} existing entry(s)`,
-          );
-        } else {
-          toast.error(errorMsg, {
-            details: `Type: ${input.type}, Name: ${input.name}, Category: ${input.category || 'none'}`,
-          });
-        }
-
-        return null;
+      // If we got an entry back, it was successful
+      if (entry && entry.id) {
+        toast.success(`${input.name} saved successfully`);
+        return entry;
       }
 
-      toast.success(`${input.name} saved successfully`);
-
-      return result.entry || null;
+      // Shouldn't reach here if server works correctly, but handle edge case
+      error.value = "Failed to create entry - no entry returned";
+      toast.error("Failed to create entry", {
+        details: `Type: ${input.type}, Name: ${input.name}, Category: ${input.category || "none"}`,
+      });
+      return null;
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
       error.value = message;
-      
+
       // Include more context in the toast for debugging
       const details = [
         `Type: ${input.type}`,
@@ -160,8 +146,10 @@ export function useEntryEngine() {
         input.category ? `Category: ${input.category}` : null,
         input.durationSeconds ? `Duration: ${input.durationSeconds}s` : null,
         input.count ? `Count: ${input.count}` : null,
-      ].filter(Boolean).join(', ');
-      
+      ]
+        .filter(Boolean)
+        .join(", ");
+
       toast.error(message, { details });
       return null;
     } finally {

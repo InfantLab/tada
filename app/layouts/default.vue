@@ -10,10 +10,17 @@ const navigation = [
 ];
 
 const route = useRoute();
+const { triggerRefresh } = useTimelineRefresh();
 
 // Quick entry modal state
 const showQuickEntryModal = ref(false);
 const quickEntryMode = ref<EntryMode>("timed");
+
+// Handle entry saved - close modal and refresh timeline
+function handleEntrySaved() {
+  showQuickEntryModal.value = false;
+  triggerRefresh();
+}
 
 // Keyboard shortcuts for quick entry
 function handleKeydown(event: KeyboardEvent) {
@@ -274,7 +281,7 @@ onUnmounted(() => {
     <QuickEntryModal
       v-model:open="showQuickEntryModal"
       :initial-mode="quickEntryMode"
-      @saved="showQuickEntryModal = false"
+      @saved="handleEntrySaved"
     />
 
     <ToastContainer />

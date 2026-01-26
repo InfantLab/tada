@@ -150,12 +150,7 @@ export default defineNuxtConfig({
   vite: {
     // Pre-bundle heavy dependencies
     optimizeDeps: {
-      include: [
-        "vue",
-        "vue-router",
-        "drizzle-orm",
-        "emoji-picker-element",
-      ],
+      include: ["vue", "vue-router", "drizzle-orm", "emoji-picker-element"],
     },
     // Faster builds
     build: {

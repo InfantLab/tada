@@ -110,7 +110,10 @@ export default defineEventHandler(async (event) => {
       body && typeof body === "object" && "name" in body
         ? (body as { name?: unknown }).name
         : undefined;
-    logger.error("Failed to create entry", error, { type: bodyType, name: bodyName });
+    logger.error("Failed to create entry", error, {
+      type: bodyType,
+      name: bodyName,
+    });
 
     if (error && typeof error === "object" && "statusCode" in error) {
       throw error;

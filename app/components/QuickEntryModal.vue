@@ -71,15 +71,20 @@ const categoryInputRef = ref<HTMLInputElement | null>(null);
 // Fetch category suggestions
 async function fetchCategorySuggestions(query: string = "") {
   try {
-    const entryType = mode.value === "timed" ? "timed" : mode.value === "reps" ? "reps" : undefined;
+    const entryType =
+      mode.value === "timed"
+        ? "timed"
+        : mode.value === "reps"
+          ? "reps"
+          : undefined;
     const params = new URLSearchParams();
     if (query) params.set("query", query);
     if (entryType) params.set("type", entryType);
     params.set("limit", "8");
-    
-    const response = await $fetch<{ suggestions: Array<{ category: string; count: number }> }>(
-      `/api/categories/recent?${params.toString()}`
-    );
+
+    const response = await $fetch<{
+      suggestions: Array<{ category: string; count: number }>;
+    }>(`/api/categories/recent?${params.toString()}`);
     categorySuggestions.value = response.suggestions || [];
   } catch {
     categorySuggestions.value = [];
@@ -108,6 +113,13 @@ function selectCategory(cat: string) {
   showCategorySuggestions.value = false;
 }
 
+// Hide category suggestions with delay (for blur handling)
+function hideCategorySuggestions() {
+  setTimeout(() => {
+    showCategorySuggestions.value = false;
+  }, 150);
+}
+
 // Draft tracking
 const resumingDraftId = ref<string | null>(null);
 const showDraftBanner = ref(false);
@@ -125,6 +137,7 @@ const conflicts = ref<{
   suggestedResolution: string;
 } | null>(null);
 const conflictResolution = ref<"allow-both" | "replace" | null>(null);
+const showConflictModal = ref(false);
 
 // Reset form when modal opens
 watch(
@@ -165,30 +178,8 @@ watch(
   },
 );
 
-// Check for conflicts when timestamp or duration changes (for timed entries)
-// Watch for changes that might cause conflicts (debounced)
-let conflictCheckTimeout: ReturnType<typeof setTimeout> | null = null;
-watch([timestamp, durationSeconds, mode], async () => {
-  if (mode.value !== "timed" || !durationSeconds.value) {
-    conflicts.value = null;
-    return;
-  }
-
-  // Debounce conflict check
-  if (conflictCheckTimeout) {
-    clearTimeout(conflictCheckTimeout);
-  }
-  conflictCheckTimeout = setTimeout(async () => {
-    // Build a temporary entry input for conflict check
-    const entryInput = buildEntryInput();
-    try {
-      const result = await checkConflicts(entryInput);
-      conflicts.value = result || null;
-    } catch {
-      conflicts.value = null;
-    }
-  }, 500);
-});
+// Conflict checking is now done on save, not while typing
+// This avoids UI clutter and lets users just click Save
 
 // Compute if form is valid
 const isValid = computed(() => {
@@ -259,6 +250,21 @@ async function handleSave(resolution?: "allow-both" | "replace") {
   try {
     const entryInput = buildEntryInput();
 
+    // Check for conflicts if this is a timed entry and no resolution specified
+    if (
+      mode.value === "timed" &&
+      durationSeconds.value &&
+      !resolution &&
+      !conflictResolution.value
+    ) {
+      const conflictResult = await checkConflicts(entryInput);
+      if (conflictResult?.hasConflict) {
+        conflicts.value = conflictResult;
+        showConflictModal.value = true;
+        return; // Wait for user to resolve
+      }
+    }
+
     // Determine resolution based on conflict state
     const saveOptions: CreateEntryOptions = { skipEmojiResolution: false };
     if (resolution === "replace") {
@@ -300,8 +306,11 @@ async function handleSave(resolution?: "allow-both" | "replace") {
 
 // Handle conflict resolution from ConflictWarning component
 function handleConflictResolve(action: "allow-both" | "replace" | "cancel") {
+  showConflictModal.value = false;
+
   if (action === "cancel") {
-    closeModal();
+    // Just close the conflict modal, let user edit the form
+    conflicts.value = null;
     return;
   }
 
@@ -438,7 +447,13 @@ const modeLabels: Record<EntryMode, string> = {
                 v-model="name"
                 label="What did you do?"
                 placeholder="Meditation, Push-ups, etc."
-                :entry-type="mode === 'timed' ? 'timed' : mode === 'reps' ? 'reps' : undefined"
+                :entry-type="
+                  mode === 'timed'
+                    ? 'timed'
+                    : mode === 'reps'
+                      ? 'reps'
+                      : undefined
+                "
                 @select="handleActivitySelect"
               />
 
@@ -457,13 +472,18 @@ const modeLabels: Record<EntryMode, string> = {
                   placeholder="Exercise, Mindfulness, etc."
                   class="w-full px-3 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 text-stone-900 dark:text-white placeholder-stone-400 focus:ring-2 focus:ring-tada-500 focus:border-transparent"
                   @input="handleCategoryInput"
-                  @focus="fetchCategorySuggestions(category); showCategorySuggestions = true"
-                  @blur="setTimeout(() => showCategorySuggestions = false, 150)"
+                  @focus="
+                    fetchCategorySuggestions(category);
+                    showCategorySuggestions = true;
+                  "
+                  @blur="hideCategorySuggestions"
                 />
-                
+
                 <!-- Category suggestions dropdown -->
                 <div
-                  v-if="showCategorySuggestions && categorySuggestions.length > 0"
+                  v-if="
+                    showCategorySuggestions && categorySuggestions.length > 0
+                  "
                   class="absolute z-10 w-full mt-1 bg-white dark:bg-stone-800 rounded-lg border border-stone-200 dark:border-stone-700 shadow-lg max-h-48 overflow-y-auto"
                 >
                   <button
@@ -473,8 +493,12 @@ const modeLabels: Record<EntryMode, string> = {
                     class="w-full px-3 py-2 text-left text-sm hover:bg-stone-100 dark:hover:bg-stone-700 flex items-center justify-between"
                     @mousedown.prevent="selectCategory(suggestion.category)"
                   >
-                    <span class="text-stone-900 dark:text-white">{{ suggestion.category }}</span>
-                    <span class="text-xs text-stone-400">{{ suggestion.count }}×</span>
+                    <span class="text-stone-900 dark:text-white">{{
+                      suggestion.category
+                    }}</span>
+                    <span class="text-xs text-stone-400"
+                      >{{ suggestion.count }}×</span
+                    >
                   </button>
                 </div>
               </div>
@@ -507,14 +531,6 @@ const modeLabels: Record<EntryMode, string> = {
 
               <!-- When -->
               <DateTimePicker v-model="timestamp" label="When?" />
-
-              <!-- Conflict Warning -->
-              <ConflictWarning
-                v-if="conflicts && conflicts.hasConflict"
-                :conflict="conflicts"
-                :is-loading="isLoading"
-                @resolve="handleConflictResolve"
-              />
 
               <!-- Notes (optional) -->
               <div class="space-y-1">
@@ -565,6 +581,38 @@ const modeLabels: Record<EntryMode, string> = {
             </div>
           </div>
         </Transition>
+      </div>
+    </Transition>
+
+    <!-- Conflict Resolution Modal -->
+    <Transition
+      enter-active-class="transition duration-200 ease-out"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition duration-150 ease-in"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <div
+        v-if="showConflictModal && conflicts?.hasConflict"
+        class="fixed inset-0 z-[60] flex items-center justify-center p-4"
+      >
+        <!-- Backdrop -->
+        <div
+          class="absolute inset-0 bg-black/60"
+          @click="handleConflictResolve('cancel')"
+        />
+
+        <!-- Modal content -->
+        <div
+          class="relative bg-white dark:bg-stone-800 rounded-xl shadow-xl max-w-md w-full p-5 space-y-4"
+        >
+          <ConflictWarning
+            :conflict="conflicts"
+            :is-loading="isLoading"
+            @resolve="handleConflictResolve"
+          />
+        </div>
       </div>
     </Transition>
   </Teleport>

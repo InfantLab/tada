@@ -6,6 +6,9 @@ import { getEntryDisplayProps } from "~/utils/categoryDefaults";
 // Get usePreferences to check for custom emojis
 const { getCustomEmoji, loadPreferences } = usePreferences();
 
+// Timeline refresh trigger - reload when entries are created/updated
+const { refreshKey } = useTimelineRefresh();
+
 // Load preferences on mount (if not already loaded)
 onMounted(() => {
   loadPreferences();
@@ -158,6 +161,12 @@ watch(
   () => {
     loadInitial();
   },
+);
+
+// Reload when entries are created/updated elsewhere
+watch(refreshKey, () => {
+  loadInitial();
+});
 );
 
 onMounted(loadInitial);

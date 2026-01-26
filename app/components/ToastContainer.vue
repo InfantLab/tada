@@ -86,8 +86,8 @@ const copyError = async (toast: Toast) => {
     }
     lines.push(`URL: ${window.location.href}`);
     lines.push(`User-Agent: ${navigator.userAgent}`);
-    
-    await navigator.clipboard.writeText(lines.join('\n'));
+
+    await navigator.clipboard.writeText(lines.join("\n"));
     copiedId.value = toast.id;
     // Reset after 2 seconds
     setTimeout(() => {
