@@ -333,7 +333,18 @@ Transform self-hosted app into hosted service at tada.living.
 
 _Target: Q4 2026_
 
-### 🌅 Routines & Rituals
+### � Smarter Conflict Resolution
+
+Current "Replace" wipes all overlapping entries. Need more intelligent approach:
+
+- [ ] Multi-select: Choose which specific entries to replace (checkbox list)
+- [ ] Category-aware: Only replace entries of the same category/activity
+- [ ] Preview: Show what will be deleted before confirming
+- [ ] Undo support: Allow recovery of replaced entries
+- [ ] Import integration: Same UI for CSV import duplicate handling
+- [ ] Merge option: Combine durations/counts instead of replacing
+
+### �🌅 Routines & Rituals
 
 - [ ] Morning/evening routine builder
 - [ ] Flexible ritual sequences (not rigid schedules)

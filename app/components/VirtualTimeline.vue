@@ -167,7 +167,6 @@ watch(
 watch(refreshKey, () => {
   loadInitial();
 });
-);
 
 onMounted(loadInitial);
 

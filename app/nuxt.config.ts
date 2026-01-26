@@ -177,6 +177,10 @@ export default defineNuxtConfig({
           "./layouts/default.vue",
         ],
       },
+      watch: {
+        // Exclude SQLite database files from watch - they cause EINVAL errors
+        ignored: ["**/data/**", "**/*.sqlite*"],
+      },
     },
   },
 

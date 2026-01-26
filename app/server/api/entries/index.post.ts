@@ -1,7 +1,7 @@
 import { defineEventHandler, readBody, createError } from "h3";
 import { db } from "~/server/db";
 import { entries, type NewEntry } from "~/server/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and, gte, lte, isNull } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { createLogger } from "~/server/utils/logger";
 
@@ -21,6 +21,7 @@ interface CreateEntryBody {
   notes?: string | null;
   source?: string;
   externalId?: string | null;
+  resolution?: "allow-both" | "replace"; // Conflict resolution strategy
 }
 
 export default defineEventHandler(async (event) => {
@@ -64,6 +65,69 @@ export default defineEventHandler(async (event) => {
     // timestamp is THE canonical timeline field - always set
     // Use provided timestamp, or default to now
     const timestamp = typedBody.timestamp || now;
+
+    // Handle conflict resolution for timed entries
+    if (
+      typedBody.resolution === "replace" &&
+      typedBody.type === "timed" &&
+      typedBody.durationSeconds &&
+      typedBody.durationSeconds > 0
+    ) {
+      // Find and soft-delete overlapping entries
+      const newStart = new Date(timestamp);
+      const newEnd = new Date(
+        newStart.getTime() + typedBody.durationSeconds * 1000,
+      );
+
+      // Fetch entries within a reasonable time window
+      const windowStart = new Date(newStart.getTime() - 24 * 60 * 60 * 1000);
+      const windowEnd = new Date(newEnd.getTime() + 24 * 60 * 60 * 1000);
+
+      const potentialOverlaps = await db
+        .select({
+          id: entries.id,
+          timestamp: entries.timestamp,
+          durationSeconds: entries.durationSeconds,
+        })
+        .from(entries)
+        .where(
+          and(
+            eq(entries.userId, userId),
+            eq(entries.type, "timed"),
+            isNull(entries.deletedAt),
+            gte(entries.timestamp, windowStart.toISOString()),
+            lte(entries.timestamp, windowEnd.toISOString()),
+          ),
+        );
+
+      // Check each entry for actual overlap and soft-delete
+      for (const existing of potentialOverlaps) {
+        if (!existing.durationSeconds || existing.durationSeconds <= 0) {
+          continue;
+        }
+
+        const existingStart = new Date(existing.timestamp);
+        const existingEnd = new Date(
+          existingStart.getTime() + existing.durationSeconds * 1000,
+        );
+
+        // Check for overlap
+        const overlaps = newStart < existingEnd && newEnd > existingStart;
+
+        if (overlaps) {
+          // Soft-delete the overlapping entry
+          await db
+            .update(entries)
+            .set({ deletedAt: now })
+            .where(eq(entries.id, existing.id));
+
+          logger.info("Replaced overlapping entry", {
+            replacedId: existing.id,
+            newEntryTimestamp: timestamp,
+          });
+        }
+      }
+    }
 
     const newEntry: NewEntry = {
       id: nanoid(),
