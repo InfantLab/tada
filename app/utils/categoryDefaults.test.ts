@@ -17,7 +17,7 @@ describe("categoryDefaults", () => {
         "movement",
         "creative",
         "learning",
-        "journal",
+        "moments",
         "accomplishment",
         "events",
       ];

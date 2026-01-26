@@ -38,11 +38,11 @@ describe("Entry Engine Integration", () => {
       expect(result.valid).toBe(true);
     });
 
-    it("should validate journal entries correctly", () => {
+    it("should validate moment entries correctly", () => {
       const input: EntryInput = {
-        type: "journal",
+        type: "moment",
         name: "Morning reflection",
-        category: "journal",
+        category: "moments",
         subcategory: "reflection",
         notes: "Today was a good day",
       };
@@ -51,9 +51,9 @@ describe("Entry Engine Integration", () => {
       expect(result.valid).toBe(true);
     });
 
-    it("should validate reps entries correctly", () => {
+    it("should validate tally entries correctly", () => {
       const input: EntryInput = {
-        type: "reps",
+        type: "tally",
         name: "push-ups",
         count: 30,
         category: "movement",
@@ -76,9 +76,9 @@ describe("Entry Engine Integration", () => {
       expect(result.errors.length).toBeGreaterThan(0);
     });
 
-    it("should reject reps entries without count", () => {
+    it("should reject tally entries without count", () => {
       const input = {
-        type: "reps",
+        type: "tally",
         name: "push-ups",
         category: "movement",
       };
@@ -117,12 +117,12 @@ describe("Entry Engine Integration", () => {
       );
     });
 
-    it("should produce consistent entry structure for journal entries", () => {
+    it("should produce consistent entry structure for moment entries", () => {
       // This simulates what add.vue sends to the engine
-      const journalInput: EntryInput = {
-        type: "journal",
+      const momentInput: EntryInput = {
+        type: "moment",
         name: "Dream log",
-        category: "journal",
+        category: "moments",
         subcategory: "dream",
         emoji: "🌙",
         notes: "I was flying over mountains...",
@@ -133,9 +133,9 @@ describe("Entry Engine Integration", () => {
         tags: ["dream"],
       };
 
-      const result = validateEntryInput(journalInput);
+      const result = validateEntryInput(momentInput);
       expect(result.valid).toBe(true);
-      expect(result.data?.type).toBe("journal");
+      expect(result.data?.type).toBe("moment");
       expect(result.data?.notes).toBe("I was flying over mountains...");
     });
 

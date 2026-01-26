@@ -248,11 +248,11 @@ export const useEntrySave = (): UseEntrySaveReturn => {
     // Use detected subcategory or default to "journal"
     const subcategory = options.subcategory || "journal";
 
-    // Create journal entry with voice metadata
+    // Create moment entry with voice metadata
     const entryData: EntryData = {
-      type: "journal",
+      type: "moment",
       name: generateVoiceEntryName(text),
-      category: "reflection",
+      category: "moments",
       subcategory,
       notes: text.trim(),
       source: "voice",

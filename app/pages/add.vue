@@ -166,7 +166,7 @@ async function submitEntry() {
 
   const result = await createEntry(
     {
-      type: entryType.value as "journal" | "tada" | "timed" | "reps",
+      type: entryType.value as "moment" | "tada" | "timed" | "tally",
       name: title.value.trim() || "Journal entry",
       category: category.value,
       subcategory: subcategory.value || undefined,

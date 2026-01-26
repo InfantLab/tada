@@ -151,7 +151,7 @@ describe("Entries API Integration", async () => {
         {
           id: nanoid(),
           userId: testUserId,
-          type: "journal",
+          type: "moment",
           name: "note",
           timestamp: now,
           timezone: "UTC",
@@ -495,7 +495,7 @@ describe("Entries API Integration", async () => {
       expect(data.category).toBe("accomplishment");
     });
 
-    it("should handle journal entries with content", async () => {
+    it("should handle moment entries with content", async () => {
       const response = await fetch("/api/entries", {
         method: "POST",
         headers: {
@@ -503,19 +503,19 @@ describe("Entries API Integration", async () => {
           Cookie: authCookie,
         },
         body: JSON.stringify({
-          type: "journal",
+          type: "moment",
           name: "Dream journal",
           timestamp: new Date().toISOString(),
           timezone: "UTC",
           notes: "I dreamed I was flying over mountains...",
-          category: "journal",
+          category: "moments",
           subcategory: "dream",
         }),
       });
 
       expect(response.status).toBe(200);
       const data = await response.json();
-      expect(data.type).toBe("journal");
+      expect(data.type).toBe("moment");
       expect(data.notes).toContain("flying over mountains");
     });
 

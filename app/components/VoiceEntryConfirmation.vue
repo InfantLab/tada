@@ -100,15 +100,13 @@ function getConfidenceColor(confidence: number): string {
 
 // Handle confirm
 function handleConfirm() {
-  // Map "moment" to "journal" for entry type (moment is UI shorthand for journal)
-  const mappedType =
-    editedType.value === "moment" ? "journal" : editedType.value;
+  // "moment" is now the canonical type name (v0.3.0 ontology)
   const editedParsed: ParsedEntry = {
     ...props.parsed,
     input: {
       ...props.parsed.input,
       name: editedName.value,
-      type: mappedType as "timed" | "reps" | "journal" | "tada",
+      type: editedType.value as "timed" | "tally" | "moment" | "tada",
       durationSeconds: editedDuration.value || undefined,
       count: editedCount.value || undefined,
     },
@@ -160,7 +158,7 @@ function toggleEdit() {
           {{
             editedType === "timed"
               ? "⏱️ Timed"
-              : editedType === "reps"
+              : editedType === "tally"
                 ? "🔢 Count"
                 : "✨ Moment"
           }}
@@ -208,9 +206,9 @@ function toggleEdit() {
         </span>
       </div>
 
-      <!-- Count (for reps) -->
+      <!-- Count (for tally) -->
       <div
-        v-if="editedType === 'reps'"
+        v-if="editedType === 'tally'"
         class="flex items-center justify-between"
       >
         <span class="text-sm text-stone-500 dark:text-stone-400">Count</span>

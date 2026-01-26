@@ -122,14 +122,14 @@ export async function createEntry(
     ? { ...input.data }
     : {};
 
-  // For reps entries, store count in data
-  if (input.type === "reps" && input.count) {
+  // For tally entries, store count in data
+  if (input.type === "tally" && input.count) {
     dataPayload["count"] = input.count;
     dataPayload["exerciseName"] = input.name;
   }
 
-  // For journal entries, store content and mood
-  if (input.type === "journal") {
+  // For moment entries, store content and mood
+  if (input.type === "moment") {
     if (input.content) dataPayload["content"] = input.content;
     if (input.mood) dataPayload["mood"] = input.mood;
     if (input.themes) dataPayload["themes"] = input.themes;
@@ -387,7 +387,7 @@ export async function getRecentCounts(
       .where(
         and(
           eq(entries.userId, userId),
-          eq(entries.type, "reps"),
+          eq(entries.type, "tally"),
           isNull(entries.deletedAt),
         ),
       )

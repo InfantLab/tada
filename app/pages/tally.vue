@@ -30,7 +30,9 @@ const isLoading = ref(true);
 const error = ref<string | null>(null);
 
 // Activity suggestions
-const suggestions = ref<Array<{ name: string; category?: string; count: number }>>([]);
+const suggestions = ref<
+  Array<{ name: string; category?: string; count: number }>
+>([]);
 const showSuggestions = ref(false);
 
 // Common quick-add presets (user can customize later)
@@ -50,7 +52,7 @@ async function fetchEntries() {
   try {
     isLoading.value = true;
     const data = await $fetch<Entry[]>("/api/entries", {
-      query: { type: "reps", limit: 20 },
+      query: { type: "tally", limit: 20 },
     });
     entries.value = data;
   } catch (err: unknown) {
@@ -66,7 +68,7 @@ async function fetchSuggestions() {
     const response = await $fetch<{
       suggestions: Array<{ name: string; category?: string; count: number }>;
     }>("/api/activities/recent", {
-      query: { type: "reps", limit: 8 },
+      query: { type: "tally", limit: 8 },
     });
     suggestions.value = response.suggestions || [];
   } catch {
@@ -116,7 +118,7 @@ async function handleSave() {
 
   try {
     const result = await createEntry({
-      type: "reps",
+      type: "tally",
       name: activityName.value.trim(),
       category: category.value.trim() || undefined,
       count: count.value,
@@ -251,7 +253,9 @@ function getEntryCount(entry: Entry): number {
 
       <!-- Count selector -->
       <div class="mb-4">
-        <label class="block text-sm font-medium text-stone-600 dark:text-stone-300 mb-2">
+        <label
+          class="block text-sm font-medium text-stone-600 dark:text-stone-300 mb-2"
+        >
           Count
         </label>
         <div class="flex items-center gap-4">
@@ -358,7 +362,8 @@ function getEntryCount(entry: Entry): number {
           No tallies yet
         </h3>
         <p class="text-sm text-stone-500 dark:text-stone-400 max-w-xs mx-auto">
-          Add your first count above to start tracking reps, sets, or any counted activity.
+          Add your first count above to start tracking reps, sets, or any
+          counted activity.
         </p>
       </div>
 
@@ -384,7 +389,9 @@ function getEntryCount(entry: Entry): number {
             <h3 class="font-medium text-stone-800 dark:text-stone-100 truncate">
               {{ entry.name }}
             </h3>
-            <div class="flex items-center gap-2 text-xs text-stone-500 dark:text-stone-400">
+            <div
+              class="flex items-center gap-2 text-xs text-stone-500 dark:text-stone-400"
+            >
               <span>{{ formatDate(entry.timestamp) }}</span>
               <span v-if="entry.category" class="text-stone-400">·</span>
               <span v-if="entry.category">{{ entry.category }}</span>

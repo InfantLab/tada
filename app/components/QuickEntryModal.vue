@@ -74,8 +74,8 @@ async function fetchCategorySuggestions(query: string = "") {
     const entryType =
       mode.value === "timed"
         ? "timed"
-        : mode.value === "reps"
-          ? "reps"
+        : mode.value === "tally"
+          ? "tally"
           : undefined;
     const params = new URLSearchParams();
     if (query) params.set("query", query);
@@ -188,7 +188,7 @@ const isValid = computed(() => {
   switch (mode.value) {
     case "timed":
       return durationSeconds.value !== null && durationSeconds.value > 0;
-    case "reps":
+    case "tally":
       return count.value !== null && count.value > 0;
     case "moment":
       return true; // Just need a name
@@ -224,10 +224,10 @@ function buildEntryInput(): EntryInput {
         },
       };
     }
-    case "reps":
+    case "tally":
       return {
         ...baseEntry,
-        type: "reps",
+        type: "tally",
         count: count.value || 0,
         data: {
           count: count.value || 0,
@@ -236,7 +236,7 @@ function buildEntryInput(): EntryInput {
     case "moment":
       return {
         ...baseEntry,
-        type: "journal",
+        type: "moment",
         content: notes.value.trim() || name.value.trim(),
         data: {},
       };
@@ -450,8 +450,8 @@ const modeLabels: Record<EntryMode, string> = {
                 :entry-type="
                   mode === 'timed'
                     ? 'timed'
-                    : mode === 'reps'
-                      ? 'reps'
+                    : mode === 'tally'
+                      ? 'tally'
                       : undefined
                 "
                 @select="handleActivitySelect"
@@ -511,8 +511,8 @@ const modeLabels: Record<EntryMode, string> = {
                 label="How long?"
               />
 
-              <!-- Count (reps mode) -->
-              <div v-if="mode === 'reps'" class="space-y-1">
+              <!-- Count (tally mode) -->
+              <div v-if="mode === 'tally'" class="space-y-1">
                 <label
                   class="block text-sm font-medium text-stone-700 dark:text-stone-300"
                 >
@@ -525,7 +525,7 @@ const modeLabels: Record<EntryMode, string> = {
                   :step-large="5"
                   :min="1"
                   placeholder="Enter count"
-                  unit="reps"
+                  unit=""
                 />
               </div>
 

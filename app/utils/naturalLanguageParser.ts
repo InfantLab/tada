@@ -157,9 +157,9 @@ const CATEGORY_KEYWORDS: Record<
   walking: { category: "movement", subcategory: "walking" },
   workout: { category: "movement", subcategory: "strength" },
   exercise: { category: "movement" },
-  dream: { category: "journal", subcategory: "dream" },
-  gratitude: { category: "journal", subcategory: "gratitude" },
-  grateful: { category: "journal", subcategory: "gratitude" },
+  dream: { category: "moments", subcategory: "dream" },
+  gratitude: { category: "moments", subcategory: "gratitude" },
+  grateful: { category: "moments", subcategory: "gratitude" },
   "push-ups": { category: "movement", subcategory: "strength" },
   pushups: { category: "movement", subcategory: "strength" },
   burpees: { category: "movement", subcategory: "cardio" },
@@ -176,7 +176,7 @@ const CATEGORY_KEYWORDS: Record<
  *
  * @example
  * parseNaturalLanguage("30 burpees this morning")
- * // { input: { type: "reps", name: "burpees", count: 30, timestamp: "..." }, ... }
+ * // { input: { type: "tally", name: "burpees", count: 30, timestamp: "..." }, ... }
  *
  * parseNaturalLanguage("20 minute meditation")
  * // { input: { type: "timed", name: "meditation", durationSeconds: 1200 }, ... }
@@ -230,7 +230,7 @@ export function parseNaturalLanguage(
     if (countResult) {
       result.input.count = countResult.count;
       result.input.name = countResult.name;
-      result.input.type = "reps";
+      result.input.type = "tally";
       result.extracted.count = true;
       result.extracted.name = true;
       result.extracted.type = true;
@@ -408,14 +408,14 @@ export function inferEntryType(input: ParsedEntry["input"]): EntryType | null {
     return "timed";
   }
   if (input.count && input.count > 0) {
-    return "reps";
+    return "tally";
   }
   if (
-    input.category === "journal" ||
+    input.category === "moments" ||
     input.subcategory === "gratitude" ||
     input.subcategory === "dream"
   ) {
-    return "journal";
+    return "moment";
   }
   return null;
 }

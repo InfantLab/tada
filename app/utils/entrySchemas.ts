@@ -15,8 +15,9 @@ import { z } from "zod";
 
 /**
  * Supported entry types
+ * v0.3.0: Renamed journal → moment, reps → tally
  */
-export const EntryTypeSchema = z.enum(["timed", "reps", "journal", "tada"]);
+export const EntryTypeSchema = z.enum(["timed", "tally", "moment", "tada"]);
 export type EntryType = z.infer<typeof EntryTypeSchema>;
 
 /**
@@ -91,14 +92,14 @@ export const EntryInputSchema = EntryInputBaseSchema.refine(
     if (data.type === "timed" && !data.durationSeconds) {
       return false;
     }
-    // Reps entries should have count
-    if (data.type === "reps" && !data.count) {
+    // Tally entries should have count
+    if (data.type === "tally" && !data.count) {
       return false;
     }
     return true;
   },
   {
-    message: "Timed entries require duration; reps entries require count",
+    message: "Timed entries require duration; tally entries require count",
   },
 );
 
@@ -220,5 +221,5 @@ export function requiresDuration(type: EntryType): boolean {
  * Check if an entry type requires count
  */
 export function requiresCount(type: EntryType): boolean {
-  return type === "reps";
+  return type === "tally";
 }

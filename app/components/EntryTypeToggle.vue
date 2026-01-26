@@ -10,7 +10,7 @@
  * Used in QuickEntryModal to switch between entry modes
  */
 
-export type EntryMode = "timed" | "reps" | "moment";
+export type EntryMode = "timed" | "tally" | "moment";
 
 const props = withDefaults(
   defineProps<{
@@ -24,7 +24,7 @@ const props = withDefaults(
     disabled?: boolean;
   }>(),
   {
-    availableModes: () => ["timed", "reps", "moment"],
+    availableModes: () => ["timed", "tally", "moment"],
     compact: false,
     disabled: false,
   },
@@ -52,9 +52,9 @@ const modes: ModeDefinition[] = [
     description: "Log a duration-based activity",
   },
   {
-    id: "reps",
-    label: "Count",
-    shortLabel: "Reps",
+    id: "tally",
+    label: "Tally",
+    shortLabel: "Count",
     icon: "🔢",
     description: "Log a count-based activity",
   },

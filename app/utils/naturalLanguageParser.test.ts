@@ -32,20 +32,20 @@ describe("naturalLanguageParser", () => {
       expect(result.input.type).toBe("timed");
     });
 
-    it("should parse reps entry with count first", () => {
+    it("should parse tally entry with count first", () => {
       const result = parseNaturalLanguage("30 push-ups");
 
       expect(result.input.name).toBe("push-ups");
       expect(result.input.count).toBe(30);
-      expect(result.input.type).toBe("reps");
+      expect(result.input.type).toBe("tally");
     });
 
-    it("should parse reps entry with multiplier format", () => {
+    it("should parse tally entry with multiplier format", () => {
       const result = parseNaturalLanguage("burpees x 20");
 
       expect(result.input.name).toBe("burpees");
       expect(result.input.count).toBe(20);
-      expect(result.input.type).toBe("reps");
+      expect(result.input.type).toBe("tally");
     });
 
     it("should extract category from meditation keyword", () => {

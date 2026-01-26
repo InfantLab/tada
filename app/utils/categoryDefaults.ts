@@ -79,15 +79,15 @@ export const CATEGORY_DEFAULTS: Record<string, CategoryDefinition> = {
       { slug: "practice", emoji: "🎯", label: "Practice" },
     ],
   },
-  journal: {
-    emoji: "📝",
+  moments: {
+    emoji: "💭",
     color: "#6366F1",
-    label: "Journal",
+    label: "Moments",
     subcategories: [
+      { slug: "journal", emoji: "📝", label: "Journal" },
       { slug: "dream", emoji: "🌙", label: "Dream" },
       { slug: "gratitude", emoji: "🙏", label: "Gratitude" },
       { slug: "reflection", emoji: "💭", label: "Reflection" },
-      { slug: "note", emoji: "📝", label: "Note" },
       { slug: "magic", emoji: "🪄", label: "Magic" },
       { slug: "memory", emoji: "📸", label: "Memory" },
     ],
@@ -176,7 +176,7 @@ export function getEntryDisplayProps(entry: {
  * Get subcategories for a specific category
  */
 export function getSubcategoriesForCategory(
-  category: string
+  category: string,
 ): SubcategoryDefinition[] {
   return CATEGORY_DEFAULTS[category]?.subcategories || [];
 }
@@ -186,7 +186,7 @@ export function getSubcategoriesForCategory(
  */
 export function getSubcategoryEmoji(
   category: string,
-  subcategory: string
+  subcategory: string,
 ): string {
   const cat = CATEGORY_DEFAULTS[category];
   if (!cat) return DEFAULT_EMOJI;
@@ -207,7 +207,7 @@ export function getCategoryEmoji(category: string): string {
  * Get category info by slug
  */
 export function getCategoryInfo(
-  category: string
+  category: string,
 ): CategoryDefinition | undefined {
   return CATEGORY_DEFAULTS[category];
 }
@@ -217,7 +217,7 @@ export function getCategoryInfo(
  */
 export function getSubcategoryInCategory(
   category: string,
-  subcategory: string
+  subcategory: string,
 ): SubcategoryDefinition | undefined {
   const cat = CATEGORY_DEFAULTS[category];
   return cat?.subcategories.find((s) => s.slug === subcategory);
@@ -228,7 +228,7 @@ export function getSubcategoryInCategory(
  */
 export function getTimedCategories(): string[] {
   return Object.keys(CATEGORY_DEFAULTS).filter(
-    (key) => CATEGORY_DEFAULTS[key]?.allowedForTimed
+    (key) => CATEGORY_DEFAULTS[key]?.allowedForTimed,
   );
 }
 
@@ -272,7 +272,7 @@ export function getCategorySlugs(): string[] {
 export function resolveEmojiForNewEntry(
   category: string,
   subcategory: string,
-  customEmojis: Record<string, string> = {}
+  customEmojis: Record<string, string> = {},
 ): string {
   // 1. Check user's custom subcategory emoji
   if (category && subcategory) {

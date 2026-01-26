@@ -172,23 +172,23 @@ export function useEntryEngine() {
   }
 
   /**
-   * Create a reps entry
+   * Create a tally entry
    */
-  async function createRepsEntry(
+  async function createTallyEntry(
     input: Omit<EntryInput, "type"> & { count: number },
     options?: CreateEntryOptions,
   ): Promise<Entry | null> {
-    return createEntry({ ...input, type: "reps" }, options);
+    return createEntry({ ...input, type: "tally" }, options);
   }
 
   /**
-   * Create a journal entry
+   * Create a moment entry
    */
-  async function createJournalEntry(
+  async function createMomentEntry(
     input: Omit<EntryInput, "type">,
     options?: CreateEntryOptions,
   ): Promise<Entry | null> {
-    return createEntry({ ...input, type: "journal" }, options);
+    return createEntry({ ...input, type: "moment" }, options);
   }
 
   /**
@@ -422,8 +422,8 @@ export function useEntryEngine() {
     // Entry Creation
     createEntry,
     createTimedEntry,
-    createRepsEntry,
-    createJournalEntry,
+    createTallyEntry,
+    createMomentEntry,
     createTadaEntry,
 
     // Conflict Detection

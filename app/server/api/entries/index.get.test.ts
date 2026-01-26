@@ -52,7 +52,7 @@ describe("GET /api/entries (pagination)", () => {
       const mockResponse = {
         entries: [
           { id: "1", name: "Meditation", type: "timed" },
-          { id: "2", name: "Journal", type: "journal" },
+          { id: "2", name: "Moment", type: "moment" },
         ],
         nextCursor: "2025-01-14T10:30:00.000Z|2",
         hasMore: true,

@@ -42,7 +42,7 @@ onMounted(async () => {
           "magic",
           "reflection",
           "memory",
-        ].includes(e.type) || e.category === "journal",
+        ].includes(e.type) || e.category === "moments",
     );
   } catch (err: unknown) {
     console.error("Failed to fetch moment entries:", err);

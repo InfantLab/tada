@@ -94,7 +94,7 @@ export default defineEventHandler(async (event) => {
     if (parsed.input.type === "timed" && !parsed.input.durationSeconds) {
       missingFields.push("duration");
     }
-    if (parsed.input.type === "reps" && !parsed.input.count) {
+    if (parsed.input.type === "tally" && !parsed.input.count) {
       missingFields.push("count");
     }
 

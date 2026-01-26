@@ -52,7 +52,7 @@ export default defineEventHandler(async (event) => {
     // Build query conditions
     const conditions = [
       eq(entries.userId, userId),
-      eq(entries.type, "reps"),
+      eq(entries.type, "tally"),
       isNotNull(entries.data),
     ];
 
@@ -60,7 +60,7 @@ export default defineEventHandler(async (event) => {
       conditions.push(eq(entries.name, activity));
     }
 
-    // Get recent reps entries
+    // Get recent tally entries
     const recentEntries = await db
       .select({
         data: entries.data,

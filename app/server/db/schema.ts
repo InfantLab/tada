@@ -76,8 +76,8 @@ export const entries = sqliteTable("entries", {
     .references(() => users.id, { onDelete: "cascade" }),
 
   // Type and identity
-  type: text("type").notNull(), // 'timed', 'reps', 'journal', 'tada', etc.
-  name: text("name").notNull(), // 'meditation', 'press-ups', 'dream', etc.
+  type: text("type").notNull(), // 'timed', 'tally', 'moment', 'tada', etc.
+  name: text("name").notNull(), // 'meditation', 'push-ups', 'dream', etc.
 
   // Category hierarchy (see design/ontology.md)
   category: text("category"), // 'mindfulness', 'accomplishment', 'creative', etc.

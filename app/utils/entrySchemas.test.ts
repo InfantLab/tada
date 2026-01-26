@@ -25,9 +25,9 @@ describe("entrySchemas", () => {
       expect(result.success).toBe(true);
     });
 
-    it("should validate a valid reps entry", () => {
+    it("should validate a valid tally entry", () => {
       const input: EntryInput = {
-        type: "reps",
+        type: "tally",
         name: "push-ups",
         count: 30,
         category: "movement",
@@ -37,9 +37,9 @@ describe("entrySchemas", () => {
       expect(result.success).toBe(true);
     });
 
-    it("should validate a valid journal entry", () => {
+    it("should validate a valid moment entry", () => {
       const input: EntryInput = {
-        type: "journal",
+        type: "moment",
         name: "dream",
         content: "I was flying over mountains...",
         mood: 4,
@@ -71,9 +71,9 @@ describe("entrySchemas", () => {
       expect(result.success).toBe(false);
     });
 
-    it("should reject reps entry without count", () => {
+    it("should reject tally entry without count", () => {
       const input = {
-        type: "reps",
+        type: "tally",
         name: "push-ups",
         // Missing count
       };
@@ -84,7 +84,7 @@ describe("entrySchemas", () => {
 
     it("should reject empty name", () => {
       const input = {
-        type: "journal",
+        type: "moment",
         name: "",
       };
 
@@ -104,21 +104,21 @@ describe("entrySchemas", () => {
 
     it("should validate mood in range 1-5", () => {
       const validInput = {
-        type: "journal",
+        type: "moment",
         name: "note",
         mood: 3,
       };
       expect(EntryInputSchema.safeParse(validInput).success).toBe(true);
 
       const invalidLow = {
-        type: "journal",
+        type: "moment",
         name: "note",
         mood: 0,
       };
       expect(EntryInputSchema.safeParse(invalidLow).success).toBe(false);
 
       const invalidHigh = {
-        type: "journal",
+        type: "moment",
         name: "note",
         mood: 6,
       };
@@ -127,7 +127,7 @@ describe("entrySchemas", () => {
 
     it("should accept valid timestamp", () => {
       const input: EntryInput = {
-        type: "journal",
+        type: "moment",
         name: "note",
         timestamp: "2026-01-25T09:00:00.000Z",
       };
@@ -191,20 +191,20 @@ describe("entrySchemas", () => {
     });
 
     it("should return false for other types", () => {
-      expect(requiresDuration("reps")).toBe(false);
-      expect(requiresDuration("journal")).toBe(false);
+      expect(requiresDuration("tally")).toBe(false);
+      expect(requiresDuration("moment")).toBe(false);
       expect(requiresDuration("tada")).toBe(false);
     });
   });
 
   describe("requiresCount", () => {
-    it("should return true for reps type", () => {
-      expect(requiresCount("reps")).toBe(true);
+    it("should return true for tally type", () => {
+      expect(requiresCount("tally")).toBe(true);
     });
 
     it("should return false for other types", () => {
       expect(requiresCount("timed")).toBe(false);
-      expect(requiresCount("journal")).toBe(false);
+      expect(requiresCount("moment")).toBe(false);
       expect(requiresCount("tada")).toBe(false);
     });
   });

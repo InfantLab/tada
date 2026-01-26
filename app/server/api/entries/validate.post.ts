@@ -138,8 +138,8 @@ export default defineEventHandler(async (event) => {
           // New entry completely contains existing
           overlapType = "contains";
         } else if (newStart >= existingStart && newEnd <= existingEnd) {
-          // New entry is completely within existing
-          overlapType = "within";
+          // New entry is completely contained within existing
+          overlapType = "contained";
         } else if (newStart < existingStart) {
           // New entry overlaps the start of existing
           overlapType = "partial-start";
@@ -169,7 +169,7 @@ export default defineEventHandler(async (event) => {
       result.overlappingEntries = overlappingEntries;
 
       // Suggest resolution based on overlap severity
-      if (overlappingEntries.some((e) => e.overlapType === "within")) {
+      if (overlappingEntries.some((e) => e.overlapType === "contained")) {
         result.suggestedResolution = "warn";
       } else if (overlappingEntries.length > 2) {
         result.suggestedResolution = "warn";
