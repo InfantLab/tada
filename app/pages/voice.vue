@@ -273,7 +273,7 @@ function handleTadaUpdate(updatedTadas: ExtractedTada[]): void {
           "
           @click="voiceMode = 'journal'"
         >
-          📝 Journal
+          🪶 Journal
         </button>
       </div>
     </div>

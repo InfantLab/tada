@@ -92,7 +92,7 @@ function getTypeIcon(type: string, subcategory?: string | null): string {
       return "📸";
     case "journal":
     case "note": // backward compat
-      return "📝";
+      return "🪶";
     default:
       return "✨";
   }
@@ -168,7 +168,7 @@ function getTypeIcon(type: string, subcategory?: string | null): string {
         to="/add?type=moment&subcategory=journal"
         class="flex items-center gap-2 px-3 py-3 bg-stone-50 dark:bg-stone-800 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-lg border border-stone-200 dark:border-stone-700 transition-colors"
       >
-        <span class="text-xl">📝</span>
+        <span class="text-xl">🪶</span>
         <span class="text-sm font-medium text-stone-700 dark:text-stone-300"
           >Journal</span
         >
@@ -192,7 +192,7 @@ function getTypeIcon(type: string, subcategory?: string | null): string {
         <span v-else-if="type === 'magic'">🪄 Magic</span>
         <span v-else-if="type === 'dream'">🌙 Dreams</span>
         <span v-else-if="type === 'gratitude'">🙏 Gratitude</span>
-        <span v-else>📝 Journal</span>
+        <span v-else>🪶 Journal</span>
       </button>
     </div>
 
