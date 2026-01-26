@@ -51,10 +51,10 @@ onMounted(async () => {
 async function fetchEntries() {
   try {
     isLoading.value = true;
-    const data = await $fetch<Entry[]>("/api/entries", {
+    const data = await $fetch<{ entries: Entry[]; nextCursor: string | null; hasMore: boolean }>("/api/entries", {
       query: { type: "tally", limit: 20 },
     });
-    entries.value = data;
+    entries.value = data.entries;
   } catch (err: unknown) {
     console.error("Failed to fetch tally entries:", err);
     error.value = err instanceof Error ? err.message : "Failed to load entries";

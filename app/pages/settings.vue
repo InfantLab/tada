@@ -505,7 +505,7 @@ async function exportData() {
   isExporting.value = true;
   try {
     // Fetch all entries
-    const entries = await $fetch<Entry[]>("/api/entries", {
+    const response = await $fetch<{ entries: Entry[]; nextCursor: string | null; hasMore: boolean }>("/api/entries", {
       params: { limit: 10000 },
     });
 
@@ -513,7 +513,7 @@ async function exportData() {
     const exportData = {
       version: appVersion,
       exportedAt: new Date().toISOString(),
-      entries,
+      entries: response.entries,
     };
 
     // Download as JSON file
