@@ -155,9 +155,12 @@ export default defineEventHandler(async (event) => {
   const lastRequest = rateLimitMap.get(userId);
   const now = Date.now();
   if (lastRequest && now - lastRequest < RATE_LIMIT_WINDOW_MS) {
+    const waitSeconds = Math.ceil(
+      (RATE_LIMIT_WINDOW_MS - (now - lastRequest)) / 1000,
+    );
     throw createError({
       statusCode: 429,
-      statusMessage: "Rate limited. Please wait before making another request.",
+      statusMessage: `Rate limited. Please wait ${waitSeconds} seconds before making another request.`,
     });
   }
   rateLimitMap.set(userId, now);

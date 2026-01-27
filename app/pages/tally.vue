@@ -23,6 +23,16 @@ const { loadPreferences, getTallyPresets, addTallyPreset } = usePreferences();
 
 // Voice input mode toggle
 const showVoiceInput = ref(false);
+const isRecording = ref(false);
+
+// Pending tallies from voice input (for review before save)
+const pendingTallies = ref<ExtractedTally[]>([]);
+
+// Handle microphone button click - shows panel and starts recording
+function handleMicClick() {
+  showVoiceInput.value = true;
+  isRecording.value = true;
+}
 
 // Form state
 const activityName = ref("");
@@ -30,6 +40,18 @@ const count = ref(10);
 const category = ref("movement"); // Default category for tallies
 const emoji = ref<string | undefined>(undefined);
 const notes = ref("");
+
+// Category options for tallies
+const tallyCategoryOptions = [
+  { value: "strength", label: "Strength", emoji: "💪" },
+  { value: "cardio", label: "Cardio", emoji: "🏃" },
+  { value: "yoga", label: "Yoga", emoji: "🧘" },
+  { value: "gym", label: "Gym", emoji: "🏋️" },
+  { value: "walking", label: "Walking", emoji: "🚶" },
+  { value: "swimming", label: "Swimming", emoji: "🏊" },
+  { value: "reading", label: "Reading", emoji: "📚" },
+  { value: "other", label: "Other", emoji: "📊" },
+];
 
 // Recent tally entries
 const entries = ref<Entry[]>([]);
@@ -74,8 +96,8 @@ async function fetchEntries() {
     });
     entries.value = data.entries;
   } catch (err: unknown) {
-    console.error("Failed to fetch tally entries:", err);
-    error.value = err instanceof Error ? err.message : "Failed to load entries";
+    logError("tally.fetchEntries", err);
+    error.value = getErrorMessage(err, "Failed to load entries");
   } finally {
     isLoading.value = false;
   }
@@ -200,8 +222,8 @@ async function handleSave() {
       await fetchEntries();
     }
   } catch (err) {
-    console.error("Failed to save tally:", err);
-    toast.error("Failed to save entry");
+    logError("tally.saveTally", err);
+    toast.error(getErrorMessage(err, "Failed to save entry"));
   }
 }
 
@@ -243,15 +265,36 @@ function getEntryCount(entry: Entry): number {
 }
 
 // Voice input handlers
-async function handleVoiceTallies(tallies: ExtractedTally[]) {
-  // Save each tally as a separate entry
+function handleVoiceTallies(tallies: ExtractedTally[]) {
+  isRecording.value = false;
+  showVoiceInput.value = false;
+  // Queue tallies for review instead of auto-saving
+  pendingTallies.value = tallies;
+  toast.info(
+    `Found ${tallies.length} ${tallies.length === 1 ? "tally" : "tallies"} - review below`,
+  );
+}
+
+// Remove a pending tally from the review list
+function removePendingTally(index: number) {
+  pendingTallies.value.splice(index, 1);
+}
+
+// Clear all pending tallies
+function clearPendingTallies() {
+  pendingTallies.value = [];
+}
+
+// Save all pending tallies
+async function savePendingTallies() {
   let successCount = 0;
-  for (const tally of tallies) {
+  for (const tally of pendingTallies.value) {
     try {
       const result = await createEntry({
         type: "tally",
         name: tally.activity,
         category: tally.category || "movement",
+        subcategory: tally.subcategory || undefined,
         emoji: tally.emoji,
         count: tally.count,
         timestamp: new Date().toISOString(),
@@ -262,7 +305,7 @@ async function handleVoiceTallies(tallies: ExtractedTally[]) {
       });
       if (result) successCount++;
     } catch (err) {
-      console.error("Failed to save voice tally:", err);
+      logError("tally.savePendingTallies.saveOne", err);
     }
   }
 
@@ -270,7 +313,7 @@ async function handleVoiceTallies(tallies: ExtractedTally[]) {
     toast.success(
       `Added ${successCount} ${successCount === 1 ? "tally" : "tallies"}!`,
     );
-    showVoiceInput.value = false;
+    pendingTallies.value = [];
     await fetchEntries();
   } else {
     toast.error("Failed to save tallies");
@@ -278,6 +321,7 @@ async function handleVoiceTallies(tallies: ExtractedTally[]) {
 }
 
 function handleVoiceNoTallies(transcription: string) {
+  isRecording.value = false;
   // No tallies extracted - put the transcription in the activity name
   activityName.value = transcription;
   showVoiceInput.value = false;
@@ -285,6 +329,7 @@ function handleVoiceNoTallies(transcription: string) {
 }
 
 function handleVoiceError(message: string) {
+  isRecording.value = false;
   toast.error(message);
 }
 </script>
@@ -301,17 +346,13 @@ function handleVoiceError(message: string) {
           Track reps, counts & quick activities
         </p>
       </div>
-      <!-- Voice input toggle -->
+      <!-- Green mic button (hidden when voice panel is shown) -->
       <button
+        v-if="!showVoiceInput"
         type="button"
-        class="flex items-center gap-2 rounded-lg px-3 py-2 transition-colors"
-        :class="
-          showVoiceInput
-            ? 'bg-tada-100 text-tada-700 dark:bg-tada-900/30 dark:text-tada-300'
-            : 'text-stone-500 hover:bg-stone-100 hover:text-stone-700 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-200'
-        "
+        class="w-10 h-10 rounded-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center shadow-lg transition-all hover:scale-105"
         title="Voice input"
-        @click="showVoiceInput = !showVoiceInput"
+        @click="handleMicClick"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -319,15 +360,14 @@ function handleVoiceError(message: string) {
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
+          stroke-width="2"
         >
           <path
             stroke-linecap="round"
             stroke-linejoin="round"
-            stroke-width="2"
             d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
           />
         </svg>
-        <span class="text-sm font-medium">Voice</span>
       </button>
     </div>
 
@@ -354,10 +394,106 @@ function handleVoiceError(message: string) {
         </div>
 
         <VoiceTallyRecorder
+          :autostart="isRecording"
           @tallies="handleVoiceTallies"
           @no-tallies="handleVoiceNoTallies"
           @error="handleVoiceError"
         />
+      </div>
+    </Transition>
+
+    <!-- Pending Tallies Review Panel -->
+    <Transition
+      enter-active-class="transition duration-200 ease-out"
+      enter-from-class="opacity-0 scale-95"
+      enter-to-class="opacity-100 scale-100"
+      leave-active-class="transition duration-100 ease-in"
+      leave-from-class="opacity-100 scale-100"
+      leave-to-class="opacity-0 scale-95"
+    >
+      <div
+        v-if="pendingTallies.length > 0"
+        class="mb-6 rounded-xl border-2 border-amber-300 bg-gradient-to-br from-amber-50 to-yellow-50 p-6 dark:border-amber-700 dark:from-amber-900/30 dark:to-yellow-900/20"
+      >
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold text-amber-900 dark:text-amber-100">
+            🎯 Review Tallies ({{ pendingTallies.length }})
+          </h3>
+          <button
+            type="button"
+            class="text-sm text-amber-600 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-200"
+            @click="clearPendingTallies"
+          >
+            Clear all
+          </button>
+        </div>
+
+        <ul class="space-y-2 mb-4">
+          <li
+            v-for="(tally, idx) in pendingTallies"
+            :key="idx"
+            class="bg-white dark:bg-stone-800 rounded-lg px-4 py-3 border border-amber-200 dark:border-amber-700 space-y-2"
+          >
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <span class="text-xl">{{ tally.emoji || "📊" }}</span>
+                <span class="font-medium text-stone-800 dark:text-stone-100">
+                  {{ tally.count }}× {{ tally.activity }}
+                </span>
+              </div>
+              <button
+                type="button"
+                class="p-1.5 text-stone-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                title="Remove"
+                @click="removePendingTally(idx)"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+            <!-- Per-item category selector -->
+            <div class="flex flex-wrap gap-1 ml-8">
+              <button
+                v-for="cat in tallyCategoryOptions"
+                :key="cat.value"
+                type="button"
+                class="px-2 py-0.5 rounded text-xs font-medium transition-colors"
+                :class="
+                  tally.subcategory === cat.value
+                    ? 'bg-amber-200 dark:bg-amber-800/50 text-amber-800 dark:text-amber-200'
+                    : 'bg-stone-100 dark:bg-stone-700 text-stone-500 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-600'
+                "
+                @click="pendingTallies[idx].subcategory = cat.value"
+              >
+                {{ cat.emoji }} {{ cat.label }}
+              </button>
+            </div>
+          </li>
+        </ul>
+
+        <div class="flex gap-3">
+          <button
+            type="button"
+            :disabled="isSaving"
+            class="flex-1 py-2 bg-amber-500 hover:bg-amber-600 disabled:bg-stone-300 dark:disabled:bg-stone-600 text-white rounded-lg font-medium transition-colors shadow-sm"
+            @click="savePendingTallies"
+          >
+            <span v-if="isSaving">Saving...</span>
+            <span v-else>Save All</span>
+          </button>
+        </div>
       </div>
     </Transition>
 

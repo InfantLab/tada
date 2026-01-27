@@ -1,0 +1,10 @@
+{
+  "ignore_dirs": [
+    "data",
+    "node_modules",
+    ".nuxt",
+    ".output",
+    "dist",
+    "coverage"
+  ]
+}

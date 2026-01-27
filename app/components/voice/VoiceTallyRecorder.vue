@@ -15,10 +15,13 @@ import { extractTalliesRuleBased } from "~/utils/tallyExtractor";
 interface Props {
   /** Disabled state */
   disabled?: boolean;
+  /** Auto-start recording when component mounts */
+  autostart?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   disabled: false,
+  autostart: false,
 });
 
 const emit = defineEmits<{
@@ -147,6 +150,7 @@ defineExpose({
     <VoiceRecorder
       mode="tada"
       :disabled="props.disabled || isExtracting"
+      :autostart="props.autostart"
       @complete="handleVoiceComplete"
       @error="handleVoiceError"
       @cancel="handleVoiceCancel"

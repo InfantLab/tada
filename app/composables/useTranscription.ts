@@ -438,7 +438,8 @@ export function useTranscription(): UseTranscriptionReturn {
   }
 
   /**
-   * Transcribe using cloud Whisper API (Groq or OpenAI)
+   * Transcribe using cloud Whisper API via server endpoint
+   * Uses server-side GROQ_API_KEY by default, or user's BYOK if provided
    */
   async function transcribeWithWhisperCloud(
     blob: Blob,
@@ -447,44 +448,41 @@ export function useTranscription(): UseTranscriptionReturn {
     const startTime = Date.now();
     const language = options.language || "en";
 
-    // Check for API key
-    const apiKey = voiceSettings.getApiKey("groq");
-    if (!apiKey) {
-      throw new Error(
-        "Groq API key required for cloud transcription. Add it in Settings.",
-      );
-    }
-
     progress.value = 10;
 
     // Create form data with audio file
     const formData = new FormData();
-    formData.append("file", blob, "audio.webm");
-    formData.append("model", "whisper-large-v3");
+    formData.append("audio", blob, "audio.webm");
     formData.append("language", language);
 
     progress.value = 30;
 
-    // Call Groq Whisper API
-    const response = await fetch(
-      "https://api.groq.com/openai/v1/audio/transcriptions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: formData,
-      },
-    );
+    // Build headers - include user's own API key if they have one configured
+    const headers: Record<string, string> = {};
+    const userApiKey = voiceSettings.getApiKey("groq");
+    if (userApiKey) {
+      // For MVP, the ciphertext contains the actual key
+      headers["x-user-api-key"] = userApiKey.ciphertext;
+    }
+
+    // Call server-side transcription endpoint
+    const response = await fetch("/api/voice/transcribe", {
+      method: "POST",
+      headers,
+      body: formData,
+    });
 
     progress.value = 80;
 
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Groq API error: ${response.status} - ${errorText}`);
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage =
+        (errorData as { statusMessage?: string }).statusMessage ||
+        `Server error: ${response.status}`;
+      throw new Error(errorMessage);
     }
 
-    const data = (await response.json()) as { text: string };
+    const data = (await response.json()) as { text: string; provider: string };
 
     return {
       text: data.text.trim(),
@@ -561,9 +559,10 @@ export function useTranscription(): UseTranscriptionReturn {
     try {
       // Always create a FRESH instance - never reuse old ones
       const recognition = new SpeechRecognition() as SpeechRecognitionInstance;
-      recognition.continuous = true;
-      recognition.interimResults = true;
+      recognition.continuous = true; // Keep listening even after pauses
+      recognition.interimResults = true; // Get partial results
       recognition.lang = options.language || "en-US";
+      // Note: maxAlternatives not set - browser default is fine
 
       // Clear previous state
       error.value = null;
@@ -629,7 +628,17 @@ export function useTranscription(): UseTranscriptionReturn {
       };
 
       recognition.onerror = (event: Event) => {
+        // Guard 1: Check if this instance is still the active one
         if (!isActive) return;
+
+        // Guard 2: Check if we've already been stopped (e.g., user clicked stop)
+        // This prevents race conditions where the error fires after stopLiveTranscription
+        if (status.value !== "transcribing") {
+          console.log(
+            `[useTranscription] Ignoring error - already stopped (status: ${status.value})`,
+          );
+          return;
+        }
 
         const errorEvent = event as SpeechRecognitionErrorEvent;
         const timestamp = new Date().toISOString();
@@ -663,7 +672,9 @@ export function useTranscription(): UseTranscriptionReturn {
 
         // Network error is often transient - if we have transcript, consider it success
         if (errorEvent.error === "network") {
-          if (liveTranscript.value) {
+          // Check both liveTranscript and result.value for captured text
+          const hasTranscript = liveTranscript.value || result.value?.text;
+          if (hasTranscript) {
             console.log(
               `[useTranscription] Network error but have transcript - treating as success`,
             );
@@ -721,10 +732,12 @@ export function useTranscription(): UseTranscriptionReturn {
           setTimeout(() => {
             // Double-check we're still active after the delay
             if (!isActive || status.value !== "transcribing") {
-              console.log(`[useTranscription] Status changed during restart delay, aborting restart`);
+              console.log(
+                `[useTranscription] Status changed during restart delay, aborting restart`,
+              );
               return;
             }
-            
+
             try {
               recognition.start();
             } catch (err) {
@@ -743,7 +756,9 @@ export function useTranscription(): UseTranscriptionReturn {
                 cleanupRecognitionInstance();
               } else {
                 // We have transcript, just silently stop auto-restart
-                console.log(`[useTranscription] Have transcript, stopping auto-restart silently`);
+                console.log(
+                  `[useTranscription] Have transcript, stopping auto-restart silently`,
+                );
                 isActive = false;
               }
             }

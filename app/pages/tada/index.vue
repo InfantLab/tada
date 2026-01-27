@@ -4,6 +4,7 @@ import { getSubcategoriesForCategory } from "~/utils/categoryDefaults";
 import type { TranscriptionResult, VoiceRecordingStatus } from "~/types/voice";
 import type { ExtractedTada } from "~/types/extraction";
 import type { EntryInput } from "~/utils/entrySchemas";
+import { logError } from "~/utils/errorHandling";
 
 // Use unified entry engine for main entry creation
 const { createEntry, isLoading: isSubmitting } = useEntryEngine();
@@ -16,6 +17,8 @@ const transcription = useTranscription();
 const llmStructure = useLLMStructure();
 
 // Voice state
+const showVoicePanel = ref(false);
+const isRecording = ref(false);
 const showTadaChecklist = ref(false);
 const currentTranscription = ref<TranscriptionResult | null>(null);
 const extractedTadas = ref<ExtractedTada[]>([]);
@@ -53,7 +56,7 @@ const notesTextarea = ref<HTMLTextAreaElement | null>(null);
 // Multi-ta-da mode: when user enters multiple lines or uses voice
 const multiTadaMode = ref(false);
 const multiTadaList = ref<
-  Array<{ title: string; notes: string; emoji: string }>
+  Array<{ title: string; notes: string; emoji: string; subcategory: string }>
 >([]);
 
 // Celebration state
@@ -104,30 +107,16 @@ function getTadaSoundFile(): string {
   return "/sounds/tada-f-versionD.mp3";
 }
 
-// Play celebration sound - using user's preferred sound
-function playCelebrationSound() {
-  try {
-    const audio = new Audio(getTadaSoundFile());
-    audio.volume = 0.7;
-    audio.play().catch(() => {
-      // Audio play failed (user hasn't interacted with page yet)
-    });
-  } catch {
-    // Audio not supported
-  }
-}
-
 // Trigger celebration animation and sound
 function celebrate() {
   showCelebration.value = true;
-  playCelebrationSound();
   showSuccess("Ta-Da! 🎉 Great job!");
+}
 
-  // Auto-hide celebration after animation completes
-  setTimeout(() => {
-    showCelebration.value = false;
-    navigateTo("/");
-  }, 2000);
+// Handle celebration completion - navigate to timeline
+function onCelebrationComplete() {
+  showCelebration.value = false;
+  navigateTo("/");
 }
 
 /**
@@ -158,6 +147,7 @@ function parseMultipleTadas(
         title: cleaned.slice(0, 100),
         notes: cleaned.length > 100 ? cleaned : "",
         emoji: "⚡",
+        subcategory: "", // Will be filled by guessSubcategory later
       };
     })
     .filter((t) => t.title.length > 0);
@@ -169,7 +159,11 @@ function parseMultipleTadas(
 function checkForMultipleTadas() {
   const tadas = parseMultipleTadas(title.value);
   if (tadas.length > 1) {
-    multiTadaList.value = tadas;
+    // Guess subcategory for each
+    multiTadaList.value = tadas.map((t) => ({
+      ...t,
+      subcategory: guessSubcategory(t.title) || "personal",
+    }));
     multiTadaMode.value = true;
     title.value = "";
   }
@@ -209,7 +203,7 @@ async function submitEntry() {
       .filter((t) => t.title.trim())
       .map((t) => ({
         title: t.title.trim(),
-        category: tadaSubcategory.value,
+        category: t.subcategory || tadaSubcategory.value, // Use item's subcategory
         significance: "normal" as const,
         notes: t.notes || undefined,
         confidence: 1.0,
@@ -311,11 +305,17 @@ async function handleVoiceComplete(
       showSuccess("Ready to edit - add your ta-da details below");
     }
     voiceStatus.value = "idle";
+    showVoicePanel.value = false;
+    isRecording.value = false;
   } catch (err) {
-    console.error("[tada/index.vue] Extraction error:", err);
+    logError("tada.handleVoiceTranscript", err, {
+      transcriptLength: transcriptText.length,
+    });
     // On error, split text between title and notes for manual entry
     splitTextForManualEntry(transcriptText);
     voiceStatus.value = "idle";
+    showVoicePanel.value = false;
+    isRecording.value = false;
   }
 }
 
@@ -328,11 +328,66 @@ function populateMultiTadaMode(tadas: ExtractedTada[]) {
     title: t.title,
     notes: t.notes || "",
     emoji: "⚡",
+    subcategory: t.subcategory || guessSubcategory(t.title) || "personal",
   }));
   multiTadaMode.value = true;
   // Clear single-mode fields
   title.value = "";
   notes.value = "";
+}
+
+/**
+ * Guess subcategory from tada title using keyword matching
+ */
+function guessSubcategory(title: string): string | null {
+  const lower = title.toLowerCase();
+
+  // Work-related keywords
+  if (
+    /\b(work|job|office|meeting|client|project|deadline|report|email|boss|colleague|presentation|code|deploy|release|sprint|ticket|pr|review)\b/.test(
+      lower,
+    )
+  ) {
+    return "work";
+  }
+
+  // Home-related keywords
+  if (
+    /\b(home|house|clean|cook|laundry|dishes|garden|yard|repair|fix|organize|declutter|groceries|kitchen|bedroom|bathroom)\b/.test(
+      lower,
+    )
+  ) {
+    return "home";
+  }
+
+  // Health-related keywords
+  if (
+    /\b(exercise|workout|gym|run|walk|yoga|meditat|health|doctor|appointment|medicine|sleep|water|diet|weight|stretch|physio|therapy)\b/.test(
+      lower,
+    )
+  ) {
+    return "health";
+  }
+
+  // Social-related keywords
+  if (
+    /\b(friend|family|call|visit|party|dinner|lunch|coffee|catch up|meet|hangout|birthday|anniversary|gift)\b/.test(
+      lower,
+    )
+  ) {
+    return "social";
+  }
+
+  // Hobby-related keywords
+  if (
+    /\b(read|book|paint|draw|music|play|game|craft|hobby|learn|course|class|practice|piano|guitar|photo|write|blog)\b/.test(
+      lower,
+    )
+  ) {
+    return "hobby";
+  }
+
+  return null; // Default to personal
 }
 
 /**
@@ -366,6 +421,14 @@ function splitTextForManualEntry(text: string) {
 
 function handleVoiceCancel() {
   voiceStatus.value = "idle";
+  showVoicePanel.value = false;
+  isRecording.value = false;
+}
+
+// Handle mic button click - show panel and start recording
+function handleMicClick() {
+  showVoicePanel.value = true;
+  isRecording.value = true;
 }
 
 function handleVoiceError(message: string) {
@@ -432,15 +495,46 @@ function handleReRecord() {
         <img src="/icons/tada-logotype.png" alt="TA-DA" class="h-12 w-auto" />
       </div>
 
-      <!-- Compact Voice Recorder in header -->
-      <VoiceRecorder
-        compact
-        mode="tada"
-        @complete="handleVoiceComplete"
-        @cancel="handleVoiceCancel"
-        @error="handleVoiceError"
-        @transcription="handleVoiceLiveTranscription"
-      />
+      <!-- Green mic button (hidden when voice panel is shown) -->
+      <button
+        v-if="!showVoicePanel"
+        type="button"
+        class="w-10 h-10 rounded-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center shadow-lg transition-all hover:scale-105"
+        title="Voice input"
+        @click="handleMicClick"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
+          />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Voice Panel (shown when recording) -->
+    <div
+      v-if="showVoicePanel"
+      class="mb-6 rounded-xl border border-amber-200 bg-gradient-to-br from-amber-50 to-yellow-50 dark:border-amber-700 dark:from-amber-900/20 dark:to-yellow-900/20 p-4"
+    >
+      <div class="flex justify-center">
+        <VoiceRecorder
+          mode="tada"
+          :autostart="isRecording"
+          @complete="handleVoiceComplete"
+          @cancel="handleVoiceCancel"
+          @error="handleVoiceError"
+          @transcription="handleVoiceLiveTranscription"
+        />
+      </div>
     </div>
 
     <!-- Main Ta-Da Entry Area -->
@@ -496,43 +590,63 @@ function handleReRecord() {
         <div
           v-for="(tada, index) in multiTadaList"
           :key="index"
-          class="flex items-center gap-2 bg-white/60 dark:bg-stone-800/60 rounded-lg p-3"
+          class="bg-white/60 dark:bg-stone-800/60 rounded-lg p-3 space-y-2"
         >
-          <span class="text-2xl">{{ tada.emoji }}</span>
-          <input
-            :value="tada.title"
-            type="text"
-            class="flex-1 px-3 py-2 text-sm rounded-lg border border-amber-200 dark:border-amber-700 bg-white dark:bg-stone-800 text-stone-800 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-amber-400/50"
-            @input="
-              (e) => updateListItem(index, (e.target as HTMLInputElement).value)
-            "
-          />
-          <button
-            type="button"
-            class="p-1.5 text-stone-400 hover:text-red-500 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"
-            title="Remove"
-            @click="removeFromList(index)"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
+          <div class="flex items-center gap-2">
+            <span class="text-2xl">{{ tada.emoji }}</span>
+            <input
+              :value="tada.title"
+              type="text"
+              class="flex-1 px-3 py-2 text-sm rounded-lg border border-amber-200 dark:border-amber-700 bg-white dark:bg-stone-800 text-stone-800 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-amber-400/50"
+              @input="
+                (e) =>
+                  updateListItem(index, (e.target as HTMLInputElement).value)
+              "
+            />
+            <button
+              type="button"
+              class="p-1.5 text-stone-400 hover:text-red-500 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"
+              title="Remove"
+              @click="removeFromList(index)"
             >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+          <!-- Per-item subcategory selector -->
+          <div class="flex flex-wrap gap-1 ml-10">
+            <button
+              v-for="subcat in tadaSubcategoryOptions"
+              :key="subcat.value"
+              type="button"
+              class="px-2 py-0.5 rounded text-xs font-medium transition-colors"
+              :class="
+                tada.subcategory === subcat.value
+                  ? 'bg-amber-200 dark:bg-amber-800/50 text-amber-800 dark:text-amber-200'
+                  : 'bg-stone-100 dark:bg-stone-700 text-stone-500 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-600'
+              "
+              @click="multiTadaList[index].subcategory = subcat.value"
+            >
+              {{ subcat.emoji }} {{ subcat.label }}
+            </button>
+          </div>
         </div>
       </div>
 
-      <!-- Subcategory for Tadas -->
-      <div>
+      <!-- Subcategory for Tadas (single mode only - multi mode has per-item selectors) -->
+      <div v-if="!multiTadaMode">
         <label
           class="block text-sm font-medium text-amber-700 dark:text-amber-300 mb-2"
         >
@@ -641,32 +755,11 @@ function handleReRecord() {
     />
 
     <!-- Celebration Overlay -->
-    <Teleport to="body">
-      <Transition name="celebration">
-        <div
-          v-if="showCelebration"
-          class="celebration-overlay"
-          aria-live="polite"
-        >
-          <div class="celebration-content">
-            <span class="celebration-emoji">🎉</span>
-            <span class="celebration-text">TA-DA!</span>
-            <div class="confetti-container">
-              <span
-                v-for="i in 30"
-                :key="i"
-                class="confetti"
-                :style="{
-                  '--delay': `${Math.random() * 0.5}s`,
-                  '--x': `${Math.random() * 100}%`,
-                  '--rotation': `${Math.random() * 360}deg`,
-                }"
-              ></span>
-            </div>
-          </div>
-        </div>
-      </Transition>
-    </Teleport>
+    <CelebrationOverlay
+      :show="showCelebration"
+      :sound-file="getTadaSoundFile()"
+      @complete="onCelebrationComplete"
+    />
   </div>
 </template>
 

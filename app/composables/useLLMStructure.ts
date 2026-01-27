@@ -158,10 +158,12 @@ export function useLLMStructure(): UseLLMStructureReturn {
         console.log("[useLLMStructure] Server response:", response);
 
         // Convert server response to ExtractedTada format
+        // LLM returns category as subcategory (work, home, health, etc.)
         const tadas: ExtractedTada[] = response.tadas.map((t, i) => ({
           id: `extracted-${i}`,
           title: t.name,
-          category: t.category || "life",
+          category: "accomplishment", // All tadas are accomplishments
+          subcategory: t.category || "personal", // LLM-extracted subcategory
           significance: t.significance || "normal",
           selected: true,
           confidence: 0.85,

@@ -2,8 +2,8 @@
 
 Feature ideas and future plans, organized by version releases.
 
-**Current Version:** v0.2.0 ✅ (shipped)  
-**Next Release:** v0.3.0
+**Current Version:** v0.3.0 ✅ (shipped)  
+**Next Release:** v0.4.0
 
 ---
 
@@ -13,7 +13,7 @@ Feature ideas and future plans, organized by version releases.
 | ---------- | --------------------------- | ------------------- |
 | **v0.1.0** | MVP — Foundation            | ✅ Shipped Jan 2026 |
 | **v0.2.0** | Graceful Rhythms            | ✅ Shipped Jan 2026 |
-| **v0.3.0** | Magic & Voice               | Feb 2026            |
+| **v0.3.0** | Magic & Voice               | ✅ Shipped Jan 2026 |
 | **v0.4.0** | Cloud Service (tada.living) | Mar 2026            |
 | **v0.5.0** | Rituals, Celestial & AI     | Q4 2026             |
 | **v0.6.0** | Integrations                | 2027+               |

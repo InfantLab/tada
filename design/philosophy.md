@@ -51,6 +51,17 @@ We never say "you need to do 20 minutes." We celebrate that you did 20 seconds �
 
 **Why this matters:** Countdown timers create anxiety and imply minimum requirements. Count-up timers celebrate whatever you actually did. Even 30 seconds of meditation is worth noticing.
 
+### 🎯 Minimize Friction: Fewer Clicks, More Flow
+
+Every additional click is a barrier between intention and action. When a user presses a button, assume they want the action to happen **immediately**, not to be presented with another confirmation step.
+
+**Examples:**
+- Voice recorder: First press starts recording (don't wait for a second click)
+- Entry creation: One button saves, no "are you sure?" dialogs
+- Timer start: Tap to start, no setup screens unless explicitly requested
+
+**Why this matters:** Each friction point is an opportunity for hesitation, second-guessing, or abandonment. The app should feel as effortless as jotting in a physical notebook. Speed and directness build momentum; unnecessary steps break it.
+
 ### 🦋 Identity Over Behavior (Tanya's Insight)
 
 The journey isn't from "someone who doesn't run" to "someone who runs occasionally." It's from "someone who goes running" to "**a runner**."

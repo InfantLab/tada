@@ -1,9 +1,37 @@
 {
+  // ═══════════════════════════════════════════════════════════════
+  // COPILOT CHAT - BINDING AGENT INSTRUCTIONS
+  // ═══════════════════════════════════════════════════════════════
+
+  // Enable agents.md as authoritative instruction file
+  // This works both inside and outside dev containers
+  "chat.instructionFiles": ["agents.md", "AGENTS.md"],
+  "chat.promptFiles": ["agents.md", "AGENTS.md"],
+  "chat.useInstructionFiles": true,
+
+  // Set Copilot to agent mode for smarter, more autonomous behavior
+  "chat.defaultMode": "agent",
+
+  // Enable extension unification for consistent behavior
+  "chat.extensionUnification.enabled": true,
+
+  // Legacy setting for backward compatibility (if supported)
+  "chat.useAgentsMdFile": true,
+
+  // ═══════════════════════════════════════════════════════════════
+  // TERMINAL AUTO-APPROVAL (SAFE COMMANDS)
+  // ═══════════════════════════════════════════════════════════════
+
   "chat.tools.terminal.autoApprove": {
     "git remote": true,
     ".specify/scripts/bash/": true,
     ".specify/scripts/powershell/": true
   },
+
+  // ═══════════════════════════════════════════════════════════════
+  // PROMPT FILES RECOMMENDATIONS
+  // ═══════════════════════════════════════════════════════════════
+
   "chat.promptFilesRecommendations": {
     "speckit.constitution": true,
     "speckit.specify": true,
@@ -11,25 +39,50 @@
     "speckit.tasks": true,
     "speckit.implement": true
   },
+
+  "chat.promptFilesLocations": {
+    ".github/prompts": true,
+    "C:\\Users\\caspar\\.github\\prompts\\": true
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // TYPESCRIPT / PROBLEMS PANEL OPTIMIZATION
+  // ═══════════════════════════════════════════════════════════════
+
   // Improve error panel clarity
   "problems.decorations.enabled": true,
   "problems.showCurrentInStatus": true,
+
+  // Reduce noise from TS server
   "typescript.tsserver.log": "off",
   "typescript.surveys.enabled": false,
+
   // Filter out node_modules errors from the problems panel
   "typescript.tsserver.maxTsServerMemory": 4096,
   "typescript.preferences.importModuleSpecifier": "relative",
-  // Improve diagnostics
+
+  // Improve diagnostics (project-wide diagnostics disabled for performance)
   "typescript.tsserver.experimental.enableProjectDiagnostics": false,
+
+  // Vue hybrid mode for better type checking
   "vue.server.hybridMode": true,
-  // ESLint
+
+  // ═══════════════════════════════════════════════════════════════
+  // ESLINT
+  // ═══════════════════════════════════════════════════════════════
   "eslint.format.enable": true,
   "eslint.codeActionsOnSave.mode": "problems",
-  // Editor settings for better error visibility
+
+  // ═══════════════════════════════════════════════════════════════
+  // EDITOR SETTINGS FOR BETTER ERROR VISIBILITY
+  // ═══════════════════════════════════════════════════════════════
   "editor.renderLineHighlight": "all",
   "editor.showUnused": true,
   "editor.lightbulb.enabled": "on",
-  // Exclude common noise from problems
+
+  // ═══════════════════════════════════════════════════════════════
+  // SEARCH EXCLUSIONS (REDUCE NOISE)
+  // ═══════════════════════════════════════════════════════════════
   "typescript.tsserver.pluginPaths": [],
   "search.exclude": {
     "**/node_modules": true,
@@ -37,11 +90,12 @@
     "**/dist": true,
     "**/.output": true
   },
+
+  // ═══════════════════════════════════════════════════════════════
+  // PEACOCK (DEV CONTAINER COLOR CODING)
+  // ═══════════════════════════════════════════════════════════════
+
   "peacock.remoteColor": "#2B0F3A",
-  "chat.promptFilesLocations": {
-    ".github/prompts": true,
-    "C:\\Users\\caspar\\.github\\prompts\\": true
-  },
   "workbench.colorCustomizations": {
     "activityBar.activeBackground": "#491963",
     "activityBar.background": "#491963",

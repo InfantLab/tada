@@ -144,6 +144,18 @@ export default defineNuxtConfig({
         "libsql",
       ],
     },
+    // Development server watch configuration - also ignore SQLite files
+    devServer: {
+      watch: [
+        // Don't watch data directory or SQLite files
+        "!data/**",
+        "!**/*.sqlite*",
+        "!**/*.db*",
+        "!**/*-journal",
+        "!**/*-wal",
+        "!**/*-shm",
+      ],
+    },
   },
 
   // Vite optimizations for faster dev
@@ -178,8 +190,24 @@ export default defineNuxtConfig({
         ],
       },
       watch: {
-        // Exclude SQLite database files from watch - they cause EINVAL errors
-        ignored: ["**/data/**", "**/*.sqlite*"],
+        // Simpler ignore patterns - mainly to catch any accidental DB files in app/
+        ignored: [
+          "**/data/**",
+          "**/*.sqlite*",
+          "**/*.db*",
+          "**/*-journal",
+          "**/*-wal",
+          "**/*-shm",
+        ],
+        usePolling: false,
+        ignoreInitial: true,
+      },
+      // Improve dev server stability
+      hmr: {
+        // Increase timeout for HMR updates
+        timeout: 30000,
+        // Use WebSocket overlay for errors instead of crashing
+        overlay: true,
       },
     },
   },

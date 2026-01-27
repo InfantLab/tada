@@ -70,7 +70,7 @@ const levelBars = computed(() => {
 onMounted(async () => {
   if (props.autostart && !props.disabled) {
     // Small delay to ensure component is fully mounted
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
     await handleMicClick();
   }
 });
@@ -207,32 +207,47 @@ watch(
         return;
       }
 
+      // No text captured - try Whisper fallback via server endpoint
+      // Server uses GROQ_API_KEY from environment, so always available
       console.log(
-        `[VoiceRecorder] No text captured, attempting Whisper fallback`,
+        `[VoiceRecorder] No text captured, attempting Whisper fallback via server`,
+        {
+          timestamp: new Date().toISOString(),
+          blobSize: blob.size,
+          duration: voiceCapture.duration.value,
+        },
       );
-      // No text captured - try Whisper fallback if available
-      const hasApiKey = voiceSettings.hasApiKey("groq");
-      if (hasApiKey) {
-        try {
-          const whisperResult = await transcription.transcribe(blob, {
-            forceProvider: "whisper-cloud",
-          });
-          if (whisperResult?.text) {
-            finalText = whisperResult.text;
-            emit("transcription", finalText.trim());
-            emit(
-              "complete",
-              blob,
-              voiceCapture.duration.value,
-              finalText.trim(),
-            );
-            liveText.value = "";
-            return;
-          }
-        } catch {
-          // Whisper fallback failed, continue to error handling
+
+      // Show feedback that we're trying Whisper
+      liveText.value = "Transcribing with Whisper...";
+      try {
+        const whisperResult = await transcription.transcribe(blob, {
+          forceProvider: "whisper-cloud",
+        });
+        console.log(`[VoiceRecorder] Whisper fallback result`, {
+          timestamp: new Date().toISOString(),
+          hasText: !!whisperResult?.text,
+          textLength: whisperResult?.text?.length || 0,
+          textPreview: whisperResult?.text?.slice(0, 50) || "(empty)",
+        });
+        if (whisperResult?.text) {
+          finalText = whisperResult.text;
+          emit("transcription", finalText.trim());
+          emit("complete", blob, voiceCapture.duration.value, finalText.trim());
+          liveText.value = "";
+          return;
         }
+      } catch (whisperErr) {
+        console.error(`[VoiceRecorder] Whisper fallback failed`, {
+          timestamp: new Date().toISOString(),
+          error:
+            whisperErr instanceof Error
+              ? whisperErr.message
+              : String(whisperErr),
+        });
+        // Whisper fallback failed, continue to error handling
       }
+      liveText.value = "";
 
       // Still no text - emit appropriate error
       let errorMessage: string;
@@ -241,9 +256,13 @@ watch(
       if (voiceCapture.duration.value < 1) {
         errorMessage =
           "Recording was too short. Hold the button longer and speak clearly.";
-      } else if (errorLower.includes("network")) {
+      } else if (
+        errorLower.includes("network") ||
+        transcription.error.value === "Click the microphone to start recording."
+      ) {
+        // Network errors are common with Web Speech API
         errorMessage =
-          "Speech recognition temporarily unavailable. Try speaking in shorter segments or check your internet connection.";
+          "Speech recognition temporarily unavailable. Please try again.";
       } else if (
         errorLower.includes("not-allowed") ||
         errorLower.includes("denied")

@@ -103,7 +103,7 @@ Text to analyze:
       basePrompt +
       `Extract all accomplishments (tadas) mentioned. For each:
 - name: Brief description (3-10 words)
-- category: life area (work, health, creative, learning, social, home, personal)
+- category: subcategory that best fits: work (job, office, meetings), home (chores, repairs, cooking), health (exercise, medical, wellness), social (friends, family, events), hobby (creative, learning, fun), or personal (other personal wins)
 - significance: minor (small wins), normal (regular accomplishments), major (big achievements)
 
 Respond ONLY with valid JSON in this format:
@@ -331,9 +331,12 @@ export default defineEventHandler(async (event) => {
   const lastRequest = rateLimitMap.get(userId);
   const now = Date.now();
   if (lastRequest && now - lastRequest < RATE_LIMIT_WINDOW_MS) {
+    const waitSeconds = Math.ceil(
+      (RATE_LIMIT_WINDOW_MS - (now - lastRequest)) / 1000,
+    );
     throw createError({
       statusCode: 429,
-      statusMessage: "Rate limited. Please wait before making another request.",
+      statusMessage: `Rate limited. Please wait ${waitSeconds} seconds before making another request.`,
     });
   }
   rateLimitMap.set(userId, now);

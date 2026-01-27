@@ -1,4 +1,69 @@
-# Tada - Agent Instructions
+# Ta-Da! — Agent Instructions
+
+> **Ta-Da!** is a personal lifelogger — celebrating what you've accomplished rather than dreading what remains. The name is an inversion of the todo list.
+
+---
+
+## 🧠 Project Context (READ FIRST)
+
+### What Is Ta-Da!?
+
+Ta-Da! unifies activity tracking, rhythm discovery, journaling, and accomplishment capture. It answers:
+
+1. **"What have I done?"** — The accomplishment record
+2. **"Who am I becoming?"** — The pattern recognition
+3. **"What do I want to remember?"** — The memory keeper
+
+**It's not about productivity — it's about noticing your own life while you're living it.**
+
+### The Six Main Pages
+
+| Page         | Route       | Purpose                                 | Entry Type |
+| ------------ | ----------- | --------------------------------------- | ---------- |
+| **Timeline** | `/`         | Chronological feed of all entries       | All        |
+| **Ta-Da!**   | `/tada`     | Celebrate wins & accomplishments        | `tada`     |
+| **Moments**  | `/moments`  | Dreams, reflections, magic moments      | `moment`   |
+| **Sessions** | `/sessions` | Timed activities (meditation, practice) | `timed`    |
+| **Tally**    | `/tally`    | Count-based (reps, glasses of water)    | `tally`    |
+| **Rhythms**  | `/rhythms`  | Habit tracking with graceful chains     | Views      |
+
+### Unified Entry Model
+
+Everything is an `Entry` with flexible metadata:
+
+- **Type** = capture behavior (`timed`, `tada`, `moment`, `tally`)
+- **Category** = life domain (`mindfulness`, `accomplishment`, `creative`, `movement`)
+- **Subcategory** = specific activity (`sitting`, `work`, `piano`, `push-ups`)
+- **Data** = type-specific JSONB payload (open schema)
+
+Types and categories are **open strings** — just use them, no enum changes needed.
+
+### Key Design Principles
+
+- **Timers count UP** — Celebrate "you did 47 minutes" not "you need 20 more"
+- **Chains bend, not break** — Miss a day? Suggest easier tier, don't show broken streak
+- **Minimize friction** — One tap starts recording, no confirmation dialogs
+- **Identity over behavior** — "You're becoming a meditator" not "47 sessions logged"
+
+### Design Documents (Read Before Major Changes)
+
+| Document                                     | Purpose                                     |
+| -------------------------------------------- | ------------------------------------------- |
+| [design/SDR.md](design/SDR.md)               | Software requirements — THE source of truth |
+| [design/philosophy.md](design/philosophy.md) | Vision, principles, tone                    |
+| [design/ontology.md](design/ontology.md)     | Entry types, categories, emojis             |
+| [design/roadmap.md](design/roadmap.md)       | Feature roadmap by version                  |
+
+### Current Version: v0.3.0
+
+See [design/roadmap.md](design/roadmap.md) for full details. Key features:
+
+- Voice input across all entry pages (Ta-Da!, Moments, Tally, Sessions)
+- Magic moments capture
+- Practice links for sessions
+- 361+ unit tests passing
+
+---
 
 ## 🚫 CRITICAL - NEVER DO THIS
 
@@ -60,6 +125,40 @@
 - **Dir:** Always `cd app` before commands
 - **Docs:** `design/SDR.md` (requirements), `design/ontology.md` (entry types)
 - **New docs:** If explicitly requested, put in `docs/` folder, not root
+
+### Key Files
+
+| File                                | Purpose                                     |
+| ----------------------------------- | ------------------------------------------- |
+| `app/server/db/schema.ts`           | Database schema (entries, users, rhythms)   |
+| `app/utils/categoryDefaults.ts`     | Ontology: categories, subcategories, emojis |
+| `app/layouts/default.vue`           | Main layout with navigation                 |
+| `app/composables/useEntryEngine.ts` | Entry CRUD operations                       |
+| `app/composables/useEntrySave.ts`   | Voice/batch entry creation                  |
+
+### Project Structure
+
+```
+tada/
+├── app/                    # Nuxt 3 application
+│   ├── pages/              # File-based routing
+│   │   ├── index.vue       # Timeline (/)
+│   │   ├── tada/           # Ta-Da! (/tada, /tada/history)
+│   │   ├── moments.vue     # Moments (/moments)
+│   │   ├── sessions.vue    # Sessions (/sessions)
+│   │   ├── tally.vue       # Tally (/tally)
+│   │   └── rhythms.vue     # Rhythms (/rhythms)
+│   ├── components/         # Vue components
+│   │   └── voice/          # Voice recording components
+│   ├── composables/        # Vue composables (shared logic)
+│   ├── server/             # Nitro server
+│   │   ├── api/            # REST endpoints
+│   │   └── db/             # Drizzle schema & migrations
+│   └── utils/              # Client utilities
+├── design/                 # Design documents (SDR, philosophy, ontology)
+├── docs/                   # Developer documentation
+└── specs/                  # Feature specifications
+```
 
 ## Commands (File-Scoped)
 
@@ -221,6 +320,48 @@ docs: update testing guide
 - `design/philosophy.md` — Vision and principles
 - `design/decisions.md` — Technical decisions
 - `design/roadmap.md` — Feature roadmap
+
+## Voice Input System (v0.3.0)
+
+Voice input enables friction-free entry creation across all main pages.
+
+### Voice by Page
+
+| Page         | Voice Feature                                        | Component            |
+| ------------ | ---------------------------------------------------- | -------------------- |
+| **Ta-Da!**   | Speak accomplishments → LLM extracts multiple ta-das | `VoiceRecorder`      |
+| **Moments**  | Quick voice capture for reflections                  | `VoiceRecorder`      |
+| **Tally**    | Speak counts: "10 push-ups, 12 squats"               | `VoiceTallyRecorder` |
+| **Sessions** | Post-session voice reflection                        | `VoiceRecorder`      |
+
+### Voice Architecture
+
+```
+components/voice/
+├── VoiceRecorder.vue       # Main recording UI (green mic → red stop)
+├── VoiceTallyRecorder.vue  # Tally-specific wrapper
+
+composables/
+├── useVoiceCapture.ts      # MediaRecorder + audio levels
+├── useTranscription.ts     # Web Speech API + Whisper fallback
+├── useLLMStructure.ts      # Extract structured data from text
+└── useVoiceSettings.ts     # API keys, preferences
+```
+
+### Voice API Endpoints
+
+```
+POST /api/voice/transcribe   # Whisper transcription (uses GROQ_API_KEY)
+POST /api/structure/tadas    # LLM extraction of ta-das from text
+POST /api/voice/validate-key # Validate user-provided API keys
+```
+
+### Voice UX Pattern (Consistent Across Pages)
+
+1. **Green mic button** in header (hidden when recording)
+2. **Click** → Shows voice panel AND starts recording (red stop button)
+3. **Stop** → Transcription + LLM processing
+4. **Review** → Edit extracted data before saving
 
 ## CSV Import Feature (v0.2.0+)
 

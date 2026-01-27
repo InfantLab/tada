@@ -1,37 +1,154 @@
 {
   "name": "Tada Dev Container",
-  "image": "oven/bun:1",
-  "workspaceFolder": "/workspaces/tada",
-  "forwardPorts": [3000, 4983],
-  "features": {
-    "ghcr.io/devcontainers/features/git:1": {},
-    "ghcr.io/devcontainers/features/github-cli:1": {}
+
+  // ═══════════════════════════════════════════════════════════════
+  // BASE IMAGE & WORKSPACE
+  // ═══════════════════════════════════════════════════════════════
+
+  // Use custom Dockerfile for power-user CLI setup
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": "."
   },
+
+  "workspaceFolder": "/workspaces/tada",
+
+  // ═══════════════════════════════════════════════════════════════
+  // PORT FORWARDING
+  // ═══════════════════════════════════════════════════════════════
+
+  "forwardPorts": [
+    3000, // Nuxt dev server
+    4983 // Drizzle Studio
+  ],
+
+  "portsAttributes": {
+    "3000": {
+      "label": "Nuxt Dev Server",
+      "onAutoForward": "notify"
+    },
+    "4983": {
+      "label": "Drizzle Studio",
+      "onAutoForward": "silent"
+    }
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // PERSISTENT STORAGE
+  // ═══════════════════════════════════════════════════════════════
+
+  // Create history directory on host BEFORE container starts (cross-platform)
+  "initializeCommand": "cd .devcontainer && mkdir -p commandhistory || mkdir commandhistory 2>nul || echo 'Directory exists'",
+
+  "mounts": [
+    // Bind mount for persistent command history (inherits host permissions, unlike Docker volumes)
+    "source=${localWorkspaceFolder}/.devcontainer/commandhistory,target=/commandhistory,type=bind"
+  ],
+
+  // ═══════════════════════════════════════════════════════════════
+  // USER CONFIGURATION
+  // ═══════════════════════════════════════════════════════════════
+  
+  // Run everything as bun user (matches Dockerfile)
+  "remoteUser": "bun",
+
+  // ═══════════════════════════════════════════════════════════════
+  // LIFECYCLE HOOKS
+  // ═══════════════════════════════════════════════════════════════
+
+  // Run setup script on container creation
+  "onCreateCommand": "bash .devcontainer/setup.sh",
+
+  // Install dependencies after container is created
   "postCreateCommand": "cd app && bun install",
+
+  // ═══════════════════════════════════════════════════════════════
+  // VS CODE CUSTOMIZATIONS
+  // ═══════════════════════════════════════════════════════════════
   "customizations": {
     "vscode": {
+      // Extensions installed IN the container (not host)
       "extensions": [
+        // Copilot Chat (required for agent instructions)
+        "GitHub.copilot-chat",
+
+        // Vue / Nuxt
         "Vue.volar",
-        "dbaeumer.vscode-eslint",
-        "bradlc.vscode-tailwindcss",
-        "esbenp.prettier-vscode",
         "antfu.iconify",
         "formulahendry.auto-rename-tag",
-        "mikestead.dotenv",
-        "oven.bun-vscode"
+
+        // TypeScript / Linting
+        "dbaeumer.vscode-eslint",
+
+        // Tailwind CSS
+        "bradlc.vscode-tailwindcss",
+
+        // Formatters
+        "esbenp.prettier-vscode",
+
+        // Bun
+        "oven.bun-vscode",
+
+        // Docker (for Dockerfile editing)
+        "ms-azuretools.vscode-docker",
+
+        // Utilities
+        "mikestead.dotenv"
       ],
+
+      // Settings (reinforces top-level .vscode/settings.json)
       "settings": {
+        // ═══════════════════════════════════════════════════════════
+        // COPILOT CHAT - BINDING AGENT INSTRUCTIONS
+        // ═══════════════════════════════════════════════════════════
+
+        // Reinforce agents.md as authoritative (primary config is in .vscode/settings.json)
+        "chat.instructionFiles": ["agents.md", "AGENTS.md"],
+        "chat.useInstructionFiles": true,
+        "chat.defaultMode": "agent",
+        "chat.extensionUnification.enabled": true,
+
+        // ═══════════════════════════════════════════════════════════
+        // EDITOR SETTINGS
+        // ═══════════════════════════════════════════════════════════
+
         "editor.formatOnSave": true,
         "editor.defaultFormatter": "esbenp.prettier-vscode",
         "editor.codeActionsOnSave": {
           "source.fixAll.eslint": "explicit"
         },
+
+        // ═══════════════════════════════════════════════════════════
+        // TYPESCRIPT / VUE
+        // ═══════════════════════════════════════════════════════════
+
         "typescript.preferences.importModuleSpecifier": "relative",
         "vue.inlayHints.missingProps": true,
-        "terminal.integrated.defaultProfile.linux": "bash",
-        "terminal.integrated.shellIntegration.enabled": true
+
+        // ═══════════════════════════════════════════════════════════
+        // TERMINAL CONFIGURATION
+        // ═══════════════════════════════════════════════════════════
+
+        // Use zsh as default shell (configured in Dockerfile)
+        "terminal.integrated.defaultProfile.linux": "zsh",
+        "terminal.integrated.shellIntegration.enabled": true,
+
+        // Persistent command history location
+        "terminal.integrated.env.linux": {
+          "HISTFILE": "/commandhistory/.zsh_history"
+        }
       }
     }
   },
-  "remoteUser": "bun"
+
+  // ═══════════════════════════════════════════════════════════════
+  // USER & ENVIRONMENT
+  // ═══════════════════════════════════════════════════════════════
+
+  "remoteUser": "bun",
+
+  "remoteEnv": {
+    // Ensure commands default to app/ directory
+    "WORKSPACE_APP_DIR": "/workspaces/tada/app"
+  }
 }

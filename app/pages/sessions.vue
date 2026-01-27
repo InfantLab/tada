@@ -68,6 +68,7 @@ const fixedIntervals = computed(() => {
 const nextIntervalIndex = ref(0); // index in cumulative targets
 const isOvertime = ref(false);
 const overtimeSeconds = ref(0);
+const showSaveOptionsModal = ref(false);
 const ringsCount = ref(0);
 
 // Track interval completion for smooth circle animation
@@ -253,6 +254,19 @@ function handleVoiceError(message: string) {
   showVoiceRecorder.value = false;
 }
 
+// Handle voice reflection completion
+function handleReflectionVoiceComplete(
+  _blob: Blob,
+  _duration: number,
+  transcription: string,
+) {
+  console.log("[Sessions] Voice reflection complete:", transcription);
+  if (transcription.trim()) {
+    sessionReflection.value = transcription.trim();
+  }
+  showVoiceRecorder.value = false;
+}
+
 // Toggle selection of a bonus tada
 function toggleBonusTada(tadaId: string) {
   const tada = extractedBonusTadas.value.find((t) => t.id === tadaId);
@@ -359,7 +373,10 @@ watch(selectedPresetId, (newId) => {
   }
 });
 // Load settings from localStorage
-onMounted(() => {
+onMounted(async () => {
+  // Wait for component to fully mount
+  await nextTick();
+
   try {
     const saved = localStorage.getItem("tada-settings");
     if (saved) {
@@ -371,6 +388,59 @@ onMounted(() => {
       if (typeof settings.captureReflection === "boolean") {
         captureReflection.value = settings.captureReflection;
       }
+
+      // Load last used preset
+      if (settings.lastPresetId) {
+        console.log("[Sessions] Loading last preset:", settings.lastPresetId);
+        try {
+          const response = await $fetch<TimerPreset[]>("/api/presets");
+          console.log(
+            "[Sessions] API response type:",
+            typeof response,
+            "isArray:",
+            Array.isArray(response),
+          );
+          console.log("[Sessions] API response:", response);
+
+          const presets = Array.isArray(response) ? response : [];
+          console.log(
+            "[Sessions] Available presets:",
+            presets.map((p) => ({ id: p.id, name: p.name })),
+          );
+          const lastPreset = presets.find(
+            (p) => p.id === settings.lastPresetId,
+          );
+          console.log(
+            "[Sessions] Found preset:",
+            lastPreset?.name,
+            "ID:",
+            lastPreset?.id,
+          );
+          if (lastPreset) {
+            selectedPresetId.value = lastPreset.id;
+            console.log(
+              "[Sessions] About to call handlePresetSelect with:",
+              lastPreset.name,
+            );
+            handlePresetSelect(lastPreset);
+            console.log(
+              "[Sessions] Preset applied, selectedPresetName is now:",
+              selectedPresetName.value,
+            );
+          } else {
+            console.warn(
+              "[Sessions] No preset found with ID:",
+              settings.lastPresetId,
+            );
+          }
+        } catch (err) {
+          console.error("Failed to load last preset:", err);
+        }
+      } else {
+        console.log("[Sessions] No lastPresetId in settings");
+      }
+    } else {
+      console.log("[Sessions] No tada-settings in localStorage");
     }
   } catch (error) {
     console.error("Failed to load timer settings:", error);
@@ -400,6 +470,13 @@ const overtimeDisplay = computed(() => {
   return `${mins}:${secs.toString().padStart(2, "0")}`;
 });
 
+// Format seconds to MM:SS
+function formatTime(seconds: number): string {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs.toString().padStart(2, "0")}`;
+}
+
 // Progress within current interval (0-100%), resets each interval
 const intervalProgress = computed(() => {
   if (timerMode.value === "fixed") {
@@ -418,18 +495,17 @@ const intervalProgress = computed(() => {
       0;
     const intervalLength = (currentTarget ?? 0) - (prevTarget ?? 0);
     const elapsedInInterval = elapsedSeconds.value - (prevTarget ?? 0);
-    if (isOvertime.value) return 100; // Full ring during overtime
+
+    // During overtime, continue showing progress within the last interval duration
+    // This creates a looping circle animation effect
+    if (isOvertime.value && intervalLength > 0) {
+      const overtimeProgress =
+        ((overtimeSeconds.value % intervalLength) / intervalLength) * 100;
+      return overtimeProgress;
+    }
 
     // Calculate base progress
     const progress = Math.min(100, (elapsedInInterval / intervalLength) * 100);
-
-    // For repeating intervals: when we complete one and start the next,
-    // continue filling clockwise (>100%) then wrap to create smooth transition
-    if (isTransitioningInterval.value && progress < 5) {
-      // We just crossed into a new interval - show progress > 100% briefly
-      // to create clockwise "wipe" effect before resetting
-      return 100 + progress;
-    }
 
     return progress;
   }
@@ -439,9 +515,6 @@ const intervalProgress = computed(() => {
   const progress = (elapsedInInterval / intervalSecs) * 100;
 
   // Similar transition effect for milestone intervals
-  if (isTransitioningInterval.value && progress < 5) {
-    return 100 + progress;
-  }
 
   return progress;
 });
@@ -473,12 +546,6 @@ function checkMilestones() {
   // Play single bell for all missed milestones (avoid cacophony)
   if (missedCount > 0) {
     playBell("interval", 0);
-
-    // Trigger transition animation for smooth circle reset
-    isTransitioningInterval.value = true;
-    setTimeout(() => {
-      isTransitioningInterval.value = false;
-    }, 1000);
   }
 }
 
@@ -767,12 +834,53 @@ function playBell(
   }
 }
 
+// Preview bell sound when selecting
+function previewBellSound(soundValue: string) {
+  if (soundValue === "silence") return;
+
+  const soundFiles: Record<string, string> = {
+    bell: "/sounds/bell.mp3",
+    chime: "/sounds/chime.mp3",
+    gong: "/sounds/gong.mp3",
+    gong2: "/sounds/gong2.mp3",
+    cymbal: "/sounds/cymbal.mp3",
+  };
+
+  try {
+    const audio = new Audio(soundFiles[soundValue]);
+    audio.play().catch(() => {
+      // Silently fail - user will see visual feedback
+    });
+  } catch (error) {
+    // Silently fail
+  }
+}
+
 // Triggered by Save button - show modal if capture settings enabled
 function requestSave(includeOvertime: boolean = true) {
   if (elapsedSeconds.value < 1) return;
   stopTimer();
 
+  // If in overtime with fixed mode, show save options modal first
+  if (timerMode.value === "fixed" && isOvertime.value) {
+    showSaveOptionsModal.value = true;
+    return;
+  }
+
   // If mood or reflection capture is enabled, show modal first
+  if (captureMood.value || captureReflection.value) {
+    pendingIncludeOvertime.value = includeOvertime;
+    showPostSessionModal.value = true;
+  } else {
+    saveSession(includeOvertime);
+  }
+}
+
+// Handle save option selection (fixed vs total)
+function selectSaveOption(includeOvertime: boolean) {
+  showSaveOptionsModal.value = false;
+
+  // If mood or reflection capture is enabled, show that modal next
   if (captureMood.value || captureReflection.value) {
     pendingIncludeOvertime.value = includeOvertime;
     showPostSessionModal.value = true;
@@ -809,8 +917,8 @@ async function saveSession(includeOvertime: boolean = true) {
   const durationToSave =
     timerMode.value === "fixed"
       ? includeOvertime && isOvertime.value
-        ? totalFixedSeconds + overtimeSeconds.value
-        : totalFixedSeconds
+        ? elapsedSeconds.value // Save actual elapsed time including overtime
+        : Math.min(elapsedSeconds.value, totalFixedSeconds) // Save actual elapsed, capped at target
       : elapsedSeconds.value;
 
   // Create the main timer entry
@@ -897,8 +1005,20 @@ function releaseWakeLock() {
 // Preset handling
 
 function handlePresetSelect(preset: TimerPreset) {
+  console.log("[Sessions] Selecting preset:", preset.id, preset.name);
   // Store preset name for headline
   selectedPresetName.value = preset.name;
+
+  // Save to localStorage as last used preset
+  try {
+    const saved = localStorage.getItem("tada-settings") || "{}";
+    const settings = JSON.parse(saved);
+    settings.lastPresetId = preset.id;
+    localStorage.setItem("tada-settings", JSON.stringify(settings));
+    console.log("[Sessions] Saved preset to localStorage:", preset.id);
+  } catch (error) {
+    console.error("Failed to save last preset:", error);
+  }
 
   // Apply preset settings
   selectedCategory.value = preset.category || "mindfulness";
@@ -923,7 +1043,7 @@ function handlePresetSelect(preset: TimerPreset) {
     ) {
       intervals.value = preset.bellConfig.intervalBells.map((int) => ({
         durationMinutes: int.minutes,
-        repeats: 1,
+        repeats: int.repeats ?? 1, // Use saved repeats or default to 1
         bellSound: int.sound || "bell.mp3",
         customDuration: "",
       }));
@@ -1250,7 +1370,10 @@ onUnmounted(() => {
                   ? 'bg-tada-100/30 dark:bg-tada-600/20 text-tada-700 dark:text-tada-300'
                   : 'bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600'
               "
-              @click="startBell = sound.value"
+              @click="
+                startBell = sound.value;
+                previewBellSound(sound.value);
+              "
             >
               {{ sound.label }}
             </button>
@@ -1429,7 +1552,10 @@ onUnmounted(() => {
                           ? 'bg-tada-100/30 dark:bg-tada-600/20 text-tada-700 dark:text-tada-300'
                           : 'bg-white dark:bg-stone-600 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-500'
                       "
-                      @click="int.bellSound = sound.value"
+                      @click="
+                        int.bellSound = sound.value;
+                        previewBellSound(sound.value);
+                      "
                     >
                       {{ sound.label }}
                     </button>
@@ -1525,7 +1651,8 @@ onUnmounted(() => {
         />
         <!-- Progress circle (fills clockwise as time elapses) -->
         <circle
-          class="text-tada-500 dark:text-tada-400 transition-all duration-1000"
+          :key="`interval-${nextIntervalIndex}`"
+          class="text-tada-500 dark:text-tada-400 transition-all duration-300"
           stroke="currentColor"
           stroke-width="4"
           stroke-linecap="round"
@@ -1537,20 +1664,6 @@ onUnmounted(() => {
           :stroke-dashoffset="
             283 - (Math.min(100, intervalProgress) / 100) * 283
           "
-        />
-        <!-- Clearing circle (wipes clockwise when transitioning to next interval) -->
-        <circle
-          v-if="isTransitioningInterval"
-          class="text-stone-200 dark:text-stone-700 transition-all duration-1000"
-          stroke="currentColor"
-          stroke-width="4"
-          stroke-linecap="round"
-          fill="none"
-          r="45"
-          cx="50"
-          cy="50"
-          :stroke-dasharray="283"
-          :stroke-dashoffset="283 - ((intervalProgress - 100) / 5) * 283"
         />
       </svg>
 
@@ -1666,15 +1779,6 @@ onUnmounted(() => {
           />
         </button>
 
-        <!-- Save fixed only (visible in overtime for fixed mode) -->
-        <button
-          v-if="timerMode === 'fixed' && isOvertime && !isSaving"
-          class="w-auto px-4 h-16 rounded-lg bg-stone-200 dark:bg-stone-700 hover:bg-stone-300 dark:hover:bg-stone-600 text-stone-700 dark:text-stone-200 flex items-center justify-center shadow transition-colors text-sm"
-          @click="requestSave(false)"
-        >
-          Save fixed only
-        </button>
-
         <!-- Reset -->
         <button
           class="w-16 h-16 rounded-full bg-stone-200 dark:bg-stone-700 hover:bg-stone-300 dark:hover:bg-stone-600 text-stone-700 dark:text-stone-200 flex items-center justify-center shadow transition-colors"
@@ -1744,48 +1848,43 @@ onUnmounted(() => {
             Reflection (optional)
           </label>
 
-          <!-- Voice or Text Toggle -->
-          <div class="flex gap-2 mb-2">
+          <!-- Text input (collapsible when voice active) -->
+          <div v-if="!showVoiceRecorder" class="space-y-2">
+            <textarea
+              v-model="sessionReflection"
+              placeholder="Any thoughts from this session?"
+              rows="3"
+              class="w-full px-3 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-700 text-stone-800 dark:text-stone-100 text-sm resize-none"
+            />
+
+            <!-- Show voice button -->
             <button
               type="button"
-              class="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg border transition-colors"
-              :class="
-                !showVoiceRecorder
-                  ? 'bg-indigo-50 dark:bg-indigo-900/30 border-indigo-300 dark:border-indigo-600 text-indigo-700 dark:text-indigo-300'
-                  : 'bg-stone-100 dark:bg-stone-700 border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-400'
-              "
-              @click="showVoiceRecorder = false"
-            >
-              ✍️ Type
-            </button>
-            <button
-              type="button"
-              class="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg border transition-colors"
-              :class="
-                showVoiceRecorder
-                  ? 'bg-indigo-50 dark:bg-indigo-900/30 border-indigo-300 dark:border-indigo-600 text-indigo-700 dark:text-indigo-300'
-                  : 'bg-stone-100 dark:bg-stone-700 border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-400'
-              "
+              class="w-12 h-12 rounded-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center shadow-lg transition-all"
               @click="showVoiceRecorder = true"
+              aria-label="Record voice reflection"
             >
-              🎤 Speak
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="w-6 h-6"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"
+                />
+                <path
+                  d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"
+                />
+              </svg>
             </button>
           </div>
 
-          <!-- Text input -->
-          <textarea
-            v-if="!showVoiceRecorder"
-            v-model="sessionReflection"
-            placeholder="Any thoughts from this session?"
-            rows="3"
-            class="w-full px-3 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-700 text-stone-800 dark:text-stone-100 text-sm resize-none"
-          />
-
-          <!-- Voice recorder -->
-          <div v-else class="flex flex-col items-center py-4">
+          <!-- Voice recorder (auto-starts when shown) -->
+          <div v-else class="flex flex-col items-center py-4 space-y-3">
             <p
               v-if="isTranscribing"
-              class="text-sm text-indigo-600 dark:text-indigo-400 mb-2"
+              class="text-sm text-indigo-600 dark:text-indigo-400"
             >
               Transcribing...
             </p>
@@ -1793,14 +1892,12 @@ onUnmounted(() => {
               v-else
               mode="journal"
               compact
-              @complete="handleVoiceComplete"
+              autostart
+              @complete="handleReflectionVoiceComplete"
               @cancel="showVoiceRecorder = false"
               @error="handleVoiceError"
               @transcription="handleVoiceLiveTranscription"
             />
-            <p class="text-xs text-stone-500 dark:text-stone-400 mt-2">
-              Tap to record your reflection
-            </p>
           </div>
 
           <!-- Show transcription preview if available -->
@@ -1896,7 +1993,7 @@ onUnmounted(() => {
             class="flex-1 px-4 py-2 rounded-lg bg-stone-200 dark:bg-stone-700 hover:bg-stone-300 dark:hover:bg-stone-600 text-stone-700 dark:text-stone-200 font-medium transition-colors"
             @click="
               showPostSessionModal = false;
-              saveSession(pendingIncludeOvertime);
+              resetTimer();
             "
           >
             Skip
@@ -1909,6 +2006,69 @@ onUnmounted(() => {
             {{ isSaving ? "Saving..." : "Save" }}
           </button>
         </div>
+      </div>
+    </div>
+
+    <!-- Save Options Modal (overtime: fixed vs total) -->
+    <div
+      v-if="showSaveOptionsModal"
+      class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+    >
+      <div
+        class="bg-white dark:bg-stone-800 rounded-2xl shadow-xl max-w-md w-full p-6 space-y-6"
+      >
+        <h2
+          class="text-xl font-semibold text-stone-800 dark:text-stone-100 text-center"
+        >
+          Save your session
+        </h2>
+
+        <p class="text-sm text-stone-600 dark:text-stone-400 text-center">
+          You went into overtime! Choose what to save:
+        </p>
+
+        <div class="space-y-3">
+          <!-- Save total time (default) -->
+          <button
+            class="w-full px-6 py-4 rounded-xl bg-tada-600 hover:opacity-90 text-black dark:text-white font-medium transition-all shadow-md hover:shadow-lg"
+            @click="selectSaveOption(true)"
+          >
+            <div class="flex items-center justify-between">
+              <span>Save total time</span>
+              <span class="text-sm opacity-80">{{ displayTime }}</span>
+            </div>
+            <div class="text-xs mt-1 opacity-70">
+              Includes overtime (default)
+            </div>
+          </button>
+
+          <!-- Save fixed amount only -->
+          <button
+            class="w-full px-6 py-4 rounded-xl bg-stone-200 dark:bg-stone-700 hover:bg-stone-300 dark:hover:bg-stone-600 text-stone-700 dark:text-stone-200 font-medium transition-all"
+            @click="selectSaveOption(false)"
+          >
+            <div class="flex items-center justify-between">
+              <span>Save fixed amount only</span>
+              <span class="text-sm opacity-80">{{
+                formatTime(fixedIntervals.reduce((a, b) => a + b, 0))
+              }}</span>
+            </div>
+            <div class="text-xs mt-1 opacity-70">
+              Exclude +{{ overtimeDisplay }}
+            </div>
+          </button>
+        </div>
+
+        <!-- Cancel -->
+        <button
+          class="w-full px-4 py-2 text-sm text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 transition-colors"
+          @click="
+            showSaveOptionsModal = false;
+            startTimer(); // Resume timer if they cancel
+          "
+        >
+          Cancel
+        </button>
       </div>
     </div>
   </div>

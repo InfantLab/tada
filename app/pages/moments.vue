@@ -1,6 +1,7 @@
 <script setup lang="ts">
 // Moments page - dreams, notes, magic moments, and freeform entries
 import type { Entry } from "~/server/db/schema";
+import type { ExtractedTada } from "~/types/extraction";
 
 definePageMeta({
   layout: "default",
@@ -9,9 +10,27 @@ definePageMeta({
 const router = useRouter();
 const toast = useToast();
 const { createEntry, isLoading: isSaving } = useEntryEngine();
+const llmStructure = useLLMStructure();
+
+// Voice UI state
+const showVoicePanel = ref(false);
+const isRecording = ref(false);
 
 // Voice input subcategory
-const voiceSubcategory = ref<"magic" | "journal" | "dream" | "gratitude">("journal");
+const voiceSubcategory = ref<"magic" | "journal" | "dream" | "gratitude">(
+  "journal",
+);
+
+// Text input form state
+const title = ref("");
+const notes = ref("");
+const notesTextarea = ref<HTMLTextAreaElement | null>(null);
+
+// Extracted ta-das from voice
+const extractedTadas = ref<ExtractedTada[]>([]);
+
+// Celebration state
+const showCelebration = ref(false);
 
 // Fetch journal entries from API
 const entries = ref<Entry[]>([]);
@@ -31,6 +50,25 @@ function handleEntryClick(entry: Entry, event: MouseEvent) {
     return;
   }
   router.push(`/entry/${entry.id}`);
+}
+
+// Get the user's preferred ta-da sound
+function getTadaSoundFile(): string {
+  try {
+    const saved = localStorage.getItem("tada-settings");
+    if (saved) {
+      const settings = JSON.parse(saved);
+      const soundMap: Record<string, string> = {
+        "tada-short": "/sounds/tada-f-versionD.mp3",
+        "tada-long": "/sounds/tada-f-versionA.mp3",
+        twinkle: "/sounds/twinkle.mp3",
+      };
+      return soundMap[settings.tadaSound] || "/sounds/tada-f-versionD.mp3";
+    }
+  } catch {
+    // Ignore errors
+  }
+  return "/sounds/tada-f-versionD.mp3";
 }
 
 onMounted(async () => {
@@ -56,8 +94,8 @@ onMounted(async () => {
         e.subcategory === "journal",
     );
   } catch (err: unknown) {
-    console.error("Failed to fetch moment entries:", err);
-    error.value = err instanceof Error ? err.message : "Failed to load entries";
+    logError("moments.fetchEntries", err);
+    error.value = getErrorMessage(err, "Failed to load entries");
   } finally {
     isLoading.value = false;
   }
@@ -103,87 +141,256 @@ function getTypeIcon(type: string, subcategory?: string | null): string {
   }
 }
 
+/**
+ * Smart split of transcribed text into title and notes
+ * - Title: First sentence or first ~60 chars at a natural break
+ * - Notes: Everything after the title
+ */
+function splitTitleAndNotes(text: string): { title: string; notes: string } {
+  const trimmed = text.trim();
+
+  if (trimmed.length <= 60) {
+    // Short enough to be just a title
+    return { title: trimmed, notes: "" };
+  }
+
+  // Try to find first sentence (ending with . ! ?)
+  const sentenceMatch = trimmed.match(/^(.+?[.!?])\s+/);
+  if (sentenceMatch && sentenceMatch[1].length <= 80) {
+    return {
+      title: sentenceMatch[1].trim(),
+      notes: trimmed.slice(sentenceMatch[0].length).trim(),
+    };
+  }
+
+  // Try to find a natural break point (comma, dash, colon) within first 80 chars
+  const breakMatch = trimmed.slice(0, 80).match(/^(.+?[,\-:—])\s+/);
+  if (breakMatch && breakMatch[1].length >= 15) {
+    return {
+      title: breakMatch[1].trim(),
+      notes: trimmed.slice(breakMatch[0].length).trim(),
+    };
+  }
+
+  // Find last space within first 60 chars to avoid cutting words
+  const first60 = trimmed.slice(0, 60);
+  const lastSpace = first60.lastIndexOf(" ");
+
+  if (lastSpace > 20) {
+    return {
+      title: trimmed.slice(0, lastSpace).trim(),
+      notes: trimmed.slice(lastSpace + 1).trim(),
+    };
+  }
+
+  // Fallback: just take first 60 chars
+  return {
+    title: trimmed.slice(0, 60).trim(),
+    notes: trimmed.slice(60).trim(),
+  };
+}
+
+// Auto-grow textarea as user types
+function autoGrow() {
+  const textarea = notesTextarea.value;
+  if (textarea) {
+    textarea.style.height = "auto";
+    textarea.style.height =
+      Math.min(textarea.scrollHeight, window.innerHeight * 0.5) + "px";
+  }
+}
+
+// Text form submission handler
+async function handleTextSubmit() {
+  if (!title.value.trim() && !notes.value.trim()) {
+    toast.error("Please enter a title or notes");
+    return;
+  }
+
+  try {
+    const result = await createEntry({
+      type: "moment",
+      subcategory: voiceSubcategory.value,
+      name: title.value.trim() || "Untitled moment",
+      notes: notes.value.trim() || undefined,
+      emoji: getTypeIcon(voiceSubcategory.value),
+      timestamp: new Date().toISOString(),
+      data: {
+        source: showVoicePanel.value ? "voice" : "text",
+      },
+    });
+
+    if (result) {
+      toast.success(
+        `${voiceSubcategory.value === "magic" ? "🪄 Magic moment" : "📝 Moment"} saved!`,
+      );
+
+      // Save extracted ta-das if any
+      if (extractedTadas.value.length > 0) {
+        await saveTadas();
+      }
+
+      // Clear form
+      title.value = "";
+      notes.value = "";
+      showVoicePanel.value = false;
+      extractedTadas.value = [];
+
+      // Refresh entries
+      await refreshEntries();
+    }
+  } catch (err) {
+    logError("moments.saveTextEntry", err);
+    toast.error(getErrorMessage(err, "Failed to save moment"));
+  }
+}
+
+// Handle microphone button click
+function handleMicClick() {
+  showVoicePanel.value = true;
+  isRecording.value = true;
+}
+
 // Voice input handlers
 async function handleVoiceComplete(
   _blob: Blob,
   _duration: number,
   transcription: string,
 ) {
+  isRecording.value = false;
+
   if (!transcription?.trim()) {
     toast.error("No speech detected. Please try again.");
+    showVoicePanel.value = false;
     return;
   }
 
   try {
-    // Extract first sentence as title, rest as notes
-    const text = transcription.trim();
-    const firstSentenceMatch = text.match(/^([^.!?]+[.!?]?)\s*/);
-    let title = text;
-    let notes = "";
+    // Process with LLM to extract ta-das and detect type
+    const extraction = await llmStructure.extractTadas(transcription);
 
-    if (firstSentenceMatch && firstSentenceMatch[1]) {
-      const firstPart = firstSentenceMatch[1].trim();
-      const rest = text.slice(firstSentenceMatch[0].length).trim();
+    // Store extracted ta-das
+    if (extraction.tadas && extraction.tadas.length > 0) {
+      extractedTadas.value = extraction.tadas;
+    }
 
-      if (firstPart.length <= 60) {
-        title = firstPart;
-        notes = rest;
+    // Detect type/subcategory from journal type if available
+    if (extraction.journalType) {
+      const typeMap: Record<string, typeof voiceSubcategory.value> = {
+        magic: "magic",
+        dream: "dream",
+        gratitude: "gratitude",
+        journal: "journal",
+        reflection: "journal",
+      };
+      const detected = typeMap[extraction.journalType.toLowerCase()];
+      if (detected) {
+        voiceSubcategory.value = detected;
       }
     }
 
-    // Create moment entry
-    const result = await createEntry({
-      type: "moment",
-      subcategory: voiceSubcategory.value,
-      name: title,
-      notes: notes || undefined,
-      emoji: getTypeIcon(voiceSubcategory.value),
-      timestamp: new Date().toISOString(),
-      data: {
-        source: "voice",
-      },
-    });
+    // Split text into title and notes smartly
+    const text = transcription.trim();
+    const { title: extractedTitle, notes: extractedNotes } =
+      splitTitleAndNotes(text);
 
-    if (result) {
-      toast.success(`${voiceSubcategory.value === "magic" ? "🪄 Magic moment" : "📝 Moment"} saved!`);
-      // Refresh entries
-      try {
-        const data = await $fetch<{
-          entries: Entry[];
-          nextCursor: string | null;
-          hasMore: boolean;
-        }>("/api/entries");
-        entries.value = data.entries.filter(
-          (e) =>
-            [
-              "dream",
-              "journal",
-              "note",
-              "gratitude",
-              "magic",
-              "reflection",
-              "memory",
-              "moment",
-            ].includes(e.type) ||
-            e.category === "moments" ||
-            e.subcategory === "journal",
-        );
-      } catch {
-        // Silent refresh failure
-      }
+    // Use LLM-extracted title if available and reasonable, otherwise use our split
+    if (extraction.title && extraction.title.length <= 80) {
+      title.value = extraction.title;
+      notes.value = text; // Keep full text as notes for context
+    } else {
+      title.value = extractedTitle;
+      notes.value = extractedNotes;
+    }
+
+    // Only keep ta-das that look like actual accomplishments (have meaningful titles)
+    if (extraction.tadas && extraction.tadas.length > 0) {
+      const meaningfulTadas = extraction.tadas.filter(
+        (t) => t.title && t.title.length > 3 && t.title.length < 100,
+      );
+      extractedTadas.value = meaningfulTadas;
+    }
+
+    // Don't auto-save - let user review and save manually
+  } catch (err) {
+    logError("moments.handleVoiceTranscript", err, {
+      transcriptLength: transcriptText.length,
+    });
+    toast.error(getErrorMessage(err, "Failed to process transcription"));
+    showVoicePanel.value = false;
+  }
+}
+
+async function saveTadas() {
+  const { createBatchTadas } = useEntrySave();
+
+  try {
+    const result = await createBatchTadas(
+      extractedTadas.value.map((tada) => ({
+        title: tada.title,
+        category: tada.subcategory || "personal",
+        significance: tada.significance,
+        confidence: tada.confidence || 0.8,
+      })),
+      `moment-${Date.now()}`, // extractionId
+    );
+
+    if (result && result.length > 0) {
+      showCelebration.value = true;
+      toast.success(
+        `${extractedTadas.value.length} ta-da${extractedTadas.value.length > 1 ? "s" : ""}!`,
+      );
     }
   } catch (err) {
-    console.error("Failed to save voice moment:", err);
-    toast.error("Failed to save moment");
+    logError("moments.saveTadas", err, {
+      tadasCount: extractedTadas.value.length,
+    });
+    toast.error(getErrorMessage(err, "Failed to save accomplishments"));
+  }
+}
+
+// Handle celebration completion
+function onCelebrationComplete() {
+  showCelebration.value = false;
+  extractedTadas.value = [];
+}
+
+async function refreshEntries() {
+  try {
+    const data = await $fetch<{
+      entries: Entry[];
+      nextCursor: string | null;
+      hasMore: boolean;
+    }>("/api/entries");
+    entries.value = data.entries.filter(
+      (e) =>
+        [
+          "dream",
+          "journal",
+          "note",
+          "gratitude",
+          "magic",
+          "reflection",
+          "memory",
+          "moment",
+        ].includes(e.type) ||
+        e.category === "moments" ||
+        e.subcategory === "journal",
+    );
+  } catch {
+    // Silent refresh failure
   }
 }
 
 function handleVoiceError(message: string) {
   toast.error(message);
+  isRecording.value = false;
 }
 
 function handleVoiceCancel() {
-  // No need to hide anything - voice section is always visible
+  showVoicePanel.value = false;
+  isRecording.value = false;
+  extractedTadas.value = [];
 }
 </script>
 
@@ -199,45 +406,35 @@ function handleVoiceCancel() {
           Dreams, magic & reflections
         </p>
       </div>
-
-      <div class="flex items-center gap-2">
-        <!-- Quick text entry button -->
-        <NuxtLink
-          to="/add?type=moment"
-          class="flex items-center gap-2 px-4 py-2 bg-stone-100 hover:bg-stone-200 dark:bg-stone-700 dark:hover:bg-stone-600 text-stone-700 dark:text-stone-200 rounded-lg font-medium transition-colors shadow-sm"
+      <!-- Green mic button (hidden when voice panel is shown) -->
+      <button
+        v-if="!showVoicePanel"
+        type="button"
+        class="w-10 h-10 rounded-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center shadow-lg transition-all hover:scale-105"
+        title="Voice input"
+        @click="handleMicClick"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-5 w-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-            />
-          </svg>
-          <span class="hidden sm:inline">Write</span>
-        </NuxtLink>
-      </div>
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
+          />
+        </svg>
+      </button>
     </div>
 
-    <!-- Voice Input Section (always visible at top) -->
+    <!-- Quick Entry Form -->
     <div
-      class="mb-6 rounded-xl border border-purple-200 bg-gradient-to-br from-purple-50 to-indigo-50 p-6 dark:border-purple-800 dark:from-purple-900/20 dark:to-indigo-900/20"
+      class="mb-6 rounded-xl border border-stone-200 bg-white dark:border-stone-700 dark:bg-stone-800 p-6 shadow-sm"
     >
-      <div class="mb-4 text-center">
-        <h3 class="text-lg font-semibold text-stone-800 dark:text-stone-100">
-          Quick Voice Capture
-        </h3>
-        <p class="text-sm text-stone-500 dark:text-stone-400">
-          Speak your thought, dream, or moment
-        </p>
-      </div>
-
       <!-- Type selector -->
       <div class="flex justify-center gap-2 mb-4">
         <button
@@ -261,69 +458,126 @@ function handleVoiceCancel() {
         </button>
       </div>
 
-      <div class="flex justify-center">
-        <VoiceRecorder
-          mode="journal"
-          @complete="handleVoiceComplete"
-          @error="handleVoiceError"
-          @cancel="handleVoiceCancel"
-        />
-      </div>
-
-      <!-- Saving indicator -->
+      <!-- Voice Panel (shown when recording) -->
       <div
-        v-if="isSaving"
-        class="mt-4 flex items-center justify-center gap-2 text-stone-500 dark:text-stone-400"
+        v-if="showVoicePanel"
+        class="mb-4 rounded-lg border border-purple-200 bg-gradient-to-br from-purple-50 to-indigo-50 dark:border-purple-800 dark:from-purple-900/20 dark:to-indigo-900/20 p-4"
       >
-        <div
-          class="h-4 w-4 animate-spin rounded-full border-2 border-tada-500 border-t-transparent"
-        />
-        <span class="text-sm">Saving...</span>
+        <div class="flex justify-center">
+          <VoiceRecorder
+            mode="journal"
+            :autostart="isRecording"
+            @complete="handleVoiceComplete"
+            @error="handleVoiceError"
+            @cancel="handleVoiceCancel"
+          />
+        </div>
       </div>
-    </div>
 
-    <!-- Quick capture buttons (informational/shortcuts to type) -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-6">
-      <button
-        type="button"
-        class="flex items-center gap-2 px-3 py-3 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded-lg border border-purple-200 dark:border-purple-800 transition-colors"
-        @click="voiceSubcategory = 'magic'"
-      >
-        <span class="text-xl">🪄</span>
-        <span class="text-sm font-medium text-purple-700 dark:text-purple-300"
-          >Magic</span
+      <!-- Text Input Form -->
+      <form class="space-y-3" @submit.prevent="handleTextSubmit">
+        <!-- Title input -->
+        <div>
+          <label
+            for="title"
+            class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1"
+          >
+            Title
+          </label>
+          <input
+            id="title"
+            v-model="title"
+            type="text"
+            placeholder="What happened?"
+            class="w-full px-3 py-2 border border-stone-300 dark:border-stone-600 rounded-lg bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-tada-500 focus:border-transparent"
+          />
+        </div>
+
+        <!-- Notes textarea -->
+        <div>
+          <label
+            for="notes"
+            class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1"
+          >
+            Notes (optional)
+          </label>
+          <textarea
+            id="notes"
+            ref="notesTextarea"
+            v-model="notes"
+            rows="3"
+            placeholder="Add more details..."
+            class="w-full px-3 py-2 border border-stone-300 dark:border-stone-600 rounded-lg bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-tada-500 focus:border-transparent resize-none"
+            @input="autoGrow"
+          />
+        </div>
+
+        <!-- Extracted Ta-das Panel (if any) -->
+        <div
+          v-if="extractedTadas.length > 0"
+          class="rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20 p-4"
         >
-      </button>
-      <button
-        type="button"
-        class="flex items-center gap-2 px-3 py-3 bg-indigo-50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 rounded-lg border border-indigo-200 dark:border-indigo-800 transition-colors"
-        @click="voiceSubcategory = 'dream'"
-      >
-        <span class="text-xl">🌙</span>
-        <span class="text-sm font-medium text-indigo-700 dark:text-indigo-300"
-          >Dream</span
-        >
-      </button>
-      <button
-        type="button"
-        class="flex items-center gap-2 px-3 py-3 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/30 rounded-lg border border-amber-200 dark:border-amber-800 transition-colors"
-        @click="voiceSubcategory = 'gratitude'"
-      >
-        <span class="text-xl">🙏</span>
-        <span class="text-sm font-medium text-amber-700 dark:text-amber-300"
-          >Gratitude</span
-        >
-      </button>
-      <button
-        type="button"
-        class="flex items-center gap-2 px-3 py-3 bg-stone-50 dark:bg-stone-900/20 hover:bg-stone-100 dark:hover:bg-stone-900/30 rounded-lg border border-stone-200 dark:border-stone-800 transition-colors"
-        @click="voiceSubcategory = 'journal'"
-      >
-        <span class="text-xl">🪶</span>
-        <span class="text-sm font-medium text-stone-700 dark:text-stone-300"
-          >Journal</span
-        >
-      </button>
+          <div class="flex items-center justify-between mb-2">
+            <h4
+              class="text-sm font-semibold text-amber-900 dark:text-amber-100"
+            >
+              🎯 Ta-das detected ({{ extractedTadas.length }})
+            </h4>
+            <button
+              type="button"
+              class="text-xs text-amber-600 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-200"
+              @click="extractedTadas = []"
+            >
+              Clear all
+            </button>
+          </div>
+          <ul class="space-y-1">
+            <li
+              v-for="(tada, idx) in extractedTadas"
+              :key="idx"
+              class="flex items-center justify-between text-sm text-amber-800 dark:text-amber-200 bg-white dark:bg-stone-800 rounded px-2 py-1"
+            >
+              <span> • {{ tada.title }} </span>
+              <button
+                type="button"
+                class="ml-2 p-0.5 text-stone-400 hover:text-red-500 rounded transition-colors"
+                title="Remove"
+                @click="extractedTadas.splice(idx, 1)"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </li>
+          </ul>
+          <p class="text-xs text-amber-700 dark:text-amber-300 mt-2">
+            These will be saved with the moment • Remove any you don't want
+          </p>
+        </div>
+
+        <!-- Submit button -->
+        <div class="flex justify-end">
+          <button
+            type="submit"
+            :disabled="isSaving"
+            class="px-6 py-2 bg-tada-600 hover:bg-tada-700 disabled:bg-stone-300 dark:disabled:bg-stone-600 text-white rounded-lg font-medium transition-colors shadow-sm disabled:cursor-not-allowed"
+          >
+            <span v-if="isSaving">Saving...</span>
+            <span v-else>Save Moment</span>
+          </button>
+        </div>
+      </form>
     </div>
 
     <!-- Type filter -->
@@ -461,5 +715,16 @@ function handleVoiceCancel() {
         </div>
       </div>
     </div>
+
+    <!-- Celebration overlay -->
+    <CelebrationOverlay
+      :show="showCelebration"
+      :sound-file="getTadaSoundFile()"
+      @complete="onCelebrationComplete"
+    />
   </div>
 </template>
+
+<style scoped>
+/* Page-specific styles */
+</style>

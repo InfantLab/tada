@@ -9,6 +9,79 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 _No unreleased changes_
 
+## [0.3.0] - 2026-01-27
+
+### Added
+
+- **Voice Input Across All Entry Pages:**
+  - Voice recording with automatic transcription (Web Speech API + Whisper fallback)
+  - Voice input on Ta-Da!, Moments, Tally, and Sessions pages
+  - Server-side Whisper transcription via Groq API
+  - LLM structure extraction for ta-das (Groq/OpenAI/Anthropic)
+  - Rate limiting (1 request/10 seconds) with helpful wait time messages
+  - VoiceRecorder component with autostart capability
+  - VoiceTallyRecorder for count-based voice input
+  - Pending review panel for voice-extracted entries
+
+- **Magic Moments:**
+  - New "magic" subcategory for moments
+  - Smart text splitting (title/notes) from voice transcription
+  - LLM-based journal type detection
+  - Celebration overlay with sound and confetti
+  - Per-item subcategory selectors
+
+- **Sessions Improvements:**
+  - Voice reflection capture post-session (green mic button with autostart)
+  - Bell sound preview when selecting chimes
+  - Last-used preset remembered (saved to localStorage)
+  - Preset repeats now saved and loaded correctly
+  - Save options modal for overtime sessions (fixed vs total time)
+  - Skip button now properly discards sessions without saving
+  - Clockwise circle animation (finally fixed!)
+
+- **Tally Voice Input:**
+  - Voice-to-tally extraction ("10 push-ups, 12 squats")
+  - Pending review panel with per-item category selectors
+  - Rule-based extraction with LLM fallback
+
+- **Database Stability:**
+  - Database moved outside watched directory (dev: `/workspaces/tada/data/`)
+  - Fixed EINVAL errors and server crashes from SQLite journal file watcher conflicts
+  - Enhanced Vite/Nitro watcher configuration
+  - Database retry logic for transient errors
+  - Graceful error handling utilities
+
+- **Reusable Components:**
+  - `CelebrationOverlay.vue` - Celebration UI with sound and confetti
+  - `VoiceRecorder.vue` - Voice recording with progress and transcription
+  - `VoiceTallyRecorder.vue` - Tally-specific voice input
+
+### Changed
+
+- Timer circle animation now fills/empties clockwise (used Vue :key for proper resets)
+- Voice recorder UX simplified (green button + autostart, no toggle)
+- Rate limit messages now show seconds remaining
+- All pages updated with consistent error handling
+- Improved subcategory guessing from voice input
+
+### Fixed
+
+- Timer circle no longer animates backwards between intervals
+- Skip button on sessions no longer saves the session
+- Save duration now uses actual elapsed time instead of preset target
+- Preset API endpoint corrected (`/api/presets` not `/api/timer-presets`)
+- Voice transcription handles network errors gracefully
+- Database watcher conflicts resolved (moved outside app/ directory)
+
+### Developer Experience
+
+- Added comprehensive error handling utilities (`utils/errorHandling.ts`)
+- Added database management layer (`server/db/manager.ts`, `operations.ts`)
+- Migration script for database location change
+- Dev container improvements (zsh, starship, fzf, ripgrep)
+- 18+ new unit tests for error handling
+- Documentation: DATABASE_LOCATION_MIGRATION.md, ERROR_HANDLING.md
+
 ## [0.2.0] - 2026-01-22
 
 ### Added
