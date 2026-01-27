@@ -18,12 +18,15 @@ interface Props {
   compact?: boolean;
   /** Disabled state */
   disabled?: boolean;
+  /** Auto-start recording when component mounts */
+  autostart?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   mode: "journal",
   compact: false,
   disabled: false,
+  autostart: false,
 });
 
 const emit = defineEmits<{
@@ -61,6 +64,15 @@ const hasWebSpeech = computed(() => supportsWebSpeech());
 const levelBars = computed(() => {
   const level = voiceCapture.audioLevel.value;
   return [level > 0.1, level > 0.25, level > 0.45, level > 0.65, level > 0.85];
+});
+
+// Auto-start recording if requested
+onMounted(async () => {
+  if (props.autostart && !props.disabled) {
+    // Small delay to ensure component is fully mounted
+    await new Promise(resolve => setTimeout(resolve, 100));
+    await handleMicClick();
+  }
 });
 
 /**
