@@ -182,10 +182,8 @@ Prepare the architecture for photo/video attachments. Actual capture and storage
 
 Moved from v0.2.0 or newly identified:
 
-- [ ] Email verification (optional for self-hosted, required for cloud)
 - [x] Timezone selector UI for imports (dropdown with common timezones)
 - [x] Settings page autosave (removed save button, added autosave indicator)
-- [ ] Rewrite integration tests with @nuxt/test-utils/e2e
 
 ---
 
@@ -197,6 +195,14 @@ _Target: Q3 2026_
 
 - [ ] Remove deprecated `/add` page (replaced by inline capture on each entry type page)
 - [ ] Audit and remove unused components from v0.2.0 refactoring
+- [ ] Rewrite integration tests with @nuxt/test-utils/e2e
+
+### 🔐 Email Verification
+
+- [ ] Email verification flow (optional for self-hosted, required for cloud)
+- [ ] Email verification on registration
+- [ ] Resend verification email option
+- [ ] Account status indicators (verified/unverified)
 
 ### 🌱 Gentle Onboarding Tour
 

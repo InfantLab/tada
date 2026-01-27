@@ -95,11 +95,6 @@ function openDatePicker() {
   }
 }
 
-// Date presets
-function setNow() {
-  emit("update:modelValue", new Date().toISOString());
-}
-
 function setToday() {
   const now = new Date();
   const dateStr = now.toISOString().split("T")[0];
@@ -121,42 +116,21 @@ function setYesterday() {
   emit("update:modelValue", newDate.toISOString());
 }
 
-function setThisMorning() {
-  const now = new Date();
-  const dateStr = now.toISOString().split("T")[0];
-  const newDate = new Date(`${dateStr}T07:00`);
+function setDaysAgo(days: number) {
+  const date = new Date();
+  date.setDate(date.getDate() - days);
+  const dateStr = date.toISOString().split("T")[0];
+  const currentTime = timeValue.value || "12:00";
+  const newDate = new Date(`${dateStr}T${currentTime}`);
   emit("update:modelValue", newDate.toISOString());
 }
 
-function setLastNight() {
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  const dateStr = yesterday.toISOString().split("T")[0];
-  const newDate = new Date(`${dateStr}T21:00`);
-  emit("update:modelValue", newDate.toISOString());
-}
-
-// Time quick picks
-const timePresets = [
-  { label: "6am", value: "06:00" },
-  { label: "7am", value: "07:00" },
-  { label: "8am", value: "08:00" },
-  { label: "12pm", value: "12:00" },
-  { label: "6pm", value: "18:00" },
-  { label: "9pm", value: "21:00" },
-];
-
-function setTimePreset(time: string) {
-  const currentDate = dateValue.value || new Date().toISOString().split("T")[0];
-  const newDate = new Date(`${currentDate}T${time}`);
-  if (!isNaN(newDate.getTime())) {
-    emit("update:modelValue", newDate.toISOString());
-  }
-}
-
-// Check if time preset is selected
-function isTimeSelected(preset: string): boolean {
-  return timeValue.value === preset;
+// Get day name abbreviation for days ago
+function getDayName(daysAgo: number): string {
+  const date = new Date();
+  date.setDate(date.getDate() - daysAgo);
+  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  return days[date.getDay()] || "";
 }
 </script>
 
@@ -224,33 +198,25 @@ function isTimeSelected(preset: string): boolean {
           type="button"
           :disabled="disabled"
           class="px-2 py-1 text-xs rounded bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          @click="setNow"
+          @click="setDaysAgo(4)"
         >
-          Now
+          {{ getDayName(4) }}
         </button>
         <button
           type="button"
           :disabled="disabled"
           class="px-2 py-1 text-xs rounded bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          @click="setThisMorning"
+          @click="setDaysAgo(3)"
         >
-          This Morning
+          {{ getDayName(3) }}
         </button>
         <button
           type="button"
           :disabled="disabled"
           class="px-2 py-1 text-xs rounded bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          @click="setToday"
+          @click="setDaysAgo(2)"
         >
-          Today
-        </button>
-        <button
-          type="button"
-          :disabled="disabled"
-          class="px-2 py-1 text-xs rounded bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          @click="setLastNight"
-        >
-          Last Night
+          {{ getDayName(2) }}
         </button>
         <button
           type="button"
@@ -260,27 +226,13 @@ function isTimeSelected(preset: string): boolean {
         >
           Yesterday
         </button>
-      </div>
-    </div>
-
-    <!-- Time quick presets -->
-    <div v-if="showTimePresets" class="space-y-1">
-      <span class="text-xs text-stone-500 dark:text-stone-400">Time:</span>
-      <div class="flex flex-wrap gap-1">
         <button
-          v-for="preset in timePresets"
-          :key="preset.value"
           type="button"
           :disabled="disabled"
-          class="px-2 py-1 text-xs rounded transition-colors"
-          :class="
-            isTimeSelected(preset.value)
-              ? 'bg-tada-100 dark:bg-tada-900/30 text-tada-700 dark:text-tada-300 ring-1 ring-tada-300 dark:ring-tada-700'
-              : 'bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600'
-          "
-          @click="setTimePreset(preset.value)"
+          class="px-2 py-1 text-xs rounded bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          @click="setToday"
         >
-          {{ preset.label }}
+          Today
         </button>
       </div>
     </div>

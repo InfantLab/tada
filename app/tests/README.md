@@ -13,14 +13,12 @@
 - `server/utils/csvParser.test.ts` (20 tests) - CSV parsing, date/duration detection
 - `server/api/health.get.test.ts` (1 test) - Health check endpoint
 
-**Disabled integration tests (\*.test.ts.skip):**
+**Integration tests (v0.4.0 planned):**
 
-- `server/api/auth/login.post.test.ts.skip` - Needs @nuxt/test-utils
-- `server/api/auth/register.post.test.ts.skip` - Needs @nuxt/test-utils
-- `server/api/auth/has-users.get.test.ts.skip` - Needs running server
-- `server/api/import/entries.post.test.ts.skip` - Needs HTTP context
+Integration tests for auth and import endpoints will be rewritten with `@nuxt/test-utils/e2e` as part of v0.4.0. Current integration tests:
 
-**Why disabled?** These tests use `$fetch` which requires a running Nuxt server. They'll be rewritten with proper `@nuxt/test-utils/e2e` setup.
+- `tests/api/entries.integration.test.ts` - Entry CRUD with @nuxt/test-utils/e2e
+- `tests/integration/entry-engine.test.ts` - Entry engine validation parity
 
 **Coverage tool blocked:** `@vitest/coverage-v8` requires `node:inspector` which Bun doesn't implement yet.
 

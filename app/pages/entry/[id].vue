@@ -373,8 +373,122 @@ function getMoodEmoji(mood: number): string {
           @select="(e) => (emoji = e)"
         />
 
-        <!-- Timestamp -->
-        <DateTimeInput v-model="timestamp" label="Date & Time" />
+        <!-- Notes (moved up, right after title) -->
+        <div>
+          <label
+            class="block text-sm font-medium text-stone-600 dark:text-stone-400 mb-2"
+          >
+            Notes
+            <span
+              v-if="hasVoiceNotes"
+              class="ml-2 text-xs font-normal text-indigo-500 dark:text-indigo-400"
+            >
+              (includes voice transcription)
+            </span>
+          </label>
+          <textarea
+            ref="notesTextarea"
+            v-model="notes"
+            rows="4"
+            class="journal-textarea w-full px-5 py-4 rounded-xl border border-stone-200 dark:border-stone-600 bg-white/80 dark:bg-stone-900/80 text-stone-800 dark:text-stone-100 placeholder-stone-400/60 dark:placeholder-stone-500/60 focus:outline-none focus:ring-2 focus:ring-stone-400/50 focus:border-stone-300 dark:focus:border-stone-500 focus:bg-white dark:focus:bg-stone-900 transition-all duration-200"
+            placeholder="Add notes or details..."
+            @input="autoGrow"
+          />
+        </div>
+
+        <!-- Category & Subcategory -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label
+              class="block text-sm font-medium text-stone-600 dark:text-stone-400 mb-2"
+            >
+              Category
+            </label>
+            <select
+              v-model="category"
+              class="w-full px-4 py-2.5 rounded-xl border border-stone-200 dark:border-stone-600 bg-white/80 dark:bg-stone-900/80 text-stone-900 dark:text-white focus:ring-2 focus:ring-stone-400/50 focus:border-stone-300 dark:focus:border-stone-500"
+            >
+              <option value="">No category</option>
+              <option
+                v-for="cat in categoryOptions"
+                :key="cat.value"
+                :value="cat.value"
+              >
+                {{ cat.emoji }} {{ cat.label }}
+              </option>
+            </select>
+          </div>
+          <div>
+            <label
+              class="block text-sm font-medium text-stone-600 dark:text-stone-400 mb-2"
+            >
+              Subcategory
+            </label>
+            <select
+              v-model="subcategory"
+              :disabled="!category"
+              class="w-full px-4 py-2.5 rounded-xl border border-stone-200 dark:border-stone-600 bg-white/80 dark:bg-stone-900/80 text-stone-900 dark:text-white focus:ring-2 focus:ring-stone-400/50 focus:border-stone-300 dark:focus:border-stone-500 disabled:opacity-50"
+            >
+              <option value="">No subcategory</option>
+              <option
+                v-for="sub in subcategoryOptions"
+                :key="sub.value"
+                :value="sub.value"
+              >
+                {{ sub.emoji }} {{ sub.label }}
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Duration (for timed entries) -->
+        <DurationInput
+          v-if="entry.type === 'timed' || entry.type === 'meditation'"
+          v-model="durationSeconds"
+          label="Duration"
+        />
+
+        <!-- Tally Count Editor (for tally entries) -->
+        <div
+          v-if="entry.type === 'tally' && tallyCount !== null"
+          class="space-y-2 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-xl border border-emerald-100 dark:border-emerald-800"
+        >
+          <label
+            class="block text-sm font-medium text-emerald-700 dark:text-emerald-300"
+          >
+            💪 Count
+          </label>
+          <div class="flex items-center gap-4">
+            <!-- Decrement -->
+            <button
+              type="button"
+              class="w-10 h-10 rounded-lg bg-white dark:bg-stone-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 text-stone-700 dark:text-stone-200 font-bold text-lg transition-colors border border-emerald-200 dark:border-emerald-700"
+              @click="tallyCount = Math.max(1, (tallyCount || 0) - 1)"
+            >
+              −
+            </button>
+
+            <!-- Count input -->
+            <input
+              v-model.number="tallyCount"
+              type="number"
+              min="1"
+              class="flex-1 text-center text-3xl font-bold text-stone-800 dark:text-stone-100 bg-white dark:bg-stone-800 border border-emerald-200 dark:border-emerald-700 rounded-lg py-2 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            />
+
+            <!-- Increment -->
+            <button
+              type="button"
+              class="w-10 h-10 rounded-lg bg-white dark:bg-stone-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 text-stone-700 dark:text-stone-200 font-bold text-lg transition-colors border border-emerald-200 dark:border-emerald-700"
+              @click="tallyCount = (tallyCount || 0) + 1"
+            >
+              +
+            </button>
+          </div>
+        </div>
+
+        <!-- Timestamp (moved down, uses DateTimePicker with day shortcuts) -->
+        <DateTimePicker v-model="timestamp" label="When?" />
 
         <!-- Voice/Timer Metadata (if present) -->
         <div
@@ -478,120 +592,6 @@ function getMoodEmoji(mood: number): string {
             <AttachmentGallery :entry-id="entry.id" />
           </div>
         </div>
-
-        <!-- Tally Count Editor (for tally entries) -->
-        <div
-          v-if="entry.type === 'tally' && tallyCount !== null"
-          class="space-y-2 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-xl border border-emerald-100 dark:border-emerald-800"
-        >
-          <label
-            class="block text-sm font-medium text-emerald-700 dark:text-emerald-300"
-          >
-            💪 Count
-          </label>
-          <div class="flex items-center gap-4">
-            <!-- Decrement -->
-            <button
-              type="button"
-              class="w-10 h-10 rounded-lg bg-white dark:bg-stone-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 text-stone-700 dark:text-stone-200 font-bold text-lg transition-colors border border-emerald-200 dark:border-emerald-700"
-              @click="tallyCount = Math.max(1, (tallyCount || 0) - 1)"
-            >
-              −
-            </button>
-
-            <!-- Count input -->
-            <input
-              v-model.number="tallyCount"
-              type="number"
-              min="1"
-              class="flex-1 text-center text-3xl font-bold text-stone-800 dark:text-stone-100 bg-white dark:bg-stone-800 border border-emerald-200 dark:border-emerald-700 rounded-lg py-2 focus:outline-none focus:ring-2 focus:ring-emerald-400"
-            />
-
-            <!-- Increment -->
-            <button
-              type="button"
-              class="w-10 h-10 rounded-lg bg-white dark:bg-stone-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 text-stone-700 dark:text-stone-200 font-bold text-lg transition-colors border border-emerald-200 dark:border-emerald-700"
-              @click="tallyCount = (tallyCount || 0) + 1"
-            >
-              +
-            </button>
-          </div>
-        </div>
-
-        <!-- Notes -->
-        <div>
-          <label
-            class="block text-sm font-medium text-stone-600 dark:text-stone-400 mb-2"
-          >
-            Notes
-            <span
-              v-if="hasVoiceNotes"
-              class="ml-2 text-xs font-normal text-indigo-500 dark:text-indigo-400"
-            >
-              (includes voice transcription)
-            </span>
-          </label>
-          <textarea
-            ref="notesTextarea"
-            v-model="notes"
-            rows="4"
-            class="journal-textarea w-full px-5 py-4 rounded-xl border border-stone-200 dark:border-stone-600 bg-white/80 dark:bg-stone-900/80 text-stone-800 dark:text-stone-100 placeholder-stone-400/60 dark:placeholder-stone-500/60 focus:outline-none focus:ring-2 focus:ring-stone-400/50 focus:border-stone-300 dark:focus:border-stone-500 focus:bg-white dark:focus:bg-stone-900 transition-all duration-200"
-            placeholder="Add notes or details..."
-            @input="autoGrow"
-          />
-        </div>
-
-        <!-- Category & Subcategory -->
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label
-              class="block text-sm font-medium text-stone-600 dark:text-stone-400 mb-2"
-            >
-              Category
-            </label>
-            <select
-              v-model="category"
-              class="w-full px-4 py-2.5 rounded-xl border border-stone-200 dark:border-stone-600 bg-white/80 dark:bg-stone-900/80 text-stone-900 dark:text-white focus:ring-2 focus:ring-stone-400/50 focus:border-stone-300 dark:focus:border-stone-500"
-            >
-              <option value="">No category</option>
-              <option
-                v-for="cat in categoryOptions"
-                :key="cat.value"
-                :value="cat.value"
-              >
-                {{ cat.emoji }} {{ cat.label }}
-              </option>
-            </select>
-          </div>
-          <div>
-            <label
-              class="block text-sm font-medium text-stone-600 dark:text-stone-400 mb-2"
-            >
-              Subcategory
-            </label>
-            <select
-              v-model="subcategory"
-              :disabled="!category"
-              class="w-full px-4 py-2.5 rounded-xl border border-stone-200 dark:border-stone-600 bg-white/80 dark:bg-stone-900/80 text-stone-900 dark:text-white focus:ring-2 focus:ring-stone-400/50 focus:border-stone-300 dark:focus:border-stone-500 disabled:opacity-50"
-            >
-              <option value="">No subcategory</option>
-              <option
-                v-for="sub in subcategoryOptions"
-                :key="sub.value"
-                :value="sub.value"
-              >
-                {{ sub.emoji }} {{ sub.label }}
-              </option>
-            </select>
-          </div>
-        </div>
-
-        <!-- Duration (for timed entries) -->
-        <DurationInput
-          v-if="entry.type === 'timed' || entry.type === 'meditation'"
-          v-model="durationSeconds"
-          label="Duration"
-        />
 
         <!-- Entry metadata (read-only) -->
         <div class="pt-4 border-t border-stone-200 dark:border-stone-700">

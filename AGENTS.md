@@ -131,11 +131,10 @@ The VS Code Problems panel has been configured for clarity:
 
 ## Testing
 
-**Current status:** 133 unit tests passing (7 logger tests failing - pre-existing issue with JSON format assertions). Integration tests (4 files) disabled pending @nuxt/test-utils rewrite.
+**Current status:** 361+ unit tests passing. Integration tests with @nuxt/test-utils/e2e in `tests/api/` and `tests/integration/`. Full auth/import integration tests planned for v0.4.0.
 
 - Unit tests: Co-locate with source (`utils/*.test.ts`)
 - Integration tests: `tests/api/*.test.ts` (use @nuxt/test-utils/e2e)
-- Disabled tests: `*.test.ts.skip` - need database/server setup
 - Never create test scripts in root
 - See `app/tests/README.md` for examples
 

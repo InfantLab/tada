@@ -70,6 +70,10 @@ const isOvertime = ref(false);
 const overtimeSeconds = ref(0);
 const ringsCount = ref(0);
 
+// Track interval completion for smooth circle animation
+const lastCompletedIntervalIndex = ref(-1);
+const isTransitioningInterval = ref(false);
+
 // Milestone interval for unlimited mode (derived from first interval)
 const milestoneInterval = computed(() => {
   if (intervals.value.length > 0 && intervals.value[0]) {
@@ -415,12 +419,31 @@ const intervalProgress = computed(() => {
     const intervalLength = (currentTarget ?? 0) - (prevTarget ?? 0);
     const elapsedInInterval = elapsedSeconds.value - (prevTarget ?? 0);
     if (isOvertime.value) return 100; // Full ring during overtime
-    return Math.min(100, (elapsedInInterval / intervalLength) * 100);
+
+    // Calculate base progress
+    const progress = Math.min(100, (elapsedInInterval / intervalLength) * 100);
+
+    // For repeating intervals: when we complete one and start the next,
+    // continue filling clockwise (>100%) then wrap to create smooth transition
+    if (isTransitioningInterval.value && progress < 5) {
+      // We just crossed into a new interval - show progress > 100% briefly
+      // to create clockwise "wipe" effect before resetting
+      return 100 + progress;
+    }
+
+    return progress;
   }
   // Unlimited: progress within current celebration interval
   const intervalSecs = milestoneInterval.value * 60;
   const elapsedInInterval = elapsedSeconds.value % intervalSecs;
-  return (elapsedInInterval / intervalSecs) * 100;
+  const progress = (elapsedInInterval / intervalSecs) * 100;
+
+  // Similar transition effect for milestone intervals
+  if (isTransitioningInterval.value && progress < 5) {
+    return 100 + progress;
+  }
+
+  return progress;
 });
 
 const _isComplete = computed(() => {
@@ -450,6 +473,12 @@ function checkMilestones() {
   // Play single bell for all missed milestones (avoid cacophony)
   if (missedCount > 0) {
     playBell("interval", 0);
+
+    // Trigger transition animation for smooth circle reset
+    isTransitioningInterval.value = true;
+    setTimeout(() => {
+      isTransitioningInterval.value = false;
+    }, 1000);
   }
 }
 
@@ -639,6 +668,16 @@ function resumeTimer() {
         }
         if (crossedCount > 0) {
           playBell("interval", lastCrossedIndex - 1);
+
+          // Mark transition for smooth circle animation
+          if (lastCrossedIndex < cumulative.length) {
+            // We're moving to another interval (not overtime)
+            isTransitioningInterval.value = true;
+            setTimeout(() => {
+              isTransitioningInterval.value = false;
+            }, 1000); // Match the CSS transition duration
+          }
+
           nextIntervalIndex.value = lastCrossedIndex;
         }
         if (nextIntervalIndex.value >= cumulative.length) {
@@ -675,6 +714,8 @@ function resetTimer() {
   overtimeSeconds.value = 0;
   ringsCount.value = 0;
   nextIntervalIndex.value = 0;
+  isTransitioningInterval.value = false;
+  lastCompletedIntervalIndex.value = -1;
   sessionMood.value = null;
   sessionReflection.value = "";
   showPostSessionModal.value = false;
@@ -1472,6 +1513,7 @@ onUnmounted(() => {
     <div class="relative mb-8 flex flex-col items-center justify-center">
       <!-- Progress ring (fills per interval, resets) -->
       <svg class="w-64 h-64 transform -rotate-90" viewBox="0 0 100 100">
+        <!-- Background circle (empty state) -->
         <circle
           class="text-stone-200 dark:text-stone-700"
           stroke="currentColor"
@@ -1481,6 +1523,7 @@ onUnmounted(() => {
           cx="50"
           cy="50"
         />
+        <!-- Progress circle (fills clockwise as time elapses) -->
         <circle
           class="text-tada-500 dark:text-tada-400 transition-all duration-1000"
           stroke="currentColor"
@@ -1491,7 +1534,23 @@ onUnmounted(() => {
           cx="50"
           cy="50"
           :stroke-dasharray="283"
-          :stroke-dashoffset="283 - (intervalProgress / 100) * 283"
+          :stroke-dashoffset="
+            283 - (Math.min(100, intervalProgress) / 100) * 283
+          "
+        />
+        <!-- Clearing circle (wipes clockwise when transitioning to next interval) -->
+        <circle
+          v-if="isTransitioningInterval"
+          class="text-stone-200 dark:text-stone-700 transition-all duration-1000"
+          stroke="currentColor"
+          stroke-width="4"
+          stroke-linecap="round"
+          fill="none"
+          r="45"
+          cx="50"
+          cy="50"
+          :stroke-dasharray="283"
+          :stroke-dashoffset="283 - ((intervalProgress - 100) / 5) * 283"
         />
       </svg>
 

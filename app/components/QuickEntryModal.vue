@@ -15,6 +15,10 @@ import type { EntryMode } from "./EntryTypeToggle.vue";
 import type { DurationContext } from "./DurationPicker.vue";
 import type { EntryInput } from "~/utils/entrySchemas";
 import type { CreateEntryOptions } from "~/composables/useEntryEngine";
+import {
+  CATEGORY_DEFAULTS,
+  getSubcategoriesForCategory,
+} from "~/utils/categoryDefaults";
 
 const props = withDefaults(
   defineProps<{
@@ -58,66 +62,56 @@ const toast = useToast();
 const mode = ref<EntryMode>(props.initialMode);
 const name = ref(props.initialName);
 const category = ref(props.initialCategory);
+const subcategory = ref<string>("");
 const timestamp = ref(new Date().toISOString());
 const durationSeconds = ref<number | null>(null);
 const count = ref<number | null>(null);
 const notes = ref("");
+const emoji = ref<string | null>(null);
+const showEmojiPicker = ref(false);
 
-// Category suggestions state
-const categorySuggestions = ref<Array<{ category: string; count: number }>>([]);
-const showCategorySuggestions = ref(false);
-const categoryInputRef = ref<HTMLInputElement | null>(null);
+// User preferences for category visibility
+const { loadPreferences, isCategoryVisible } = usePreferences();
 
-// Fetch category suggestions
-async function fetchCategorySuggestions(query: string = "") {
-  try {
-    const entryType =
-      mode.value === "timed"
-        ? "timed"
-        : mode.value === "tally"
-          ? "tally"
-          : undefined;
-    const params = new URLSearchParams();
-    if (query) params.set("query", query);
-    if (entryType) params.set("type", entryType);
-    params.set("limit", "8");
+// Load preferences on mount
+onMounted(() => {
+  loadPreferences();
+});
 
-    const response = await $fetch<{
-      suggestions: Array<{ category: string; count: number }>;
-    }>(`/api/categories/recent?${params.toString()}`);
-    categorySuggestions.value = response.suggestions || [];
-  } catch {
-    categorySuggestions.value = [];
-  }
-}
+// Category options
+const categoryOptions = computed(() => {
+  return Object.keys(CATEGORY_DEFAULTS)
+    .filter((slug) => isCategoryVisible(slug))
+    .map((slug) => ({
+      value: slug,
+      label: CATEGORY_DEFAULTS[slug]!.label,
+      emoji: CATEGORY_DEFAULTS[slug]!.emoji,
+    }));
+});
+
+// Subcategory options based on selected category
+const subcategoryOptions = computed(() => {
+  if (!category.value) return [];
+  return getSubcategoriesForCategory(category.value).map((s) => ({
+    value: s.slug,
+    label: s.label,
+    emoji: s.emoji,
+  }));
+});
 
 // Handle activity selection from autocomplete
-function handleActivitySelect(suggestion: { name: string; category?: string }) {
+function handleActivitySelect(suggestion: {
+  name: string;
+  category?: string;
+  subcategory?: string;
+}) {
   name.value = suggestion.name;
   if (suggestion.category) {
     category.value = suggestion.category;
   }
-}
-
-// Handle category input
-function handleCategoryInput(event: Event) {
-  const target = event.target as HTMLInputElement;
-  category.value = target.value;
-  fetchCategorySuggestions(target.value);
-  showCategorySuggestions.value = true;
-}
-
-// Select a category suggestion
-function selectCategory(cat: string) {
-  category.value = cat;
-  showCategorySuggestions.value = false;
-}
-
-// Hide category suggestions with delay (for blur handling)
-function hideCategorySuggestions() {
-  setTimeout(() => {
-    showCategorySuggestions.value = false;
-  }, 150);
+  if (suggestion.subcategory) {
+    subcategory.value = suggestion.subcategory;
+  }
 }
 
 // Draft tracking
@@ -155,11 +149,13 @@ watch(
         mode.value = (input["type"] as EntryMode) || props.initialMode;
         name.value = (input["name"] as string) || props.initialName;
         category.value = (input["category"] as string) || props.initialCategory;
+        subcategory.value = (input["subcategory"] as string) || "";
         timestamp.value =
           (input["timestamp"] as string) || new Date().toISOString();
         durationSeconds.value = (input["durationSeconds"] as number) || null;
         count.value = (input["count"] as number) || null;
         notes.value = (input["notes"] as string) || "";
+        emoji.value = (input["emoji"] as string) || null;
       } else {
         // Normal reset
         resumingDraftId.value = null;
@@ -167,10 +163,13 @@ watch(
         mode.value = props.initialMode;
         name.value = props.initialName;
         category.value = props.initialCategory;
+        subcategory.value = "";
         timestamp.value = new Date().toISOString();
         durationSeconds.value = null;
         count.value = null;
         notes.value = "";
+        emoji.value = null;
+        showEmojiPicker.value = false;
       }
       conflicts.value = null;
       conflictResolution.value = null;
@@ -192,6 +191,8 @@ const isValid = computed(() => {
       return count.value !== null && count.value > 0;
     case "moment":
       return true; // Just need a name
+    case "tada":
+      return true; // Just need a name
     default:
       return false;
   }
@@ -202,6 +203,8 @@ function buildEntryInput(): EntryInput {
   const baseEntry = {
     name: name.value.trim(),
     category: category.value.trim() || undefined,
+    subcategory: subcategory.value.trim() || undefined,
+    emoji: emoji.value || undefined,
     timestamp: timestamp.value,
     notes: notes.value.trim() || undefined,
     source: "manual" as const,
@@ -238,6 +241,12 @@ function buildEntryInput(): EntryInput {
         ...baseEntry,
         type: "moment",
         content: notes.value.trim() || name.value.trim(),
+        data: {},
+      };
+    case "tada":
+      return {
+        ...baseEntry,
+        type: "tada",
         data: {},
       };
   }
@@ -333,9 +342,10 @@ function handleKeydown(event: KeyboardEvent) {
 
 // Mode labels for header
 const modeLabels: Record<EntryMode, string> = {
-  timed: "Log Past Session",
-  reps: "Log Activity",
+  tada: "Log Ta-Da!",
   moment: "Quick Note",
+  timed: "Log Past Session",
+  tally: "Log Activity",
 };
 </script>
 
@@ -442,6 +452,25 @@ const modeLabels: Record<EntryMode, string> = {
                 <EntryTypeToggle v-model="mode" />
               </div>
 
+              <!-- Emoji Picker Button -->
+              <div class="flex justify-center">
+                <button
+                  type="button"
+                  class="text-5xl hover:scale-110 transition-transform cursor-pointer p-2 rounded-2xl hover:bg-stone-200/50 dark:hover:bg-stone-700/50"
+                  title="Click to change emoji"
+                  @click="showEmojiPicker = !showEmojiPicker"
+                >
+                  {{ emoji || "✨" }}
+                </button>
+              </div>
+
+              <!-- Emoji Picker -->
+              <EmojiPicker
+                v-model="showEmojiPicker"
+                :entry-name="name"
+                @select="(e) => (emoji = e)"
+              />
+
               <!-- Activity name with autocomplete -->
               <ActivityAutocomplete
                 v-model="name"
@@ -452,54 +481,77 @@ const modeLabels: Record<EntryMode, string> = {
                     ? 'timed'
                     : mode === 'tally'
                       ? 'tally'
-                      : undefined
+                      : mode === 'tada'
+                        ? 'tada'
+                        : mode === 'moment'
+                          ? 'moment'
+                          : undefined
                 "
                 @select="handleActivitySelect"
               />
 
-              <!-- Category with suggestions -->
-              <div class="space-y-1 relative">
+              <!-- Notes (moved up, right after title) -->
+              <div class="space-y-1">
                 <label
                   class="block text-sm font-medium text-stone-700 dark:text-stone-300"
                 >
-                  Category
+                  Notes
                   <span class="text-stone-400 font-normal">(optional)</span>
                 </label>
-                <input
-                  ref="categoryInputRef"
-                  :value="category"
-                  type="text"
-                  placeholder="Exercise, Mindfulness, etc."
-                  class="w-full px-3 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 text-stone-900 dark:text-white placeholder-stone-400 focus:ring-2 focus:ring-tada-500 focus:border-transparent"
-                  @input="handleCategoryInput"
-                  @focus="
-                    fetchCategorySuggestions(category);
-                    showCategorySuggestions = true;
+                <textarea
+                  v-model="notes"
+                  :rows="2"
+                  :placeholder="
+                    mode === 'moment'
+                      ? 'What\'s on your mind?'
+                      : 'Any notes about this session?'
                   "
-                  @blur="hideCategorySuggestions"
+                  class="w-full px-3 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 text-stone-900 dark:text-white placeholder-stone-400 focus:ring-2 focus:ring-tada-500 focus:border-transparent resize-none"
                 />
+              </div>
 
-                <!-- Category suggestions dropdown -->
-                <div
-                  v-if="
-                    showCategorySuggestions && categorySuggestions.length > 0
-                  "
-                  class="absolute z-10 w-full mt-1 bg-white dark:bg-stone-800 rounded-lg border border-stone-200 dark:border-stone-700 shadow-lg max-h-48 overflow-y-auto"
-                >
-                  <button
-                    v-for="suggestion in categorySuggestions"
-                    :key="suggestion.category"
-                    type="button"
-                    class="w-full px-3 py-2 text-left text-sm hover:bg-stone-100 dark:hover:bg-stone-700 flex items-center justify-between"
-                    @mousedown.prevent="selectCategory(suggestion.category)"
+              <!-- Category & Subcategory (two selects side by side) -->
+              <div class="grid grid-cols-2 gap-3">
+                <div class="space-y-1">
+                  <label
+                    class="block text-sm font-medium text-stone-700 dark:text-stone-300"
                   >
-                    <span class="text-stone-900 dark:text-white">{{
-                      suggestion.category
-                    }}</span>
-                    <span class="text-xs text-stone-400"
-                      >{{ suggestion.count }}×</span
+                    Category
+                  </label>
+                  <select
+                    v-model="category"
+                    class="w-full px-3 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 text-stone-900 dark:text-white focus:ring-2 focus:ring-tada-500 focus:border-transparent"
+                  >
+                    <option value="">None</option>
+                    <option
+                      v-for="cat in categoryOptions"
+                      :key="cat.value"
+                      :value="cat.value"
                     >
-                  </button>
+                      {{ cat.emoji }} {{ cat.label }}
+                    </option>
+                  </select>
+                </div>
+                <div class="space-y-1">
+                  <label
+                    class="block text-sm font-medium text-stone-700 dark:text-stone-300"
+                  >
+                    Subcategory
+                  </label>
+                  <select
+                    v-model="subcategory"
+                    :disabled="!category"
+                    class="w-full px-3 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 text-stone-900 dark:text-white focus:ring-2 focus:ring-tada-500 focus:border-transparent disabled:opacity-50"
+                  >
+                    <option value="">None</option>
+                    <option
+                      v-for="sub in subcategoryOptions"
+                      :key="sub.value"
+                      :value="sub.value"
+                    >
+                      {{ sub.emoji }} {{ sub.label }}
+                    </option>
+                  </select>
                 </div>
               </div>
 
@@ -531,26 +583,6 @@ const modeLabels: Record<EntryMode, string> = {
 
               <!-- When -->
               <DateTimePicker v-model="timestamp" label="When?" />
-
-              <!-- Notes (optional) -->
-              <div class="space-y-1">
-                <label
-                  class="block text-sm font-medium text-stone-700 dark:text-stone-300"
-                >
-                  Notes
-                  <span class="text-stone-400 font-normal">(optional)</span>
-                </label>
-                <textarea
-                  v-model="notes"
-                  :rows="2"
-                  :placeholder="
-                    mode === 'moment'
-                      ? 'What\'s on your mind?'
-                      : 'Any notes about this session?'
-                  "
-                  class="w-full px-3 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 text-stone-900 dark:text-white placeholder-stone-400 focus:ring-2 focus:ring-tada-500 focus:border-transparent resize-none"
-                />
-              </div>
 
               <!-- Attachment Placeholder -->
               <div class="flex justify-start">

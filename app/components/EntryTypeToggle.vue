@@ -10,7 +10,7 @@
  * Used in QuickEntryModal to switch between entry modes
  */
 
-export type EntryMode = "timed" | "tally" | "moment";
+export type EntryMode = "tada" | "moment" | "timed" | "tally";
 
 const props = withDefaults(
   defineProps<{
@@ -24,7 +24,7 @@ const props = withDefaults(
     disabled?: boolean;
   }>(),
   {
-    availableModes: () => ["timed", "tally", "moment"],
+    availableModes: () => ["tada", "moment", "timed", "tally"],
     compact: false,
     disabled: false,
   },
@@ -45,8 +45,22 @@ interface ModeDefinition {
 
 const modes: ModeDefinition[] = [
   {
+    id: "tada",
+    label: "Ta-Da!",
+    shortLabel: "Ta-Da!",
+    icon: "🎉",
+    description: "Celebrate an accomplishment",
+  },
+  {
+    id: "moment",
+    label: "Moment",
+    shortLabel: "Note",
+    icon: "✨",
+    description: "Capture a quick thought or event",
+  },
+  {
     id: "timed",
-    label: "Timed",
+    label: "Session",
     shortLabel: "Time",
     icon: "⏱️",
     description: "Log a duration-based activity",
@@ -57,13 +71,6 @@ const modes: ModeDefinition[] = [
     shortLabel: "Count",
     icon: "🔢",
     description: "Log a count-based activity",
-  },
-  {
-    id: "moment",
-    label: "Moment",
-    shortLabel: "Note",
-    icon: "✨",
-    description: "Capture a quick thought or event",
   },
 ];
 
