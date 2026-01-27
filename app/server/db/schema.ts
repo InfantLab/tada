@@ -119,6 +119,47 @@ export const entries = sqliteTable("entries", {
 });
 
 // ============================================================================
+// Attachments - Media files (photos, videos, audio) linked to entries
+// ============================================================================
+
+export type AttachmentStatus = "pending" | "processing" | "ready" | "failed";
+
+export const attachments = sqliteTable("attachments", {
+  id: text("id").primaryKey(), // UUID
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  entryId: text("entry_id").references(() => entries.id, {
+    onDelete: "cascade",
+  }),
+
+  // File metadata
+  filename: text("filename").notNull(), // Original filename
+  mimeType: text("mime_type").notNull(), // e.g., 'image/jpeg'
+  sizeBytes: integer("size_bytes").notNull(), // Original file size
+
+  // Storage location
+  storageKey: text("storage_key").notNull(), // R2/S3 object key or local path
+  thumbnailKey: text("thumbnail_key"), // Thumbnail object key (if applicable)
+
+  // Media metadata (extracted after processing)
+  width: integer("width"), // Image/video width in pixels
+  height: integer("height"), // Image/video height in pixels
+  durationSeconds: integer("duration_seconds"), // Audio/video duration
+
+  // Processing status
+  status: text("status").notNull().default("pending"), // AttachmentStatus
+  errorMessage: text("error_message"), // If status = 'failed'
+
+  // Timestamps
+  createdAt: text("created_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
+  processedAt: text("processed_at"), // When processing completed
+  deletedAt: text("deleted_at"), // Soft delete
+});
+
+// ============================================================================
 // Rhythms - Definitions that aggregate entries into patterns
 // ============================================================================
 
@@ -255,30 +296,6 @@ export const encouragements = sqliteTable("encouragements", {
 
   // Metadata
   isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
-
-  createdAt: text("created_at")
-    .notNull()
-    .default(sql`(datetime('now'))`),
-});
-
-// ============================================================================
-// Attachments - Files associated with entries
-// ============================================================================
-
-export const attachments = sqliteTable("attachments", {
-  id: text("id").primaryKey(), // UUID
-  entryId: text("entry_id")
-    .notNull()
-    .references(() => entries.id, { onDelete: "cascade" }),
-
-  type: text("type").notNull(), // 'photo', 'audio', 'gpx', 'file'
-  filename: text("filename").notNull(),
-  mimeType: text("mime_type").notNull(),
-  storagePath: text("storage_path").notNull(), // Filesystem path or blob reference
-  sizeBytes: integer("size_bytes"),
-
-  // Type-specific metadata (JSON)
-  metadata: text("metadata", { mode: "json" }).$type<Record<string, unknown>>(),
 
   createdAt: text("created_at")
     .notNull()

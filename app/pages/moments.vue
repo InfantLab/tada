@@ -7,6 +7,12 @@ definePageMeta({
 });
 
 const router = useRouter();
+const toast = useToast();
+const { createEntry, isLoading: isSaving } = useEntryEngine();
+
+// Voice input mode
+const showVoiceInput = ref(false);
+const voiceSubcategory = ref<"magic" | "journal" | "dream" | "gratitude">("journal");
 
 // Fetch journal entries from API
 const entries = ref<Entry[]>([]);
@@ -97,6 +103,90 @@ function getTypeIcon(type: string, subcategory?: string | null): string {
       return "✨";
   }
 }
+
+// Voice input handlers
+async function handleVoiceComplete(
+  _blob: Blob,
+  _duration: number,
+  transcription: string,
+) {
+  if (!transcription?.trim()) {
+    toast.error("No speech detected. Please try again.");
+    return;
+  }
+
+  try {
+    // Extract first sentence as title, rest as notes
+    const text = transcription.trim();
+    const firstSentenceMatch = text.match(/^([^.!?]+[.!?]?)\s*/);
+    let title = text;
+    let notes = "";
+
+    if (firstSentenceMatch && firstSentenceMatch[1]) {
+      const firstPart = firstSentenceMatch[1].trim();
+      const rest = text.slice(firstSentenceMatch[0].length).trim();
+
+      if (firstPart.length <= 60) {
+        title = firstPart;
+        notes = rest;
+      }
+    }
+
+    // Create moment entry
+    const result = await createEntry({
+      type: "moment",
+      subcategory: voiceSubcategory.value,
+      name: title,
+      notes: notes || undefined,
+      emoji: getTypeIcon(voiceSubcategory.value),
+      timestamp: new Date().toISOString(),
+      data: {
+        source: "voice",
+      },
+    });
+
+    if (result) {
+      toast.success(`${voiceSubcategory.value === "magic" ? "🪄 Magic moment" : "📝 Moment"} saved!`);
+      showVoiceInput.value = false;
+      // Refresh entries
+      try {
+        const data = await $fetch<{
+          entries: Entry[];
+          nextCursor: string | null;
+          hasMore: boolean;
+        }>("/api/entries");
+        entries.value = data.entries.filter(
+          (e) =>
+            [
+              "dream",
+              "journal",
+              "note",
+              "gratitude",
+              "magic",
+              "reflection",
+              "memory",
+              "moment",
+            ].includes(e.type) ||
+            e.category === "moments" ||
+            e.subcategory === "journal",
+        );
+      } catch {
+        // Silent refresh failure
+      }
+    }
+  } catch (err) {
+    console.error("Failed to save voice moment:", err);
+    toast.error("Failed to save moment");
+  }
+}
+
+function handleVoiceError(message: string) {
+  toast.error(message);
+}
+
+function handleVoiceCancel() {
+  showVoiceInput.value = false;
+}
 </script>
 
 <template>
@@ -112,67 +202,169 @@ function getTypeIcon(type: string, subcategory?: string | null): string {
         </p>
       </div>
 
-      <!-- Add entry button -->
-      <NuxtLink
-        to="/add?type=moment"
-        class="flex items-center gap-2 px-4 py-2 bg-tada-600 hover:opacity-90 text-black dark:bg-tada-600 dark:text-white rounded-lg font-medium transition-colors shadow-sm"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-5 w-5"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
+      <div class="flex items-center gap-2">
+        <!-- Voice input toggle -->
+        <button
+          type="button"
+          class="flex items-center gap-2 rounded-lg px-3 py-2 transition-colors"
+          :class="
+            showVoiceInput
+              ? 'bg-tada-100 text-tada-700 dark:bg-tada-900/30 dark:text-tada-300'
+              : 'text-stone-500 hover:bg-stone-100 hover:text-stone-700 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-200'
+          "
+          title="Voice input"
+          @click="showVoiceInput = !showVoiceInput"
         >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M12 4v16m8-8H4"
-          />
-        </svg>
-        <span class="hidden sm:inline">New</span>
-      </NuxtLink>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
+            />
+          </svg>
+        </button>
+
+        <!-- Add entry button -->
+        <button
+          type="button"
+          class="flex items-center gap-2 px-4 py-2 bg-tada-600 hover:opacity-90 text-black dark:bg-tada-600 dark:text-white rounded-lg font-medium transition-colors shadow-sm"
+          @click="showVoiceInput = true"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 4v16m8-8H4"
+            />
+          </svg>
+          <span class="hidden sm:inline">New</span>
+        </button>
+      </div>
     </div>
 
-    <!-- Quick capture buttons -->
+    <!-- Voice Input Section -->
+    <Transition
+      enter-active-class="transition-all duration-200 ease-out"
+      enter-from-class="opacity-0 -translate-y-2"
+      enter-to-class="opacity-100 translate-y-0"
+      leave-active-class="transition-all duration-150 ease-in"
+      leave-from-class="opacity-100 translate-y-0"
+      leave-to-class="opacity-0 -translate-y-2"
+    >
+      <div
+        v-if="showVoiceInput"
+        class="mb-6 rounded-xl border border-purple-200 bg-gradient-to-br from-purple-50 to-indigo-50 p-6 dark:border-purple-800 dark:from-purple-900/20 dark:to-indigo-900/20"
+      >
+        <div class="mb-4 text-center">
+          <h3 class="text-lg font-semibold text-stone-800 dark:text-stone-100">
+            Quick Voice Capture
+          </h3>
+          <p class="text-sm text-stone-500 dark:text-stone-400">
+            Speak your thought, dream, or moment
+          </p>
+        </div>
+
+        <!-- Type selector -->
+        <div class="flex justify-center gap-2 mb-4">
+          <button
+            v-for="type in [
+              { value: 'magic', label: '🪄 Magic', color: 'purple' },
+              { value: 'dream', label: '🌙 Dream', color: 'indigo' },
+              { value: 'gratitude', label: '🙏 Gratitude', color: 'amber' },
+              { value: 'journal', label: '🪶 Journal', color: 'stone' },
+            ]"
+            :key="type.value"
+            type="button"
+            class="px-3 py-1.5 rounded-full text-sm font-medium transition-colors"
+            :class="
+              voiceSubcategory === type.value
+                ? 'bg-' + type.color + '-500 text-white'
+                : 'bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600'
+            "
+            @click="voiceSubcategory = type.value as any"
+          >
+            {{ type.label }}
+          </button>
+        </div>
+
+        <div class="flex justify-center">
+          <VoiceRecorder
+            mode="journal"
+            @complete="handleVoiceComplete"
+            @error="handleVoiceError"
+            @cancel="handleVoiceCancel"
+          />
+        </div>
+
+        <!-- Saving indicator -->
+        <div
+          v-if="isSaving"
+          class="mt-4 flex items-center justify-center gap-2 text-stone-500 dark:text-stone-400"
+        >
+          <div
+            class="h-4 w-4 animate-spin rounded-full border-2 border-tada-500 border-t-transparent"
+          />
+          <span class="text-sm">Saving...</span>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- Quick capture buttons - open voice input with preset type -->
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-6">
-      <NuxtLink
-        to="/add?type=moment&subcategory=magic"
+      <button
+        type="button"
         class="flex items-center gap-2 px-3 py-3 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded-lg border border-purple-200 dark:border-purple-800 transition-colors"
+        @click="voiceSubcategory = 'magic'; showVoiceInput = true"
       >
         <span class="text-xl">🪄</span>
         <span class="text-sm font-medium text-purple-700 dark:text-purple-300"
           >Magic</span
         >
-      </NuxtLink>
-      <NuxtLink
-        to="/add?type=moment&subcategory=dream"
+      </button>
+      <button
+        type="button"
         class="flex items-center gap-2 px-3 py-3 bg-indigo-50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 rounded-lg border border-indigo-200 dark:border-indigo-800 transition-colors"
+        @click="voiceSubcategory = 'dream'; showVoiceInput = true"
       >
         <span class="text-xl">🌙</span>
         <span class="text-sm font-medium text-indigo-700 dark:text-indigo-300"
           >Dream</span
         >
-      </NuxtLink>
-      <NuxtLink
-        to="/add?type=moment&subcategory=gratitude"
+      </button>
+      <button
+        type="button"
         class="flex items-center gap-2 px-3 py-3 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/30 rounded-lg border border-amber-200 dark:border-amber-800 transition-colors"
+        @click="voiceSubcategory = 'gratitude'; showVoiceInput = true"
       >
         <span class="text-xl">🙏</span>
         <span class="text-sm font-medium text-amber-700 dark:text-amber-300"
           >Gratitude</span
         >
-      </NuxtLink>
-      <NuxtLink
-        to="/add?type=moment&subcategory=journal"
+      </button>
+      <button
+        type="button"
         class="flex items-center gap-2 px-3 py-3 bg-stone-50 dark:bg-stone-800 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-lg border border-stone-200 dark:border-stone-700 transition-colors"
+        @click="voiceSubcategory = 'journal'; showVoiceInput = true"
       >
         <span class="text-xl">🪶</span>
         <span class="text-sm font-medium text-stone-700 dark:text-stone-300"
           >Journal</span
         >
-      </NuxtLink>
+      </button>
     </div>
 
     <!-- Type filter -->
@@ -214,18 +406,20 @@ function getTypeIcon(type: string, subcategory?: string | null): string {
         thoughts.
       </p>
       <div class="flex flex-col sm:flex-row gap-3 justify-center">
-        <NuxtLink
-          to="/add?type=moment&subcategory=magic"
+        <button
+          type="button"
           class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-medium transition-colors"
+          @click="voiceSubcategory = 'magic'; showVoiceInput = true"
         >
           🪄 Capture magic
-        </NuxtLink>
-        <NuxtLink
-          to="/add?type=moment&subcategory=dream"
+        </button>
+        <button
+          type="button"
           class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg font-medium transition-colors"
+          @click="voiceSubcategory = 'dream'; showVoiceInput = true"
         >
           🌙 Record a dream
-        </NuxtLink>
+        </button>
       </div>
     </div>
 

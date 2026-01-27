@@ -141,15 +141,11 @@ async function saveEntry() {
     updateData["data"] = { count: tallyCount.value };
   }
 
-  const result = await updateEntry(
-    entryId,
-    updateData,
-    {
-      navigateTo: "/",
-      successMessage: "Entry saved!",
-      skipEmojiResolution: true, // Keep the manually selected emoji
-    },
-  );
+  const result = await updateEntry(entryId, updateData, {
+    navigateTo: "/",
+    successMessage: "Entry saved!",
+    skipEmojiResolution: true, // Keep the manually selected emoji
+  });
 
   // Result will be null if save failed (error already shown by composable)
   if (!result) return;
@@ -267,6 +263,9 @@ const entryData = computed(() => {
       typeof data["practiceTitle"] === "string"
         ? (data["practiceTitle"] as string)
         : null,
+    attachments: Array.isArray(data["attachments"])
+      ? (data["attachments"] as string[])
+      : [],
   };
 });
 
@@ -443,30 +442,7 @@ function getMoodEmoji(mood: number): string {
             >
               Practice
             </div>
-            <a
-              :href="entryData.practiceUrl"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="inline-flex items-center gap-2 text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                />
-              </svg>
-              <span>{{
-                entryData.practiceTitle || entryData.practiceUrl
-              }}</span>
-            </a>
+            <PracticeLinkPreview :url="entryData.practiceUrl" />
           </div>
 
           <!-- Significance badge (for voice-captured tadas) -->
@@ -487,6 +463,19 @@ function getMoodEmoji(mood: number): string {
                 ? "Major accomplishment!"
                 : "Quick win"
             }}</span>
+          </div>
+
+          <!-- Attachments Gallery (photos, videos, audio) -->
+          <div
+            v-if="entryData.attachments && entryData.attachments.length > 0"
+            class="space-y-2"
+          >
+            <div
+              class="text-xs font-medium text-stone-500 dark:text-stone-400 uppercase tracking-wider"
+            >
+              Attachments
+            </div>
+            <AttachmentGallery :entry-id="entry.id" />
           </div>
         </div>
 

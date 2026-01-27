@@ -7,6 +7,7 @@ import {
   getTimedCategories,
 } from "~/utils/categoryDefaults";
 import { extractTimerNoteData } from "~/utils/tadaExtractor";
+import { isValidUrl, type LinkMetadata } from "~/utils/linkPreview";
 import type { ExtractedTada } from "~/types/extraction";
 import type { TimerPreset } from "~/server/db/schema";
 import type { EntryInput } from "~/utils/entrySchemas";
@@ -84,6 +85,47 @@ const selectedSubcategory = ref("sitting");
 // Practice URL - optional link to what you're practicing
 const practiceUrl = ref("");
 const practiceTitle = ref(""); // Auto-extracted or user-provided title
+const practiceMetadata = ref<LinkMetadata | null>(null);
+const isFetchingLinkPreview = ref(false);
+
+// Debounced fetch for practice URL metadata
+let practiceUrlDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+watch(practiceUrl, (newUrl) => {
+  // Clear previous timer
+  if (practiceUrlDebounceTimer) {
+    clearTimeout(practiceUrlDebounceTimer);
+  }
+
+  // Reset metadata if URL is cleared
+  if (!newUrl.trim()) {
+    practiceMetadata.value = null;
+    return;
+  }
+
+  // Debounce the fetch (wait 500ms after user stops typing)
+  practiceUrlDebounceTimer = setTimeout(async () => {
+    if (!isValidUrl(newUrl)) return;
+
+    isFetchingLinkPreview.value = true;
+    try {
+      const metadata = await $fetch<LinkMetadata>("/api/link-preview", {
+        query: { url: newUrl },
+      });
+      practiceMetadata.value = metadata;
+
+      // Auto-fill title if not already set by user
+      if (metadata.title && !practiceTitle.value) {
+        practiceTitle.value = metadata.title;
+      }
+    } catch (error) {
+      console.error("Failed to fetch link preview:", error);
+      practiceMetadata.value = null;
+    } finally {
+      isFetchingLinkPreview.value = false;
+    }
+  }, 500);
+});
 
 // User preferences for filtering categories and custom emojis
 const {
@@ -1076,16 +1118,41 @@ onUnmounted(() => {
               @click="
                 practiceUrl = '';
                 practiceTitle = '';
+                practiceMetadata = null;
               "
             >
               ✕
             </button>
           </div>
+
+          <!-- Link Preview -->
+          <div
+            v-if="isFetchingLinkPreview"
+            class="mt-2 flex items-center gap-2 text-sm text-stone-500"
+          >
+            <div
+              class="animate-spin h-4 w-4 border-2 border-stone-300 border-t-transparent rounded-full"
+            ></div>
+            <span>Fetching preview...</span>
+          </div>
+          <div v-else-if="practiceMetadata" class="mt-2">
+            <PracticeLinkPreview
+              :url="practiceUrl"
+              :metadata="practiceMetadata"
+              compact
+            />
+          </div>
+
+          <!-- Title override (only show if no auto-title or user wants to edit) -->
           <input
-            v-if="practiceUrl"
+            v-if="
+              practiceUrl &&
+              (!practiceMetadata?.title ||
+                practiceTitle !== practiceMetadata?.title)
+            "
             v-model="practiceTitle"
             type="text"
-            placeholder="Title (optional - describe what you're practicing)"
+            placeholder="Title (optional - auto-detected if available)"
             class="mt-2 w-full px-3 py-2 rounded-lg text-sm border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-700 text-stone-800 dark:text-stone-100 placeholder-stone-400"
           />
         </div>

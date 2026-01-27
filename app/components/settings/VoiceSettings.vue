@@ -552,6 +552,25 @@ const usagePercent = computed(() => {
       </div>
     </div>
 
+    <!-- Diagnostics Section -->
+    <div
+      class="rounded-xl border border-stone-200 bg-white p-4 dark:border-stone-700 dark:bg-stone-800"
+    >
+      <div class="mb-4 flex items-center gap-3">
+        <span class="text-xl">🔧</span>
+        <div>
+          <h3 class="font-medium text-stone-800 dark:text-stone-100">
+            Troubleshooting
+          </h3>
+          <p class="text-sm text-stone-500 dark:text-stone-400">
+            Debug voice recording issues on this device
+          </p>
+        </div>
+      </div>
+
+      <VoiceDiagnostics />
+    </div>
+
     <!-- Privacy Note -->
     <div class="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-xl">
       <div class="flex gap-3">

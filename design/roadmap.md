@@ -149,7 +149,6 @@ Magic moments include: **joy, delight, serendipity, zen, wonder, awe, gratitude,
 - [x] Quick-capture button: "Something magical just happened" (on Moments page)
 - [x] Minimal friction: just a text field + optional photo placeholder
 - [x] Tag suggestions: joy, delight, serendipity, zen, wonder, awe, synchronicity, gratitude
-- [ ] Optional: Pattern view over time (see your magic moments together)
 
 ### 🎙️ Voice Input with LLM
 
@@ -157,29 +156,27 @@ Magic moments include: **joy, delight, serendipity, zen, wonder, awe, gratitude,
 - [x] LLM processing to structure dictated content
 - [x] Review/edit before saving
 - [x] Works offline with on-device processing (where possible)
-- [ ] Extract category, mood, key details automatically
-- [ ] Voice-to-Moment: speak a quick thought, save as moment
-- [ ] Voice-to-Session: describe what you practiced after a session
+- [x] Voice-to-Tally: speak counts like "10 push-ups, 12 kettlebells, 30 squats"
+- [x] Voice diagnostics for mobile PWA debugging
+- [x] Voice-to-Moment: quick voice capture on moments page
+- [x] Voice-to-Session: reflection capture with voice at session end
 
 ### 🔗 Practice Links
 
 Connect sessions to specific practices, resources, or guided content.
 
 - [x] Optional URL field on Sessions: "What were you practicing?"
-- [ ] Auto-detect YouTube, Insight Timer, Spotify links → show title/thumbnail
-- [ ] Practice history: "Return to this practice" quick-launch
-- [ ] Suggested practices based on category/subcategory
+- [x] Auto-detect YouTube, Insight Timer, Spotify links → show title/thumbnail
 - [x] Link display on entry detail page
 
-### 📸 Photo Attachments (Frontend Only)
+### 📸 Photo/Media System Foundations
 
-Prepare the UI for photo attachments. Backend storage deferred to v0.4.0 (hosted version).
+Prepare the architecture for photo/video attachments. Actual capture and storage are premium features (v0.6.0+).
 
 - [x] Photo placeholder component in Moments and Ta-Da! entries
-- [ ] Camera capture button (stores locally/shows preview)
-- [ ] Photo gallery UI mockup in entry detail
-- [ ] Design for cloud storage integration (S3/R2)
-- [ ] Note: actual upload/storage requires hosted infrastructure
+- [x] Attachment data model design (schema for media references)
+- [x] Photo gallery UI mockup in entry detail
+- [x] Design document for cloud storage integration (S3/R2)
 
 ### 🧹 Polish & Fixes
 
@@ -189,13 +186,17 @@ Moved from v0.2.0 or newly identified:
 - [x] Timezone selector UI for imports (dropdown with common timezones)
 - [x] Settings page autosave (removed save button, added autosave indicator)
 - [ ] Rewrite integration tests with @nuxt/test-utils/e2e
-- [ ] Home screen design (configurable dashboard - see docs/plans/landingpage.md)
 
 ---
 
 ## v0.4.0: Cloud Service — tada.living
 
 _Target: Q3 2026_
+
+### 🧹 Cleanup & Deprecations
+
+- [ ] Remove deprecated `/add` page (replaced by inline capture on each entry type page)
+- [ ] Audit and remove unused components from v0.2.0 refactoring
 
 ### 🌱 Gentle Onboarding Tour
 
@@ -379,6 +380,27 @@ Current "Replace" wipes all overlapping entries. Need more intelligent approach:
 - [ ] Routine templates (shareable)
 - [ ] Time-of-day awareness (morning routine vs evening wind-down)
 
+### 🔗 Practice Links Enhancement
+
+Build on v0.3.0 practice links with history and suggestions.
+
+- [ ] Recent Practices: "Return to this practice" quick-launch dropdown
+- [ ] Suggested practices based on category/subcategory
+- [ ] Practice frequency stats ("Used 5 times", "Last: 2 days ago")
+
+### 🏠 Configurable Home Screen
+
+Personalizable dashboard for the landing page.
+
+- [ ] Home screen design (see docs/plans/landingpage.md)
+- [ ] Widget-based layout (rhythms, recent entries, quick actions)
+- [ ] User-configurable widget order and visibility
+
+### ✨ Magic Moments Enhancement
+
+- [ ] Pattern view over time (see your magic moments together)
+- [ ] Magic moments timeline/calendar visualization
+
 ### 🤖 AI Insights (with Guardrails)
 
 Private, opt-in AI analysis with strong privacy protections.
@@ -392,6 +414,7 @@ Private, opt-in AI analysis with strong privacy protections.
 
 **Features:**
 
+- [ ] Auto-extract category, mood, and key details from voice input
 - [ ] Pattern recognition (weekly/monthly rhythms)
 - [ ] Gentle observations: "You tend to meditate more on weekends"
 - [ ] Correlation hints: "Sleep quality seems better after evening meditation"

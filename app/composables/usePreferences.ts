@@ -120,7 +120,7 @@ export const usePreferences = () => {
    */
   const showCategory = async (category: string) => {
     const hiddenCategories = preferences.value.hiddenCategories.filter(
-      (c) => c !== category
+      (c) => c !== category,
     );
     return savePreferences({ hiddenCategories });
   };
@@ -139,7 +139,7 @@ export const usePreferences = () => {
    */
   const showEntryType = async (entryType: string) => {
     const hiddenEntryTypes = preferences.value.hiddenEntryTypes.filter(
-      (t) => t !== entryType
+      (t) => t !== entryType,
     );
     return savePreferences({ hiddenEntryTypes });
   };
@@ -160,7 +160,7 @@ export const usePreferences = () => {
    */
   const removeCustomEntryType = async (name: string) => {
     const customEntryTypes = preferences.value.customEntryTypes.filter(
-      (t) => t.name !== name
+      (t) => t.name !== name,
     );
     return savePreferences({ customEntryTypes });
   };
@@ -176,7 +176,7 @@ export const usePreferences = () => {
    * Get all visible entry types (built-in + custom, minus hidden)
    */
   const getVisibleEntryTypes = (
-    builtInTypes: Array<{ name: string; emoji: string }>
+    builtInTypes: Array<{ name: string; emoji: string }>,
   ) => {
     const filtered = builtInTypes.filter((t) => isEntryTypeVisible(t.name));
     return [...filtered, ...preferences.value.customEntryTypes];
@@ -246,7 +246,7 @@ export const usePreferences = () => {
    * Save tally presets
    */
   const saveTallyPresets = async (
-    presets: Array<{ name: string; category?: string; emoji?: string }>
+    presets: Array<{ name: string; category?: string; emoji?: string }>,
   ) => {
     return savePreferences({ tallyPresets: presets });
   };

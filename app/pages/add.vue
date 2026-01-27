@@ -1,4 +1,13 @@
 <script setup lang="ts">
+/**
+ * @deprecated This page is deprecated as of v0.3.0 and will be removed in v0.4.0.
+ * Entry creation is now handled inline on each specialized page:
+ * - /moments - voice capture for moments, dreams, magic, gratitude
+ * - /tally - voice/manual tally entry
+ * - /sessions - timer-based session creation
+ * - /tada - QuickEntryModal for ta-das
+ */
+
 // Journal entry page - quick capture with category selection
 import {
   CATEGORY_DEFAULTS,

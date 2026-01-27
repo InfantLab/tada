@@ -4,11 +4,13 @@
  *
  * Features:
  * - Quick-add counter with +/- buttons
+ * - Voice input: "10 push-ups, 12 kettlebells, 30 squats"
  * - Recent tally entries list
  * - Activity suggestions from history
  * - One-tap presets for common activities (user-editable)
  */
 import type { Entry } from "~/server/db/schema";
+import type { ExtractedTally } from "~/utils/tallyExtractor";
 
 definePageMeta({
   layout: "default",
@@ -18,6 +20,9 @@ const router = useRouter();
 const toast = useToast();
 const { createEntry, isLoading: isSaving } = useEntryEngine();
 const { loadPreferences, getTallyPresets, addTallyPreset } = usePreferences();
+
+// Voice input mode toggle
+const showVoiceInput = ref(false);
 
 // Form state
 const activityName = ref("");
@@ -145,7 +150,7 @@ function repeatEntry(entry: Entry) {
 const isActivityAPreset = computed(() => {
   const name = activityName.value.trim();
   return activityPresets.value.some(
-    (p) => p.name.toLowerCase() === name.toLowerCase()
+    (p) => p.name.toLowerCase() === name.toLowerCase(),
   );
 });
 
@@ -236,19 +241,125 @@ function getEntryCount(entry: Entry): number {
   }
   return 0;
 }
+
+// Voice input handlers
+async function handleVoiceTallies(tallies: ExtractedTally[]) {
+  // Save each tally as a separate entry
+  let successCount = 0;
+  for (const tally of tallies) {
+    try {
+      const result = await createEntry({
+        type: "tally",
+        name: tally.activity,
+        category: tally.category || "movement",
+        emoji: tally.emoji,
+        count: tally.count,
+        timestamp: new Date().toISOString(),
+        data: {
+          count: tally.count,
+          source: "voice",
+        },
+      });
+      if (result) successCount++;
+    } catch (err) {
+      console.error("Failed to save voice tally:", err);
+    }
+  }
+
+  if (successCount > 0) {
+    toast.success(
+      `Added ${successCount} ${successCount === 1 ? "tally" : "tallies"}!`,
+    );
+    showVoiceInput.value = false;
+    await fetchEntries();
+  } else {
+    toast.error("Failed to save tallies");
+  }
+}
+
+function handleVoiceNoTallies(transcription: string) {
+  // No tallies extracted - put the transcription in the activity name
+  activityName.value = transcription;
+  showVoiceInput.value = false;
+  toast.info("Couldn't extract counts - enter manually");
+}
+
+function handleVoiceError(message: string) {
+  toast.error(message);
+}
 </script>
 
 <template>
   <div>
     <!-- Page header -->
-    <div class="mb-6">
-      <h1 class="text-2xl font-bold text-stone-800 dark:text-stone-100">
-        Tally
-      </h1>
-      <p class="text-sm text-stone-500 dark:text-stone-400">
-        Track reps, counts & quick activities
-      </p>
+    <div class="mb-6 flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-bold text-stone-800 dark:text-stone-100">
+          Tally
+        </h1>
+        <p class="text-sm text-stone-500 dark:text-stone-400">
+          Track reps, counts & quick activities
+        </p>
+      </div>
+      <!-- Voice input toggle -->
+      <button
+        type="button"
+        class="flex items-center gap-2 rounded-lg px-3 py-2 transition-colors"
+        :class="
+          showVoiceInput
+            ? 'bg-tada-100 text-tada-700 dark:bg-tada-900/30 dark:text-tada-300'
+            : 'text-stone-500 hover:bg-stone-100 hover:text-stone-700 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-200'
+        "
+        title="Voice input"
+        @click="showVoiceInput = !showVoiceInput"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
+          />
+        </svg>
+        <span class="text-sm font-medium">Voice</span>
+      </button>
     </div>
+
+    <!-- Voice Input Section -->
+    <Transition
+      enter-active-class="transition-all duration-200 ease-out"
+      enter-from-class="opacity-0 -translate-y-2"
+      enter-to-class="opacity-100 translate-y-0"
+      leave-active-class="transition-all duration-150 ease-in"
+      leave-from-class="opacity-100 translate-y-0"
+      leave-to-class="opacity-0 -translate-y-2"
+    >
+      <div
+        v-if="showVoiceInput"
+        class="mb-6 rounded-xl border border-tada-200 bg-gradient-to-br from-tada-50 to-white p-6 dark:border-tada-800 dark:from-tada-900/20 dark:to-stone-800"
+      >
+        <div class="mb-4 text-center">
+          <h3 class="text-lg font-semibold text-stone-800 dark:text-stone-100">
+            Voice Input
+          </h3>
+          <p class="text-sm text-stone-500 dark:text-stone-400">
+            Say something like: "10 push-ups, 12 kettlebells, 30 squats"
+          </p>
+        </div>
+
+        <VoiceTallyRecorder
+          @tallies="handleVoiceTallies"
+          @no-tallies="handleVoiceNoTallies"
+          @error="handleVoiceError"
+        />
+      </div>
+    </Transition>
 
     <!-- Quick Add Card -->
     <div
