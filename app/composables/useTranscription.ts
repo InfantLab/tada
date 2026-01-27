@@ -668,17 +668,26 @@ export function useTranscription(): UseTranscriptionReturn {
               `[useTranscription] Network error but have transcript - treating as success`,
             );
             // Don't set error state, the transcript is valid
+            // Gracefully stop recognition
+            isActive = false;
+            cleanupRecognitionInstance();
             return;
           }
-          // Network error with no transcript - this is the problematic case
-          // Mark instance as inactive to prevent auto-restart
+          // Network error with no transcript - try to recover gracefully
           isActive = false;
           console.warn(
-            `[useTranscription] Network error with no transcript - stopping recognition`,
+            `[useTranscription] Network error with no transcript - will allow user to retry`,
             {
               errorCode: errorEvent.error,
             },
           );
+          // Don't show a scary error - Web Speech API network errors are common
+          // and usually mean the service stopped listening (normal browser behavior)
+          // Only show error if user hasn't spoken yet
+          error.value = "Click the microphone to start recording.";
+          status.value = "idle";
+          cleanupRecognitionInstance();
+          return;
         }
 
         console.error(`[useTranscription] Fatal error, setting error state`, {
@@ -708,20 +717,37 @@ export function useTranscription(): UseTranscriptionReturn {
           recognitionInstance.value === recognition
         ) {
           console.log(`[useTranscription] Auto-restarting recognition`);
-          try {
-            recognition.start();
-          } catch (err) {
-            console.error(
-              `[useTranscription] Failed to restart recognition`,
-              err,
-            );
-            // If restart fails, create a completely fresh instance
-            isActive = false;
-            error.value =
-              "Speech recognition temporarily unavailable. Try speaking in shorter segments or check your internet connection.";
-            status.value = "error";
-            cleanupRecognitionInstance();
-          }
+          // Add a small delay before restarting to avoid race conditions
+          setTimeout(() => {
+            // Double-check we're still active after the delay
+            if (!isActive || status.value !== "transcribing") {
+              console.log(`[useTranscription] Status changed during restart delay, aborting restart`);
+              return;
+            }
+            
+            try {
+              recognition.start();
+            } catch (err) {
+              console.error(
+                `[useTranscription] Failed to restart recognition`,
+                err,
+              );
+              // Don't treat restart failures as fatal errors
+              // The user can just click the mic button again
+              // Only set error if we haven't captured any transcript yet
+              if (!liveTranscript.value) {
+                isActive = false;
+                error.value =
+                  "Speech recognition stopped. Click the microphone to record again.";
+                status.value = "error";
+                cleanupRecognitionInstance();
+              } else {
+                // We have transcript, just silently stop auto-restart
+                console.log(`[useTranscription] Have transcript, stopping auto-restart silently`);
+                isActive = false;
+              }
+            }
+          }, 100);
         } else {
           console.log(
             `[useTranscription] Not restarting - session ended normally`,
@@ -849,7 +875,7 @@ function getSpeechErrorMessage(errorCode: string): string {
     "not-allowed":
       "Microphone access was denied. Please allow microphone access in your browser settings.",
     network:
-      "Network error occurred. Please check your internet connection and try again.",
+      "Speech recognition stopped. This is normal - just click the microphone to record again.",
     aborted: "Recording was cancelled.",
     "service-not-allowed":
       "Speech recognition service is not available. Try using a different browser.",
