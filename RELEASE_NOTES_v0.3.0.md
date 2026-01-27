@@ -83,11 +83,13 @@ Unlike timers (which track duration) or ta-das (which celebrate accomplishments)
 ### Why Tallies Matter
 
 Before tallies, you'd have to:
+
 - Create a ta-da for each set of push-ups (felt excessive)
 - Use sessions with notes (awkward for counts)
 - Track externally and manually log (breaks the flow)
 
 Now you can **quickly log counts** right when they happen, and Ta-Da! remembers:
+
 - Your most common activities (easy quick-add presets)
 - Trends over time (coming in v0.4.0)
 - Your patterns and rhythms (building on v0.2.0's graceful chains)
@@ -103,6 +105,7 @@ Count-based activities are now voice-enabled:
 ```
 
 **Features:**
+
 - **Pending review panel** — Edit counts and categories before saving
 - **Per-item categories** — Choose movement type for each activity
 - **Smart extraction** — Understands "50 reps", "8 glasses", "three sets of 25"
@@ -110,6 +113,7 @@ Count-based activities are now voice-enabled:
 - **LLM fallback** — Handles complex sentences like "did my usual morning workout plus 10 extra"
 
 **Example voice inputs that work:**
+
 - "10 push-ups" → 1 tally
 - "25 squats, 15 lunges, 30 crunches" → 3 tallies
 - "drank 8 glasses of water today" → 1 tally
