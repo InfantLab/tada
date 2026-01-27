@@ -28,6 +28,7 @@ Read more: [design/philosophy.md](design/philosophy.md)
 - **🌿 Graceful Rhythms** — Track natural patterns with multiple chain types (daily, weekly, monthly targets)
 - **🧘 Meditation Timer** — Unlimited or fixed modes with interval bells, presets, and warm-up countdown
 - **⚡ Ta-Da! Accomplishments** — Celebrate wins with confetti, sound effects, and streaks
+- **📊 Tallies** — Quick count tracking for reps, glasses, pages, and any discrete activities with voice input
 - **🌙 Dream Journal** — Rich dream entries with mood and themes
 - **📝 Quick Notes** — Capture thoughts, gratitude, reflections
 - **📊 Timeline Views** — Day/Week/Month/Year zoom with infinite scroll
@@ -83,8 +84,9 @@ Ta-Da! uses a flexible three-level classification system for all life activities
 Type (behavior)  →  Category (domain)  →  Subcategory (specific)
     ↓                     ↓                        ↓
   "timed"          "mindfulness"              "sitting"
-  "Ta-Da!"          "accomplishment"              "work"
-  "journal"          "journal"                 "dream"
+  "tada"           "accomplishment"              "work"
+  "tally"          "movement"                 "push-ups"
+  "moment"         "journal"                  "dream"
 ```
 
 Every entry can have a custom emoji, with sensible defaults based on category and subcategory. Seven built-in categories cover most life activities: mindfulness, movement, creative, learning, journal, accomplishment, and events.
@@ -128,11 +130,11 @@ See [docs/DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) for full development work
 
 ## Roadmap
 
-**Current:** v0.2.0 (Graceful Rhythms) ✅ — Shipped January 2026!
+**Current:** v0.3.0 (Magic & Voice) ✅ — Shipped January 2026!
 
-**Next:** v0.3.0 (Q2 2026) — Voice input, photo attachments, magic features
+**Next:** v0.4.0 (Q2 2026) — Cloud service (tada.living), multi-device sync, E2E tests
 
-**Future:** v0.4.0+ — Cloud service (tada.living), Obsidian sync, AI insights
+**Future:** v0.5.0+ — Rituals, celestial events, AI insights, integrations
 
 See [design/roadmap.md](design/roadmap.md) and [CHANGELOG.md](CHANGELOG.md) for details.
 
