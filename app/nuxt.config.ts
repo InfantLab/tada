@@ -37,11 +37,12 @@ export default defineNuxtConfig({
     databaseUrl: process.env["DATABASE_URL"] || "file:./data/db.sqlite",
 
     // Voice feature API keys (server-only)
-    // Nuxt will auto-read NUXT_GROQ_API_KEY, but we also support GROQ_API_KEY
-    groqApiKey: process.env["GROQ_API_KEY"] || "",
-    openaiApiKey: process.env["OPENAI_API_KEY"] || "",
-    anthropicApiKey: process.env["ANTHROPIC_API_KEY"] || "",
-    deepgramApiKey: process.env["DEEPGRAM_API_KEY"] || "",
+    // Nuxt auto-reads NUXT_GROQ_API_KEY to override groqApiKey
+    // We also check GROQ_API_KEY as fallback for convenience
+    groqApiKey: process.env["NUXT_GROQ_API_KEY"] || process.env["GROQ_API_KEY"] || "",
+    openaiApiKey: process.env["NUXT_OPENAI_API_KEY"] || process.env["OPENAI_API_KEY"] || "",
+    anthropicApiKey: process.env["NUXT_ANTHROPIC_API_KEY"] || process.env["ANTHROPIC_API_KEY"] || "",
+    deepgramApiKey: process.env["NUXT_DEEPGRAM_API_KEY"] || process.env["DEEPGRAM_API_KEY"] || "",
 
     // Public (exposed to client)
     public: {
