@@ -26,8 +26,17 @@ class Logger {
 
   constructor(prefix = "") {
     this.prefix = prefix;
-    // Store logs in app/data/logs/ (same location as database)
-    this.logDir = join(process.cwd(), "data", "logs");
+    // Store logs in data/logs/ directory
+    // In production (built .output), DATABASE_URL points to /data/db.sqlite
+    // In development, it's relative to app/data/db.sqlite
+    const dbUrl = process.env["DATABASE_URL"] || "";
+    if (dbUrl.includes("/data/")) {
+      // Production: /data is the persistent volume mount point
+      this.logDir = "/data/logs";
+    } else {
+      // Development: relative to current working directory
+      this.logDir = join(process.cwd(), "data", "logs");
+    }
     this.ensureLogDirectory();
   }
 

@@ -44,7 +44,7 @@ COPY --from=builder /app/server/db/migrations ./server/db/migrations
 # Create data directory for SQLite at /data (CapRover persistent volume mount point)
 # WARNING: Do NOT change this path - it must match CapRover's persistent directory config
 # The host path /var/lib/caprover/appsdata/tadata maps to /data in the container
-RUN mkdir -p /data && chown -R nuxt:nodejs /data
+RUN mkdir -p /data/logs && chown -R nuxt:nodejs /data
 
 # Set environment variables
 # WARNING: DATABASE_URL must point to /data/db.sqlite for persistence across deploys

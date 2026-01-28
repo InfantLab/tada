@@ -150,8 +150,19 @@ export default defineEventHandler(async (event) => {
   }
 
   const userId = event.context.user.id;
+  const userApiKey = getHeader(event, "x-user-api-key");
 
-  // Rate limiting
+  // Check API key availability BEFORE rate limiting
+  // This prevents 503 errors from consuming rate limit
+  const config = useRuntimeConfig();
+  if (!userApiKey && !config.groqApiKey && !config.openaiApiKey) {
+    throw createError({
+      statusCode: 503,
+      statusMessage: "Voice transcription is not available. Please configure your own API key in settings or contact the administrator.",
+    });
+  }
+
+  // Rate limiting (checked after service availability)
   const lastRequest = rateLimitMap.get(userId);
   const now = Date.now();
   if (lastRequest && now - lastRequest < RATE_LIMIT_WINDOW_MS) {
@@ -163,11 +174,9 @@ export default defineEventHandler(async (event) => {
       statusMessage: `Rate limited. Please wait ${waitSeconds} seconds before making another request.`,
     });
   }
-  rateLimitMap.set(userId, now);
 
   // Check free tier limit
   const usageThisMonth = await countVoiceEntriesThisMonth(userId);
-  const userApiKey = getHeader(event, "x-user-api-key");
 
   // Only enforce limit if user doesn't have their own key
   if (!userApiKey && usageThisMonth >= FREE_TIER_LIMIT) {
@@ -233,17 +242,18 @@ export default defineEventHandler(async (event) => {
     apiKey = userApiKey;
     logger.info(`Using BYOK for ${provider} transcription`);
   } else {
-    // Use server-side API key
-    const config = useRuntimeConfig();
+    // Use server-side API key (already validated above)
     if (provider === "groq" && config.groqApiKey) {
       apiKey = config.groqApiKey;
     } else if (provider === "openai" && config.openaiApiKey) {
       apiKey = config.openaiApiKey;
+    } else if (config.groqApiKey) {
+      // Fallback to groq if openai was requested but not available
+      apiKey = config.groqApiKey;
+      provider = "groq";
     } else {
-      throw createError({
-        statusCode: 503,
-        statusMessage: "Transcription service not configured",
-      });
+      apiKey = config.openaiApiKey;
+      provider = "openai";
     }
   }
 
@@ -257,6 +267,10 @@ export default defineEventHandler(async (event) => {
     } else {
       result = await transcribeWithGroq(audioData, apiKey);
     }
+
+    // Update rate limit only AFTER successful transcription
+    // This prevents failed requests from consuming rate limit
+    rateLimitMap.set(userId, now);
 
     // Audio is NOT persisted - only the text result is returned
     logger.info(`Transcription complete: ${result.text.substring(0, 50)}...`);

@@ -326,8 +326,19 @@ export default defineEventHandler(async (event) => {
   }
 
   const userId = event.context.user.id;
+  const userApiKey = getHeader(event, "x-user-api-key");
 
-  // Rate limiting
+  // Check API key availability BEFORE rate limiting
+  // This prevents 503 errors from consuming rate limit
+  const config = useRuntimeConfig();
+  if (!userApiKey && !config.groqApiKey && !config.openaiApiKey && !config.anthropicApiKey) {
+    throw createError({
+      statusCode: 503,
+      statusMessage: "Voice extraction is not available. Please configure your own API key in settings or contact the administrator.",
+    });
+  }
+
+  // Rate limiting (checked after service availability)
   const lastRequest = rateLimitMap.get(userId);
   const now = Date.now();
   if (lastRequest && now - lastRequest < RATE_LIMIT_WINDOW_MS) {
@@ -339,11 +350,9 @@ export default defineEventHandler(async (event) => {
       statusMessage: `Rate limited. Please wait ${waitSeconds} seconds before making another request.`,
     });
   }
-  rateLimitMap.set(userId, now);
 
   // Check free tier limit
   const usageThisMonth = await countVoiceEntriesThisMonth(userId);
-  const userApiKey = getHeader(event, "x-user-api-key");
 
   // Only enforce limit if user doesn't have their own key
   if (!userApiKey && usageThisMonth >= FREE_TIER_LIMIT) {
@@ -404,18 +413,23 @@ export default defineEventHandler(async (event) => {
     apiKey = userApiKey;
     logger.info(`Using BYOK for ${provider} extraction`);
   } else {
-    const config = useRuntimeConfig();
+    // Use server-side API key (already validated above)
     if (provider === "groq" && config.groqApiKey) {
       apiKey = config.groqApiKey;
     } else if (provider === "openai" && config.openaiApiKey) {
       apiKey = config.openaiApiKey;
     } else if (provider === "anthropic" && config.anthropicApiKey) {
       apiKey = config.anthropicApiKey;
+    } else if (config.groqApiKey) {
+      // Fallback to available provider
+      apiKey = config.groqApiKey;
+      provider = "groq";
+    } else if (config.openaiApiKey) {
+      apiKey = config.openaiApiKey;
+      provider = "openai";
     } else {
-      throw createError({
-        statusCode: 503,
-        statusMessage: "Extraction service not configured",
-      });
+      apiKey = config.anthropicApiKey;
+      provider = "anthropic";
     }
   }
 
@@ -442,6 +456,10 @@ export default defineEventHandler(async (event) => {
     }
 
     logger.info(`Extraction complete: ${result.tadas.length} tadas found`);
+
+    // Update rate limit only AFTER successful extraction
+    // This prevents failed requests from consuming rate limit
+    rateLimitMap.set(userId, now);
 
     return result;
   } catch (err) {

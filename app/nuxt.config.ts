@@ -85,8 +85,20 @@ export default defineNuxtConfig({
       ],
     },
     workbox: {
+      // Disable navigation fallback to prevent "non-precached-url" errors
+      // Navigation requests should go to the network, not a cached fallback
+      navigateFallback: null,
       // Cache strategies
       runtimeCaching: [
+        {
+          // Handle navigation requests with NetworkFirst
+          urlPattern: ({ request }) => request.mode === "navigate",
+          handler: "NetworkFirst",
+          options: {
+            cacheName: "pages-cache",
+            networkTimeoutSeconds: 10,
+          },
+        },
         {
           urlPattern: /^https:\/\/.*\.(mp3|wav|ogg|m4a)$/,
           handler: "CacheFirst",
@@ -97,6 +109,11 @@ export default defineNuxtConfig({
               maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
             },
           },
+        },
+        {
+          // Handle API requests with NetworkOnly (don't cache voice/structure endpoints)
+          urlPattern: /\/api\//,
+          handler: "NetworkOnly",
         },
       ],
     },
