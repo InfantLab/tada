@@ -29,13 +29,13 @@ try {
 GIT_SHORT_HASH=${gitShortHash}
 `;
 
-  writeFileSync(join(__dirname, "../.env.build"), envContent);
+  writeFileSync(join(__dirname, "../.env.production"), envContent);
   console.log(`✓ Git info captured: ${gitShortHash}`);
 } catch (error) {
   // Git not available, write unknown
   const envContent = `GIT_HASH=unknown
 GIT_SHORT_HASH=unknown
 `;
-  writeFileSync(join(__dirname, "../.env.build"), envContent);
+  writeFileSync(join(__dirname, "../.env.production"), envContent);
   console.log("⚠ Git not available, using 'unknown' for hash");
 }
