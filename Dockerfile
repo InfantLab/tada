@@ -3,8 +3,12 @@ FROM oven/bun:1-alpine AS builder
 
 WORKDIR /app
 
-# Install build dependencies (CA certs for HTTPS, build tools for native modules)
-RUN apk add --no-cache ca-certificates
+# Build arguments for version info
+ARG GIT_HASH=unknown
+ARG GIT_SHORT_HASH=unknown
+
+# Install build dependencies (CA certs for HTTPS, build tools for native modules, git for version)
+RUN apk add --no-cache ca-certificates git
 
 # Copy package files
 COPY app/package.json app/bun.lock* ./
@@ -20,6 +24,10 @@ RUN bun run build:docker
 
 # Production stage - Alpine for minimal attack surface
 FROM oven/bun:1-alpine AS production
+
+# Build arguments (passed from builder)
+ARG GIT_HASH=unknown
+ARG GIT_SHORT_HASH=unknown
 
 WORKDIR /app
 
@@ -53,6 +61,8 @@ ENV NODE_ENV=production
 ENV DATABASE_URL=file:/data/db.sqlite
 ENV HOST=0.0.0.0
 ENV PORT=3000
+ENV GIT_HASH=${GIT_HASH}
+ENV GIT_SHORT_HASH=${GIT_SHORT_HASH}
 
 # Switch to non-root user
 USER nuxt

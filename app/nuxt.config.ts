@@ -47,7 +47,9 @@ export default defineNuxtConfig({
     // Public (exposed to client)
     public: {
       appName: "Tada",
-      appVersion: "0.3.0",
+      appVersion: "0.3.1",
+      gitHash: process.env["GIT_HASH"] || "",
+      gitShortHash: process.env["GIT_SHORT_HASH"] || "",
       // Voice feature flags
       voiceEnabled: process.env["VOICE_ENABLED"] !== "false",
       voiceFreeLimit: parseInt(process.env["VOICE_FREE_LIMIT"] || "50", 10),
