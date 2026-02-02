@@ -1,4 +1,4 @@
-claude # Ta-Da! v0.3.0 Release Notes
+# Ta-Da! v0.3.0 Release Notes
 
 **Release Date:** January 27, 2026  
 **Theme:** Magic & Voice

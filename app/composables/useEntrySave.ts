@@ -38,24 +38,6 @@ export interface EntryData {
 }
 
 /**
- * Voice entry specific data that can be included in EntryData.data
- */
-export interface VoiceEntryData {
-  /** Original transcribed text */
-  transcription: string;
-  /** STT provider used */
-  sttProvider: string;
-  /** Transcription confidence (0-1) */
-  confidence: number;
-  /** Recording duration in ms */
-  recordingDurationMs: number;
-  /** LLM provider used for extraction (if any) */
-  llmProvider?: string;
-  /** Whether entry was auto-extracted from multi-tada */
-  autoExtracted?: boolean;
-}
-
-/**
  * Input for batch tada creation from extraction
  */
 export interface BatchTadaInput {
@@ -89,17 +71,6 @@ export interface SaveOptions {
 }
 
 export interface UseEntrySaveReturn {
-  /** Create a new entry */
-  createEntry: (
-    data: EntryData,
-    options?: SaveOptions,
-  ) => Promise<Entry | null>;
-  /** Create entry from voice transcription */
-  createVoiceEntry: (
-    text: string,
-    voiceData: VoiceEntryData,
-    options?: SaveOptions,
-  ) => Promise<Entry | null>;
   /** Create multiple tadas from extraction */
   createBatchTadas: (
     tadas: BatchTadaInput[],
@@ -149,139 +120,6 @@ export const useEntrySave = (): UseEntrySaveReturn => {
     }
 
     return null;
-  };
-
-  /**
-   * Validate entry data for creation
-   */
-  const validateCreate = (data: EntryData): string | null => {
-    if (!data.type?.trim()) {
-      return "Entry type is required";
-    }
-    if (!data.name?.trim()) {
-      return "Entry name is required";
-    }
-    return null;
-  };
-
-  /**
-   * Create a new entry
-   * @deprecated Use useEntryEngine().createEntry() instead for new code
-   */
-  const createEntry = async (
-    data: EntryData,
-    options: SaveOptions = {},
-  ): Promise<Entry | null> => {
-    if (process.env["NODE_ENV"] !== "production") {
-      console.warn(
-        "[useEntrySave] createEntry is deprecated. Use useEntryEngine().createEntry() instead.",
-      );
-    }
-    error.value = null;
-
-    // Validate
-    const validationError = validateCreate(data);
-    if (validationError) {
-      error.value = validationError;
-      showError(validationError);
-      return null;
-    }
-
-    isLoading.value = true;
-
-    try {
-      // Resolve emoji if not skipping
-      const emoji = options.skipEmojiResolution
-        ? data.emoji
-        : resolveEmoji(data.category, data.subcategory, data.emoji);
-
-      const entryData = {
-        ...data,
-        emoji,
-        timestamp: data.timestamp || new Date().toISOString(),
-      };
-
-      const created = await $fetch<Entry>("/api/entries", {
-        method: "POST",
-        body: entryData,
-      });
-
-      // Show success toast
-      if (options.showSuccessToast !== false) {
-        const message = options.successMessage || "Entry saved!";
-        showSuccess(message);
-      }
-
-      // Navigate if specified
-      if (options.navigateTo) {
-        router.push(options.navigateTo);
-      }
-
-      return created;
-    } catch (err: unknown) {
-      console.error("Failed to create entry:", err);
-      const message =
-        err instanceof Error ? err.message : "Failed to save entry";
-      error.value = message;
-      showError(message);
-      return null;
-    } finally {
-      isLoading.value = false;
-    }
-  };
-
-  /**
-   * Create entry from voice transcription (journal mode - single entry)
-   * Uses transcribed text as notes and creates a journal-type entry
-   */
-  const createVoiceEntry = async (
-    text: string,
-    voiceData: VoiceEntryData,
-    options: SaveOptions = {},
-  ): Promise<Entry | null> => {
-    if (!text.trim()) {
-      error.value = "No transcription text provided";
-      showError("No transcription text provided");
-      return null;
-    }
-
-    // Use detected subcategory or default to "journal"
-    const subcategory = options.subcategory || "journal";
-
-    // Create moment entry with voice metadata
-    const entryData: EntryData = {
-      type: "moment",
-      name: generateVoiceEntryName(text),
-      category: "moments",
-      subcategory,
-      notes: text.trim(),
-      source: "voice",
-      data: {
-        voice: {
-          transcription: voiceData.transcription,
-          sttProvider: voiceData.sttProvider,
-          confidence: voiceData.confidence,
-          recordingDurationMs: voiceData.recordingDurationMs,
-          llmProvider: voiceData.llmProvider,
-          autoExtracted: voiceData.autoExtracted,
-        },
-      },
-    };
-
-    return createEntry(entryData, {
-      ...options,
-      successMessage: options.successMessage || "Voice entry saved! 🎤",
-    });
-  };
-
-  /**
-   * Generate a short name from transcribed text
-   */
-  const generateVoiceEntryName = (text: string): string => {
-    const words = text.trim().split(/\s+/);
-    const maxWords = 6;
-    const truncated = words.slice(0, maxWords).join(" ");
-    return words.length > maxWords ? `${truncated}...` : truncated;
   };
 
   /**
@@ -485,8 +323,6 @@ export const useEntrySave = (): UseEntrySaveReturn => {
   };
 
   return {
-    createEntry,
-    createVoiceEntry,
     createBatchTadas,
     updateEntry,
     deleteEntry,
