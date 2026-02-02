@@ -1861,8 +1861,8 @@ onUnmounted(() => {
             <button
               type="button"
               class="w-12 h-12 rounded-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center shadow-lg transition-all"
-              @click="showVoiceRecorder = true"
               aria-label="Record voice reflection"
+              @click="showVoiceRecorder = true"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"

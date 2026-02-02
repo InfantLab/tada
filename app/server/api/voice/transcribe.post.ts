@@ -158,7 +158,8 @@ export default defineEventHandler(async (event) => {
   if (!userApiKey && !config.groqApiKey && !config.openaiApiKey) {
     throw createError({
       statusCode: 503,
-      statusMessage: "Voice transcription is not available. Please configure your own API key in settings or contact the administrator.",
+      statusMessage:
+        "Voice transcription is not available. Please configure your own API key in settings or contact the administrator.",
     });
   }
 

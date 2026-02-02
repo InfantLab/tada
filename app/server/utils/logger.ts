@@ -153,7 +153,7 @@ class Logger {
 
   child(childPrefix: string): Logger {
     return new Logger(
-      this.prefix ? `${this.prefix}:${childPrefix}` : childPrefix
+      this.prefix ? `${this.prefix}:${childPrefix}` : childPrefix,
     );
   }
 }

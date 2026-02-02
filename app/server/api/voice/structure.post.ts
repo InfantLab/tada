@@ -331,10 +331,16 @@ export default defineEventHandler(async (event) => {
   // Check API key availability BEFORE rate limiting
   // This prevents 503 errors from consuming rate limit
   const config = useRuntimeConfig();
-  if (!userApiKey && !config.groqApiKey && !config.openaiApiKey && !config.anthropicApiKey) {
+  if (
+    !userApiKey &&
+    !config.groqApiKey &&
+    !config.openaiApiKey &&
+    !config.anthropicApiKey
+  ) {
     throw createError({
       statusCode: 503,
-      statusMessage: "Voice extraction is not available. Please configure your own API key in settings or contact the administrator.",
+      statusMessage:
+        "Voice extraction is not available. Please configure your own API key in settings or contact the administrator.",
     });
   }
 
