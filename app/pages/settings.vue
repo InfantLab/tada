@@ -14,9 +14,21 @@ definePageMeta({
   layout: "default",
 });
 
-// App version
-const appVersion = "0.2.0";
+// App version - fetched dynamically
+const appVersion = ref("0.3.1");
+const gitHash = ref("");
 const appName = "Tada";
+
+// Fetch version info on mount
+onMounted(async () => {
+  try {
+    const versionInfo = await $fetch("/api/version");
+    appVersion.value = versionInfo.version;
+    gitHash.value = versionInfo.gitShortHash;
+  } catch (error) {
+    console.error("Failed to fetch version info:", error);
+  }
+});
 
 // User preferences
 const settings = ref({
@@ -515,7 +527,7 @@ async function exportData() {
 
     // Create JSON export
     const exportData = {
-      version: appVersion,
+      version: appVersion.value,
       exportedAt: new Date().toISOString(),
       entries: response.entries,
     };
@@ -1681,7 +1693,7 @@ onMounted(() => {
                 <h3 class="font-semibold text-stone-800 dark:text-stone-100">
                   {{ appName }}
                   <span class="text-sm font-normal text-stone-500"
-                    >v{{ appVersion }}</span
+                    >v{{ appVersion }}<template v-if="gitHash">+{{ gitHash }}</template></span
                   >
                 </h3>
                 <p class="text-sm text-stone-600 dark:text-stone-300 mt-1">
