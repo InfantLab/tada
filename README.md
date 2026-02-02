@@ -22,7 +22,7 @@ Ta-Da! inverts the traditional productivity mindset:
 
 Read more: [design/philosophy.md](design/philosophy.md)
 
-## Features (v0.3.0)
+## Features (v0.3.1)
 
 - **🎤 Voice Input** — Speak your accomplishments naturally; AI extracts and structures tadas automatically
 - **🌿 Graceful Rhythms** — Track natural patterns with multiple chain types (daily, weekly, monthly targets)
@@ -36,6 +36,19 @@ Read more: [design/philosophy.md](design/philosophy.md)
 - **🎨 Customization** — Custom emojis, timer presets, hide categories
 - **📱 PWA** — Installable, works offline
 - **🔒 Self-Hosted** — Your data stays yours, full JSON export
+
+### REST API v1 (New in v0.3.1)
+
+- **🔌 Complete REST API** — 24 endpoints across 7 user stories
+- **🔑 API Key Management** — Generate keys with granular permissions
+- **📊 Data Retrieval** — Get entries, rhythms, and statistics with filtering/pagination
+- **✍️ Voice Entry Creation** — Create, update, delete entries via API
+- **🪝 Webhooks** — Real-time notifications with HMAC-SHA256 signing and auto-retry
+- **📤 Multi-Format Export** — JSON, CSV, Markdown, Obsidian (daily/weekly/monthly)
+- **🔍 Pattern Discovery** — Automated correlation detection with statistical analysis
+- **📥 Historical Import** — Import years of data from CSV/JSON with duplicate detection
+- **⚡ Rate Limiting** — Built-in protection with configurable limits
+- **🔐 Security** — bcrypt hashing, HTTPS, private IP blocking
 
 ## Tech Stack
 
@@ -130,7 +143,10 @@ See [docs/DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) for full development work
 
 ## Roadmap
 
-**Current:** v0.3.0 (Magic & Voice) ✅ — Shipped January 2026!
+**Current:** v0.3.1 (REST API v1) ✅ — Shipped February 2026!
+- Complete REST API with 24 endpoints
+- 7 user stories: Data retrieval, Voice entry, API keys, Webhooks, Export, Patterns, Import
+- 220 tasks completed
 
 **Next:** v0.4.0 (Q2 2026) — Cloud service (tada.living), multi-device sync, E2E tests
 
@@ -140,16 +156,27 @@ See [design/roadmap.md](design/roadmap.md) and [CHANGELOG.md](CHANGELOG.md) for 
 
 ## Resources
 
-- **📖 Documentation:** [docs/DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md)
-- **🧪 Testing Guide:** [docs/dev/TESTING.md](docs/dev/TESTING.md)
-- **🏗️ Architecture:** [docs/PROJECT_STRUCTURE.md](docs/PROJECT_STRUCTURE.md)
-- **🎯 Design Philosophy:** [design/philosophy.md](design/philosophy.md)
-- **🎨 Visual Design:** [design/visual design.md](design/visual%20design.md)
-- **📊 Entry Ontology:** [design/ontology.md](design/ontology.md)
-- **🗺️ Roadmap:** [design/roadmap.md](design/roadmap.md)
-- **🤖 AI Agent Guide:** [AGENTS.md](AGENTS.md)
-- **📝 Changelog:** [CHANGELOG.md](CHANGELOG.md)
-- **📦 Repository:** https://github.com/InfantLab/Ta-Da!
+### Documentation
+
+- **📚 [Documentation Index](docs/README.md)** — Complete docs overview
+- **🚀 [Deployment Guide](docs/DEPLOYMENT.md)** — Deploy to CapRover, Docker, or manual
+- **🔌 [REST API v1](docs/tada-api/API-SPECIFICATION.md)** — Complete API reference (24 endpoints)
+- **📖 [Developer Guide](docs/DEVELOPER_GUIDE.md)** — Development setup
+- **🧪 [Testing Guide](docs/testing/TESTING.md)** — Testing best practices
+- **🏗️ [Architecture](docs/PROJECT_STRUCTURE.md)** — Codebase structure
+
+### Design
+
+- **🎯 [Philosophy](design/philosophy.md)** — Design principles
+- **🎨 [Visual Design](design/visual%20design.md)** — UI/UX guidelines
+- **📊 [Ontology](design/ontology.md)** — Entry type system
+- **🗺️ [Roadmap](design/roadmap.md)** — Future plans
+
+### Other
+
+- **🤖 [AI Agent Guide](AGENTS.md)** — For AI assistants
+- **📝 [Changelog](CHANGELOG.md)** — Version history
+- **📦 [Repository](https://github.com/InfantLab/Ta-Da!)** — Source code
 
 ## Contributing
 

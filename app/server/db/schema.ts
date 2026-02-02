@@ -575,6 +575,110 @@ export const activityHistory = sqliteTable("activity_history", {
 });
 
 // ============================================================================
+// API Keys - For REST API authentication
+// ============================================================================
+
+export const apiKeys = sqliteTable("api_keys", {
+  id: text("id").primaryKey(), // UUID
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+
+  // Key identification
+  name: text("name").notNull(), // User-provided label: "OpenClaw Integration"
+  keyHash: text("key_hash").notNull(), // bcrypt hash (cost 12) - NEVER store plaintext
+  keyPrefix: text("key_prefix").notNull(), // First 16 chars for lookup: "tada_key_abc123"
+
+  // Permissions (JSON array of strings)
+  permissions: text("permissions", { mode: "json" })
+    .$type<string[]>()
+    .notNull()
+    .default([]), // ['entries:read', 'rhythms:read', ...]
+
+  // Lifecycle
+  createdAt: text("created_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
+  lastUsedAt: text("last_used_at"), // Timestamp of most recent auth
+  expiresAt: text("expires_at"), // Optional expiration (ISO 8601)
+  revokedAt: text("revoked_at"), // When key was revoked (soft delete)
+});
+
+// ============================================================================
+// Webhooks - Event notification subscriptions
+// ============================================================================
+
+export const webhooks = sqliteTable("webhooks", {
+  id: text("id").primaryKey(), // UUID
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+
+  // Endpoint configuration
+  url: text("url").notNull(), // HTTPS endpoint (validated)
+  secret: text("secret").notNull(), // HMAC secret for signature verification
+  description: text("description"), // Optional user note
+
+  // Event subscriptions (JSON array)
+  events: text("events", { mode: "json" })
+    .$type<string[]>()
+    .notNull()
+    .default([]), // ['entry.created', 'streak.milestone', ...]
+
+  // Status
+  active: integer("active", { mode: "boolean" }).notNull().default(true),
+  disabledReason: text("disabled_reason"), // Auto-disabled if too many failures
+
+  // Delivery statistics
+  lastTriggeredAt: text("last_triggered_at"), // Most recent delivery attempt
+  lastSuccessAt: text("last_success_at"), // Most recent successful delivery
+  totalDeliveries: integer("total_deliveries").notNull().default(0),
+  failedDeliveries: integer("failed_deliveries").notNull().default(0),
+  consecutiveFailures: integer("consecutive_failures").notNull().default(0),
+
+  // Timestamps
+  createdAt: text("created_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
+});
+
+// ============================================================================
+// Insight Cache - Cached pattern detection and analysis results
+// ============================================================================
+
+export const insightCache = sqliteTable("insight_cache", {
+  id: text("id").primaryKey(), // Composite key: `${userId}:${type}:${params}`
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+
+  // Cache key components
+  type: text("type").notNull(), // 'patterns' | 'correlations' | 'summary'
+  params: text("params", { mode: "json" })
+    .$type<Record<string, any>>()
+    .notNull(), // { lookback: 90, category: 'mindfulness', minConfidence: 'medium' }
+
+  // Cached result
+  data: text("data", { mode: "json" })
+    .$type<any>()
+    .notNull(), // Pattern detection results, summary stats, etc.
+
+  // Metadata
+  computeTimeMs: integer("compute_time_ms"), // How long it took to compute
+  entryCount: integer("entry_count"), // How many entries were analyzed
+
+  // Lifecycle
+  computedAt: text("computed_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
+  expiresAt: text("expires_at").notNull(), // computedAt + TTL (default 1 hour)
+  hitCount: integer("hit_count").notNull().default(0), // Cache hit counter
+});
+
+// ============================================================================
 // Type exports for use in application code
 // ============================================================================
 
@@ -622,3 +726,12 @@ export type NewEntryDraft = typeof entryDrafts.$inferInsert;
 
 export type ActivityHistory = typeof activityHistory.$inferSelect;
 export type NewActivityHistory = typeof activityHistory.$inferInsert;
+
+export type ApiKey = typeof apiKeys.$inferSelect;
+export type NewApiKey = typeof apiKeys.$inferInsert;
+
+export type Webhook = typeof webhooks.$inferSelect;
+export type NewWebhook = typeof webhooks.$inferInsert;
+
+export type InsightCache = typeof insightCache.$inferSelect;
+export type NewInsightCache = typeof insightCache.$inferInsert;

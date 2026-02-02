@@ -1,6 +1,8 @@
 # Deploying Ta-Da! to CapRover
 
-Guide for deploying Ta-Da! to a CapRover instance.
+> **📌 Note:** This is the original CapRover deployment guide. For the comprehensive, up-to-date deployment guide that includes REST API v1 setup, see **[DEPLOYMENT.md](./DEPLOYMENT.md)**.
+
+This document provides CapRover-specific deployment details.
 
 ---
 
