@@ -3,12 +3,11 @@ FROM oven/bun:1-alpine AS builder
 
 WORKDIR /app
 
-# Build arguments for version info
-ARG GIT_HASH=unknown
-ARG GIT_SHORT_HASH=unknown
-
 # Install build dependencies (CA certs for HTTPS, build tools for native modules, git for version)
 RUN apk add --no-cache ca-certificates git
+
+# Copy .git to extract version info during build
+COPY .git ../.git
 
 # Copy package files
 COPY app/package.json app/bun.lock* ./
@@ -16,18 +15,15 @@ COPY app/package.json app/bun.lock* ./
 # Install dependencies (native bindings will be compiled for musl/Alpine)
 RUN bun install --frozen-lockfile
 
-# Copy source
+# Copy source (includes scripts/capture-git-info.js)
 COPY app/ ./
 
-# Build the application (skip type check - generated files cause issues)
+# Build the application (capture-git-info.js runs first, extracts git hash to .env.build)
+# Nuxt reads GIT_HASH and GIT_SHORT_HASH from .env.build during build
 RUN bun run build:docker
 
 # Production stage - Alpine for minimal attack surface
 FROM oven/bun:1-alpine AS production
-
-# Build arguments (passed from builder)
-ARG GIT_HASH=unknown
-ARG GIT_SHORT_HASH=unknown
 
 WORKDIR /app
 
@@ -61,8 +57,6 @@ ENV NODE_ENV=production
 ENV DATABASE_URL=file:/data/db.sqlite
 ENV HOST=0.0.0.0
 ENV PORT=3000
-ENV GIT_HASH=${GIT_HASH}
-ENV GIT_SHORT_HASH=${GIT_SHORT_HASH}
 
 # Switch to non-root user
 USER nuxt
