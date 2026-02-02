@@ -17,8 +17,11 @@ describe("categoryDefaults", () => {
         "movement",
         "creative",
         "learning",
+        "health",
+        "work",
+        "social",
+        "life_admin",
         "moments",
-        "accomplishment",
         "events",
       ];
 

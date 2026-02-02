@@ -1,6 +1,9 @@
 <script setup lang="ts">
 // Dedicated Ta-Da! entry page - celebrate accomplishments with positive reinforcement
-import { getSubcategoriesForCategory } from "~/utils/categoryDefaults";
+import {
+  getSubcategoriesForCategory,
+  CATEGORY_DEFAULTS,
+} from "~/utils/categoryDefaults";
 import type { TranscriptionResult, VoiceRecordingStatus } from "~/types/voice";
 import type { ExtractedTada } from "~/types/extraction";
 import type { EntryInput } from "~/utils/entrySchemas";
@@ -66,16 +69,33 @@ const showCelebration = ref(false);
 const customEmoji = ref<string>("⚡");
 const showEmojiPicker = ref(false);
 
-// Subcategory for tadas (home, work, personal, etc.)
-const tadaSubcategory = ref("personal");
+// Category for tadas (work, health, social, life_admin, etc.)
+const tadaCategory = ref("work");
 
-// Get subcategory options for tadas
+// Subcategory within the selected category
+const tadaSubcategory = ref("");
+
+// Get category options for tadas (all 10 categories)
+const tadaCategoryOptions = computed(() => {
+  return Object.entries(CATEGORY_DEFAULTS).map(([slug, cat]) => ({
+    value: slug,
+    label: cat.label,
+    emoji: cat.emoji,
+  }));
+});
+
+// Get subcategory options based on selected category
 const tadaSubcategoryOptions = computed(() => {
-  return getSubcategoriesForCategory("accomplishment").map((s) => ({
+  return getSubcategoriesForCategory(tadaCategory.value).map((s) => ({
     value: s.slug,
     label: s.label,
     emoji: s.emoji,
   }));
+});
+
+// Reset subcategory when category changes
+watch(tadaCategory, () => {
+  tadaSubcategory.value = "";
 });
 
 // Function to open emoji picker
@@ -203,7 +223,8 @@ async function submitEntry() {
       .filter((t) => t.title.trim())
       .map((t) => ({
         title: t.title.trim(),
-        category: t.subcategory || tadaSubcategory.value, // Use item's subcategory
+        category: tadaCategory.value, // Use the selected category
+        subcategory: t.subcategory || tadaSubcategory.value || null,
         significance: "normal" as const,
         notes: t.notes || undefined,
         confidence: 1.0,
@@ -228,12 +249,12 @@ async function submitEntry() {
     {
       type: "tada",
       name: title.value.trim() || "Ta-Da! entry",
-      category: "accomplishment",
-      subcategory: tadaSubcategory.value,
+      category: tadaCategory.value,
+      subcategory: tadaSubcategory.value || null,
       emoji: customEmoji.value || "⚡",
       notes: notes.value.trim() || undefined,
       data: {},
-      tags: ["accomplishment", tadaSubcategory.value].filter(
+      tags: [tadaCategory.value, tadaSubcategory.value].filter(
         Boolean,
       ) as string[],
     } as EntryInput,

@@ -158,12 +158,23 @@ export function useLLMStructure(): UseLLMStructureReturn {
         console.log("[useLLMStructure] Server response:", response);
 
         // Convert server response to ExtractedTada format
-        // LLM returns category as subcategory (work, home, health, etc.)
+        // LLM now returns actual category (mindfulness, work, health, etc.)
+        // Map legacy subcategory values for backwards compatibility
+        const mapLegacyCategory = (cat?: string): string | null => {
+          if (!cat) return null;
+          const legacyMap: Record<string, string> = {
+            home: "life_admin",
+            hobby: "creative",
+            personal: "work", // Best guess for "personal wins"
+          };
+          return legacyMap[cat] || cat;
+        };
+
         const tadas: ExtractedTada[] = response.tadas.map((t, i) => ({
           id: `extracted-${i}`,
           title: t.name,
-          category: "accomplishment", // All tadas are accomplishments
-          subcategory: t.category || "personal", // LLM-extracted subcategory
+          category: mapLegacyCategory(t.category) || "work", // Default to work if unknown
+          subcategory: null, // Subcategory can be set by user if needed
           significance: t.significance || "normal",
           selected: true,
           confidence: 0.85,

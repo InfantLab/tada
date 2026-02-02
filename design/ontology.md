@@ -2,8 +2,8 @@
 
 _Defining the category hierarchy, type system, and emoji conventions for lifelogging entries._
 
-**Status:** v0.3.0 Refined  
-**Last Updated:** 2026-01-26
+**Status:** v0.4.0 Refined
+**Last Updated:** 2026-02-02
 
 ---
 
@@ -28,7 +28,7 @@ Tada uses a **unified Entry model** where every piece of life data is stored as 
 | Dimension       | Purpose           | Examples                           | Editable        |
 | --------------- | ----------------- | ---------------------------------- | --------------- |
 | **Type**        | Capture behavior  | `timed`, `tada`, `moment`, `tally` | System-defined  |
-| **Category**    | Life domain       | `mindfulness`, `accomplishment`    | User-extensible |
+| **Category**    | Life domain       | `mindfulness`, `life_admin`        | User-extensible |
 | **Subcategory** | Specific activity | `sitting`, `work`, `piano`         | User-extensible |
 
 ### Design Principles
@@ -116,31 +116,41 @@ interface TallyData {
 
 Categories represent **life domains** — broad areas of human activity that entries belong to. They enable cross-type grouping and provide visual consistency through shared colors and emojis.
 
-### Core Categories (v0.3.0)
+### Core Categories (v0.4.0)
 
-| Category         | Emoji | Color              | Description                                    |
-| ---------------- | ----- | ------------------ | ---------------------------------------------- |
-| `mindfulness`    | 🧘    | `#7C3AED` (purple) | Meditation, breathing, contemplative practices |
-| `movement`       | 🏃    | `#059669` (green)  | Physical exercise, sports, body practices      |
-| `creative`       | 🎵    | `#D97706` (amber)  | Music, art, writing, making things             |
-| `learning`       | 📚    | `#2563EB` (blue)   | Study, courses, skill acquisition              |
-| `moments`        | 💭    | `#6366F1` (indigo) | Inner life: dreams, reflections, memories      |
-| `accomplishment` | ⚡    | `#F59E0B` (yellow) | Tadas, wins, completed tasks                   |
-| `events`         | 🎭    | `#EC4899` (pink)   | Concerts, movies, attended experiences         |
+| Category      | Emoji | Color              | Description                                    |
+| ------------- | ----- | ------------------ | ---------------------------------------------- |
+| `mindfulness` | 🧘    | `#7C3AED` (purple) | Meditation, breathing, contemplative practices |
+| `movement`    | 🏃    | `#059669` (green)  | Physical exercise, sports, body practices      |
+| `creative`    | 🎨    | `#D97706` (amber)  | Music, art, writing, making things             |
+| `learning`    | 📚    | `#2563EB` (blue)   | Study, courses, skill acquisition              |
+| `health`      | 💚    | `#14B8A6` (teal)   | Wellness, sleep, nutrition, self-care          |
+| `work`        | 💼    | `#64748B` (slate)  | Career, professional, job achievements         |
+| `social`      | 👥    | `#F43F5E` (rose)   | Relationships, community, connection           |
+| `life_admin`  | 🏠    | `#78716C` (stone)  | Chores, errands, household maintenance         |
+| `moments`     | 💭    | `#6366F1` (indigo) | Inner life: dreams, ideas, memories            |
+| `events`      | 🎭    | `#EC4899` (pink)   | Concerts, movies, attended experiences         |
+
+> **Tadas use these categories**: The `tada` type marks celebrations; the category tells you what life domain. "Ran a marathon!" is `type: tada, category: movement, subcategory: running`.
 
 ### Category-Type Relationships
 
 Categories can span multiple types. The relationship is suggestive, not restrictive:
 
-| Category         | Primary Types                   | Example Entries                   |
-| ---------------- | ------------------------------- | --------------------------------- |
-| `mindfulness`    | `timed`                         | 10-minute sitting meditation      |
-| `movement`       | `timed`, `tally`, `gps_tracked` | Yoga session, 50 push-ups, 5k run |
-| `creative`       | `timed`                         | 30-minute piano practice          |
-| `learning`       | `timed`                         | Language lesson, reading session  |
-| `moments`        | `moment`                        | Dream record, reflection entry    |
-| `accomplishment` | `tada`                          | "Fixed the leaky tap" ⚡          |
-| `events`         | `experience`                    | Concert at Royal Albert Hall      |
+| Category      | Primary Types                   | Example Entries                          |
+| ------------- | ------------------------------- | ---------------------------------------- |
+| `mindfulness` | `timed`, `tada`                 | 10-minute sit, "30-day streak!" 🧘       |
+| `movement`    | `timed`, `tally`, `tada`        | Yoga session, 50 push-ups, "Ran a marathon!" 🏃 |
+| `creative`    | `timed`, `tada`                 | Piano practice, "Finished the painting!" 🎨 |
+| `learning`    | `timed`, `tada`                 | Language lesson, "Passed the exam!" 📚   |
+| `health`      | `tada`, `tally`, `measurement`  | "Slept 8 hours!", water intake, weight   |
+| `work`        | `tada`                          | "Got promoted!", "Shipped the feature!" 💼 |
+| `social`      | `tada`                          | "Called mom for an hour!", "Made a new friend!" 👥 |
+| `life_admin`  | `tada`, `timed`                 | "Vacuumed the house!" 🧹, meal prep      |
+| `moments`     | `moment`                        | Dream record, idea capture, journal      |
+| `events`      | `experience`, `tada`            | Concert, "Saw Radiohead live!" 🎭        |
+
+> **Tadas leverage categories**: Every celebration belongs to a life domain. The `type: tada` marks it as celebratory; the category provides grouping and visualization.
 
 ### User Extension
 
@@ -162,21 +172,26 @@ Subcategories provide **specific activity identification** within a category. Th
 | `body_scan`       | 🫀    | Body awareness practice     |
 | `loving_kindness` | 💗    | Metta/compassion meditation |
 | `prayer`          | 🙏    | Contemplative prayer        |
-| `visualization`   | 🌈    | Guided imagery, manifesting |
+| `visualization`   | 🌈    | Guided imagery              |
+| `manifesting`     | ✨    | Intention-setting, affirming |
+
 
 ### Movement Subcategories
 
-| Subcategory | Emoji | Description                 |
-| ----------- | ----- | --------------------------- |
-| `yoga`      | 🧘‍♀️    | Yoga practice               |
-| `tai_chi`   | 🥋    | Tai chi, qigong             |
-| `running`   | 🏃    | Running, jogging            |
-| `walking`   | 🚶    | Fitness walking             |
-| `cycling`   | 🚴    | Biking                      |
-| `strength`  | 💪    | Weight training, resistance |
-| `gym`       | 🏋️    | General gym workout         |
-| `swimming`  | 🏊    | Swimming                    |
-| `dance`     | 💃    | Dance practice              |
+| Subcategory     | Emoji | Description                 |
+| --------------- | ----- | --------------------------- |
+| `yoga`          | 🧘‍♀️    | Yoga practice               |
+| `tai_chi`       | 🥋    | Tai chi, qigong             |
+| `running`       | 🏃    | Running, jogging            |
+| `walking`       | 🚶    | Fitness walking             |
+| `cycling`       | 🚴    | Biking                      |
+| `strength`      | 💪    | Weight training, resistance |
+| `gym`           | 🏋️    | General gym workout         |
+| `swimming`      | 🏊    | Swimming                    |
+| `dance`         | 💃    | Dance practice              |
+| `climbing`      | 🧗    | Bouldering, rock climbing   |
+| `sport`         | ⚽    | Team sports, tennis, etc.   |
+| `martial_arts`  | 🥊    | Boxing, BJJ, karate         |
 
 ### Creative Subcategories
 
@@ -200,28 +215,67 @@ Subcategories provide **specific activity identification** within a category. Th
 | `language`  | 🗣️    | Language practice         |
 | `course`    | 🎓    | Online course, MOOC       |
 | `practice`  | 🎯    | Deliberate skill practice |
+| `podcast`   | 🎧    | Educational listening     |
+| `research`  | 🔍    | Deep-dive investigation   |
+| `workshop`  | 🛠️    | Hands-on learning session |
+| `mentoring` | 👥    | Learning through guidance |
 
 ### Moments Subcategories
 
-| Subcategory  | Emoji | Description                                 |
-| ------------ | ----- | ------------------------------------------- |
-| `journal`    | 📝    | Personal diary entries                      |
-| `dream`      | 🌙    | Dream journal                               |
-| `gratitude`  | 🙏    | Gratitude entries                           |
-| `reflection` | 💭    | Personal reflection                         |
-| `magic`      | 🪄    | Joy, delight, serendipity, zen, wonder, awe |
-| `memory`     | 📸    | Memory capture                              |
+Content-focused: "What am I capturing?"
 
-### Accomplishment Subcategories
+| Subcategory  | Emoji | Description                                    |
+| ------------ | ----- | ---------------------------------------------- |
+| `journal`    | 🪶    | Daily thoughts, what's happening (default)     |
+| `dream`      | 🌙    | Dream recording                                |
+| `memory`     | 📸    | A past moment worth preserving                 |
+| `idea`       | 💡    | A thought, spark, concept                      |
+| `gratitude`  | 🙏    | Something you're thankful for                  |
+| `intention`  | 🎯    | Something you want to do/be/have               |
+| `magic`      | 🪄    | Serendipity, pronoia, wonder, pure joy         |
 
-| Subcategory | Emoji | Description                 |
-| ----------- | ----- | --------------------------- |
-| `home`      | 🏠    | Household accomplishments   |
-| `work`      | 💼    | Professional wins           |
-| `personal`  | 🎯    | Personal goals achieved     |
-| `hobby`     | 🎨    | Hobby milestones            |
-| `social`    | 👫    | Relationship investments    |
-| `health`    | 💚    | Health-related achievements |
+### Life Admin Subcategories
+
+| Subcategory   | Emoji | Description                   |
+| ------------- | ----- | ----------------------------- |
+| `cleaning`    | 🧹    | Tidying, vacuuming, organizing |
+| `laundry`     | 🧺    | Washing, folding, ironing     |
+| `cooking`     | 🍳    | Meal prep, cooking            |
+| `errands`     | 🛒    | Shopping, pickups, drop-offs  |
+| `finances`    | 💳    | Bills, budgeting, paperwork   |
+| `maintenance` | 🔧    | Home repairs, car care        |
+| `admin`       | 📋    | Appointments, forms, emails   |
+
+### Health Subcategories
+
+| Subcategory  | Emoji | Description                  |
+| ------------ | ----- | ---------------------------- |
+| `sleep`      | 😴    | Sleep wins                   |
+| `nutrition`  | 🥗    | Eating well                  |
+| `hydration`  | 💧    | Drinking water               |
+| `medical`    | 🏥    | Appointments, checkups, meds |
+| `mental`     | 🧠    | Mental health, therapy       |
+| `recovery`   | 🩹    | Rest, healing                |
+| `self_care`  | 🛁    | Pampering, relaxation        |
+
+### Work Subcategories
+
+| Subcategory  | Emoji | Description              |
+| ------------ | ----- | ------------------------ |
+| `project`    | 📊    | Project milestones       |
+| `meeting`    | 🤝    | Productive meetings      |
+| `deadline`   | ⏰    | Hitting deadlines        |
+| `win`        | 🏆    | Recognition, promotions  |
+| `growth`     | 📈    | Professional development |
+
+### Social Subcategories
+
+| Subcategory  | Emoji | Description              |
+| ------------ | ----- | ------------------------ |
+| `family`     | 👨‍👩‍👧    | Family connection        |
+| `friends`    | 👯    | Friend time              |
+| `community`  | 🏘️    | Community involvement    |
+| `connection` | 💕    | New or deepened bonds    |
 
 ### Events Subcategories
 
@@ -233,6 +287,10 @@ Subcategories provide **specific activity identification** within a category. Th
 | `exhibition` | 🖼️    | Art/museum exhibition    |
 | `talk`       | 🎤    | Lecture, conference talk |
 | `sports`     | 🏟️    | Sporting event           |
+| `festival`   | 🎪    | Multi-day events         |
+| `dining`     | 🍽️    | Special meals, restaurants |
+| `travel`     | ✈️    | Trips, holidays          |
+| `gathering`  | 🎉    | Parties, celebrations    |
 
 ### Subcategory Overlap
 
@@ -243,14 +301,23 @@ Some subcategories appear in multiple categories (e.g., `walking` in mindfulness
 
 Same activity, different intention and framing.
 
-### Gratitude: Category vs Tada Type
+### Tada Type Leverages All Categories
 
-Note that gratitude can appear in two places:
+Every `tada` belongs to a life domain category. Examples:
 
-- **As a subcategory under `moments`**: A reflective journal entry about what you're thankful for
-- **As a `tada` type entry**: A quick celebratory capture — "Tada! I'm grateful for..."
+| Celebration | Category | Subcategory |
+|-------------|----------|-------------|
+| "Ran a marathon!" | `movement` | `running` |
+| "30-day meditation streak!" | `mindfulness` | `sitting` |
+| "Finished the painting!" | `creative` | `art` |
+| "Passed the exam!" | `learning` | `course` |
+| "Slept 8 hours!" | `health` | `sleep` |
+| "Got promoted!" | `work` | `win` |
+| "Called mom for an hour" | `social` | `family` |
+| "Vacuumed the house!" | `life_admin` | `cleaning` |
+| "Saw Radiohead live!" | `events` | `concert` |
 
-The distinction is behavioral: moments are reflective (you sit and write), tadas are celebratory (quick capture of a spark).
+The **type** (`tada`) marks it as celebratory. The **category** tells you what life domain it belongs to. Together they enable filtering like "show me all my movement celebrations" or "show me everything I did this week in health".
 
 ---
 
@@ -359,15 +426,18 @@ function getEntryEmoji(entry: Entry): string {
 
 ### Category Emoji Defaults
 
-| Category         | Emoji | Rationale                      |
-| ---------------- | ----- | ------------------------------ |
-| `mindfulness`    | 🧘    | Universal meditation symbol    |
-| `movement`       | 🏃    | Active motion                  |
-| `creative`       | 🎵    | Music as archetypal creativity |
-| `learning`       | 📚    | Books = knowledge              |
-| `moments`        | 💭    | Thought bubble = inner life    |
-| `accomplishment` | ⚡    | Energy, spark, "tada!"         |
-| `events`         | 🎭    | Theatre masks = performance    |
+| Category      | Emoji | Rationale                      |
+| ------------- | ----- | ------------------------------ |
+| `mindfulness` | 🧘    | Universal meditation symbol    |
+| `movement`    | 🏃    | Active motion                  |
+| `creative`    | 🎨    | Art palette = making things    |
+| `learning`    | 📚    | Books = knowledge              |
+| `health`      | 💚    | Green heart = wellness         |
+| `work`        | 💼    | Briefcase = professional       |
+| `social`      | 👥    | People = connection            |
+| `life_admin`  | 🏠    | Home = domestic life           |
+| `moments`     | 💭    | Thought bubble = inner life    |
+| `events`      | 🎭    | Theatre masks = experiences    |
 
 ### Emoji Design Principles
 
@@ -384,15 +454,18 @@ Each category has an assigned color for consistent UI treatment across timeline 
 
 ### Category Colors
 
-| Category         | Color  | Hex       | Tailwind Class |
-| ---------------- | ------ | --------- | -------------- |
-| `mindfulness`    | Purple | `#7C3AED` | `violet-600`   |
-| `movement`       | Green  | `#059669` | `emerald-600`  |
-| `creative`       | Amber  | `#D97706` | `amber-600`    |
-| `learning`       | Blue   | `#2563EB` | `blue-600`     |
-| `moments`        | Indigo | `#6366F1` | `indigo-500`   |
-| `accomplishment` | Yellow | `#F59E0B` | `amber-500`    |
-| `events`         | Pink   | `#EC4899` | `pink-500`     |
+| Category      | Color  | Hex       | Tailwind Class |
+| ------------- | ------ | --------- | -------------- |
+| `mindfulness` | Purple | `#7C3AED` | `violet-600`   |
+| `movement`    | Green  | `#059669` | `emerald-600`  |
+| `creative`    | Amber  | `#D97706` | `amber-600`    |
+| `learning`    | Blue   | `#2563EB` | `blue-600`     |
+| `health`      | Teal   | `#14B8A6` | `teal-500`     |
+| `work`        | Slate  | `#64748B` | `slate-500`    |
+| `social`      | Rose   | `#F43F5E` | `rose-500`     |
+| `life_admin`  | Stone  | `#78716C` | `stone-500`    |
+| `moments`     | Indigo | `#6366F1` | `indigo-500`   |
+| `events`      | Pink   | `#EC4899` | `pink-500`     |
 
 ### Color Usage
 
@@ -421,8 +494,8 @@ export const entries = sqliteTable("entries", {
 
   // Classification
   type: text("type").notNull(), // "timed", "tada", "moment", "tally"
-  category: text("category"), // "mindfulness", "accomplishment", "moments"
-  subcategory: text("subcategory"), // "sitting", "work", "journal"
+  category: text("category"), // "mindfulness", "work", "health", "social", etc.
+  subcategory: text("subcategory"), // "sitting", "project", "sleep", "family"
   emoji: text("emoji"), // Per-entry override (nullable)
 
   // ... other fields ...
@@ -541,13 +614,16 @@ function getEntryDisplayProps(
 
 ```
 ┌─────────────────────────────────────────┐
-│ 🧘 Morning Sit                   6m  │ ← emoji from subcategory "sitting"
-│    mindfulness • sitting              │ ← category • subcategory
+│ 🧘 Morning Sit                   6m  │ ← timed, mindfulness
+│    mindfulness • sitting              │
 ├─────────────────────────────────────────┤
-│ ⚡ Fixed the leaky tap                  │ ← emoji from category "accomplishment"
-│    accomplishment • home                │
+│ 🏆 Got promoted!                        │ ← tada, work
+│    work • win                           │
 ├─────────────────────────────────────────┤
-│ 🌙 Flying dream                         │ ← emoji from subcategory "dream"
+│ 🏃 Ran a marathon!                      │ ← tada, movement
+│    movement • running                   │
+├─────────────────────────────────────────┤
+│ 🌙 Flying dream                         │ ← moment, moments
 │    moments • dream                      │
 └─────────────────────────────────────────┘
 ```
@@ -610,4 +686,4 @@ If export to these standards is needed, mapping functions can translate categori
 
 ---
 
-_This document defines the ontology for Tada v0.1.0. It will evolve as the app grows into a broader lifelogging platform._
+_This document defines the ontology for Tada v0.4.0. It will evolve as the app grows into a broader lifelogging platform._

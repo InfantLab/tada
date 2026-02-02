@@ -73,7 +73,6 @@ function autoGrow() {
 // Entry type derived from category
 const entryType = computed(() => {
   if (category.value === "journal") return "journal";
-  if (category.value === "accomplishment") return "tada";
   return "note";
 });
 

@@ -133,8 +133,8 @@ describe("GET /api/v1/export/obsidian", () => {
     await createTestEntry(env.user.id, {
       type: "tada",
       name: "Completed project",
-      category: "accomplishment",
-      subcategory: "work",
+      category: "work",
+      subcategory: "project",
       timestamp: "2026-01-31T14:00:00.000Z",
     });
   });

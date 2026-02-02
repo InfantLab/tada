@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { CATEGORY_DEFAULTS } from "~/utils/categoryDefaults";
+
 // TimelineHeader - Search and filter controls for the timeline
 interface Props {
   modelValue?: string;
@@ -35,16 +37,15 @@ const selectedTimeRange = computed({
 
 const isSearchExpanded = ref(false);
 
-// Common categories from ontology
-const categories = [
+// Categories from ontology (dynamically generated)
+const categories = computed(() => [
   { value: "", label: "All", emoji: "📋" },
-  { value: "mindfulness", label: "Mindfulness", emoji: "🧘" },
-  { value: "accomplishment", label: "Accomplishment", emoji: "⚡" },
-  { value: "movement", label: "Movement", emoji: "💪" },
-  { value: "creative", label: "Creative", emoji: "🎨" },
-  { value: "dreams", label: "Dreams", emoji: "🌙" },
-  { value: "journal", label: "Journal", emoji: "📝" },
-];
+  ...Object.entries(CATEGORY_DEFAULTS).map(([slug, cat]) => ({
+    value: slug,
+    label: cat.label,
+    emoji: cat.emoji,
+  })),
+]);
 
 const timeRanges = [
   { value: "today", label: "Today" },

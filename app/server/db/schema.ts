@@ -80,7 +80,7 @@ export const entries = sqliteTable("entries", {
   name: text("name").notNull(), // 'meditation', 'push-ups', 'dream', etc.
 
   // Category hierarchy (see design/ontology.md)
-  category: text("category"), // 'mindfulness', 'accomplishment', 'creative', etc.
+  category: text("category"), // 'mindfulness', 'work', 'creative', etc.
   subcategory: text("subcategory"), // 'sitting', 'work', 'piano', etc.
   emoji: text("emoji"), // Per-entry override (nullable)
 
@@ -321,7 +321,7 @@ export const categorySettings = sqliteTable("category_settings", {
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
 
-  category: text("category").notNull(), // 'mindfulness', 'accomplishment', etc.
+  category: text("category").notNull(), // 'mindfulness', 'work', etc.
   subcategory: text("subcategory"), // null = category-level setting, set = subcategory-level
 
   emoji: text("emoji"), // Override default emoji for this category OR subcategory

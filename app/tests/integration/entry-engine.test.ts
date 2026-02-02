@@ -30,8 +30,8 @@ describe("Entry Engine Integration", () => {
       const input: EntryInput = {
         type: "tada",
         name: "Fixed the bug",
-        category: "accomplishment",
-        subcategory: "work",
+        category: "work",
+        subcategory: "project",
       };
 
       const result = validateEntryInput(input);
@@ -144,18 +144,18 @@ describe("Entry Engine Integration", () => {
       const tadaInput: EntryInput = {
         type: "tada",
         name: "Shipped the feature!",
-        category: "accomplishment",
-        subcategory: "work",
+        category: "work",
+        subcategory: "project",
         emoji: "⚡",
         notes: "Finally got it done",
         data: {},
-        tags: ["accomplishment", "work"],
+        tags: ["work", "project"],
       };
 
       const result = validateEntryInput(tadaInput);
       expect(result.valid).toBe(true);
       expect(result.data?.type).toBe("tada");
-      expect(result.data?.category).toBe("accomplishment");
+      expect(result.data?.category).toBe("work");
     });
 
     it("should produce consistent entry structure for restored entries", () => {

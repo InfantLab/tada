@@ -61,10 +61,10 @@ export interface VoiceEntryData {
 export interface BatchTadaInput {
   /** Tada title */
   title: string;
-  /** Category (home, work, etc.) */
+  /** Category (life domain: work, health, social, life_admin, etc.) */
   category: string;
-  /** Subcategory */
-  subcategory?: string;
+  /** Subcategory (optional, more specific: cleaning, sleep, family, etc.) */
+  subcategory?: string | null;
   /** Significance level */
   significance: "minor" | "normal" | "major";
   /** Original text from transcription */
@@ -308,8 +308,8 @@ export const useEntrySave = (): UseEntrySaveReturn => {
         const entryData: EntryData = {
           type: "tada",
           name: tada.title,
-          category: "accomplishment",
-          subcategory: tada.category, // Use extraction category as subcategory
+          category: tada.category, // Use the actual category from extraction
+          subcategory: tada.subcategory || null, // Optional subcategory
           source: "voice",
           notes: tada.notes || null,
           data: {
@@ -328,7 +328,7 @@ export const useEntrySave = (): UseEntrySaveReturn => {
             method: "POST",
             body: {
               ...entryData,
-              emoji: resolveEmoji("accomplishment", tada.category, null),
+              emoji: resolveEmoji(tada.category, tada.subcategory || "", null),
               timestamp: new Date().toISOString(),
             },
           });

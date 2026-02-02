@@ -484,15 +484,15 @@ describe("Entries API Integration", async () => {
           name: "Fixed the leaky tap",
           timestamp: new Date().toISOString(),
           timezone: "UTC",
-          category: "accomplishment",
-          subcategory: "home",
+          category: "life_admin",
+          subcategory: "chores",
         }),
       });
 
       expect(response.status).toBe(200);
       const data = await response.json();
       expect(data.type).toBe("tada");
-      expect(data.category).toBe("accomplishment");
+      expect(data.category).toBe("life_admin");
     });
 
     it("should handle moment entries with content", async () => {

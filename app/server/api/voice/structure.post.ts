@@ -101,9 +101,19 @@ Text to analyze:
   if (mode === "tada") {
     return (
       basePrompt +
-      `Extract all accomplishments (tadas) mentioned. For each:
+      `Extract all accomplishments (tadas/celebrations) mentioned. For each:
 - name: Brief description (3-10 words)
-- category: subcategory that best fits: work (job, office, meetings), home (chores, repairs, cooking), health (exercise, medical, wellness), social (friends, family, events), hobby (creative, learning, fun), or personal (other personal wins)
+- category: life domain that best fits:
+  * mindfulness (meditation, breathing, contemplation)
+  * movement (exercise, sports, running, yoga)
+  * creative (art, music, writing, coding)
+  * learning (study, courses, reading)
+  * health (sleep, nutrition, medical, self-care)
+  * work (career, professional, meetings, projects)
+  * social (family, friends, community)
+  * life_admin (chores, cleaning, errands, cooking)
+  * moments (ideas, dreams, reflections)
+  * events (concerts, movies, travel, dining)
 - significance: minor (small wins), normal (regular accomplishments), major (big achievements)
 
 Respond ONLY with valid JSON in this format:
