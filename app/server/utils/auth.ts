@@ -19,6 +19,9 @@ export const lucia = new Lucia(adapter, {
       timezone: attributes.timezone,
       email: attributes.email,
       emailVerified: attributes.emailVerified,
+      // Cloud subscription attributes (v0.4.0+)
+      subscriptionTier: attributes.subscriptionTier,
+      subscriptionStatus: attributes.subscriptionStatus,
     };
   },
 });
@@ -31,6 +34,9 @@ declare module "lucia" {
       timezone: string;
       email: string | null;
       emailVerified: boolean;
+      // Cloud subscription attributes (v0.4.0+)
+      subscriptionTier: string | null;
+      subscriptionStatus: string | null;
     };
   }
 }

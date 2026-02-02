@@ -44,15 +44,23 @@ export default defineNuxtConfig({
     anthropicApiKey: process.env["NUXT_ANTHROPIC_API_KEY"] || process.env["ANTHROPIC_API_KEY"] || "",
     deepgramApiKey: process.env["NUXT_DEEPGRAM_API_KEY"] || process.env["DEEPGRAM_API_KEY"] || "",
 
+    // Stripe billing (server-only, v0.4.0+)
+    stripeSecretKey: process.env["STRIPE_SECRET_KEY"] || "",
+    stripeWebhookSecret: process.env["STRIPE_WEBHOOK_SECRET"] || "",
+    stripePriceIdMonthly: process.env["STRIPE_PRICE_ID_MONTHLY"] || "",
+    stripePriceIdYearly: process.env["STRIPE_PRICE_ID_YEARLY"] || "",
+
     // Public (exposed to client)
     public: {
       appName: "Tada",
-      appVersion: "0.3.1",
+      appVersion: "0.4.0",
       gitHash: process.env["GIT_HASH"] || "",
       gitShortHash: process.env["GIT_SHORT_HASH"] || "",
       // Voice feature flags
       voiceEnabled: process.env["VOICE_ENABLED"] !== "false",
       voiceFreeLimit: parseInt(process.env["VOICE_FREE_LIMIT"] || "50", 10),
+      // Cloud mode flag (v0.4.0+) - enables subscription UI
+      isCloudMode: process.env["TADA_CLOUD_MODE"] === "true" || !!process.env["STRIPE_SECRET_KEY"],
     },
   },
 

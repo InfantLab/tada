@@ -2,8 +2,8 @@
 
 Feature ideas and future plans, organized by version releases.
 
-**Current Version:** v0.3.0 ✅ (shipped)  
-**Next Release:** v0.4.0
+**Current Version:** v0.4.0a (in progress)
+**Previous Releases:** v0.3.0, v0.3.1
 
 ---
 
@@ -14,7 +14,8 @@ Feature ideas and future plans, organized by version releases.
 | **v0.1.0** | MVP — Foundation            | ✅ Shipped Jan 2026 |
 | **v0.2.0** | Graceful Rhythms            | ✅ Shipped Jan 2026 |
 | **v0.3.0** | Magic & Voice               | ✅ Shipped Jan 2026 |
-| **v0.4.0** | Cloud Service (tada.living) | Mar 2026            |
+| **v0.3.1** | REST API                    | ✅ Shipped Jan 2026 |
+| **v0.4.0** | Ontology & Cloud Service    | Q2 2026             |
 | **v0.5.0** | Rituals, Celestial & AI     | Q4 2026             |
 | **v0.6.0** | Integrations                | 2027+               |
 
@@ -124,9 +125,11 @@ See [CHANGELOG.md](../CHANGELOG.md) and [RELEASE_NOTES_v0.2.0.md](../RELEASE_NOT
 
 ---
 
-## v0.3.0: Magic & Voice
+## v0.3.0: Magic & Voice ✅
 
-_Target: Feb 2026_
+_Status: Shipped January 2026_
+
+See [CHANGELOG.md](../CHANGELOG.md) and [RELEASE_NOTES_v0.3.0.md](../RELEASE_NOTES_v0.3.0.md) for details.
 
 **Theme:** Polish the core experience. Magic Moments for capturing life's special instants. Voice input for friction-free entry. Practice links to connect sessions with resources.
 
@@ -187,22 +190,52 @@ Moved from v0.2.0 or newly identified:
 
 ---
 
-## v0.4.0: Cloud Service — tada.living
+## v0.3.1: REST API ✅
 
-_Target: Q3 2026_
+_Status: Shipped January 2026_
+
+**Theme:** Developer-friendly REST API for integrations and automation.
+
+**Delivered:**
+
+- Complete REST API v1 at `/api/v1/`
+- Entries CRUD with filtering, pagination, bulk operations
+- Rhythms API with progress tracking
+- Insights API (summary and patterns)
+- CSV import API with recipe support
+- Export API (JSON/CSV)
+- Webhooks for external integrations
+- API key authentication
+- Comprehensive test coverage (220+ tests)
+
+---
+
+## v0.4.0: Ontology & Cloud Service — tada.living
+
+_Target: Q2 2026_
+
+### ✅ Completed This Version
+
+- [x] **Ontology Expansion (10 categories):**
+  - Removed "Accomplishment" category (ta-das are entries, not a category)
+  - Added **Health** (💚): sleep, nutrition, hydration, medical, mental, recovery, self care
+  - Added **Work** (💼): project, meeting, deadline, win, growth
+  - Added **Social** (👥): family, friends, community, connection
+  - Added **Life Admin** (🏠): cleaning, laundry, cooking, errands, finances, maintenance, admin
+  - Renamed "Journal" → **Moments** (💭): journal, dream, memory, idea, gratitude, intention, magic
+  - Updated Creative emoji: 🎵 → 🎨
+
+---
 
 ### 🧹 Cleanup & Deprecations
 
-- [ ] Remove deprecated `/add` page (replaced by inline capture on each entry type page)
-- [ ] Audit and remove unused components from v0.2.0 refactoring
-- [ ] Rewrite integration tests with @nuxt/test-utils/e2e
-
-### 🔐 Email Verification
-
-- [ ] Email verification flow (optional for self-hosted, required for cloud)
-- [ ] Email verification on registration
-- [ ] Resend verification email option
-- [ ] Account status indicators (verified/unverified)
+- [x] Remove deprecated `/add` page (replaced by inline capture on each entry type page)
+- [x] Audit and remove unused components from v0.2.0 refactoring
+  - Removed: `useVoiceQueue.ts` (unused composable)
+  - Removed: `QuickNavScrubber.vue` (unused component)
+  - Removed: `VoiceErrorBoundary.vue` (unused component)
+  - Removed: `createEntry`, `createVoiceEntry` from `useEntrySave.ts` (deprecated)
+- [ ] Rewrite integration tests with @nuxt/test-utils/e2e _(parked until v0.4.0 features complete)_
 
 ### 🌱 Gentle Onboarding Tour
 
@@ -306,25 +339,25 @@ Make reporting issues feel zen, not stressful.
 - Privacy: always show exactly what data will be sent before sending
 - Never include entry content without explicit opt-in
 
-### ☁️ Multi-Tenant Platform
+### ☁️ Cloud Platform (tada.living)
 
-Transform self-hosted app into hosted service at tada.living.
+Transform self-hosted app into hosted freemium service. See [commercial.md](commercial.md) for full architecture.
 
-**Infrastructure:**
+**Cloud Mode Infrastructure:**
 
-- [ ] Multi-tenant database architecture (tenant isolation)
-- [ ] User registration and onboarding flow
-- [ ] Account management dashboard
-- [ ] Cross-device sync (real-time)
-- [ ] Automated backups and recovery
+- [ ] Cloud mode detection (`TADA_CLOUD_MODE` / Stripe key presence)
+- [ ] Database schema: subscription fields on users table
+- [ ] Usage limits: 1-year rolling window for free tier
+- [ ] Email verification (required for cloud, optional for self-hosted)
+- [ ] Account page (`/account`) for subscription management
 
 **Billing (Stripe):**
 
-- [ ] Subscription tiers (Free, Premium)
-- [ ] Stripe integration for payments
-- [ ] Usage-based limits (entries, storage)
-- [ ] Trial period and conversion flow
-- [ ] Cancellation and data export
+- [ ] Stripe Checkout integration (monthly/yearly)
+- [ ] Webhook handlers (subscription lifecycle events)
+- [ ] Customer Portal link (manage subscription)
+- [ ] UI: upgrade prompts, tier status display
+- [ ] Graceful archive notices for free tier users
 
 **Legal & Compliance:**
 
@@ -345,11 +378,12 @@ Transform self-hosted app into hosted service at tada.living.
 - [ ] SEO optimization
 - [ ] Email newsletter (opt-in)
 
-**Self-Hosted Compatibility:**
+**tada.living Deployment:**
 
-- [ ] Self-hosted remains fully functional (no cloud required)
-- [ ] Optional cloud backup for self-hosted users
-- [ ] Migration path: self-hosted ↔ cloud
+- [ ] CapRover captain-definition
+- [ ] Production environment config
+- [ ] Automated backup scripts
+- [ ] Monitoring and alerting
 
 ---
 
@@ -531,4 +565,4 @@ Things we're explicitly _not_ building:
 
 ---
 
-_Last updated: January 2026_
+_Last updated: February 2026_

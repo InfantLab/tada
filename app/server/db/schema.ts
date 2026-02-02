@@ -12,6 +12,13 @@ export const users = sqliteTable("users", {
   emailVerified: integer("email_verified", { mode: "boolean" }).default(false),
   passwordHash: text("password_hash"), // Null if no password set (open access)
   timezone: text("timezone").notNull().default("UTC"),
+
+  // Cloud subscription fields (v0.4.0+)
+  subscriptionTier: text("subscription_tier").default("free"), // 'free' | 'premium'
+  subscriptionStatus: text("subscription_status").default("active"), // 'active' | 'past_due' | 'cancelled' | 'expired'
+  stripeCustomerId: text("stripe_customer_id"), // Stripe customer ID for billing
+  subscriptionExpiresAt: text("subscription_expires_at"), // ISO 8601 - when subscription period ends
+
   createdAt: text("created_at")
     .notNull()
     .default(sql`(datetime('now'))`),
@@ -44,6 +51,40 @@ export const passwordResetTokens = sqliteTable("password_reset_tokens", {
   tokenHash: text("token_hash").notNull(), // SHA-256 hash of the token
   expiresAt: text("expires_at").notNull(), // ISO 8601 - 6 hours from creation
   usedAt: text("used_at"), // When token was used (null if unused)
+  createdAt: text("created_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
+});
+
+// ============================================================================
+// Email Verification Tokens - For cloud mode email verification (v0.4.0+)
+// ============================================================================
+
+export const emailVerificationTokens = sqliteTable("email_verification_tokens", {
+  id: text("id").primaryKey(), // UUID
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  tokenHash: text("token_hash").notNull(), // SHA-256 hash of the token
+  expiresAt: text("expires_at").notNull(), // ISO 8601 - 24 hours from creation
+  usedAt: text("used_at"), // When token was used (null if unused)
+  createdAt: text("created_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
+});
+
+// ============================================================================
+// Subscription Events - Audit trail for billing activities (v0.4.0+)
+// ============================================================================
+
+export const subscriptionEvents = sqliteTable("subscription_events", {
+  id: text("id").primaryKey(), // UUID
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  eventType: text("event_type").notNull(), // 'created', 'renewed', 'upgraded', 'cancelled', 'expired', 'payment_failed', 'payment_succeeded'
+  stripeEventId: text("stripe_event_id"), // Stripe event ID for deduplication
+  data: text("data", { mode: "json" }).$type<Record<string, unknown>>(), // Event details
   createdAt: text("created_at")
     .notNull()
     .default(sql`(datetime('now'))`),
@@ -690,6 +731,12 @@ export type NewSession = typeof sessions.$inferInsert;
 
 export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
 export type NewPasswordResetToken = typeof passwordResetTokens.$inferInsert;
+
+export type EmailVerificationToken = typeof emailVerificationTokens.$inferSelect;
+export type NewEmailVerificationToken = typeof emailVerificationTokens.$inferInsert;
+
+export type SubscriptionEvent = typeof subscriptionEvents.$inferSelect;
+export type NewSubscriptionEvent = typeof subscriptionEvents.$inferInsert;
 
 export type AuthEvent = typeof authEvents.$inferSelect;
 export type NewAuthEvent = typeof authEvents.$inferInsert;
