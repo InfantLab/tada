@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS backronyms (
 
 -- Insert the backronyms with slogans
 INSERT INTO backronyms (backronym, slogan) VALUES
-  ('Track Activities, Discover Achievements', 'The original. Simple, clear, and true to the mission.'),
+  ('Track Activities, Discover Achievements', 'Do the work. Notice the wins.'),
   ('Tally Adventures, Declare Accomplishments', 'Every moment counts. Every win deserves celebration.'),
   ('Treasure Actions, Document Aspirations', 'Collecting seashells on the beach of your life.'),
   ('Tag Artifacts, Detect Associations', 'Mark what matters. Uncover what connects.'),
