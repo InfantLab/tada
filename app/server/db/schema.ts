@@ -735,3 +735,19 @@ export type NewWebhook = typeof webhooks.$inferInsert;
 
 export type InsightCache = typeof insightCache.$inferSelect;
 export type NewInsightCache = typeof insightCache.$inferInsert;
+
+// ============================================================================
+// Backronyms - Ta-Da! backronym variations for rotating taglines
+// ============================================================================
+
+export const backronyms = sqliteTable("backronyms", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  backronym: text("backronym").notNull(),
+  slogan: text("slogan").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" })
+    .notNull()
+    .default(sql`(unixepoch())`),
+});
+
+export type Backronym = typeof backronyms.$inferSelect;
+export type NewBackronym = typeof backronyms.$inferInsert;
