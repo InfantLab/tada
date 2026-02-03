@@ -248,13 +248,13 @@ A soft, welcoming introduction that respects the user's intelligence and curiosi
 - Never overwhelm — reveal features as they explore
 - Celebrate their first actions, however small
 
-**Initial Welcome (first visit):**
+**Initial Welcome (first visit):** ✅
 
-- [ ] Soft welcome overlay: "Welcome to Ta-Da! — a place to notice your life"
-- [ ] Highlight top navigation row gently (Sessions, Add, Tada, Moments)
-- [ ] Single-sentence hints: "Start a meditation timer" / "Capture a win" / etc.
-- [ ] Dismiss with any interaction — no forced clicks
-- [ ] Remember dismissal (localStorage + user preference)
+- [x] Soft welcome overlay: "Welcome to Ta-Da! — a place to notice your life"
+- [x] Highlight top navigation row gently (Sessions, Add, Tada, Moments)
+- [x] Single-sentence hints: "Start a meditation timer" / "Capture a win" / etc.
+- [x] Dismiss with any interaction — no forced clicks
+- [x] Remember dismissal (localStorage + user preference)
 
 **Timer-specific guidance:**
 
@@ -262,11 +262,11 @@ A soft, welcoming introduction that respects the user's intelligence and curiosi
 - [ ] Explain: browsers throttle background tabs, bells may be delayed if backgrounded
 - [ ] Show only once, remember dismissal
 
-**Progressive Discovery:**
+**Progressive Discovery:** ✅
 
-- [ ] Feature hints appear contextually when user explores new areas
-- [ ] First timer completion: gentle celebration + "This is now in your collection"
-- [ ] First dream logged: "Dreams are treasures worth remembering"
+- [x] Feature hints appear contextually when user explores new areas
+- [x] First timer completion: gentle celebration + "This is now in your collection"
+- [x] First dream logged: "Dreams are treasures worth remembering"
 - [ ] First week: optional "Getting started" card on home (dismissible)
 - [ ] Settings tour only when they visit Settings
 
@@ -280,12 +280,12 @@ A soft, welcoming introduction that respects the user's intelligence and curiosi
 
 In-app guidance that feels like a wise friend, not a manual.
 
-**Help Center (`/help`):**
+**Help Center (`/help`):** ✅
 
-- [ ] Beautiful, zen-like FAQ page matching app aesthetic
-- [ ] Categories: Getting Started, Timer, Entries, Rhythms, Import, Privacy
-- [ ] Searchable with fuzzy matching
-- [ ] Expandable questions (accordion style)
+- [x] Beautiful, zen-like FAQ page matching app aesthetic
+- [x] Categories: Getting Started, Timer, Entries, Rhythms, Import, Privacy
+- [x] Searchable with fuzzy matching
+- [x] Expandable questions (accordion style)
 - [ ] Direct links from relevant pages ("Need help? →")
 
 **Contextual Help:**
@@ -316,14 +316,14 @@ In-app guidance that feels like a wise friend, not a manual.
 
 Make reporting issues feel zen, not stressful.
 
-**In-App Bug Reporter:**
+**In-App Bug Reporter:** ✅
 
-- [ ] Accessible from Help menu or Settings
-- [ ] Calm, friendly interface: "Something not quite right?"
-- [ ] Simple form: What happened? What did you expect?
-- [ ] Optional: include browser/device info (with consent preview)
+- [x] Accessible from Help menu or Settings
+- [x] Calm, friendly interface: "Something not quite right?"
+- [x] Simple form: What happened? What did you expect?
+- [x] Optional: include browser/device info (with consent preview)
 - [ ] Optional: attach screenshot or screen recording
-- [ ] No account required for self-hosted (email optional for follow-up)
+- [x] No account required for self-hosted (email optional for follow-up)
 
 **For Cloud Users (tada.living):**
 
@@ -343,47 +343,49 @@ Make reporting issues feel zen, not stressful.
 
 Transform self-hosted app into hosted freemium service. See [commercial.md](commercial.md) for full architecture.
 
-**Cloud Mode Infrastructure:**
+_Core infrastructure implemented in commit `54a2dd5` (Feb 2026)._
 
-- [ ] Cloud mode detection (`TADA_CLOUD_MODE` / Stripe key presence)
-- [ ] Database schema: subscription fields on users table
-- [ ] Usage limits: 1-year rolling window for free tier
-- [ ] Email verification (required for cloud, optional for self-hosted)
-- [ ] Account page (`/account`) for subscription management
+**Cloud Mode Infrastructure:** ✅
 
-**Billing (Stripe):**
+- [x] Cloud mode detection (`TADA_CLOUD_MODE` / Stripe key presence)
+- [x] Database schema: subscription fields on users table
+- [x] Usage limits: 1-year rolling window for free tier
+- [x] Email verification (required for cloud, optional for self-hosted)
+- [x] Account page (`/account`) for subscription management
 
-- [ ] Stripe Checkout integration (monthly/yearly)
-- [ ] Webhook handlers (subscription lifecycle events)
-- [ ] Customer Portal link (manage subscription)
-- [ ] UI: upgrade prompts, tier status display
-- [ ] Graceful archive notices for free tier users
+**Billing (Stripe):** ✅
 
-**Legal & Compliance:**
+- [x] Stripe Checkout integration (monthly/yearly)
+- [x] Webhook handlers (subscription lifecycle events)
+- [x] Customer Portal link (manage subscription)
+- [x] UI: upgrade prompts, tier status display
+- [x] Graceful archive notices for free tier users
 
-- [ ] Privacy policy (GDPR-compliant)
-- [ ] Terms of service
+**Legal & Compliance:** ✅
+
+- [x] Privacy policy (GDPR-compliant)
+- [x] Terms of service
 - [ ] Data processing agreements
-- [ ] Cookie consent (minimal)
+- [x] Cookie consent (minimal)
 - [ ] Data deletion workflow
 
 **Marketing & Content:**
 
-- [ ] Landing page with philosophy messaging
+- [x] Landing page with philosophy messaging
 - [ ] Blog with science/philosophy content:
   - Benefits of mindfulness tracking
   - Psychology of rhythm formation
   - Identity-based behavior change research
   - Contemplative practice traditions
-- [ ] SEO optimization
+- [x] SEO optimization
 - [ ] Email newsletter (opt-in)
 
 **tada.living Deployment:**
 
 - [ ] CapRover captain-definition
-- [ ] Production environment config
+- [x] Production environment config (`.env.example` documented)
 - [ ] Automated backup scripts
-- [ ] Monitoring and alerting
+- [x] Monitoring and alerting (health endpoint at `/api/health`)
 
 ---
 

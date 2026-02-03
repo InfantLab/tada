@@ -1,8 +1,27 @@
 <script setup lang="ts">
 // Timeline page - the main view showing all entries chronologically
+// Shows landing page for unauthenticated users
 
 definePageMeta({
   layout: "default",
+  auth: false, // Allow public access - we handle auth check manually
+});
+
+// Check authentication status
+const isAuthenticated = ref(false);
+const isCheckingAuth = ref(true);
+
+onMounted(async () => {
+  try {
+    const response = await $fetch<{
+      user: { id: string; username: string } | null;
+    }>("/api/auth/session");
+    isAuthenticated.value = !!response.user;
+  } catch {
+    isAuthenticated.value = false;
+  } finally {
+    isCheckingAuth.value = false;
+  }
 });
 
 // Zoom level state
@@ -129,7 +148,16 @@ watch(zoomLevel, (newLevel) => {
 </script>
 
 <template>
-  <div>
+  <!-- Loading state while checking auth -->
+  <div v-if="isCheckingAuth" class="flex items-center justify-center min-h-[50vh]">
+    <div class="animate-pulse text-4xl">✨</div>
+  </div>
+
+  <!-- Landing page for unauthenticated users -->
+  <LandingPage v-else-if="!isAuthenticated" />
+
+  <!-- Timeline for authenticated users -->
+  <div v-else>
     <!-- Page header -->
     <div class="flex items-center justify-between mb-4">
       <div>

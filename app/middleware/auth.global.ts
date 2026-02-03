@@ -1,10 +1,14 @@
 /**
  * Global auth middleware
  * Redirects unauthenticated users to login page
+ * Allows public pages (login, landing, legal)
  */
+
+const publicPaths = ["/", "/login", "/register", "/privacy", "/terms", "/help", "/feedback", "/verify-email"];
+
 export default defineNuxtRouteMiddleware(async (to) => {
-  // Allow access to login page
-  if (to.path === "/login") {
+  // Allow access to public pages
+  if (publicPaths.includes(to.path)) {
     return;
   }
 

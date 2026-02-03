@@ -296,6 +296,8 @@ onUnmounted(() => {
 
     <ToastContainer />
     <ErrorTrackerPanel />
+    <CookieConsent />
+    <onboarding-WelcomeOverlay />
   </div>
 </template>
 

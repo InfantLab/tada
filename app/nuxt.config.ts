@@ -44,23 +44,17 @@ export default defineNuxtConfig({
     anthropicApiKey: process.env["NUXT_ANTHROPIC_API_KEY"] || process.env["ANTHROPIC_API_KEY"] || "",
     deepgramApiKey: process.env["NUXT_DEEPGRAM_API_KEY"] || process.env["DEEPGRAM_API_KEY"] || "",
 
-    // Stripe billing (server-only, v0.4.0+)
-    stripeSecretKey: process.env["STRIPE_SECRET_KEY"] || "",
-    stripeWebhookSecret: process.env["STRIPE_WEBHOOK_SECRET"] || "",
-    stripePriceIdMonthly: process.env["STRIPE_PRICE_ID_MONTHLY"] || "",
-    stripePriceIdYearly: process.env["STRIPE_PRICE_ID_YEARLY"] || "",
-
     // Public (exposed to client)
     public: {
       appName: "Tada",
       appVersion: "0.4.0",
-      gitHash: process.env["GIT_HASH"] || "",
-      gitShortHash: process.env["GIT_SHORT_HASH"] || "",
+      // Cloud mode - for cookie consent, subscription UI, etc.
+      isCloudMode:
+        process.env["TADA_CLOUD_MODE"] === "true" ||
+        !!process.env["STRIPE_SECRET_KEY"],
       // Voice feature flags
       voiceEnabled: process.env["VOICE_ENABLED"] !== "false",
       voiceFreeLimit: parseInt(process.env["VOICE_FREE_LIMIT"] || "50", 10),
-      // Cloud mode flag (v0.4.0+) - enables subscription UI
-      isCloudMode: process.env["TADA_CLOUD_MODE"] === "true" || !!process.env["STRIPE_SECRET_KEY"],
     },
   },
 
@@ -136,20 +130,48 @@ export default defineNuxtConfig({
   // App configuration
   app: {
     head: {
-      title: "Tada",
+      title: "Ta-Da! — Notice Your Life",
+      titleTemplate: "%s | Ta-Da!",
       meta: [
         {
           name: "description",
           content:
-            "Personal lifelogger - Track Activities, Discover Achievements",
+            "A mindful life tracker for meditation, accomplishments, and daily rhythms. Count up, not down. Celebrate what you did, not what you missed.",
         },
         { name: "theme-color", content: "#10b981" },
         { name: "apple-mobile-web-app-capable", content: "yes" },
         { name: "apple-mobile-web-app-status-bar-style", content: "default" },
+        // Open Graph
+        { property: "og:type", content: "website" },
+        { property: "og:site_name", content: "Ta-Da!" },
+        { property: "og:title", content: "Ta-Da! — Notice Your Life" },
+        {
+          property: "og:description",
+          content:
+            "A mindful life tracker for meditation, accomplishments, and daily rhythms.",
+        },
+        { property: "og:image", content: "/og-image.png" },
+        // Twitter Card
+        { name: "twitter:card", content: "summary_large_image" },
+        { name: "twitter:title", content: "Ta-Da! — Notice Your Life" },
+        {
+          name: "twitter:description",
+          content:
+            "A mindful life tracker for meditation, accomplishments, and daily rhythms.",
+        },
+        { name: "twitter:image", content: "/og-image.png" },
+        // Additional SEO
+        { name: "robots", content: "index, follow" },
+        {
+          name: "keywords",
+          content:
+            "meditation tracker, mindfulness app, habit tracker, accomplishment journal, gratitude app, rhythm tracker",
+        },
       ],
       link: [
         { rel: "icon", type: "image/png", href: "/favicon.png" },
         { rel: "apple-touch-icon", href: "/icons/icon-192.png" },
+        { rel: "canonical", href: "https://tada.living" },
       ],
     },
   },
