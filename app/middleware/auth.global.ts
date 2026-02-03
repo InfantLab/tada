@@ -1,14 +1,20 @@
 /**
  * Global auth middleware
  * Redirects unauthenticated users to login page
- * Allows public pages (login, landing, legal)
+ * Allows public pages (login, landing, legal, blog)
  */
 
 const publicPaths = ["/", "/login", "/register", "/privacy", "/terms", "/help", "/feedback", "/verify-email"];
+const publicPrefixes = ["/blog"];
 
 export default defineNuxtRouteMiddleware(async (to) => {
   // Allow access to public pages
   if (publicPaths.includes(to.path)) {
+    return;
+  }
+
+  // Allow access to public path prefixes (e.g., /blog/*)
+  if (publicPrefixes.some((prefix) => to.path.startsWith(prefix))) {
     return;
   }
 

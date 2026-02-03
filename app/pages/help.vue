@@ -129,7 +129,10 @@ const faqs: FAQ[] = [
 
 const categories = [...new Set(faqs.map((f) => f.category))];
 
-const searchQuery = ref("");
+const route = useRoute();
+
+// Support pre-filtering via ?q= query parameter
+const searchQuery = ref((route.query["q"] as string) || "");
 const expandedQuestions = ref<Set<string>>(new Set());
 
 const filteredFaqs = computed(() => {

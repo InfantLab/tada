@@ -185,9 +185,12 @@ function getCategoryEmoji(category: string | null): string {
         <h1 class="text-2xl font-bold text-stone-800 dark:text-stone-100">
           Rhythms
         </h1>
-        <p class="text-sm text-stone-500 dark:text-stone-400">
-          See your natural patterns
-        </p>
+        <div class="flex items-center gap-3">
+          <p class="text-sm text-stone-500 dark:text-stone-400">
+            See your natural patterns
+          </p>
+          <HelpLink search="chains" label="Need help?" />
+        </div>
       </div>
 
       <!-- Add rhythm button -->

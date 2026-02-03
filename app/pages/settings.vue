@@ -759,7 +759,13 @@ onMounted(() => {
       <h1 class="text-2xl font-bold text-stone-800 dark:text-stone-100">
         Settings
       </h1>
+      <div class="ml-auto">
+        <HelpLink search="account password" label="Need help?" />
+      </div>
     </div>
+
+    <!-- Settings hint for first-time visitors -->
+    <SettingsHint />
 
     <!-- Mobile navigation tabs -->
     <div class="lg:hidden mb-6 -mx-4 px-4 overflow-x-auto scrollbar-hide">

@@ -1,11 +1,13 @@
 /**
  * POST /api/feedback
  *
- * Receives user feedback and stores it.
+ * Receives user feedback and stores it in the database.
  * Public endpoint - no authentication required.
  */
 
 import { z } from "zod";
+import { db } from "~/server/db";
+import { feedback } from "~/server/db/schema";
 import { createLogger } from "~/server/utils/logger";
 
 const logger = createLogger("api:feedback");
@@ -40,37 +42,41 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const feedback = parseResult.data;
+  const feedbackData = parseResult.data;
 
   // Get user ID if authenticated (optional)
   const userId = event.context.user?.id || null;
 
-  // Log the feedback (in production, this would go to a database or support system)
-  logger.info("Feedback received", {
-    type: feedback.type,
+  // Store feedback in database
+  const feedbackId = crypto.randomUUID();
+  const now = new Date().toISOString();
+
+  await db.insert(feedback).values({
+    id: feedbackId,
     userId,
-    email: feedback.email,
-    hasSystemInfo: !!feedback.systemInfo,
-    descriptionLength: feedback.description.length,
+    type: feedbackData.type,
+    description: feedbackData.description,
+    expectedBehavior: feedbackData.expectedBehavior,
+    email: feedbackData.email,
+    systemInfo: feedbackData.systemInfo,
+    status: "new",
+    createdAt: now,
+    updatedAt: now,
   });
 
-  // For now, we log to console in a structured way
-  // In production, you'd store this in a database table or send to a support system
-  console.log("=== FEEDBACK RECEIVED ===");
-  console.log("Type:", feedback.type);
-  console.log("User ID:", userId || "anonymous");
-  console.log("Email:", feedback.email || "not provided");
-  console.log("Description:", feedback.description);
-  if (feedback.expectedBehavior) {
-    console.log("Expected:", feedback.expectedBehavior);
-  }
-  if (feedback.systemInfo) {
-    console.log("System Info:", JSON.stringify(feedback.systemInfo, null, 2));
-  }
-  console.log("========================");
+  // Log for monitoring
+  logger.info("Feedback stored", {
+    id: feedbackId,
+    type: feedbackData.type,
+    userId,
+    email: feedbackData.email,
+    hasSystemInfo: !!feedbackData.systemInfo,
+    descriptionLength: feedbackData.description.length,
+  });
 
   return {
     success: true,
     message: "Thank you for your feedback!",
+    id: feedbackId,
   };
 });

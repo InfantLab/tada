@@ -268,7 +268,7 @@ A soft, welcoming introduction that respects the user's intelligence and curiosi
 - [x] First timer completion: gentle celebration + "This is now in your collection"
 - [x] First dream logged: "Dreams are treasures worth remembering"
 - [ ] First week: optional "Getting started" card on home (dismissible)
-- [ ] Settings tour only when they visit Settings
+- [x] Settings tour only when they visit Settings
 
 **Returning Users:**
 
@@ -286,15 +286,15 @@ In-app guidance that feels like a wise friend, not a manual.
 - [x] Categories: Getting Started, Timer, Entries, Rhythms, Import, Privacy
 - [x] Searchable with fuzzy matching
 - [x] Expandable questions (accordion style)
-- [ ] Direct links from relevant pages ("Need help? →")
+- [x] Direct links from relevant pages ("Need help? →")
 
-**Contextual Help:**
+**Contextual Help:** ✅
 
-- [ ] `?` icon in header (subtle, consistent location)
-- [ ] Page-specific help panels (slide in, don't navigate away)
-- [ ] Timer help: "Why does the timer count up?"
-- [ ] Rhythm help: "How do graceful chains work?"
-- [ ] Import help: "Where do I get my Insight Timer data?"
+- [x] `?` icon in header (subtle, consistent location)
+- [x] Page-specific help panels (slide in, don't navigate away)
+- [x] Timer help: "Why does the timer count up?"
+- [x] Rhythm help: "How do graceful chains work?"
+- [x] Import help: "Where do I get my Insight Timer data?"
 
 **FAQ Philosophy:**
 
@@ -324,18 +324,20 @@ Make reporting issues feel zen, not stressful.
 - [x] Optional: include browser/device info (with consent preview)
 - [ ] Optional: attach screenshot or screen recording
 - [x] No account required for self-hosted (email optional for follow-up)
+- [x] Database storage for feedback (feedback table in schema)
 
 **For Cloud Users (tada.living):**
 
+- [x] Feedback stored in database with status tracking
 - [ ] Automatic context: user ID, app version, recent actions (with consent)
 - [ ] Response acknowledgment: "We've heard you — thank you for helping Ta-Da improve"
-- [ ] Status tracking: view submitted reports and responses
+- [ ] Status tracking UI: view submitted reports and responses
 - [ ] Integration with support ticketing (Intercom/Zendesk/email)
 
 **Implementation Notes:**
 
-- Self-hosted: generates markdown report for GitHub issue or email
-- Cloud: submits to backend → support queue
+- Self-hosted: stores in local database, exportable for support
+- Cloud: stored in database with admin-only status management
 - Privacy: always show exactly what data will be sent before sending
 - Never include entry content without explicit opt-in
 
@@ -367,16 +369,17 @@ _Core infrastructure implemented in commit `54a2dd5` (Feb 2026)._
 - [x] Terms of service
 - [ ] Data processing agreements
 - [x] Cookie consent (minimal)
-- [ ] Data deletion workflow
+- [x] Data deletion workflow (DELETE /api/account + UI in /account)
 
 **Marketing & Content:**
 
 - [x] Landing page with philosophy messaging
-- [ ] Blog with science/philosophy content:
-  - Benefits of mindfulness tracking
-  - Psychology of rhythm formation
-  - Identity-based behavior change research
-  - Contemplative practice traditions
+- [x] Blog foundation (`/blog`) with philosophy content:
+  - [x] "Why We Count Up" - the count-up timer philosophy
+  - [x] "Identity Over Streaks" - identity-based behavior change
+  - [x] "The Case for Graceful Rhythms" - flexible consistency
+  - [ ] Benefits of mindfulness tracking
+  - [ ] Contemplative practice traditions
 - [x] SEO optimization
 - [ ] Email newsletter (opt-in)
 

@@ -798,3 +798,46 @@ export const backronyms = sqliteTable("backronyms", {
 
 export type Backronym = typeof backronyms.$inferSelect;
 export type NewBackronym = typeof backronyms.$inferInsert;
+
+// ============================================================================
+// Feedback - User feedback, bug reports, and feature requests (v0.4.0+)
+// ============================================================================
+
+export const feedback = sqliteTable("feedback", {
+  id: text("id").primaryKey(), // UUID
+  userId: text("user_id").references(() => users.id, { onDelete: "set null" }), // Optional - anonymous feedback allowed
+
+  // Feedback type and content
+  type: text("type").notNull(), // 'bug', 'feedback', 'question'
+  description: text("description").notNull(), // Main feedback content
+  expectedBehavior: text("expected_behavior"), // For bug reports
+
+  // Contact info (optional)
+  email: text("email"), // For follow-up (if user provided)
+
+  // System context (with user consent)
+  systemInfo: text("system_info", { mode: "json" }).$type<{
+    userAgent?: string;
+    platform?: string;
+    language?: string;
+    screenSize?: string;
+    appVersion?: string;
+    timestamp?: string;
+  }>(),
+
+  // Status tracking (for cloud mode support management)
+  status: text("status").notNull().default("new"), // 'new', 'reviewed', 'in_progress', 'resolved', 'closed'
+  internalNotes: text("internal_notes"), // Admin notes (never shown to user)
+  resolvedAt: text("resolved_at"), // When feedback was resolved
+
+  // Timestamps
+  createdAt: text("created_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
+});
+
+export type Feedback = typeof feedback.$inferSelect;
+export type NewFeedback = typeof feedback.$inferInsert;

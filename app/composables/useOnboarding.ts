@@ -17,6 +17,7 @@ const STORAGE_KEY = "tada-onboarding";
 interface OnboardingState {
   welcomeDismissed: boolean;
   timerHintDismissed: boolean;
+  settingsHintDismissed: boolean;
   firstSessionCelebrated: boolean;
   firstTadaCelebrated: boolean;
   firstMomentCelebrated: boolean;
@@ -27,6 +28,7 @@ interface OnboardingState {
 const defaultState: OnboardingState = {
   welcomeDismissed: false,
   timerHintDismissed: false,
+  settingsHintDismissed: false,
   firstSessionCelebrated: false,
   firstTadaCelebrated: false,
   firstMomentCelebrated: false,
@@ -86,6 +88,12 @@ export function useOnboarding() {
     return !state.value.timerHintDismissed;
   });
 
+  // Computed: Should show settings hint?
+  const shouldShowSettingsHint = computed(() => {
+    if (!isLoaded.value) return false;
+    return !state.value.settingsHintDismissed;
+  });
+
   // Computed: Is this a new version the user hasn't seen?
   const hasNewVersion = computed(() => {
     if (!isLoaded.value) return false;
@@ -101,6 +109,11 @@ export function useOnboarding() {
 
   function dismissTimerHint() {
     state.value.timerHintDismissed = true;
+    saveState();
+  }
+
+  function dismissSettingsHint() {
+    state.value.settingsHintDismissed = true;
     saveState();
   }
 
@@ -152,12 +165,14 @@ export function useOnboarding() {
     isLoaded,
     shouldShowWelcome,
     shouldShowTimerHint,
+    shouldShowSettingsHint,
     hasNewVersion,
     state: readonly(state),
 
     // Actions
     dismissWelcome,
     dismissTimerHint,
+    dismissSettingsHint,
     celebrateFirstSession,
     celebrateFirstTada,
     celebrateFirstMoment,

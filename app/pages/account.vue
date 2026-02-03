@@ -32,6 +32,11 @@ const checkoutCanceled = computed(() => route.query["canceled"] === "true");
 const isSendingVerification = ref(false);
 const verificationSent = ref(false);
 
+// Delete account state
+const showDeleteDialog = ref(false);
+const deleteConfirmation = ref("");
+const isDeleting = ref(false);
+
 // Load data on mount
 onMounted(async () => {
   await loadAll();
@@ -65,6 +70,45 @@ async function handleUpgrade(plan: "monthly" | "yearly") {
 
 async function handleManageSubscription() {
   await openPortal();
+}
+
+async function handleDeleteAccount() {
+  if (deleteConfirmation.value !== "DELETE") {
+    showError("Please type DELETE to confirm");
+    return;
+  }
+
+  isDeleting.value = true;
+
+  try {
+    const response = await $fetch("/api/account", {
+      method: "DELETE",
+      body: { confirmation: "DELETE" },
+    });
+
+    if (response.success) {
+      // Redirect to home page after deletion
+      showSuccess("Your account has been deleted. Goodbye!");
+      router.push("/");
+    }
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : "Failed to delete account";
+    showError(errorMessage);
+  } finally {
+    isDeleting.value = false;
+    showDeleteDialog.value = false;
+    deleteConfirmation.value = "";
+  }
+}
+
+function openDeleteDialog() {
+  deleteConfirmation.value = "";
+  showDeleteDialog.value = true;
+}
+
+function closeDeleteDialog() {
+  showDeleteDialog.value = false;
+  deleteConfirmation.value = "";
 }
 
 // Format date for display
@@ -109,16 +153,36 @@ function formatDate(dateString: string | null): string {
     <!-- Not Cloud Mode -->
     <div
       v-else-if="!isCloudMode"
-      class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 p-6"
+      class="space-y-6"
     >
-      <div class="text-center">
-        <div class="text-4xl mb-4">🏠</div>
-        <h2 class="text-xl font-semibold text-stone-800 dark:text-stone-100 mb-2">
-          Self-Hosted Mode
+      <div class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 p-6">
+        <div class="text-center">
+          <div class="text-4xl mb-4">🏠</div>
+          <h2 class="text-xl font-semibold text-stone-800 dark:text-stone-100 mb-2">
+            Self-Hosted Mode
+          </h2>
+          <p class="text-stone-600 dark:text-stone-400">
+            You're running Ta-Da! on your own server. All features are unlimited!
+          </p>
+        </div>
+      </div>
+
+      <!-- Danger Zone (self-hosted) -->
+      <div
+        class="bg-white dark:bg-stone-800 rounded-xl border border-red-200 dark:border-red-900 p-6"
+      >
+        <h2 class="text-lg font-semibold text-red-700 dark:text-red-400 mb-2">
+          Danger Zone
         </h2>
-        <p class="text-stone-600 dark:text-stone-400">
-          You're running Ta-Da! on your own server. All features are unlimited!
+        <p class="text-stone-600 dark:text-stone-400 mb-4">
+          Permanently delete your account and all associated data. This action cannot be undone.
         </p>
+        <button
+          class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+          @click="openDeleteDialog"
+        >
+          Delete Account
+        </button>
       </div>
     </div>
 
@@ -381,6 +445,95 @@ function formatDate(dateString: string | null): string {
       >
         <p class="text-red-800 dark:text-red-200">{{ error }}</p>
       </div>
+
+      <!-- Danger Zone -->
+      <div
+        class="bg-white dark:bg-stone-800 rounded-xl border border-red-200 dark:border-red-900 p-6"
+      >
+        <h2 class="text-lg font-semibold text-red-700 dark:text-red-400 mb-2">
+          Danger Zone
+        </h2>
+        <p class="text-stone-600 dark:text-stone-400 mb-4">
+          Permanently delete your account and all associated data. This action cannot be undone.
+        </p>
+        <button
+          class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+          @click="openDeleteDialog"
+        >
+          Delete Account
+        </button>
+      </div>
     </div>
+
+    <!-- Delete Confirmation Dialog (outside conditional to work for both modes) -->
+    <Teleport to="body">
+      <div
+        v-if="showDeleteDialog"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+      >
+        <!-- Backdrop -->
+        <div
+          class="absolute inset-0 bg-black/50"
+          @click="closeDeleteDialog"
+        />
+
+        <!-- Dialog -->
+        <div
+          class="relative bg-white dark:bg-stone-800 rounded-xl shadow-xl max-w-md w-full p-6"
+        >
+          <h3 class="text-xl font-semibold text-stone-800 dark:text-stone-100 mb-2">
+            Delete Your Account?
+          </h3>
+
+          <div class="space-y-4">
+            <p class="text-stone-600 dark:text-stone-400">
+              This will permanently delete:
+            </p>
+            <ul class="text-stone-600 dark:text-stone-400 text-sm space-y-1 ml-4">
+              <li>All your entries and activity history</li>
+              <li>All your rhythms and streaks</li>
+              <li>All your preferences and settings</li>
+              <li v-if="isPremium">Your premium subscription (will be cancelled)</li>
+            </ul>
+
+            <div class="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+              <p class="text-sm text-red-800 dark:text-red-200 font-medium">
+                This action cannot be undone. All your data will be permanently removed.
+              </p>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1">
+                Type <span class="font-mono bg-stone-100 dark:bg-stone-700 px-1 rounded">DELETE</span> to confirm
+              </label>
+              <input
+                v-model="deleteConfirmation"
+                type="text"
+                placeholder="DELETE"
+                class="w-full px-3 py-2 border border-stone-300 dark:border-stone-600 rounded-lg bg-white dark:bg-stone-700 text-stone-800 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-red-500"
+                @keyup.enter="handleDeleteAccount"
+              />
+            </div>
+
+            <div class="flex gap-3 pt-2">
+              <button
+                class="flex-1 px-4 py-2 bg-stone-100 dark:bg-stone-700 text-stone-700 dark:text-stone-200 rounded-lg hover:bg-stone-200 dark:hover:bg-stone-600 transition-colors"
+                :disabled="isDeleting"
+                @click="closeDeleteDialog"
+              >
+                Cancel
+              </button>
+              <button
+                class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                :disabled="deleteConfirmation !== 'DELETE' || isDeleting"
+                @click="handleDeleteAccount"
+              >
+                {{ isDeleting ? "Deleting..." : "Delete Account" }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>

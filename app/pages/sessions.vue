@@ -1116,9 +1116,10 @@ onUnmounted(() => {
           {{ currentPresetName }}
         </h1>
       </div>
-      <p class="text-sm text-stone-500 dark:text-stone-400">
+      <p class="text-sm text-stone-500 dark:text-stone-400 mb-1">
         {{ currentPresetDescription }}
       </p>
+      <HelpLink search="timer" label="Need help?" />
     </div>
 
     <!-- SECTION 1: Preset Selector Accordion (only when not running) -->
