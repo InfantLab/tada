@@ -112,24 +112,49 @@ data/
 *.sqlite-shm
 ```
 
-## Code Changes
+## Code Changes (Updated Feb 2026)
+
+### Unified Database Path Strategy
+
+**All tools use `DATABASE_URL` env var with consistent fallback:**
+
+| Context | How DATABASE_URL is set | Resolves to |
+|---------|------------------------|-------------|
+| `bun run dev` | package.json: `DATABASE_URL=file:../data/db.sqlite` | `/workspaces/tada/data/db.sqlite` |
+| `bun run db:migrate` | package.json: `DATABASE_URL=file:../data/db.sqlite` | `/workspaces/tada/data/db.sqlite` |
+| `bun run db:studio` | package.json: `DATABASE_URL=file:../data/db.sqlite` | `/workspaces/tada/data/db.sqlite` |
+| Production (CapRover) | Container env var: `DATABASE_URL=file:/data/db.sqlite` | `/data/db.sqlite` |
+| Docker Compose | docker-compose.yml sets it | `/app/data/db.sqlite` |
+
+### `package.json` scripts
+
+```json
+{
+  "dev": "DATABASE_URL=file:../data/db.sqlite nuxt dev",
+  "db:migrate": "DATABASE_URL=file:../data/db.sqlite drizzle-kit migrate",
+  "db:studio": "DATABASE_URL=file:../data/db.sqlite drizzle-kit studio"
+}
+```
 
 ### `server/db/index.ts`
 
 ```typescript
-// Development: ../data/db.sqlite (outside app/ - not watched)
-// Production: Uses DATABASE_URL env var
-const isDev = process.env["NODE_ENV"] === "development";
-const databaseUrl =
-  process.env["DATABASE_URL"] ||
-  (isDev ? "file:../data/db.sqlite" : "file:./data/db.sqlite");
+// Fallback only - package.json scripts should always set DATABASE_URL
+const databaseUrl = process.env["DATABASE_URL"] || "file:../data/db.sqlite";
+```
+
+### `drizzle.config.ts`
+
+```typescript
+const databaseUrl = process.env["DATABASE_URL"] || 'file:../data/db.sqlite';
 ```
 
 **Key points:**
 
-- `DATABASE_URL` environment variable takes precedence (production safety)
-- In development, uses relative path `../data/` (up one level from `app/`)
-- In production, uses `./data/` (same directory as the app)
+- `DATABASE_URL` is set by package.json scripts (dev) or container env vars (prod)
+- **Do NOT set DATABASE_URL in `.env`** - it causes conflicts with package.json
+- All fallbacks use `../data/db.sqlite` (relative to app/, outside watched directory)
+- Production always uses explicit env var from container/CapRover
 
 ## Cleanup (Optional)
 

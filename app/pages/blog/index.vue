@@ -168,16 +168,9 @@ const filteredPosts = computed(() => {
       </button>
     </div>
 
-    <!-- Newsletter signup (placeholder for future) -->
+    <!-- Newsletter signup -->
     <div class="mt-12 pt-8 border-t border-stone-200 dark:border-stone-700">
-      <div class="bg-pearl-mist dark:bg-cosmic-indigo rounded-xl p-6 text-center">
-        <h3 class="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-2">
-          More thoughts coming soon
-        </h3>
-        <p class="text-stone-600 dark:text-stone-400 text-sm">
-          We're writing about mindfulness, habits, and the philosophy behind Ta-Da!
-        </p>
-      </div>
+      <NewsletterSignup source="blog" />
     </div>
   </div>
 </template>

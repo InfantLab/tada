@@ -6,14 +6,26 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { parseNaturalLanguage } from "./naturalLanguageParser";
 
 describe("naturalLanguageParser", () => {
+  // Note: vi.useFakeTimers() can fail in some environments (Bun, certain CI setups)
+  // We use a try-catch pattern to make tests more robust
+  let usingFakeTimers = false;
+
   beforeEach(() => {
-    // Mock date to 2026-01-25 10:00:00 for consistent testing
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-01-25T10:00:00.000Z"));
+    try {
+      // Mock date to 2026-01-25 10:00:00 for consistent testing
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date("2026-01-25T10:00:00.000Z"));
+      usingFakeTimers = true;
+    } catch {
+      // Fake timers not available in this environment - tests will use real time
+      usingFakeTimers = false;
+    }
   });
 
   afterEach(() => {
-    vi.useRealTimers();
+    if (usingFakeTimers) {
+      vi.useRealTimers();
+    }
   });
 
   describe("parseNaturalLanguage", () => {

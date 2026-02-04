@@ -131,48 +131,20 @@ export default defineNuxtConfig({
   // App configuration
   app: {
     head: {
-      title: "Ta-Da! — Notice Your Life",
-      titleTemplate: "%s | Ta-Da!",
+      title: "Tada",
       meta: [
         {
           name: "description",
           content:
-            "A mindful life tracker for meditation, accomplishments, and daily rhythms. Count up, not down. Celebrate what you did, not what you missed.",
+            "Personal lifelogger - Track Activities, Discover Achievements",
         },
         { name: "theme-color", content: "#10b981" },
         { name: "apple-mobile-web-app-capable", content: "yes" },
         { name: "apple-mobile-web-app-status-bar-style", content: "default" },
-        // Open Graph
-        { property: "og:type", content: "website" },
-        { property: "og:site_name", content: "Ta-Da!" },
-        { property: "og:title", content: "Ta-Da! — Notice Your Life" },
-        {
-          property: "og:description",
-          content:
-            "A mindful life tracker for meditation, accomplishments, and daily rhythms.",
-        },
-        { property: "og:image", content: "/og-image.png" },
-        // Twitter Card
-        { name: "twitter:card", content: "summary_large_image" },
-        { name: "twitter:title", content: "Ta-Da! — Notice Your Life" },
-        {
-          name: "twitter:description",
-          content:
-            "A mindful life tracker for meditation, accomplishments, and daily rhythms.",
-        },
-        { name: "twitter:image", content: "/og-image.png" },
-        // Additional SEO
-        { name: "robots", content: "index, follow" },
-        {
-          name: "keywords",
-          content:
-            "meditation tracker, mindfulness app, habit tracker, accomplishment journal, gratitude app, rhythm tracker",
-        },
       ],
       link: [
         { rel: "icon", type: "image/png", href: "/favicon.png" },
         { rel: "apple-touch-icon", href: "/icons/icon-192.png" },
-        { rel: "canonical", href: "https://tada.living" },
       ],
     },
   },

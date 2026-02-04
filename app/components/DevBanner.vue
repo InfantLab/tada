@@ -48,8 +48,8 @@ onMounted(() => {
         </div>
         <button
           class="text-amber-700 dark:text-amber-300 hover:text-amber-900 dark:hover:text-amber-100 px-2"
-          @click="dismiss"
           title="Dismiss for this session"
+          @click="dismiss"
         >
           ✕
         </button>

@@ -6,7 +6,11 @@ Welcome to the Ta-Da! documentation. This directory contains guides for deployme
 
 ### Getting Started
 
-- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - **START HERE** - Complete deployment guide
+- **[ENVIRONMENTS.md](./ENVIRONMENTS.md)** - **NEW** - Environment configuration guide
+  - Localhost development setup
+  - Self-hosted deployment
+  - Database path strategy
+- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Complete deployment guide
   - CapRover deployment (recommended)
   - Docker deployment
   - Database setup and migrations
@@ -67,15 +71,15 @@ Documentation for the REST API v1 (released in v0.3.1):
 
 ## 📦 Version Information
 
-- **App Version:** v0.3.1
+- **App Version:** v0.4.0
 - **REST API Version:** v1.0.0
-- **Last Updated:** 2026-02-02
+- **Last Updated:** 2026-02-04
 
 ## 🔗 Related Resources
 
-- **GitHub Repository:** https://github.com/YourUsername/tada
-- **Live Demo:** https://tada.yourdomain.com
-- **API Health Check:** https://tada.yourdomain.com/api/v1/health
+- **GitHub Repository:** https://github.com/InfantLab/tada
+- **Live Demo:** https://tada.living
+- **API Health Check:** https://tada.living/api/health
 
 ---
 

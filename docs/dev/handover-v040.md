@@ -48,11 +48,44 @@ Completed:
   - Positioned next to settings icon
   - Opens contextual help panel on click
 
-### Blog Foundation (just completed)
+### Newsletter Signup (just completed)
+- [NewsletterSignup.vue](app/components/NewsletterSignup.vue) - Email subscription form
+  - Used on blog page and landing page
+  - Success/error states with friendly messaging
+  - Privacy policy link
+- [newsletter_subscribers table](app/server/db/schema.ts) - Database table for subscribers
+- [0018_newsletter_subscribers.sql](app/server/db/migrations/0018_newsletter_subscribers.sql) - Migration
+- [/api/newsletter/subscribe](app/server/api/newsletter/subscribe.post.ts) - Subscription API
+  - Email validation, handles resubscription
+- [blog/index.vue](app/pages/blog/index.vue) - Added newsletter signup
+- [LandingPage.vue](app/components/LandingPage.vue) - Added newsletter section and blog link
+
+### Data Processing Agreement (just completed)
+- [/dpa](app/pages/dpa.vue) - GDPR-compliant DPA page
+  - Processing scope and purpose
+  - Categories of data
+  - Security measures
+  - Sub-processors list
+  - Data breach notification
+  - International transfers
+- [auth.global.ts](app/middleware/auth.global.ts) - Added /dpa to public paths
+- [privacy.vue](app/pages/privacy.vue) - Added DPA link in footer
+
+### Getting Started Card
+- [GettingStartedCard.vue](app/components/onboarding/GettingStartedCard.vue) - First-week guidance card
+  - Appears on home page for new users
+  - Warm, friendly tone with quick-start links
+  - Links to Sessions, Ta-Da!, Moments, Rhythms
+  - Emphasizes "count up" philosophy
+  - Dismissible, respects user preference
+- [useOnboarding.ts](app/composables/useOnboarding.ts) - Added `shouldShowFirstWeekCard` computed
+- [index.vue](app/pages/index.vue) - Added GettingStartedCard to home page
+
+### Blog Foundation
 - [/blog](app/pages/blog/index.vue) - Blog listing page
   - Category filtering (Philosophy, Design)
   - Clean card-based post listing
-  - Newsletter signup placeholder
+  - Newsletter signup (fully functional)
 - [/blog/counting-up](app/pages/blog/counting-up.vue) - Article on count-up philosophy
 - [/blog/identity-over-streaks](app/pages/blog/identity-over-streaks.vue) - Article on identity-based habits
 - [/blog/graceful-rhythms](app/pages/blog/graceful-rhythms.vue) - Article on flexible consistency
@@ -106,8 +139,8 @@ Previously completed:
 
 See [design/roadmap.md](../design/roadmap.md) for full details.
 
-### Onboarding (minor)
-- [ ] First week "getting started" card on home
+### Onboarding ✅
+- [x] First week "getting started" card on home (DONE)
 - [x] Settings tour when visiting Settings page (DONE)
 
 ### Help System ✅
@@ -118,13 +151,13 @@ See [design/roadmap.md](../design/roadmap.md) for full details.
 - [ ] Screenshot/recording attachment option
 - [x] Database table for storing feedback (DONE)
 
-### Legal (minor)
-- [ ] Data processing agreements page
+### Legal ✅
+- [x] Data processing agreements page (DONE)
 - [x] Data deletion workflow in account settings (DONE)
 
 ### Marketing ✅
 - [x] Blog foundation with initial content (DONE - 3 articles)
-- [ ] Email newsletter signup
+- [x] Email newsletter signup (DONE)
 
 ### Deployment (can defer)
 - [ ] CapRover captain-definition
@@ -141,9 +174,13 @@ See [design/roadmap.md](../design/roadmap.md) for full details.
 | Subscription state | `app/composables/useSubscription.ts` |
 | Stripe integration | `app/server/services/stripe.ts` |
 | Onboarding state | `app/composables/useOnboarding.ts` |
+| Getting started card | `app/components/onboarding/GettingStartedCard.vue` |
 | Public page list | `app/middleware/auth.global.ts` |
 | Contextual help | `app/components/ContextualHelpPanel.vue` |
 | Feedback storage | `app/server/db/schema.ts` (feedback table) |
+| Newsletter signup | `app/components/NewsletterSignup.vue` |
+| Newsletter API | `app/server/api/newsletter/subscribe.post.ts` |
+| Data Processing Agreement | `app/pages/dpa.vue` |
 | Blog pages | `app/pages/blog/*.vue` |
 | Design docs | `design/commercial.md`, `design/roadmap.md` |
 
@@ -157,7 +194,7 @@ Ta-Da! is **gentle and celebratory**:
 - Graceful rhythms — missing a day isn't failure
 - Onboarding like a friend showing you around, not a tutorial
 - Help that answers "why" not just "how"
-
+#
 ---
 
 ## Testing Notes
@@ -176,10 +213,12 @@ Ta-Da! is **gentle and celebratory**:
 3. ~~**Feedback storage:** Create `feedback` table in schema, update API~~ DONE
 4. ~~**Blog:** Create `/blog` with 1-2 philosophy articles~~ DONE
 5. ~~**Contextual help panels:** `?` icon in header with slide-in help panels~~ DONE
-6. **First week card:** Add "getting started" card on home for new users
-7. **Email newsletter:** Add newsletter signup to blog/landing
-8. **Deployment:** CapRover captain-definition and backup scripts
+6. ~~**First week card:** Add "getting started" card on home for new users~~ DONE
+7. ~~**Email newsletter:** Add newsletter signup to blog/landing~~ DONE
+8. ~~**Data Processing Agreement:** Add /dpa page for GDPR compliance~~ DONE
+9. **Deployment:** CapRover captain-definition and backup scripts (can defer to actual deployment)
 
 ---
 
 *Handover prepared by Claude Opus 4.5*
+  

@@ -212,6 +212,13 @@ const philosophyPoints = [
       </div>
     </section>
 
+    <!-- Newsletter Section -->
+    <section class="py-12 bg-white/50 dark:bg-stone-900/50">
+      <div class="max-w-xl mx-auto px-4">
+        <NewsletterSignup source="landing" />
+      </div>
+    </section>
+
     <!-- Footer -->
     <footer class="py-8 border-t border-stone-200 dark:border-stone-700">
       <div class="max-w-4xl mx-auto px-4">
@@ -220,6 +227,9 @@ const philosophyPoints = [
             <img src="/icons/tada-logotype.png" alt="Ta-Da!" class="h-8" />
           </div>
           <nav class="flex gap-6 text-sm text-stone-600 dark:text-stone-400">
+            <NuxtLink to="/blog" class="hover:text-tada-600 dark:hover:text-tada-400">
+              Blog
+            </NuxtLink>
             <NuxtLink to="/privacy" class="hover:text-tada-600 dark:hover:text-tada-400">
               Privacy
             </NuxtLink>

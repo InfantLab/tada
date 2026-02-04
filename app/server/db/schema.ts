@@ -841,3 +841,31 @@ export const feedback = sqliteTable("feedback", {
 
 export type Feedback = typeof feedback.$inferSelect;
 export type NewFeedback = typeof feedback.$inferInsert;
+
+// ============================================================================
+// Newsletter Subscribers - Email list for blog updates (v0.4.0+)
+// ============================================================================
+
+export const newsletterSubscribers = sqliteTable("newsletter_subscribers", {
+  id: text("id").primaryKey(), // UUID
+  email: text("email").notNull().unique(), // Subscriber email
+
+  // Subscription status
+  status: text("status").notNull().default("active"), // 'active', 'unsubscribed'
+  source: text("source").notNull().default("blog"), // Where they signed up: 'blog', 'landing', 'footer'
+
+  // Verification (optional for future double opt-in)
+  verifiedAt: text("verified_at"), // When email was verified
+
+  // Unsubscribe tracking
+  unsubscribedAt: text("unsubscribed_at"), // When they unsubscribed
+  unsubscribeReason: text("unsubscribe_reason"), // Optional feedback
+
+  // Timestamps
+  createdAt: text("created_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
+});
+
+export type NewsletterSubscriber = typeof newsletterSubscribers.$inferSelect;
+export type NewNewsletterSubscriber = typeof newsletterSubscribers.$inferInsert;

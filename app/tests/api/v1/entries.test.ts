@@ -8,6 +8,10 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { createTestEnvironment, createTestEntry } from "~/tests/api/setup";
 
+// Import utilities
+import { createApiKey } from "~/server/utils/api-key";
+import { deleteEntry } from "~/server/services/entries";
+
 describe("GET /api/v1/entries", () => {
   let env: Awaited<ReturnType<typeof createTestEnvironment>>;
 
@@ -523,7 +527,3 @@ describe("POST /api/v1/entries/bulk", () => {
     expect(response.data.results).toBeDefined();
   });
 });
-
-// Import utilities
-import { createApiKey } from "~/server/utils/api-key";
-import { deleteEntry } from "~/server/services/entries";

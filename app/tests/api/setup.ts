@@ -11,6 +11,9 @@ import { createApiKey } from "~/server/utils/api-key";
 import type { Permission } from "~/types/api";
 import type { NewEntry } from "~/server/db/schema";
 
+// Import eq and like for the cleanup functions
+import { eq, like } from "drizzle-orm";
+
 /**
  * Create a test user
  */
@@ -226,6 +229,3 @@ export async function authenticatedRequest<T = any>(
 
   return await response.json();
 }
-
-// Import eq and like for the cleanup functions
-import { eq, like } from "drizzle-orm";

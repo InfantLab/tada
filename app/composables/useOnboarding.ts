@@ -94,6 +94,12 @@ export function useOnboarding() {
     return !state.value.settingsHintDismissed;
   });
 
+  // Computed: Should show first week getting started card?
+  const shouldShowFirstWeekCard = computed(() => {
+    if (!isLoaded.value) return false;
+    return !state.value.firstWeekCardDismissed;
+  });
+
   // Computed: Is this a new version the user hasn't seen?
   const hasNewVersion = computed(() => {
     if (!isLoaded.value) return false;
@@ -166,6 +172,7 @@ export function useOnboarding() {
     shouldShowWelcome,
     shouldShowTimerHint,
     shouldShowSettingsHint,
+    shouldShowFirstWeekCard,
     hasNewVersion,
     state: readonly(state),
 

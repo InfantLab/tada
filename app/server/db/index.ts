@@ -6,14 +6,12 @@ import { createLogger } from "~/utils/logger";
 
 const logger = createLogger("db:index");
 
-// Get database path from runtime config or environment
-// In development, store OUTSIDE the app directory to avoid file watcher issues
+// Database path strategy (see docs/DATABASE_LOCATION_MIGRATION.md):
+// - Development: DATABASE_URL set by package.json scripts to ../data/db.sqlite
+// - Production: DATABASE_URL set in container/CapRover env vars to /data/db.sqlite
+// - Fallback: ../data/db.sqlite (relative to app/, i.e., /workspaces/tada/data/)
 const isDev = process.env["NODE_ENV"] === "development";
-const databaseUrl =
-  process.env["DATABASE_URL"] ||
-  (isDev
-    ? "file:../data/db.sqlite" // Outside app/ directory - not watched
-    : "file:./data/db.sqlite"); // Inside app/ for production
+const databaseUrl = process.env["DATABASE_URL"] || "file:../data/db.sqlite";
 
 logger.info(`Database path: ${databaseUrl} (dev: ${isDev})`);
 

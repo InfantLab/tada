@@ -8,6 +8,9 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { createTestEnvironment, createTestEntry } from "~/tests/api/setup";
 
+// Import utilities
+import { createApiKey } from "~/server/utils/api-key";
+
 describe("GET /api/v1/export/entries", () => {
   let env: Awaited<ReturnType<typeof createTestEnvironment>>;
 
@@ -227,6 +230,3 @@ describe("GET /api/v1/export/obsidian", () => {
     expect(response).toContain("---"); // YAML frontmatter
   });
 });
-
-// Import utilities
-import { createApiKey } from "~/server/utils/api-key";

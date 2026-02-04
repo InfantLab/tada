@@ -300,12 +300,18 @@ const lastUpdated = "February 2026";
     </div>
 
     <!-- Footer Links -->
-    <div class="mt-12 pt-8 border-t border-stone-200 dark:border-stone-700 flex gap-4 text-sm">
+    <div class="mt-12 pt-8 border-t border-stone-200 dark:border-stone-700 flex flex-wrap gap-4 text-sm">
       <NuxtLink
         to="/terms"
         class="text-stone-600 dark:text-stone-400 hover:text-tada-600 dark:hover:text-tada-400"
       >
         Terms of Service
+      </NuxtLink>
+      <NuxtLink
+        to="/dpa"
+        class="text-stone-600 dark:text-stone-400 hover:text-tada-600 dark:hover:text-tada-400"
+      >
+        Data Processing Agreement
       </NuxtLink>
       <NuxtLink
         to="/help"

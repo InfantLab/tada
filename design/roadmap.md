@@ -2,7 +2,7 @@
 
 Feature ideas and future plans, organized by version releases.
 
-**Current Version:** v0.4.0a (in progress)
+**Current Version:** v0.4.0 (shipping February 2026)
 **Previous Releases:** v0.3.0, v0.3.1
 
 ---
@@ -15,7 +15,7 @@ Feature ideas and future plans, organized by version releases.
 | **v0.2.0** | Graceful Rhythms            | ✅ Shipped Jan 2026 |
 | **v0.3.0** | Magic & Voice               | ✅ Shipped Jan 2026 |
 | **v0.3.1** | REST API                    | ✅ Shipped Jan 2026 |
-| **v0.4.0** | Ontology & Cloud Service    | Q2 2026             |
+| **v0.4.0** | Ontology & Cloud Service    | ✅ Shipped Feb 2026 |
 | **v0.5.0** | Rituals, Celestial & AI     | Q4 2026             |
 | **v0.6.0** | Integrations                | 2027+               |
 
@@ -210,9 +210,13 @@ _Status: Shipped January 2026_
 
 ---
 
-## v0.4.0: Ontology & Cloud Service — tada.living
+## v0.4.0: Ontology & Cloud Service — tada.living ✅
 
-_Target: Q2 2026_
+_Status: Shipped February 2026_
+
+See [CHANGELOG.md](../CHANGELOG.md) for details.
+
+**Theme:** Cloud service launch at tada.living with gentle onboarding, help system, and GDPR compliance.
 
 ### ✅ Completed This Version
 
@@ -267,7 +271,7 @@ A soft, welcoming introduction that respects the user's intelligence and curiosi
 - [x] Feature hints appear contextually when user explores new areas
 - [x] First timer completion: gentle celebration + "This is now in your collection"
 - [x] First dream logged: "Dreams are treasures worth remembering"
-- [ ] First week: optional "Getting started" card on home (dismissible)
+- [x] First week: optional "Getting started" card on home (dismissible)
 - [x] Settings tour only when they visit Settings
 
 **Returning Users:**
@@ -367,7 +371,7 @@ _Core infrastructure implemented in commit `54a2dd5` (Feb 2026)._
 
 - [x] Privacy policy (GDPR-compliant)
 - [x] Terms of service
-- [ ] Data processing agreements
+- [x] Data processing agreements (`/dpa` page)
 - [x] Cookie consent (minimal)
 - [x] Data deletion workflow (DELETE /api/account + UI in /account)
 
@@ -381,15 +385,18 @@ _Core infrastructure implemented in commit `54a2dd5` (Feb 2026)._
   - [ ] Benefits of mindfulness tracking
   - [ ] Contemplative practice traditions
 - [x] SEO optimization
-- [ ] Email newsletter (opt-in)
+- [x] Email newsletter (opt-in with database storage)
 
-**tada.living Deployment:**
+**tada.living Deployment:** ✅
 
-- [ ] CapRover captain-definition
+- [x] CapRover deployment (manual via CLI)
 - [x] Production environment config (`.env.example` documented)
-- [ ] Automated backup scripts
 - [x] Monitoring and alerting (health endpoint at `/api/health`)
-- [ ] Set up dedicated support@tada.living email account (replace infantologist@gmail.com)
+- [x] Dev environment banner (prevents data confusion)
+- [x] Dedicated `/register` page for new users
+- [x] Account management section in Settings
+- [ ] Automated backup scripts (can defer)
+- [ ] Set up dedicated support@tada.living email account (can defer)
 
 ---
 

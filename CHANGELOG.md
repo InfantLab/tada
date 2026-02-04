@@ -9,6 +9,80 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 _No unreleased changes_
 
+## [0.4.0] - 2026-02-04
+
+### Added
+
+- **Cloud Platform (tada.living):**
+  - Cloud mode detection (`TADA_CLOUD_MODE` env var or Stripe keys presence)
+  - Stripe integration with checkout, webhooks, and customer portal
+  - Subscription management with pay-what-you-want tiers (£12/year suggested)
+  - Usage limits with 1-year rolling window for free tier
+  - Email verification flow for cloud users
+  - Account page (`/account`) for subscription and data management
+  - Graceful archive notices for free tier users approaching limits
+
+- **Expanded Ontology (10 categories):**
+  - Added **Health** (💚): sleep, nutrition, hydration, medical, mental, recovery, self care
+  - Added **Work** (💼): project, meeting, deadline, win, growth
+  - Added **Social** (👥): family, friends, community, connection
+  - Added **Life Admin** (🏠): cleaning, laundry, cooking, errands, finances, maintenance, admin
+  - Renamed "Journal" → **Moments** (💭) with magic subcategory
+  - Removed "Accomplishment" category (ta-das are entries, not a category)
+
+- **Gentle Onboarding:**
+  - Welcome overlay for first-time visitors
+  - Getting Started card on home page for new users (first week)
+  - Settings tour when visiting Settings page for the first time
+  - Feature hints that appear contextually as users explore
+  - First-time celebration messages (timer completion, dream logged, etc.)
+
+- **Help & Support System:**
+  - Help page (`/help`) with searchable FAQ across 6 categories
+  - Contextual help panels (slide-in from `?` icon in header)
+  - Page-specific help content for all major features
+  - Bug report tool (`/feedback`) with optional system info
+  - Feedback storage in database with status tracking
+  - HelpLink component for direct links from relevant pages
+
+- **Legal & Compliance (GDPR):**
+  - Privacy policy page (`/privacy`)
+  - Terms of service page (`/terms`)
+  - Data Processing Agreement page (`/dpa`)
+  - Cookie consent banner (cloud mode only)
+  - Account deletion workflow with Stripe subscription cancellation
+  - "Danger Zone" in account settings with confirmation dialog
+
+- **Marketing & Content:**
+  - Philosophy-driven landing page with value proposition
+  - Blog foundation (`/blog`) with category filtering
+  - Three philosophy articles: "Counting Up", "Identity Over Streaks", "Graceful Rhythms"
+  - Newsletter signup with database storage
+  - SEO optimization (OG tags, Twitter cards, canonical URLs)
+  - Dedicated registration page (`/register`)
+
+- **Developer Experience:**
+  - Dev environment banner (prevents production data confusion)
+  - Account management section in Settings page
+  - Health check endpoint at `/api/health`
+
+### Changed
+
+- Updated app version to 0.4.0
+- Updated Creative category emoji: 🎵 → 🎨
+- Contact emails updated to infantologist@gmail.com
+- Auth middleware updated for new public pages (blog, help, legal)
+
+### Fixed
+
+- Dockerfile COPY command no longer includes .git directory
+- Various TypeScript strict mode improvements
+
+### Removed
+
+- Deprecated `/add` page (replaced by inline capture on each entry type page)
+- Unused composables and components from v0.2.0 refactoring
+
 ## [0.3.0] - 2026-01-27
 
 ### Added

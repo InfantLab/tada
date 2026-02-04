@@ -170,6 +170,9 @@ watch(zoomLevel, (newLevel) => {
       </div>
     </div>
 
+    <!-- Getting Started Card (for new users) -->
+    <GettingStartedCard />
+
     <!-- Journey Badge - Accumulated time celebration -->
     <div class="mb-4">
       <JourneyBadge :zoom-level="zoomLevel" />

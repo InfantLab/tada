@@ -10,6 +10,9 @@ import { createTestEnvironment, createTestEntry } from "~/tests/api/setup";
 import { db } from "~/server/db";
 import { rhythms } from "~/server/db/schema";
 
+// Import utilities
+import { createApiKey } from "~/server/utils/api-key";
+
 describe("GET /api/v1/rhythms", () => {
   let env: Awaited<ReturnType<typeof createTestEnvironment>>;
 
@@ -150,6 +153,3 @@ describe("GET /api/v1/rhythms", () => {
     ).rejects.toThrow(/403/);
   });
 });
-
-// Import utilities
-import { createApiKey } from "~/server/utils/api-key";

@@ -22,8 +22,9 @@ Ta-Da! inverts the traditional productivity mindset:
 
 Read more: [design/philosophy.md](design/philosophy.md)
 
-## Features (v0.3.1)
+## Features (v0.4.0)
 
+- **☁️ Cloud Platform** — Use tada.living hosted service, or self-host your own instance
 - **🎤 Voice Input** — Speak your accomplishments naturally; AI extracts and structures tadas automatically
 - **🌿 Graceful Rhythms** — Track natural patterns with multiple chain types (daily, weekly, monthly targets)
 - **🧘 Meditation Timer** — Unlimited or fixed modes with interval bells, presets, and warm-up countdown
@@ -36,6 +37,8 @@ Read more: [design/philosophy.md](design/philosophy.md)
 - **🎨 Customization** — Custom emojis, timer presets, hide categories
 - **📱 PWA** — Installable, works offline
 - **🔒 Self-Hosted** — Your data stays yours, full JSON export
+- **❓ Help System** — Searchable FAQ and contextual help panels
+- **📰 Blog** — Philosophy articles on mindful tracking
 
 ### REST API v1 (New in v0.3.1)
 
@@ -74,7 +77,7 @@ docker compose up -d
 
 Visit `http://localhost:3000`, create an account, and start logging!
 
-**Data Location:** `./app/data/db.sqlite` (mount as volume for persistence)
+**Data Location:** `/data/db.sqlite` in container (mount as volume for persistence)
 
 ### For Developers
 
@@ -116,8 +119,6 @@ Ta-Da! uses a **unified Entry model** where everything is an entry. No separate 
 
 See [docs/PROJECT_STRUCTURE.md](docs/PROJECT_STRUCTURE.md) for detailed project layout and [design/SDR.md](design/SDR.md) for complete data model specification.
 
-See [docs/PROJECT_STRUCTURE.md](docs/PROJECT_STRUCTURE.md) for detailed project layout and [design/SDR.md](design/SDR.md) for complete data model specification.
-
 ## Development
 
 **Commands:**
@@ -139,18 +140,18 @@ bun run db:studio    # Database UI (:4983)
 
 See [docs/DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) for full development workflow.
 
-See [docs/DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) for full development workflow.
-
 ## Roadmap
 
-**Current:** v0.3.1 (REST API v1) ✅ — Shipped February 2026!
-- Complete REST API with 24 endpoints
-- 7 user stories: Data retrieval, Voice entry, API keys, Webhooks, Export, Patterns, Import
-- 220 tasks completed
+**Current:** v0.4.0 (Cloud Platform) ✅ — Shipped February 2026!
+- Cloud service at [tada.living](https://tada.living)
+- Expanded ontology (10 categories)
+- Gentle onboarding and help system
+- GDPR compliance (privacy, terms, DPA, data deletion)
+- Philosophy blog and newsletter
 
-**Next:** v0.4.0 (Q2 2026) — Cloud service (tada.living), multi-device sync, E2E tests
+**Next:** v0.5.0 (Q4 2026) — Rituals, celestial events, AI insights
 
-**Future:** v0.5.0+ — Rituals, celestial events, AI insights, integrations
+**Future:** v0.6.0+ — Integrations (Obsidian, Apple Health, Zapier)
 
 See [design/roadmap.md](design/roadmap.md) and [CHANGELOG.md](CHANGELOG.md) for details.
 

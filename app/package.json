@@ -19,8 +19,8 @@
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --run --coverage",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio"
+    "db:migrate": "DATABASE_URL=file:../data/db.sqlite drizzle-kit migrate",
+    "db:studio": "DATABASE_URL=file:../data/db.sqlite drizzle-kit studio"
   },
   "dependencies": {
     "@libsql/client": "^0.14.0",
