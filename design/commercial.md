@@ -316,7 +316,7 @@ SMTP_HOST=smtp.example.com
 SMTP_PORT=587
 SMTP_USER=...
 SMTP_PASS=...
-SMTP_FROM=hello@tada.living
+SMTP_FROM=infantologist@gmail.com
 TADA_REQUIRE_EMAIL_VERIFICATION=true
 
 # Stripe

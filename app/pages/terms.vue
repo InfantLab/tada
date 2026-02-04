@@ -298,10 +298,10 @@ const lastUpdated = "February 2026";
         </p>
         <p class="mt-2">
           <a
-            href="mailto:hello@tada.living"
+            href="mailto:infantologist@gmail.com"
             class="text-tada-600 hover:text-tada-700 dark:text-tada-400 dark:hover:text-tada-300"
           >
-            hello@tada.living
+            infantologist@gmail.com
           </a>
         </p>
       </section>

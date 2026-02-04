@@ -320,7 +320,7 @@ function isExpanded(question: string) {
           Send Feedback
         </NuxtLink>
         <a
-          href="mailto:hello@tada.living"
+          href="mailto:infantologist@gmail.com"
           class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-stone-100 dark:bg-stone-700 text-stone-700 dark:text-stone-200 rounded-xl font-medium hover:bg-stone-200 dark:hover:bg-stone-600 transition-colors"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
