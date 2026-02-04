@@ -277,10 +277,10 @@ function formatDate(dateString: string | null): string {
         class="bg-gradient-to-br from-tada-50 to-amber-50 dark:from-tada-900/20 dark:to-amber-900/20 rounded-xl border border-tada-200 dark:border-tada-700 p-6"
       >
         <h2 class="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-2">
-          Upgrade to Premium
+          Support Ta-Da! 🌳
         </h2>
         <p class="text-stone-600 dark:text-stone-400 mb-4">
-          Get unlimited data history and support Ta-Da! development.
+          Ta-Da! is a hobby project, not a professional service. Pay what feels right to help keep the servers running.
         </p>
 
         <!-- Email verification required -->
@@ -289,46 +289,31 @@ function formatDate(dateString: string | null): string {
           class="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-lg mb-4"
         >
           <p class="text-sm text-amber-800 dark:text-amber-200">
-            Please verify your email to upgrade.
+            Please verify your email to become a supporter.
           </p>
         </div>
 
-        <div class="grid grid-cols-2 gap-4">
-          <!-- Monthly -->
-          <button
-            class="p-4 bg-white dark:bg-stone-800 rounded-lg border border-stone-200 dark:border-stone-700 hover:border-tada-400 dark:hover:border-tada-500 transition-colors text-left"
-            :disabled="!canUpgrade || isLoading"
-            :class="{ 'opacity-50 cursor-not-allowed': !canUpgrade }"
-            @click="handleUpgrade('monthly')"
-          >
-            <div class="text-lg font-semibold text-stone-800 dark:text-stone-100">
-              ${{ billing?.pricing?.monthly.price || 5 }}/mo
-            </div>
-            <div class="text-sm text-stone-600 dark:text-stone-400">
-              Monthly billing
-            </div>
-          </button>
-
-          <!-- Yearly -->
-          <button
-            class="p-4 bg-white dark:bg-stone-800 rounded-lg border-2 border-tada-400 dark:border-tada-500 hover:border-tada-500 dark:hover:border-tada-400 transition-colors text-left relative"
-            :disabled="!canUpgrade || isLoading"
-            :class="{ 'opacity-50 cursor-not-allowed': !canUpgrade }"
-            @click="handleUpgrade('yearly')"
-          >
-            <span
-              class="absolute -top-2 -right-2 px-2 py-0.5 bg-tada-600 text-white text-xs font-medium rounded-full"
-            >
-              Save ${{ billing?.pricing?.yearly.savings || 10 }}
-            </span>
-            <div class="text-lg font-semibold text-stone-800 dark:text-stone-100">
-              ${{ billing?.pricing?.yearly.price || 50 }}/yr
-            </div>
-            <div class="text-sm text-stone-600 dark:text-stone-400">
-              Annual billing
-            </div>
-          </button>
+        <div class="text-center mb-4">
+          <div class="text-3xl font-bold text-stone-800 dark:text-stone-100 mb-1">
+            £12<span class="text-lg text-stone-500 dark:text-stone-400">/year</span>
+          </div>
+          <p class="text-sm text-stone-500 dark:text-stone-400">
+            Suggested — or pay what you want (min £1/year)
+          </p>
         </div>
+
+        <button
+          class="w-full px-6 py-3 bg-tada-600 hover:bg-tada-700 text-white rounded-lg font-medium transition-colors"
+          :disabled="!canUpgrade || isLoading"
+          :class="{ 'opacity-50 cursor-not-allowed': !canUpgrade }"
+          @click="handleUpgrade('yearly')"
+        >
+          Become a Supporter
+        </button>
+
+        <p class="text-xs text-center text-stone-500 dark:text-stone-400 mt-3">
+          All supporters get the same features — unlimited data history forever
+        </p>
       </div>
 
       <!-- Email Verification Card -->
