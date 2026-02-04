@@ -389,6 +389,7 @@ _Core infrastructure implemented in commit `54a2dd5` (Feb 2026)._
 - [x] Production environment config (`.env.example` documented)
 - [ ] Automated backup scripts
 - [x] Monitoring and alerting (health endpoint at `/api/health`)
+- [ ] Set up dedicated support@tada.living email account (replace infantologist@gmail.com)
 
 ---
 
