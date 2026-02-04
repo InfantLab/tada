@@ -83,6 +83,9 @@ onUnmounted(() => {
 
 <template>
   <div class="min-h-screen bg-pearl-base dark:bg-cosmic-violet">
+    <!-- Dev Environment Banner -->
+    <DevBanner />
+    
     <!-- Header -->
     <header
       class="sticky top-0 z-40 bg-pearl-cream/80 dark:bg-cosmic-void/80 backdrop-blur-sm border-b border-text-light-muted/20 dark:border-text-dark-muted/20"
