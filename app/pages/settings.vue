@@ -14,6 +14,10 @@ definePageMeta({
   layout: "default",
 });
 
+// Runtime config
+const config = useRuntimeConfig();
+const isCloudMode = config.public.isCloudMode;
+
 // App version - fetched dynamically
 const appVersion = ref("0.3.1");
 const gitHash = ref("");
@@ -829,7 +833,7 @@ onMounted(() => {
                 >
                   <span class="text-xl">👤</span>
                 </div>
-                <div>
+                <div class="flex-1">
                   <p class="font-medium text-stone-800 dark:text-stone-100">
                     {{ currentUser.username }}
                   </p>
@@ -839,6 +843,71 @@ onMounted(() => {
                 </div>
               </div>
             </div>
+
+            <!-- Manage Subscription (cloud mode only) -->
+            <NuxtLink
+              v-if="isCloudMode"
+              to="/account"
+              class="w-full p-4 flex items-center justify-between hover:bg-stone-50 dark:hover:bg-stone-700/50 transition-colors text-left"
+            >
+              <div class="flex items-center gap-3">
+                <span class="text-xl">💳</span>
+                <div>
+                  <span class="text-sm font-medium text-stone-700 dark:text-stone-300 block">
+                    Subscription & Billing
+                  </span>
+                  <span class="text-xs text-stone-500 dark:text-stone-400">
+                    Manage your supporter status
+                  </span>
+                </div>
+              </div>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5 text-stone-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </NuxtLink>
+
+            <!-- Account Details -->
+            <NuxtLink
+              to="/account"
+              class="w-full p-4 flex items-center justify-between hover:bg-stone-50 dark:hover:bg-stone-700/50 transition-colors text-left"
+            >
+              <div class="flex items-center gap-3">
+                <span class="text-xl">⚙️</span>
+                <div>
+                  <span class="text-sm font-medium text-stone-700 dark:text-stone-300 block">
+                    Account Details
+                  </span>
+                  <span class="text-xs text-stone-500 dark:text-stone-400">
+                    Email, verification & data management
+                  </span>
+                </div>
+              </div>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5 text-stone-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </NuxtLink>
 
             <!-- Logout -->
             <button
