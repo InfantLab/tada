@@ -7,7 +7,8 @@ WORKDIR /app
 RUN apk add --no-cache ca-certificates git
 
 # Copy .git to extract version info during build
-COPY .git ../.git
+# NOTE: CapRover deployments skip this (no .git in build context) - version will be "unknown"
+# COPY .git ../.git
 
 # Copy package files
 COPY app/package.json app/bun.lock* ./
