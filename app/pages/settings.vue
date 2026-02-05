@@ -371,6 +371,50 @@ const _isUpdatingEmail = ref(false); // TODO: implement email update API
 const emailError = ref<string | null>(null);
 const emailSuccess = ref(false);
 
+// Newsletter state
+const newsletterSubscribed = ref(false);
+const isSubscribingNewsletter = ref(false);
+const newsletterError = ref<string | null>(null);
+
+// Toggle newsletter subscription
+async function toggleNewsletter() {
+  if (!emailForm.value.email) {
+    newsletterError.value = "Please enter an email address first";
+    return;
+  }
+
+  newsletterError.value = null;
+  isSubscribingNewsletter.value = true;
+
+  try {
+    if (!newsletterSubscribed.value) {
+      // Subscribe
+      await $fetch("/api/newsletter/subscribe", {
+        method: "POST",
+        body: {
+          email: emailForm.value.email,
+          source: "settings"
+        },
+      });
+      newsletterSubscribed.value = true;
+      showSuccess("Subscribed to newsletter!");
+    } else {
+      // Unsubscribe
+      await $fetch("/api/newsletter/unsubscribe", {
+        method: "POST",
+        body: { email: emailForm.value.email },
+      });
+      newsletterSubscribed.value = false;
+      showSuccess("Unsubscribed from newsletter");
+    }
+  } catch (err) {
+    console.error("Newsletter toggle failed:", err);
+    newsletterError.value = "Failed to update newsletter preference";
+  } finally {
+    isSubscribingNewsletter.value = false;
+  }
+}
+
 // Fetch current user
 onMounted(async () => {
   try {
@@ -687,20 +731,15 @@ function previewTadaSound(file: string) {
   }
 }
 
-// Sidebar navigation
+// Sidebar navigation - consolidated from 11 to 7 sections
 const sidebarNavItems = [
   { id: "account", label: "Account", icon: "👤" },
   { id: "security", label: "Security", icon: "🔒" },
-  { id: "appearance", label: "Appearance", icon: "🎨" },
+  { id: "sessions", label: "Sessions", icon: "⏱️" },
+  { id: "features", label: "Features", icon: "⚡" },
   { id: "voice", label: "Voice & AI", icon: "🎤" },
-  { id: "timer", label: "Timer", icon: "⏱️" },
-  { id: "presets", label: "Presets", icon: "⚡" },
-  { id: "categories", label: "Categories", icon: "📁" },
-  { id: "entry-types", label: "Entry Types", icon: "📝" },
-  { id: "sounds", label: "Sounds", icon: "🔊" },
-  { id: "notifications", label: "Notifications", icon: "🔔" },
+  { id: "appearance", label: "Appearance", icon: "🎨" },
   { id: "data", label: "Data", icon: "💾" },
-  { id: "about", label: "About", icon: "ℹ️" },
 ];
 
 const activeSection = ref("account");
@@ -822,6 +861,10 @@ onMounted(() => {
           >
             Account
           </h2>
+
+          <!-- Subscription Widget - shows tier, usage, upgrade CTA -->
+          <SettingsSubscriptionWidget class="mb-4" />
+
           <div
             class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 divide-y divide-stone-200 dark:divide-stone-700"
           >
@@ -843,71 +886,6 @@ onMounted(() => {
                 </div>
               </div>
             </div>
-
-            <!-- Manage Subscription (cloud mode only) -->
-            <NuxtLink
-              v-if="isCloudMode"
-              to="/account"
-              class="w-full p-4 flex items-center justify-between hover:bg-stone-50 dark:hover:bg-stone-700/50 transition-colors text-left"
-            >
-              <div class="flex items-center gap-3">
-                <span class="text-xl">💳</span>
-                <div>
-                  <span class="text-sm font-medium text-stone-700 dark:text-stone-300 block">
-                    Subscription & Billing
-                  </span>
-                  <span class="text-xs text-stone-500 dark:text-stone-400">
-                    Manage your supporter status
-                  </span>
-                </div>
-              </div>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-5 w-5 text-stone-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </NuxtLink>
-
-            <!-- Account Details -->
-            <NuxtLink
-              to="/account"
-              class="w-full p-4 flex items-center justify-between hover:bg-stone-50 dark:hover:bg-stone-700/50 transition-colors text-left"
-            >
-              <div class="flex items-center gap-3">
-                <span class="text-xl">⚙️</span>
-                <div>
-                  <span class="text-sm font-medium text-stone-700 dark:text-stone-300 block">
-                    Account Details
-                  </span>
-                  <span class="text-xs text-stone-500 dark:text-stone-400">
-                    Email, verification & data management
-                  </span>
-                </div>
-              </div>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-5 w-5 text-stone-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </NuxtLink>
 
             <!-- Logout -->
             <button
@@ -987,6 +965,33 @@ onMounted(() => {
               >
                 {{ emailError }}
               </p>
+
+              <!-- Newsletter subscription -->
+              <div class="mt-4 pt-4 border-t border-stone-200 dark:border-stone-700">
+                <label class="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    :checked="newsletterSubscribed"
+                    :disabled="isSubscribingNewsletter || !emailForm.email"
+                    class="mt-0.5 w-4 h-4 rounded border-stone-300 dark:border-stone-600 text-tada-600 focus:ring-tada-500 disabled:opacity-50"
+                    @change="toggleNewsletter"
+                  />
+                  <div>
+                    <span class="text-sm font-medium text-stone-700 dark:text-stone-300">
+                      Subscribe to Ta-Da! newsletter
+                    </span>
+                    <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5">
+                      Occasional updates on mindfulness and gentle progress. No spam, unsubscribe anytime.
+                    </p>
+                  </div>
+                </label>
+                <p
+                  v-if="newsletterError"
+                  class="mt-2 text-sm text-red-600 dark:text-red-400"
+                >
+                  {{ newsletterError }}
+                </p>
+              </div>
             </div>
 
             <!-- Change Password -->
@@ -1039,58 +1044,22 @@ onMounted(() => {
           </div>
         </section>
 
-        <!-- Appearance -->
-        <section id="section-appearance">
-          <h2
-            class="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-4"
-          >
-            Appearance
-          </h2>
-          <div
-            class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 overflow-hidden"
-          >
-            <div class="p-4">
-              <label
-                class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-3"
-              >
-                Theme
-              </label>
-              <div class="grid grid-cols-3 gap-2">
-                <button
-                  v-for="theme in themes"
-                  :key="theme.id"
-                  class="flex flex-col items-center gap-1 p-3 rounded-lg border-2 transition-colors"
-                  :class="
-                    settings.theme === theme.id
-                      ? 'border-tada-300 bg-tada-100/20 dark:border-tada-600 dark:bg-tada-600/10'
-                      : 'border-stone-200 dark:border-stone-600 hover:border-stone-300'
-                  "
-                  @click="settings.theme = theme.id as any"
-                >
-                  <span class="text-xl">{{ theme.icon }}</span>
-                  <span class="text-sm text-stone-600 dark:text-stone-300">{{
-                    theme.name
-                  }}</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
-
         <!-- Voice & AI Settings -->
         <section id="section-voice">
           <SettingsVoiceSettings />
         </section>
 
-        <!-- Timer -->
-        <section id="section-timer">
+        <!-- Sessions (Timer settings + Presets) -->
+        <section id="section-sessions">
           <h2
             class="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-4"
           >
-            Timer
+            Sessions
           </h2>
+
+          <!-- Session Capture Options -->
           <div
-            class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 divide-y divide-stone-200 dark:divide-stone-700"
+            class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 divide-y divide-stone-200 dark:divide-stone-700 mb-4"
           >
             <!-- Capture mood -->
             <div class="p-4">
@@ -1146,15 +1115,11 @@ onMounted(() => {
               </div>
             </div>
           </div>
-        </section>
 
-        <!-- Timer Presets -->
-        <section id="section-presets">
-          <h2
-            class="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-4"
-          >
-            Timer Presets
-          </h2>
+          <!-- Session Presets -->
+          <h3 class="text-sm font-medium text-stone-500 dark:text-stone-400 uppercase tracking-wide mb-3">
+            Saved Presets
+          </h3>
           <div
             class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700"
           >
@@ -1280,116 +1245,53 @@ onMounted(() => {
           </div>
         </section>
 
-        <!-- Emoji Customization -->
-        <section>
+        <!-- Features (Categories, Entry Types, Sounds) -->
+        <section id="section-features">
           <h2
             class="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-4"
           >
-            Customize Emojis
+            Features
           </h2>
-          <p class="text-sm text-stone-500 dark:text-stone-400 mb-4">
-            Change the emoji for any category or subcategory
-          </p>
-          <div
-            class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 divide-y divide-stone-200 dark:divide-stone-700"
+
+          <!-- Categories link -->
+          <NuxtLink
+            to="/settings/categories"
+            class="block bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 p-4 hover:bg-stone-50 dark:hover:bg-stone-700/50 transition-colors mb-4"
           >
-            <div
-              v-for="cat in categoriesWithSubcategories"
-              :key="cat.category"
-              class="p-4"
-            >
-              <!-- Category header -->
-              <div class="flex items-center justify-between mb-3">
-                <div class="flex items-center gap-3">
-                  <button
-                    class="text-2xl hover:scale-110 transition-transform cursor-pointer"
-                    title="Click to change emoji"
-                    @click="
-                      openEmojiPickerFor('category', cat.category, cat.category)
-                    "
-                  >
-                    {{ cat.emoji }}
-                  </button>
-                  <span
-                    class="font-medium text-stone-800 dark:text-stone-100 capitalize"
-                  >
-                    {{ cat.category }}
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <span class="text-xl">📁</span>
+                <div>
+                  <span class="text-sm font-medium text-stone-700 dark:text-stone-300 block">
+                    Manage Categories
+                  </span>
+                  <span class="text-xs text-stone-500 dark:text-stone-400">
+                    Customize emojis, visibility, and add custom categories
                   </span>
                 </div>
               </div>
-
-              <!-- Subcategories -->
-              <div class="ml-8 flex flex-wrap gap-2">
-                <button
-                  v-for="sub in cat.subcategories"
-                  :key="sub.key"
-                  class="flex items-center gap-1.5 px-2 py-1 bg-stone-100 dark:bg-stone-700 rounded-lg hover:bg-stone-200 dark:hover:bg-stone-600 transition-colors"
-                  @click="openEmojiPickerFor('subcategory', sub.key, sub.name)"
-                >
-                  <span class="text-lg">{{ sub.emoji }}</span>
-                  <span class="text-sm text-stone-600 dark:text-stone-300">{{
-                    sub.name
-                  }}</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- Category Visibility -->
-        <section id="section-categories">
-          <h2
-            class="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-4"
-          >
-            Hide Categories
-          </h2>
-          <p class="text-sm text-stone-500 dark:text-stone-400 mb-4">
-            Hide categories you don't use from pickers throughout the app
-          </p>
-          <div
-            class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 divide-y divide-stone-200 dark:divide-stone-700"
-          >
-            <div
-              v-for="cat in allCategories"
-              :key="cat"
-              class="p-4 flex items-center justify-between"
-            >
-              <div class="flex items-center gap-3">
-                <span class="text-xl">{{
-                  getCustomEmoji(cat) || getCategoryEmoji(cat)
-                }}</span>
-                <span
-                  class="font-medium text-stone-800 dark:text-stone-100 capitalize"
-                >
-                  {{ cat }}
-                </span>
-              </div>
-              <label class="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  :checked="isCategoryVisible(cat)"
-                  class="sr-only peer"
-                  @change="toggleCategoryVisibility(cat)"
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5 text-stone-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
                 />
-                <div
-                  class="w-11 h-6 bg-stone-300 dark:bg-stone-600 rounded-full peer peer-checked:bg-tada-600 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"
-                />
-              </label>
+              </svg>
             </div>
-          </div>
-          <p class="text-xs text-stone-500 dark:text-stone-400 mt-2">
-            Hidden categories will still appear for your existing entries
-          </p>
-        </section>
+          </NuxtLink>
 
-        <!-- Entry Types -->
-        <section id="section-entry-types">
-          <h2
-            class="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-4"
-          >
+          <!-- Entry Types -->
+          <h3 class="text-sm font-medium text-stone-500 dark:text-stone-400 uppercase tracking-wide mb-3">
             Journal Entry Types
-          </h2>
-          <p class="text-sm text-stone-500 dark:text-stone-400 mb-4">
+          </h3>
+          <p class="text-sm text-stone-500 dark:text-stone-400 mb-3">
             Show or hide entry types from the journal add page
           </p>
           <div
@@ -1523,15 +1425,11 @@ onMounted(() => {
               </div>
             </div>
           </div>
-        </section>
 
-        <!-- Sounds -->
-        <section id="section-sounds">
-          <h2
-            class="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-4"
-          >
-            Sounds
-          </h2>
+          <!-- Ta-Da! Sounds -->
+          <h3 class="text-sm font-medium text-stone-500 dark:text-stone-400 uppercase tracking-wide mb-3 mt-6">
+            Ta-Da! Sounds
+          </h3>
           <div
             class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700"
           >
@@ -1539,7 +1437,7 @@ onMounted(() => {
               <label
                 class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-3"
               >
-                Ta-Da! celebration sound
+                Celebration sound
               </label>
               <div class="space-y-2">
                 <label
@@ -1584,16 +1482,44 @@ onMounted(() => {
           </div>
         </section>
 
-        <!-- Notifications -->
-        <section id="section-notifications">
+        <!-- Appearance (Theme + Notifications) -->
+        <section id="section-appearance">
           <h2
             class="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-4"
           >
-            Notifications
+            Appearance
           </h2>
           <div
-            class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700"
+            class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 divide-y divide-stone-200 dark:divide-stone-700"
           >
+            <!-- Theme -->
+            <div class="p-4">
+              <label
+                class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-3"
+              >
+                Theme
+              </label>
+              <div class="grid grid-cols-3 gap-2">
+                <button
+                  v-for="theme in themes"
+                  :key="theme.id"
+                  class="flex flex-col items-center gap-1 p-3 rounded-lg border-2 transition-colors"
+                  :class="
+                    settings.theme === theme.id
+                      ? 'border-tada-300 bg-tada-100/20 dark:border-tada-600 dark:bg-tada-600/10'
+                      : 'border-stone-200 dark:border-stone-600 hover:border-stone-300'
+                  "
+                  @click="settings.theme = theme.id as any"
+                >
+                  <span class="text-xl">{{ theme.icon }}</span>
+                  <span class="text-sm text-stone-600 dark:text-stone-300">{{
+                    theme.name
+                  }}</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Push Notifications -->
             <div class="p-4">
               <div class="flex items-center justify-between">
                 <div>
@@ -1603,7 +1529,7 @@ onMounted(() => {
                     Push notifications
                   </label>
                   <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5">
-                    Reminders for rhythms and timer completion
+                    Reminders for rhythms and session completion
                   </p>
                 </div>
                 <button
@@ -1744,66 +1670,14 @@ onMounted(() => {
           </div>
         </section>
 
-        <!-- About -->
-        <section id="section-about">
-          <h2
-            class="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-4"
-          >
-            About
-          </h2>
-          <div
-            class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 p-4"
-          >
-            <!-- Logotype -->
-            <div class="flex justify-center mb-4">
-              <img
-                src="/icons/tada-logotype.png"
-                alt="TA-DA"
-                class="h-16 w-auto"
-              />
-            </div>
-            <div class="flex items-start gap-3">
-              <span class="text-3xl">⚡</span>
-              <div>
-                <h3 class="font-semibold text-stone-800 dark:text-stone-100">
-                  {{ appName }}
-                  <span class="text-sm font-normal text-stone-500"
-                    >v{{ appVersion }}<template v-if="gitHash">+{{ gitHash }}</template></span
-                  >
-                </h3>
-                <p class="text-sm text-stone-600 dark:text-stone-300 mt-1">
-                  Track Activities, Discover Achievements
-                </p>
-                <p class="text-xs text-stone-500 dark:text-stone-400 mt-2">
-                  Open source personal lifelogger. Your data belongs to you.
-                </p>
-                <div class="flex gap-3 mt-3">
-                  <a
-                    href="https://github.com/InfantLab/tada"
-                    target="_blank"
-                    class="text-xs text-tada-700 dark:text-tada-300 hover:underline"
-                  >
-                    GitHub
-                  </a>
-                  <a
-                    href="/docs/DEVELOPER_GUIDE.md"
-                    target="_blank"
-                    class="text-xs text-tada-700 dark:text-tada-300 hover:underline"
-                  >
-                    Docs
-                  </a>
-                  <a
-                    href="https://github.com/InfantLab/tada/blob/main/LICENSE"
-                    target="_blank"
-                    class="text-xs text-tada-700 dark:text-tada-300 hover:underline"
-                  >
-                    License (AGPL-3.0)
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+        <!-- Version footer (About page accessible via help panel) -->
+        <div class="text-center text-xs text-stone-500 dark:text-stone-500 py-4">
+          Ta-Da! v{{ appVersion }}<template v-if="gitHash">+{{ gitHash }}</template>
+          ·
+          <NuxtLink to="/about" class="hover:underline">About</NuxtLink>
+          ·
+          <a href="https://github.com/InfantLab/tada" target="_blank" class="hover:underline">GitHub</a>
+        </div>
 
         <!-- Autosave status indicator -->
         <div class="flex items-center justify-center gap-2 py-4 text-sm">

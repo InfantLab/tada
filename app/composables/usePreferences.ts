@@ -5,12 +5,21 @@
 
 import type { UserPreferences } from "~/server/db/schema";
 
+export interface CustomCategory {
+  slug: string;
+  label: string;
+  emoji: string;
+  subcategories: Array<{ slug: string; label: string; emoji: string }>;
+  createdAt: string;
+}
+
 export interface PreferencesState {
   hiddenCategories: string[];
   hiddenEntryTypes: string[];
   customEmojis: Record<string, string>;
   customEntryTypes: Array<{ name: string; emoji: string }>;
   tallyPresets: Array<{ name: string; category?: string; emoji?: string }>;
+  customCategories: CustomCategory[];
 }
 
 const preferences = ref<PreferencesState>({
@@ -19,6 +28,7 @@ const preferences = ref<PreferencesState>({
   customEmojis: {},
   customEntryTypes: [],
   tallyPresets: [],
+  customCategories: [],
 });
 
 const isLoaded = ref(false);
@@ -41,6 +51,7 @@ export const usePreferences = () => {
           customEmojis: data.customEmojis || {},
           customEntryTypes: data.customEntryTypes || [],
           tallyPresets: data.tallyPresets || [],
+          customCategories: data.customCategories || [],
         };
       }
       isLoaded.value = true;
@@ -69,6 +80,7 @@ export const usePreferences = () => {
         customEmojis: data.customEmojis || {},
         customEntryTypes: data.customEntryTypes || [],
         tallyPresets: data.tallyPresets || [],
+        customCategories: data.customCategories || [],
       };
 
       return true;

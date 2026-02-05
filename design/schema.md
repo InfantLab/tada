@@ -1,7 +1,7 @@
 # Tada Database Schema
 
-**Version:** 0.2.0  
-**Last Updated:** January 14, 2026  
+**Version:** 0.4.0
+**Last Updated:** February 5, 2026
 **Status:** Source of Truth
 
 > This document is the authoritative reference for all database schemas. The actual implementation is in `app/server/db/schema.ts` and must match this specification.
@@ -27,7 +27,7 @@ The unified activity/event model. Everything in Tada is an Entry.
 | ------------------ | ------- | -------- | -------- | ----------------------------------------------------------- |
 | `id`               | TEXT    | NO       | -        | UUID primary key                                            |
 | `user_id`          | TEXT    | NO       | -        | FK to users.id                                              |
-| `type`             | TEXT    | NO       | -        | Entry behavior: 'timed', 'tada', 'journal', 'reps', etc.    |
+| `type`             | TEXT    | NO       | -        | Entry behavior: 'timed', 'tada', 'moment', 'tally', etc.    |
 | `name`             | TEXT    | NO       | -        | Human label: "Morning Sit", "Fixed tap"                     |
 | `category`         | TEXT    | YES      | NULL     | Life domain: 'mindfulness', 'accomplishment', 'creative'    |
 | `subcategory`      | TEXT    | YES      | NULL     | Specific activity: 'sitting', 'work', 'piano'               |
@@ -49,7 +49,7 @@ The unified activity/event model. Everything in Tada is an Entry.
 **`timestamp` is the ONLY field used for timeline ordering.**
 
 - For **timed activities**: `timestamp` = when the session started
-- For **instant events** (tada, journal): `timestamp` = when it happened
+- For **instant events** (tada, moment): `timestamp` = when it happened
 - For **imports**: `timestamp` = the original date/time from the source data
 - For **date-only events**: `timestamp` = that date at 00:00:00 in user's timezone
 
@@ -88,23 +88,23 @@ interface TadaData {
 }
 ```
 
-##### Journal
+##### Moment (Reflections)
 
 ```typescript
-interface JournalData {
+interface MomentData {
   content: string; // Markdown supported
   mood?: number; // 1-5
   themes?: string[]; // e.g., ['lucid', 'flying'] for dreams
 }
 ```
 
-##### Reps
+##### Tally (Counts)
 
 ```typescript
-interface RepsData {
+interface TallyData {
   count: number;
-  sets?: number;
-  exercise: string;
+  unit?: string; // e.g., 'reps', 'glasses', 'pages'
+  exercise?: string;
   weightKg?: number;
 }
 ```
@@ -179,7 +179,7 @@ Habit/rhythm tracking definitions.
 | `activity_matchers`   | JSON    | YES      | NULL    | Complex matchers (legacy)      |
 | `goal_type`           | TEXT    | NO       | -       | 'boolean', 'duration', 'count' |
 | `goal_value`          | INTEGER | NO       | -       | Target value                   |
-| `goal_unit`           | TEXT    | YES      | NULL    | 'minutes', 'reps', etc.        |
+| `goal_unit`           | TEXT    | YES      | NULL    | 'minutes', 'count', etc.       |
 | `frequency`           | TEXT    | NO       | -       | 'daily', 'weekly', 'monthly'   |
 | `frequency_target`    | INTEGER | YES      | NULL    | For weekly: days per week      |
 | `current_streak`      | INTEGER | NO       | 0       | Cached streak count            |
@@ -190,9 +190,9 @@ Habit/rhythm tracking definitions.
 
 ---
 
-### timer_presets
+### session_presets
 
-Saved meditation timer configurations.
+Saved session configurations (meditation, exercise, etc.).
 
 | Column             | Type    | Nullable | Default | Description          |
 | ------------------ | ------- | -------- | ------- | -------------------- |

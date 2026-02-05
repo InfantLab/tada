@@ -9,10 +9,10 @@
 const { shouldShowSettingsHint, dismissSettingsHint } = useOnboarding();
 
 const sections = [
-  { icon: "🎨", label: "Appearance", description: "Theme and display preferences" },
-  { icon: "⏱️", label: "Timer Presets", description: "Save your favorite configurations" },
-  { icon: "📦", label: "Data", description: "Export and import your entries" },
-  { icon: "🔐", label: "Security", description: "Password and account settings" },
+  { icon: "⏱️", label: "Sessions", description: "Presets and capture options" },
+  { icon: "⚡", label: "Features", description: "Categories, sounds, and entry types" },
+  { icon: "🎤", label: "Voice & AI", description: "Speech and processing settings" },
+  { icon: "💾", label: "Data", description: "Export and import your entries" },
 ];
 </script>
 

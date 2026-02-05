@@ -11,12 +11,21 @@ import { generateId } from "~/server/utils/tokens";
 
 const logger = createLogger("api:preferences:put");
 
+interface CustomCategory {
+  slug: string;
+  label: string;
+  emoji: string;
+  subcategories: Array<{ slug: string; label: string; emoji: string }>;
+  createdAt: string;
+}
+
 interface PreferencesUpdate {
   hiddenCategories?: string[];
   hiddenEntryTypes?: string[];
   customEmojis?: Record<string, string>;
   customEntryTypes?: Array<{ name: string; emoji: string }>;
   tallyPresets?: Array<{ name: string; category?: string; emoji?: string }>;
+  customCategories?: CustomCategory[];
 }
 
 export default defineEventHandler(async (event) => {
@@ -57,6 +66,12 @@ export default defineEventHandler(async (event) => {
     throw createError({
       statusCode: 400,
       message: "tallyPresets must be an array",
+    });
+  }
+  if (body.customCategories && !Array.isArray(body.customCategories)) {
+    throw createError({
+      statusCode: 400,
+      message: "customCategories must be an array",
     });
   }
 
@@ -109,6 +124,9 @@ export default defineEventHandler(async (event) => {
       if (body.tallyPresets !== undefined) {
         updateData["tallyPresets"] = body.tallyPresets;
       }
+      if (body.customCategories !== undefined) {
+        updateData["customCategories"] = body.customCategories;
+      }
 
       await db
         .update(userPreferences)
@@ -126,6 +144,7 @@ export default defineEventHandler(async (event) => {
         customEmojis: body.customEmojis || {},
         customEntryTypes: body.customEntryTypes || [],
         tallyPresets: body.tallyPresets || [],
+        customCategories: body.customCategories || [],
         createdAt: now,
         updatedAt: now,
       });

@@ -417,6 +417,19 @@ export const userPreferences = sqliteTable("user_preferences", {
     .$type<Array<{ name: string; category?: string; emoji?: string }>>()
     .default([]),
 
+  // User-defined custom categories (beyond the 10 defaults)
+  customCategories: text("custom_categories", { mode: "json" })
+    .$type<
+      Array<{
+        slug: string;
+        label: string;
+        emoji: string;
+        subcategories: Array<{ slug: string; label: string; emoji: string }>;
+        createdAt: string;
+      }>
+    >()
+    .default([]),
+
   createdAt: text("created_at")
     .notNull()
     .default(sql`(datetime('now'))`),

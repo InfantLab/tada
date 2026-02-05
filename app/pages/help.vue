@@ -34,32 +34,32 @@ const faqs: FAQ[] = [
     category: "Getting Started",
     question: "How do I get started?",
     answer:
-      "Start by capturing something! Try the meditation timer in Sessions, log a win in Ta-Da!, or write a reflection in Moments. There's no right way to use Ta-Da! — it adapts to what matters to you.",
+      "Start by capturing something! Try a meditation session in Sessions, log a win in Ta-Da!, or write a reflection in Moments. There's no right way to use Ta-Da! — it adapts to what matters to you.",
   },
   {
     category: "Getting Started",
     question: "Can I use Ta-Da! offline?",
     answer:
-      "Yes! Ta-Da! is a Progressive Web App (PWA). Once installed, the timer and basic features work offline. Your entries will sync when you're back online. For the best experience, install Ta-Da! to your home screen.",
+      "Yes! Ta-Da! is a Progressive Web App (PWA). Once installed, sessions and basic features work offline. Your entries will sync when you're back online. For the best experience, install Ta-Da! to your home screen.",
   },
-  // Timer
+  // Sessions
   {
-    category: "Timer",
-    question: "Why do timers count up instead of down?",
+    category: "Sessions",
+    question: "Why does the session timer count up instead of down?",
     answer:
       "Counting up celebrates what you accomplished rather than what's remaining. When you meditate for 47 minutes, the celebration is \"You did 47 minutes!\" not \"You have 13 minutes left.\" This philosophy extends throughout Ta-Da! — we focus on what you did, not what you missed.",
   },
   {
-    category: "Timer",
+    category: "Sessions",
     question: "What are the interval bells for?",
     answer:
       "Interval bells can mark time during your session without interrupting flow. You might set a gentle chime every 10 minutes to maintain awareness, or use them for walking meditation segments. They're completely optional — many people prefer silence.",
   },
   {
-    category: "Timer",
-    question: "Why does my timer stop when I switch tabs?",
+    category: "Sessions",
+    question: "Why does my session stop when I switch tabs?",
     answer:
-      "Browsers throttle background tabs to save battery. The timer will continue tracking, but bells might be delayed. For the most accurate experience, keep the Ta-Da! tab in the foreground during sessions. Consider using \"Do Not Disturb\" mode on your device.",
+      "Browsers throttle background tabs to save battery. The session will continue tracking, but bells might be delayed. For the most accurate experience, keep the Ta-Da! tab in the foreground during sessions. Consider using \"Do Not Disturb\" mode on your device.",
   },
   // Rhythms
   {
@@ -102,9 +102,9 @@ const faqs: FAQ[] = [
   // Import
   {
     category: "Import",
-    question: "How do I import from Insight Timer?",
+    question: "How do I import from Insight Sessions?",
     answer:
-      "Go to Settings → Data → Import. Select the Insight Timer recipe, upload your CSV export from Insight Timer, and Ta-Da! will map the columns automatically. You can preview the import before confirming.",
+      "Go to Settings → Data → Import. Select the Insight Sessions recipe, upload your CSV export from Insight Sessions, and Ta-Da! will map the columns automatically. You can preview the import before confirming.",
   },
   {
     category: "Import",
@@ -239,7 +239,7 @@ function isExpanded(question: string) {
         <template v-if="faqsByCategory[category]?.length">
           <h2 class="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-4 flex items-center gap-2">
             <span v-if="category === 'Getting Started'">🚀</span>
-            <span v-else-if="category === 'Timer'">⏱️</span>
+            <span v-else-if="category === 'Sessions'">⏱️</span>
             <span v-else-if="category === 'Rhythms'">📊</span>
             <span v-else-if="category === 'Privacy'">🔒</span>
             <span v-else-if="category === 'Import'">📥</span>
