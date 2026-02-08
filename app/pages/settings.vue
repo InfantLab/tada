@@ -19,7 +19,7 @@ const config = useRuntimeConfig();
 const isCloudMode = config.public.isCloudMode;
 
 // App version - fetched dynamically
-const appVersion = ref("0.3.1");
+const appVersion = ref("0.4.0a");
 const gitHash = ref("");
 const appName = "Tada";
 
@@ -1671,12 +1671,26 @@ onMounted(() => {
         </section>
 
         <!-- Version footer (About page accessible via help panel) -->
-        <div class="text-center text-xs text-stone-500 dark:text-stone-500 py-4">
-          Ta-Da! v{{ appVersion }}<template v-if="gitHash">+{{ gitHash }}</template>
-          ·
-          <NuxtLink to="/about" class="hover:underline">About</NuxtLink>
-          ·
-          <a href="https://github.com/InfantLab/tada" target="_blank" class="hover:underline">GitHub</a>
+        <div class="text-center py-4">
+          <p class="text-xs text-stone-500 dark:text-stone-500 mb-2">
+            Ta-Da! v{{ appVersion }}<template v-if="gitHash">+{{ gitHash }}</template>
+          </p>
+          <div class="flex items-center justify-center gap-4 text-sm">
+            <NuxtLink 
+              to="/about" 
+              class="font-medium text-tada-600 dark:text-tada-400 hover:underline hover:text-tada-700 dark:hover:text-tada-300 transition-colors"
+            >
+              📖 About Ta-Da!
+            </NuxtLink>
+            <span class="text-stone-300 dark:text-stone-600">·</span>
+            <a 
+              href="https://github.com/InfantLab/tada" 
+              target="_blank" 
+              class="text-stone-600 dark:text-stone-400 hover:underline hover:text-stone-700 dark:hover:text-stone-300 transition-colors"
+            >
+              GitHub
+            </a>
+          </div>
         </div>
 
         <!-- Autosave status indicator -->

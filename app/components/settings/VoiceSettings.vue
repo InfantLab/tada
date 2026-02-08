@@ -83,17 +83,17 @@ const llmProviderOptions: Array<{
     value: "auto",
     label: "Auto (Recommended)",
     description:
-      "Uses fast server AI (Groq), or your own keys below if configured",
+      "Uses your API keys when configured below, otherwise Ta-Da server (Groq)",
   },
   {
     value: "openai",
-    label: "OpenAI (BYOK)",
-    description: "Always use your OpenAI key (gpt-4o-mini)",
+    label: "Prefer OpenAI",
+    description: "Use OpenAI when key is configured, fallback to server",
   },
   {
     value: "anthropic",
-    label: "Anthropic (BYOK)",
-    description: "Always use your Claude key (claude-3-haiku)",
+    label: "Prefer Anthropic",
+    description: "Use Anthropic when key is configured, fallback to server",
   },
 ];
 
@@ -421,8 +421,8 @@ const usagePercent = computed(() => {
     <!-- BYOK Info -->
     <div class="p-4 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl border border-indigo-200 dark:border-indigo-700">
       <p class="text-sm text-indigo-800 dark:text-indigo-200">
-        Add your own API keys for <strong>unlimited</strong> voice processing.
-        Keys are stored locally and sent directly to providers.
+        Add your own API keys below for <strong>unlimited</strong> voice processing.
+        Once added, Ta-Da! will automatically use them based on your AI Processing preference above.
       </p>
       <p class="text-xs text-indigo-600 dark:text-indigo-400 mt-2">
         Without keys: 50 voice entries/month via Ta-Da server (Groq).
