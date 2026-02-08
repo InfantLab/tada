@@ -62,6 +62,7 @@ export default defineEventHandler(async (event) => {
         const dayStatuses = entriesToDayStatuses(
           matchingEntries,
           rhythm.durationThresholdSeconds,
+          rhythm.countThreshold,
         );
 
         // Calculate current week progress
@@ -90,7 +91,9 @@ export default defineEventHandler(async (event) => {
           name: rhythm.name,
           emoji: null, // Could derive from category
           matchCategory: rhythm.matchCategory,
+          matchType: rhythm.matchType,
           durationThresholdSeconds: rhythm.durationThresholdSeconds,
+          countThreshold: rhythm.countThreshold,
           frequency: rhythm.frequency,
           chainType: chainType,
           chainLabel: chainConfig.shortLabel,

@@ -17,7 +17,9 @@ import {
 interface Props {
   days: DayStatus[];
   chains: ChainStat[];
+  goalType?: "duration" | "count";
   thresholdSeconds: number;
+  thresholdCount?: number | null;
   weeklyTargetMinutes?: number;
   monthlyTargetMinutes?: number;
   nudgeMessage?: string;
@@ -43,24 +45,28 @@ function isPersonalBest(chain: ChainStat): boolean {
 
 // Get target info for the active chain type
 const targetInfo = computed(() => {
-  const dailyMinutes = Math.round(props.thresholdSeconds / 60);
+  const isCount = props.goalType === "count";
+  const threshold = isCount
+    ? props.thresholdCount || 10
+    : Math.round(props.thresholdSeconds / 60);
+  const unit = isCount ? "reps" : "min";
   const config = CHAIN_CONFIGS.find((c) => c.type === activeTab.value);
 
   switch (activeTab.value) {
     case "daily":
       return {
         label: "Daily target",
-        value: `${dailyMinutes} min/day`,
+        value: `${threshold} ${unit}/day`,
       };
     case "weekly_high":
       return {
         label: "Target",
-        value: `${dailyMinutes}+ min on 5 days/week`,
+        value: `${threshold}+ ${unit} on 5 days/week`,
       };
     case "weekly_low":
       return {
         label: "Target",
-        value: `${dailyMinutes}+ min on ${config?.minDaysPerPeriod || 3} days/week`,
+        value: `${threshold}+ ${unit} on ${config?.minDaysPerPeriod || 3} days/week`,
       };
     case "weekly_target":
       if (props.weeklyTargetMinutes) {

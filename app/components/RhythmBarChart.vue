@@ -109,6 +109,7 @@ const props = defineProps<{
   days: DayStatus[];
   goalType?: "duration" | "count"; // duration = minutes, count = reps
   thresholdSeconds?: number;
+  thresholdCount?: number | null;
 }>();
 
 // Navigation offset (0 = current period, 1 = previous 28 days, etc.)
@@ -323,6 +324,7 @@ function getTooltip(day: ChartDay): string {
   flex-direction: column;
   align-items: center;
   min-width: 0;
+  position: relative;
 }
 
 .bar-wrapper.weekend-day .bar-track {
@@ -358,12 +360,16 @@ function getTooltip(day: ChartDay): string {
 }
 
 .month-label {
+  position: absolute;
+  bottom: -14px;
+  left: 50%;
+  transform: translateX(-50%);
   font-size: 0.45rem;
   color: #6b7280;
   text-transform: uppercase;
   letter-spacing: 0.02em;
-  margin-top: 1px;
   line-height: 1;
+  white-space: nowrap;
 }
 
 .y-label {

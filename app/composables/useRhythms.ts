@@ -21,7 +21,9 @@ export interface RhythmSummary {
   name: string;
   emoji?: string | null;
   matchCategory: string | null;
+  matchType: string | null;
   durationThresholdSeconds: number;
+  countThreshold?: number | null;
   frequency: string;
   currentTier: TierName;
   currentTierLabel: string;
@@ -82,7 +84,9 @@ export interface CreateRhythmInput {
   matchCategory: string;
   matchSubcategory?: string;
   matchType?: string;
+  matchName?: string;
   durationThresholdSeconds?: number;
+  countThreshold?: number;
   frequency: string;
   goalType?: string;
   goalValue?: number;

@@ -16,6 +16,7 @@ interface CreateRhythmBody {
   matchType?: string | null;
   matchName?: string | null;
   durationThresholdSeconds?: number;
+  countThreshold?: number;
   frequency: string;
   frequencyTarget?: number | null;
   goalType?: string;
@@ -71,18 +72,41 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  // Validate duration threshold
-  const durationThreshold = body.durationThresholdSeconds ?? 360; // Default 6 minutes
-  if (durationThreshold < 0 || durationThreshold > 86400) {
-    throw createError({
-      statusCode: 400,
-      message: "Duration must be between 0 and 24 hours",
-      data: {
-        details: {
-          durationThresholdSeconds: "Duration must be between 0 and 24 hours",
+  // Get the entry type (default to timed for backward compatibility)
+  const matchType = body.matchType || "timed";
+
+  // Validate thresholds based on rhythm type
+  let durationThreshold = 360; // Default 6 minutes
+  let countThreshold = null;
+
+  if (matchType === "timed") {
+    durationThreshold = body.durationThresholdSeconds ?? 360;
+    if (durationThreshold < 0 || durationThreshold > 86400) {
+      throw createError({
+        statusCode: 400,
+        message: "Duration must be between 0 and 24 hours",
+        data: {
+          details: {
+            durationThresholdSeconds: "Duration must be between 0 and 24 hours",
+          },
         },
-      },
-    });
+      });
+    }
+  } else if (matchType === "tally") {
+    countThreshold = body.countThreshold;
+    if (!countThreshold || countThreshold < 1 || countThreshold > 10000) {
+      throw createError({
+        statusCode: 400,
+        message: "Count threshold must be between 1 and 10000",
+        data: {
+          details: {
+            countThreshold: "Count threshold must be between 1 and 10000",
+          },
+        },
+      });
+    }
+    // For tally rhythms, set a minimal duration threshold (1 second)
+    durationThreshold = 1;
   }
 
   const id = randomUUID();
@@ -93,16 +117,21 @@ export default defineEventHandler(async (event) => {
       id,
       userId,
       name: body.name.trim(),
-      matchType: body.matchType || "timed",
+      matchType: matchType,
       matchCategory: body.matchCategory,
       matchSubcategory: body.matchSubcategory || null,
       matchName: body.matchName || null,
       durationThresholdSeconds: durationThreshold,
+      countThreshold: countThreshold,
       frequency: body.frequency,
       frequencyTarget: body.frequencyTarget || null,
-      goalType: body.goalType || "duration",
-      goalValue: body.goalValue || Math.floor(durationThreshold / 60),
-      goalUnit: body.goalUnit || "minutes",
+      goalType: body.goalType || (matchType === "timed" ? "duration" : "count"),
+      goalValue:
+        body.goalValue ||
+        (matchType === "timed"
+          ? Math.floor(durationThreshold / 60)
+          : countThreshold || 10),
+      goalUnit: body.goalUnit || (matchType === "timed" ? "minutes" : "reps"),
       currentStreak: 0,
       longestStreak: 0,
       lastCompletedDate: null,

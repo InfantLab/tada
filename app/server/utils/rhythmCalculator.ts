@@ -110,10 +110,12 @@ export async function getMatchingEntries(
 
 /**
  * Convert entries to day statuses, summing durations per day
+ * Supports both duration-based and count-based completion criteria
  */
 export function entriesToDayStatuses(
   matchingEntries: Entry[],
   durationThresholdSeconds: number,
+  countThreshold?: number | null,
 ): DayStatus[] {
   const dayMap = new Map<
     string,
@@ -139,11 +141,25 @@ export function entriesToDayStatuses(
 
   const dayStatuses: DayStatus[] = [];
   for (const [date, data] of dayMap.entries()) {
+    // Determine completion based on available criteria
+    let isComplete = false;
+    if (
+      countThreshold !== null &&
+      countThreshold !== undefined &&
+      countThreshold > 0
+    ) {
+      // Count-based rhythm (e.g., tally entries like push-ups)
+      isComplete = data.totalCount >= countThreshold;
+    } else {
+      // Duration-based rhythm (e.g., timed sessions like meditation)
+      isComplete = data.totalSeconds >= durationThresholdSeconds;
+    }
+
     dayStatuses.push({
       date,
       totalSeconds: data.totalSeconds,
       totalCount: data.totalCount,
-      isComplete: data.totalSeconds >= durationThresholdSeconds,
+      isComplete,
       entryCount: data.entryCount,
     });
   }

@@ -93,17 +93,24 @@ function getProgress(rhythmId: string): RhythmProgress | undefined {
 async function handleCreateRhythm(rhythmData: {
   name: string;
   matchCategory: string;
-  durationThresholdSeconds: number;
+  matchType: string;
+  durationThresholdSeconds?: number;
+  countThreshold?: number;
   frequency: string;
 }) {
   try {
-    await createRhythm({
+    // Build the rhythm creation data based on type
+    const createData: any = {
       ...rhythmData,
-      matchType: "timed",
-      goalType: "duration",
-      goalValue: Math.floor(rhythmData.durationThresholdSeconds / 60),
-      goalUnit: "minutes",
-    });
+      goalType: rhythmData.matchType === "timed" ? "duration" : "count",
+      goalValue:
+        rhythmData.matchType === "timed"
+          ? Math.floor((rhythmData.durationThresholdSeconds || 360) / 60)
+          : rhythmData.countThreshold || 10,
+      goalUnit: rhythmData.matchType === "timed" ? "minutes" : "reps",
+    };
+
+    await createRhythm(createData);
     showCreateModal.value = false;
     showToast("Rhythm created successfully", "success");
   } catch (err) {
@@ -314,8 +321,13 @@ function getCategoryEmoji(category: string | null): string {
                 ({{ rhythm.chainLabel }})
               </span>
               <span class="flex items-center gap-1">
-                ⏱️ {{ Math.floor(rhythm.durationThresholdSeconds / 60) }} min
-                threshold
+                <template v-if="rhythm.matchType === 'tally'">
+                  🔢 {{ rhythm.countThreshold }} reps threshold
+                </template>
+                <template v-else>
+                  ⏱️ {{ Math.floor(rhythm.durationThresholdSeconds / 60) }} min
+                  threshold
+                </template>
               </span>
             </div>
 
@@ -324,8 +336,9 @@ function getCategoryEmoji(category: string | null): string {
               <RhythmBarChart
                 v-if="getProgress(rhythm.id)"
                 :days="getProgress(rhythm.id)!.days"
-                :goal-type="'duration'"
+                :goal-type="rhythm.matchType === 'tally' ? 'count' : 'duration'"
                 :threshold-seconds="rhythm.durationThresholdSeconds"
+                :threshold-count="rhythm.countThreshold"
               />
               <div
                 v-else
@@ -366,7 +379,9 @@ function getCategoryEmoji(category: string | null): string {
             <div class="mb-6">
               <RhythmYearTracker
                 :days="getProgress(rhythm.id)!.days"
+                :goal-type="rhythm.matchType === 'tally' ? 'count' : 'duration'"
                 :threshold-seconds="rhythm.durationThresholdSeconds"
+                :threshold-count="rhythm.countThreshold"
               />
             </div>
 
@@ -374,7 +389,9 @@ function getCategoryEmoji(category: string | null): string {
             <RhythmChainTabs
               :days="getProgress(rhythm.id)!.days"
               :chains="getProgress(rhythm.id)!.chains"
+              :goal-type="rhythm.matchType === 'tally' ? 'count' : 'duration'"
               :threshold-seconds="rhythm.durationThresholdSeconds"
+              :threshold-count="rhythm.countThreshold"
               :weekly-target-minutes="
                 getProgress(rhythm.id)!.primaryChainType === 'weekly_target'
                   ? (getProgress(rhythm.id)!.chainTargetMinutes ?? undefined)
@@ -394,6 +411,7 @@ function getCategoryEmoji(category: string | null): string {
               :encouragement="getProgress(rhythm.id)!.encouragement"
               :journey-stage="getProgress(rhythm.id)!.journeyStage"
               :totals="getProgress(rhythm.id)!.totals"
+              :match-type="rhythm.matchType"
             />
 
             <!-- Action buttons -->

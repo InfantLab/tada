@@ -117,6 +117,7 @@ export default defineEventHandler(async (event) => {
     const allDayStatuses = entriesToDayStatuses(
       allMatchingEntries,
       rhythm.durationThresholdSeconds,
+      rhythm.countThreshold,
     );
 
     // Check if we can use cached chain/totals data
@@ -192,8 +193,10 @@ export default defineEventHandler(async (event) => {
       rhythm.frequency === "daily" ? "daily" : "weekly";
     const nudgeMessage = generateNudgeMessage(weekProgress, targetTier);
 
-    // Determine journey stage based on total hours
-    const journeyStage = getJourneyStage(totals.totalHours);
+    // Determine journey stage based on metric appropriate to type (hours for timed, count for tally)
+    const journeyMetric =
+      rhythm.matchType === "tally" ? totals.totalCount : totals.totalHours;
+    const journeyStage = getJourneyStage(journeyMetric);
 
     // Select encouragement message
     const activityType = rhythm.matchCategory || "general";
@@ -209,9 +212,11 @@ export default defineEventHandler(async (event) => {
 
     return {
       rhythmId,
+      matchType: rhythm.matchType,
       primaryChainType,
       chainTargetMinutes: rhythm.chainTargetMinutes || null,
       durationThresholdSeconds: rhythm.durationThresholdSeconds,
+      countThreshold: rhythm.countThreshold || null,
       currentWeek: {
         startDate: weekProgress.startDate,
         daysCompleted: weekProgress.daysCompleted,

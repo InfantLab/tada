@@ -60,18 +60,21 @@ export const passwordResetTokens = sqliteTable("password_reset_tokens", {
 // Email Verification Tokens - For cloud mode email verification (v0.4.0+)
 // ============================================================================
 
-export const emailVerificationTokens = sqliteTable("email_verification_tokens", {
-  id: text("id").primaryKey(), // UUID
-  userId: text("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  tokenHash: text("token_hash").notNull(), // SHA-256 hash of the token
-  expiresAt: text("expires_at").notNull(), // ISO 8601 - 24 hours from creation
-  usedAt: text("used_at"), // When token was used (null if unused)
-  createdAt: text("created_at")
-    .notNull()
-    .default(sql`(datetime('now'))`),
-});
+export const emailVerificationTokens = sqliteTable(
+  "email_verification_tokens",
+  {
+    id: text("id").primaryKey(), // UUID
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    tokenHash: text("token_hash").notNull(), // SHA-256 hash of the token
+    expiresAt: text("expires_at").notNull(), // ISO 8601 - 24 hours from creation
+    usedAt: text("used_at"), // When token was used (null if unused)
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`(datetime('now'))`),
+  },
+);
 
 // ============================================================================
 // Subscription Events - Audit trail for billing activities (v0.4.0+)
@@ -247,6 +250,9 @@ export const rhythms = sqliteTable("rhythms", {
   durationThresholdSeconds: integer("duration_threshold_seconds")
     .notNull()
     .default(360),
+
+  // Minimum count per day for tally rhythms (e.g., 10 reps)
+  countThreshold: integer("count_threshold"),
 
   // Chain type configuration (v0.3.1+)
   // Determines how chains are calculated and counted
@@ -716,9 +722,7 @@ export const insightCache = sqliteTable("insight_cache", {
     .notNull(), // { lookback: 90, category: 'mindfulness', minConfidence: 'medium' }
 
   // Cached result
-  data: text("data", { mode: "json" })
-    .$type<any>()
-    .notNull(), // Pattern detection results, summary stats, etc.
+  data: text("data", { mode: "json" }).$type<any>().notNull(), // Pattern detection results, summary stats, etc.
 
   // Metadata
   computeTimeMs: integer("compute_time_ms"), // How long it took to compute
@@ -745,8 +749,10 @@ export type NewSession = typeof sessions.$inferInsert;
 export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
 export type NewPasswordResetToken = typeof passwordResetTokens.$inferInsert;
 
-export type EmailVerificationToken = typeof emailVerificationTokens.$inferSelect;
-export type NewEmailVerificationToken = typeof emailVerificationTokens.$inferInsert;
+export type EmailVerificationToken =
+  typeof emailVerificationTokens.$inferSelect;
+export type NewEmailVerificationToken =
+  typeof emailVerificationTokens.$inferInsert;
 
 export type SubscriptionEvent = typeof subscriptionEvents.$inferSelect;
 export type NewSubscriptionEvent = typeof subscriptionEvents.$inferInsert;

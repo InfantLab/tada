@@ -128,7 +128,9 @@ interface DayData {
 
 const props = defineProps<{
   days: DayStatus[];
+  goalType?: "duration" | "count";
   thresholdSeconds?: number;
+  thresholdCount?: number | null;
 }>();
 
 const intensityLevels = [0, 1, 2, 3, 4];
@@ -313,13 +315,20 @@ function getIntensityLevel(day: DayData): number {
   if (!day.status || day.isEmpty) return 0;
   if (day.isFuture) return 0;
 
-  const seconds = day.status.totalSeconds;
-  const threshold = props.thresholdSeconds || 360; // 6 min default
+  // Choose metric and threshold based on goal type
+  const value =
+    props.goalType === "count"
+      ? day.status.totalCount || 0
+      : day.status.totalSeconds;
+  const threshold =
+    props.goalType === "count"
+      ? props.thresholdCount || 10 // 10 reps default
+      : props.thresholdSeconds || 360; // 6 min default
 
-  if (seconds === 0) return 0;
-  if (seconds < threshold * 0.5) return 1;
-  if (seconds < threshold) return 2;
-  if (seconds < threshold * 2) return 3;
+  if (value === 0) return 0;
+  if (value < threshold * 0.5) return 1;
+  if (value < threshold) return 2;
+  if (value < threshold * 2) return 3;
   return 4;
 }
 

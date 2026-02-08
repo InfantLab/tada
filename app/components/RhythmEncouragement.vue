@@ -14,8 +14,14 @@
         <span class="stat-label">Sessions</span>
       </div>
       <div class="stat-card">
-        <span class="stat-value">{{ formatHours(totals.totalHours) }}</span>
-        <span class="stat-label">Hours</span>
+        <template v-if="matchType === 'tally'">
+          <span class="stat-value">{{ totals.totalCount || 0 }}</span>
+          <span class="stat-label">Reps Total</span>
+        </template>
+        <template v-else>
+          <span class="stat-value">{{ formatHours(totals.totalHours) }}</span>
+          <span class="stat-label">Hours</span>
+        </template>
       </div>
       <div class="stat-card">
         <span class="stat-value">{{ totals.weeksActive }}</span>
@@ -36,6 +42,7 @@ interface RhythmTotals {
   totalSessions: number;
   totalSeconds: number;
   totalHours: number;
+  totalCount?: number;
   firstEntryDate: string | null;
   weeksActive: number;
 }
@@ -46,6 +53,7 @@ const props = defineProps<{
   encouragement?: string;
   journeyStage?: JourneyStage;
   totals?: RhythmTotals;
+  matchType?: string | null;
 }>();
 
 /**

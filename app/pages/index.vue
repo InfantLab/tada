@@ -149,7 +149,10 @@ watch(zoomLevel, (newLevel) => {
 
 <template>
   <!-- Loading state while checking auth -->
-  <div v-if="isCheckingAuth" class="flex items-center justify-center min-h-[50vh]">
+  <div
+    v-if="isCheckingAuth"
+    class="flex items-center justify-center min-h-[50vh]"
+  >
     <div class="animate-pulse text-4xl">✨</div>
   </div>
 
@@ -171,7 +174,7 @@ watch(zoomLevel, (newLevel) => {
     </div>
 
     <!-- Getting Started Card (for new users) -->
-    <GettingStartedCard />
+    <OnboardingGettingStartedCard />
 
     <!-- Journey Badge - Accumulated time celebration -->
     <div class="mb-4">

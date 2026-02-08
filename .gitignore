@@ -42,5 +42,7 @@ coverage/
 # Misc
 *.tgz
 .eslintcache
+.claude/
+
 # Dev container
 .devcontainer/commandhistory/

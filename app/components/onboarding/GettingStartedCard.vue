@@ -14,12 +14,6 @@ const { shouldShowFirstWeekCard, dismissFirstWeekCard } = useOnboarding();
 
 const quickStarts = [
   {
-    icon: "🧘",
-    label: "Sessions",
-    description: "Time your meditations or focus sessions",
-    to: "/sessions",
-  },
-  {
     icon: "⚡",
     label: "Ta-Da!",
     description: "Celebrate wins as they happen",
@@ -30,6 +24,18 @@ const quickStarts = [
     label: "Moments",
     description: "Capture thoughts and reflections",
     to: "/moments",
+  },
+  {
+    icon: "🧘",
+    label: "Sessions",
+    description: "Time your meditations or focus sessions",
+    to: "/sessions",
+  },
+  {
+    icon: "💪",
+    label: "Tally",
+    description: "Count reps, glasses of water, anything",
+    to: "/tally",
   },
   {
     icon: "🌊",
@@ -55,12 +61,15 @@ const quickStarts = [
     >
       <div class="flex items-start justify-between gap-4 mb-4">
         <div>
-          <h3 class="text-base font-semibold text-stone-800 dark:text-stone-100 flex items-center gap-2">
+          <h3
+            class="text-base font-semibold text-stone-800 dark:text-stone-100 flex items-center gap-2"
+          >
             <span class="text-xl">✨</span>
             Getting Started
           </h3>
           <p class="text-sm text-stone-600 dark:text-stone-400 mt-1">
-            Ta-Da! counts up, not down. Celebrate what you did, not what you missed.
+            Ta-Da! counts up, not down. Celebrate what you did, not what you
+            missed.
           </p>
         </div>
         <button
@@ -68,8 +77,18 @@ const quickStarts = [
           title="Dismiss"
           @click="dismissFirstWeekCard"
         >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          <svg
+            class="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
       </div>
@@ -82,12 +101,18 @@ const quickStarts = [
           :to="item.to"
           class="group flex items-start gap-3 p-3 rounded-xl bg-white/60 dark:bg-stone-800/40 border border-stone-200/60 dark:border-stone-700/40 hover:border-tada-300 dark:hover:border-tada-600 hover:bg-white dark:hover:bg-stone-800/60 transition-all"
         >
-          <span class="text-2xl group-hover:scale-110 transition-transform">{{ item.icon }}</span>
+          <span class="text-2xl group-hover:scale-110 transition-transform">{{
+            item.icon
+          }}</span>
           <div class="min-w-0">
-            <span class="block text-sm font-medium text-stone-800 dark:text-stone-100 group-hover:text-tada-700 dark:group-hover:text-tada-400 transition-colors">
+            <span
+              class="block text-sm font-medium text-stone-800 dark:text-stone-100 group-hover:text-tada-700 dark:group-hover:text-tada-400 transition-colors"
+            >
               {{ item.label }}
             </span>
-            <span class="block text-xs text-stone-500 dark:text-stone-400 leading-tight">
+            <span
+              class="block text-xs text-stone-500 dark:text-stone-400 leading-tight"
+            >
               {{ item.description }}
             </span>
           </div>
