@@ -26,6 +26,11 @@ onMounted(async () => {
 
 const philosophyPoints = [
   {
+    icon: "⚡",
+    title: "Ta-Da! Not To-Do",
+    description: "Most productivity apps focus on what you haven't done yet, creating pressure and guilt. Ta-Da! celebrates what you have done — turning obligation into accomplishment, anxiety into joy. It's not about checking boxes, it's about noticing progress.",
+  },
+  {
     icon: "⬆️",
     title: "Count Up, Not Down",
     description: "Traditional timers count down, creating pressure. Ta-Da! counts up — celebrating what you accomplished rather than what's remaining.",
@@ -201,22 +206,90 @@ const blogPosts = [
       <h2 class="text-xl font-semibold text-stone-800 dark:text-stone-100 mb-6">
         Credits
       </h2>
-      <div class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 p-6">
-        <p class="text-stone-600 dark:text-stone-400 mb-4">
-          Ta-Da! is built with care by the team at
+      <div class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 p-6 space-y-6">
+        <!-- Creator -->
+        <div>
+          <h3 class="font-semibold text-stone-800 dark:text-stone-100 mb-2">Created by</h3>
+          <p class="text-stone-600 dark:text-stone-400">
+            <a
+              href="https://github.com/InfantLab"
+              target="_blank"
+              class="text-tada-600 dark:text-tada-400 hover:underline font-medium"
+            >Dr. Caspar Addyman</a>
+            — Developmental psychologist, writer, and mindful technologist.
+          </p>
+        </div>
+
+        <!-- Philosophy -->
+        <div>
+          <h3 class="font-semibold text-stone-800 dark:text-stone-100 mb-2">Philosophy & Design</h3>
+          <p class="text-stone-600 dark:text-stone-400">
+            Ta-Da! emerged from 11+ years of personal meditation practice and a desire to track life 
+            without the pressure of traditional productivity apps. The celebration-based approach comes 
+            from understanding how humans actually change — through noticing, not nagging.
+          </p>
+        </div>
+
+        <!-- Technology -->
+        <div>
+          <h3 class="font-semibold text-stone-800 dark:text-stone-100 mb-2">Built With</h3>
+          <div class="flex flex-wrap gap-2">
+            <span class="px-3 py-1 bg-stone-100 dark:bg-stone-700 rounded-full text-sm text-stone-700 dark:text-stone-300">
+              Nuxt 3
+            </span>
+            <span class="px-3 py-1 bg-stone-100 dark:bg-stone-700 rounded-full text-sm text-stone-700 dark:text-stone-300">
+              Vue 3
+            </span>
+            <span class="px-3 py-1 bg-stone-100 dark:bg-stone-700 rounded-full text-sm text-stone-700 dark:text-stone-300">
+              Tailwind CSS
+            </span>
+            <span class="px-3 py-1 bg-stone-100 dark:bg-stone-700 rounded-full text-sm text-stone-700 dark:text-stone-300">
+              SQLite
+            </span>
+            <span class="px-3 py-1 bg-stone-100 dark:bg-stone-700 rounded-full text-sm text-stone-700 dark:text-stone-300">
+              Drizzle ORM
+            </span>
+            <span class="px-3 py-1 bg-stone-100 dark:bg-stone-700 rounded-full text-sm text-stone-700 dark:text-stone-300">
+              Lucia Auth
+            </span>
+          </div>
+        </div>
+
+        <!-- Community -->
+        <div>
+          <h3 class="font-semibold text-stone-800 dark:text-stone-100 mb-2">Community & Contributors</h3>
+          <p class="text-stone-600 dark:text-stone-400 mb-3">
+            Special thanks to everyone who contributes ideas, feedback, and code. Your input shapes Ta-Da!
+          </p>
           <a
-            href="https://github.com/InfantLab"
+            href="https://github.com/InfantLab/tada/graphs/contributors"
             target="_blank"
-            class="text-tada-600 dark:text-tada-400 hover:underline"
-          >InfantLab</a>.
-        </p>
-        <p class="text-stone-600 dark:text-stone-400 mb-4">
-          Special thanks to the open source community and everyone who
-          contributes ideas, feedback, and code.
-        </p>
-        <p class="text-sm text-stone-500 dark:text-stone-500">
-          Built with Nuxt 3, Vue 3, Tailwind CSS, and lots of tea.
-        </p>
+            class="inline-flex items-center gap-2 text-sm text-tada-600 dark:text-tada-400 hover:underline"
+          >
+            View all contributors on GitHub
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+          </a>
+        </div>
+
+        <!-- Inspiration -->
+        <div>
+          <h3 class="font-semibold text-stone-800 dark:text-stone-100 mb-2">Inspired by</h3>
+          <p class="text-stone-600 dark:text-stone-400">
+            The "count up" philosophy from meditation timers, 
+            <a href="https://www.goodreads.com/book/show/52036" target="_blank" class="text-tada-600 dark:text-tada-400 hover:underline">Atomic Habits</a> by James Clear, 
+            and the mindful approach of 
+            <a href="https://zenhabits.net/" target="_blank" class="text-tada-600 dark:text-tada-400 hover:underline">Leo Babauta</a>.
+          </p>
+        </div>
+
+        <!-- Fun fact -->
+        <div class="pt-4 border-t border-stone-200 dark:border-stone-700">
+          <p class="text-sm text-stone-500 dark:text-stone-500 italic">
+            🍵 Powered by lots of tea, occasional insight, and the belief that small celebrations matter.
+          </p>
+        </div>
       </div>
     </section>
 
