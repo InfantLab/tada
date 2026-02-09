@@ -5,7 +5,7 @@
  */
 
 const publicPaths = ["/", "/login", "/register", "/privacy", "/terms", "/dpa", "/help", "/feedback", "/verify-email"];
-const publicPrefixes = ["/blog"];
+const publicPrefixes = ["/blog", "/api/v1"];
 
 export default defineNuxtRouteMiddleware(async (to) => {
   // Allow access to public pages
