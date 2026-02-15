@@ -16,7 +16,7 @@ export interface ExtractedTada {
   id: string;
   title: string;
   notes?: string;
-  category: string;
+  category?: string; // Optional - may be extracted or user-selected
   subcategory?: string;
   significance: TadaSignificance;
   selected: boolean;

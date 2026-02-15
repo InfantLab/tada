@@ -69,9 +69,6 @@
     "vscode": {
       // Extensions installed IN the container (not host)
       "extensions": [
-        // Claude Code
-        "anthropic.claude-code",
-
         // Copilot Chat (required for agent instructions)
         "GitHub.copilot-chat",
 

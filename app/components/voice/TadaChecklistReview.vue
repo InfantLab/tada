@@ -6,6 +6,7 @@
  */
 
 import type { ExtractedTada, TadaSignificance } from "~/types/extraction";
+import { CATEGORY_DEFAULTS } from "~/utils/categoryDefaults";
 
 interface Props {
   /** List of extracted tadas */
@@ -136,6 +137,21 @@ function getConfidenceColor(confidence: number): string {
   if (confidence >= 0.6) return "text-amber-600";
   return "text-red-600";
 }
+
+// Get category options from defaults
+const categoryOptions = computed(() => {
+  return Object.entries(CATEGORY_DEFAULTS).map(([slug, cat]) => ({
+    value: slug,
+    label: cat.label,
+    emoji: cat.emoji,
+  }));
+});
+
+// Get category display label with emoji
+function getCategoryDisplay(categorySlug: string): string {
+  const category = CATEGORY_DEFAULTS[categorySlug];
+  return category ? `${category.emoji} ${category.label}` : categorySlug;
+}
 </script>
 
 <template>
@@ -226,7 +242,10 @@ function getConfidenceColor(confidence: number): string {
               </svg>
             </button>
 
-            <!-- Content -->
+                  v-if="tada.category"
+                  class="tada-checklist__item-category"
+                >
+                  {{ getCategoryDisplay(tada.category)
             <div
               class="tada-checklist__item-content"
               @click="expandTada(tada.id)"
@@ -314,15 +333,12 @@ function getConfidenceColor(confidence: number): string {
                     updateTada(tada.id, {
                       category: (e.target as HTMLSelectElement).value,
                     })
-                "
-              >
-                <option value="home">Home</option>
-                <option value="work">Work</option>
-                <option value="health">Health</option>
-                <option value="fitness">Fitness</option>
-                <option value="social">Social</option>
-                <option value="creative">Creative</option>
-                <option value="learning">Learning</option>
+                  v-for="cat in categoryOptions"
+                  :key="cat.value"
+                  :value="cat.value"
+                >
+                  {{ cat.emoji }} {{ cat.label }}
+                </option>
                 <option value="finance">Finance</option>
                 <option value="errands">Errands</option>
                 <option value="personal">Personal</option>

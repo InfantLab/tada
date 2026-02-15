@@ -32,9 +32,10 @@ const liveTranscriptionText = ref("");
 // User preferences for custom emojis (for emoji resolution in composable)
 const { loadPreferences } = usePreferences();
 
-// Load preferences on mount
+// Load preferences and last used defaults on mount
 onMounted(() => {
   loadPreferences();
+  loadLastUsedDefaults();
 });
 
 // Auto-grow textarea as user types
@@ -59,7 +60,7 @@ const notesTextarea = ref<HTMLTextAreaElement | null>(null);
 // Multi-ta-da mode: when user enters multiple lines or uses voice
 const multiTadaMode = ref(false);
 const multiTadaList = ref<
-  Array<{ title: string; notes: string; emoji: string; subcategory: string }>
+  Array<{ title: string; notes: string; emoji: string; category?: string; subcategory: string }>
 >([]);
 
 // Celebration state
@@ -69,11 +70,41 @@ const showCelebration = ref(false);
 const customEmoji = ref<string>("⚡");
 const showEmojiPicker = ref(false);
 
-// Category for tadas (work, health, social, life_admin, etc.)
+// Category for tadas - load from localStorage or default to "work"
 const tadaCategory = ref("work");
 
 // Subcategory within the selected category
 const tadaSubcategory = ref("");
+
+// Load last used category/subcategory from localStorage on mount
+function loadLastUsedDefaults() {
+  try {
+    const lastCategory = localStorage.getItem("tada-last-category");
+    const lastSubcategory = localStorage.getItem("tada-last-subcategory");
+    if (lastCategory) {
+      tadaCategory.value = lastCategory;
+    }
+    if (lastSubcategory) {
+      tadaSubcategory.value = lastSubcategory;
+    }
+  } catch {
+    // Ignore localStorage errors
+  }
+}
+
+// Save category/subcategory to localStorage when they change
+function saveLastUsedDefaults() {
+  try {
+    if (tadaCategory.value) {
+      localStorage.setItem("tada-last-category", tadaCategory.value);
+    }
+    if (tadaSubcategory.value) {
+      localStorage.setItem("tada-last-subcategory", tadaSubcategory.value);
+    }
+  } catch {
+    // Ignore localStorage errors
+  }
+}
 
 // Get category options for tadas (all 10 categories)
 const tadaCategoryOptions = computed(() => {
@@ -93,9 +124,15 @@ const tadaSubcategoryOptions = computed(() => {
   }));
 });
 
-// Reset subcategory when category changes
+// Reset subcategory when category changes, save to localStorage
 watch(tadaCategory, () => {
   tadaSubcategory.value = "";
+  saveLastUsedDefaults();
+});
+
+// Save subcategory to localStorage when it changes
+watch(tadaSubcategory, () => {
+  saveLastUsedDefaults();
 });
 
 // Function to open emoji picker
@@ -167,6 +204,7 @@ function parseMultipleTadas(
         title: cleaned.slice(0, 100),
         notes: cleaned.length > 100 ? cleaned : "",
         emoji: "⚡",
+        category: undefined, // Will inherit from main selection
         subcategory: "", // Will be filled by guessSubcategory later
       };
     })
@@ -179,9 +217,10 @@ function parseMultipleTadas(
 function checkForMultipleTadas() {
   const tadas = parseMultipleTadas(title.value);
   if (tadas.length > 1) {
-    // Guess subcategory for each
+    // Guess subcategory for each, keep category undefined to use main selection
     multiTadaList.value = tadas.map((t) => ({
       ...t,
+      category: undefined, // Use main category selection
       subcategory: guessSubcategory(t.title) || "personal",
     }));
     multiTadaMode.value = true;
@@ -223,7 +262,7 @@ async function submitEntry() {
       .filter((t) => t.title.trim())
       .map((t) => ({
         title: t.title.trim(),
-        category: tadaCategory.value, // Use the selected category
+        category: t.category || tadaCategory.value, // Use per-item category or global selection
         subcategory: t.subcategory || tadaSubcategory.value || null,
         significance: "normal" as const,
         notes: t.notes || undefined,
@@ -349,6 +388,7 @@ function populateMultiTadaMode(tadas: ExtractedTada[]) {
     title: t.title,
     notes: t.notes || "",
     emoji: "⚡",
+    category: t.category || tadaCategory.value, // Use extracted category or current selection
     subcategory: t.subcategory || guessSubcategory(t.title) || "personal",
   }));
   multiTadaMode.value = true;
@@ -646,49 +686,101 @@ function handleReRecord() {
               </svg>
             </button>
           </div>
-          <!-- Per-item subcategory selector -->
-          <div class="flex flex-wrap gap-1 ml-10">
-            <button
-              v-for="subcat in tadaSubcategoryOptions"
-              :key="subcat.value"
-              type="button"
-              class="px-2 py-0.5 rounded text-xs font-medium transition-colors"
-              :class="
-                tada.subcategory === subcat.value
-                  ? 'bg-amber-200 dark:bg-amber-800/50 text-amber-800 dark:text-amber-200'
-                  : 'bg-stone-100 dark:bg-stone-700 text-stone-500 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-600'
-              "
-              @click="multiTadaList[index].subcategory = subcat.value"
+          <!-- Per-item category selector -->
+          <div class="ml-10 space-y-2">
+            <!-- Category buttons for this item -->
+            <div class="flex flex-wrap gap-1">
+              <button
+                v-for="cat in tadaCategoryOptions.slice(0, 5)"
+                :key="cat.value"
+                type="button"
+                class="px-2 py-0.5 rounded text-xs font-medium transition-colors"
+                :class="
+                  tada.category === cat.value
+                    ? 'bg-amber-200 dark:bg-amber-800/50 text-amber-800 dark:text-amber-200'
+                    : 'bg-stone-100 dark:bg-stone-700 text-stone-500 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-600'
+                "
+                @click="multiTadaList[index].category = cat.value"
+              >
+                {{ cat.emoji }} {{ cat.label }}
+              </button>
+            </div>
+            <!-- Subcategory buttons based on selected category -->
+            <div
+              v-if="tada.category"
+              class="flex flex-wrap gap-1"
             >
-              {{ subcat.emoji }} {{ subcat.label }}
-            </button>
+              <button
+                v-for="subcat in getSubcategoriesForCategory(tada.category || tadaCategory)"
+                :key="subcat.slug"
+                type="button"
+                class="px-2 py-0.5 rounded text-xs font-medium transition-colors"
+                :class="
+                  tada.subcategory === subcat.slug
+                    ? 'bg-amber-200 dark:bg-amber-800/50 text-amber-800 dark:text-amber-200'
+                    : 'bg-stone-100 dark:bg-stone-700 text-stone-500 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-600'
+                "
+                @click="multiTadaList[index].subcategory = subcat.slug"
+              >
+                {{ subcat.emoji }} {{ subcat.label }}
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Subcategory for Tadas (single mode only - multi mode has per-item selectors) -->
-      <div v-if="!multiTadaMode">
-        <label
-          class="block text-sm font-medium text-amber-700 dark:text-amber-300 mb-2"
-        >
-          Category
-        </label>
-        <div class="flex flex-wrap gap-2">
-          <button
-            v-for="subcat in tadaSubcategoryOptions"
-            :key="subcat.value"
-            type="button"
-            class="px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
-            :class="
-              tadaSubcategory === subcat.value
-                ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 ring-2 ring-amber-500'
-                : 'bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600'
-            "
-            @click="tadaSubcategory = subcat.value"
+      <!-- Category Selection (single mode only - multi mode has per-item selectors) -->
+      <div v-if="!multiTadaMode" class="space-y-4">
+        <!-- Category buttons -->
+        <div>
+          <label
+            class="block text-sm font-medium text-amber-700 dark:text-amber-300 mb-2"
           >
-            <span>{{ subcat.emoji }}</span>
-            <span>{{ subcat.label }}</span>
-          </button>
+            Category
+          </label>
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            <button
+              v-for="cat in tadaCategoryOptions"
+              :key="cat.value"
+              type="button"
+              class="px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 justify-center"
+              :class="
+                tadaCategory === cat.value
+                  ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 ring-2 ring-amber-500'
+                  : 'bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600'
+              "
+              @click="tadaCategory = cat.value"
+            >
+              <span>{{ cat.emoji }}</span>
+              <span>{{ cat.label }}</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Subcategory buttons (shown only when category has subcategories) -->
+        <div v-if="tadaSubcategoryOptions.length > 0">
+          <label
+            class="block text-sm font-medium text-amber-700 dark:text-amber-300 mb-2"
+          >
+            Subcategory
+          </label>
+          <div class="flex flex-wrap gap-2">
+            <button
+              v-for="subcat in tadaSubcategoryOptions"
+              :key="subcat.value"
+              type="button"
+              class="px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5"
+              :class="
+                tadaSubcategory === subcat.value
+                  ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 ring-2 ring-amber-500'
+                  : 'bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600'
+              "
+              @click="tadaSubcategory = subcat.value"
+            >
+              <span>{{ subcat.emoji }}</span>
+              <span>{{ subcat.label }}</span>
+            </button>
+          </div>
         </div>
       </div>
 

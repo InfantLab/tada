@@ -43,9 +43,14 @@ function formatDate(dateString: string | null): string {
 </script>
 
 <template>
-  <div class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 p-4">
+  <div
+    class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 p-4"
+  >
     <!-- Loading State -->
-    <div v-if="isLoading && !subscription" class="flex items-center gap-3 animate-pulse">
+    <div
+      v-if="isLoading && !subscription"
+      class="flex items-center gap-3 animate-pulse"
+    >
       <div class="w-10 h-10 bg-stone-200 dark:bg-stone-700 rounded-full" />
       <div class="flex-1">
         <div class="h-4 bg-stone-200 dark:bg-stone-700 rounded w-24 mb-2" />
@@ -74,11 +79,15 @@ function formatDate(dateString: string | null): string {
           <span class="font-semibold text-stone-800 dark:text-stone-100">
             Supporter
           </span>
-          <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-tada-100 dark:bg-tada-600/30 text-tada-700 dark:text-tada-200">
+          <span
+            class="px-2 py-0.5 text-xs font-medium rounded-full bg-tada-100 dark:bg-tada-600/30 text-tada-700 dark:text-tada-200"
+          >
             Active
           </span>
         </div>
-        <div class="text-sm text-stone-600 dark:text-stone-400 mt-1 space-y-0.5">
+        <div
+          class="text-sm text-stone-600 dark:text-stone-400 mt-1 space-y-0.5"
+        >
           <div class="flex items-center gap-1.5">
             <span class="text-green-500">✓</span>
             <span>Unlimited data history</span>
@@ -96,7 +105,10 @@ function formatDate(dateString: string | null): string {
           >
             Manage Subscription
           </button>
-          <span v-if="subscription?.expiresAt" class="text-xs text-stone-500 dark:text-stone-500">
+          <span
+            v-if="subscription?.expiresAt"
+            class="text-xs text-stone-500 dark:text-stone-500"
+          >
             Renews {{ formatDate(subscription.expiresAt) }}
           </span>
         </div>
@@ -116,7 +128,10 @@ function formatDate(dateString: string | null): string {
           <div class="text-sm text-stone-600 dark:text-stone-400 mt-1">
             <div class="flex items-center gap-1.5">
               <span class="text-tada-600">•</span>
-              <span>{{ subscription?.dataRetention?.retentionDays || 365 }} days data retention</span>
+              <span
+                >{{ subscription?.dataRetention?.retentionDays || 365 }} days
+                data retention</span
+              >
             </div>
             <div class="flex items-center gap-1.5">
               <span class="text-tada-600">•</span>
@@ -128,12 +143,15 @@ function formatDate(dateString: string | null): string {
 
       <!-- Archived entries notice -->
       <div
-        v-if="subscription?.entries?.archived && subscription.entries.archived > 0"
+        v-if="
+          subscription?.entries?.archived && subscription.entries.archived > 0
+        "
         class="flex items-center gap-2 px-3 py-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg text-sm"
       >
         <span class="text-amber-600">⚠️</span>
         <span class="text-amber-800 dark:text-amber-200">
-          {{ subscription.entries.archived }} entries archived. Upgrade to access.
+          {{ subscription.entries.archived }} entries archived. Upgrade to
+          access.
         </span>
       </div>
 
@@ -162,11 +180,22 @@ function formatDate(dateString: string | null): string {
       <!-- Account details link -->
       <NuxtLink
         to="/account"
-        class="inline-flex items-center gap-1 text-sm text-tada-600 dark:text-tada-400 hover:underline"
+        :external="false"
+        class="inline-flex items-center gap-1 text-sm text-tada-600 dark:text-tada-400 hover:underline font-medium cursor-pointer relative z-10"
       >
         View account details
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        <svg
+          class="w-3.5 h-3.5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 5l7 7-7 7"
+          />
         </svg>
       </NuxtLink>
     </div>

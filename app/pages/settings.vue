@@ -393,7 +393,7 @@ async function toggleNewsletter() {
         method: "POST",
         body: {
           email: emailForm.value.email,
-          source: "settings"
+          source: "settings",
         },
       });
       newsletterSubscribed.value = true;
@@ -731,13 +731,16 @@ function previewTadaSound(file: string) {
   }
 }
 
-// Sidebar navigation - consolidated from 11 to 7 sections
+// Sidebar navigation - organized by entry type
 const sidebarNavItems = [
   { id: "account", label: "Account", icon: "👤" },
   { id: "security", label: "Security", icon: "🔒" },
-  { id: "sessions", label: "Sessions", icon: "⏱️" },
-  { id: "features", label: "Features", icon: "⚡" },
   { id: "voice", label: "Voice & AI", icon: "🎤" },
+  { id: "tada", label: "Ta-Da!", icon: "🎉" },
+  { id: "moments", label: "Moments", icon: "✨" },
+  { id: "sessions", label: "Sessions", icon: "⏱️" },
+  { id: "tallies", label: "Tallies", icon: "🔢" },
+  { id: "rhythms", label: "Rhythms", icon: "🌊" },
   { id: "appearance", label: "Appearance", icon: "🎨" },
   { id: "data", label: "Data", icon: "💾" },
 ];
@@ -808,7 +811,7 @@ onMounted(() => {
     </div>
 
     <!-- Settings hint for first-time visitors -->
-    <SettingsHint />
+    <OnboardingSettingsHint />
 
     <!-- Mobile navigation tabs -->
     <div class="lg:hidden mb-6 -mx-4 px-4 overflow-x-auto scrollbar-hide">
@@ -967,7 +970,9 @@ onMounted(() => {
               </p>
 
               <!-- Newsletter subscription -->
-              <div class="mt-4 pt-4 border-t border-stone-200 dark:border-stone-700">
+              <div
+                class="mt-4 pt-4 border-t border-stone-200 dark:border-stone-700"
+              >
                 <label class="flex items-start gap-3 cursor-pointer">
                   <input
                     type="checkbox"
@@ -977,11 +982,16 @@ onMounted(() => {
                     @change="toggleNewsletter"
                   />
                   <div>
-                    <span class="text-sm font-medium text-stone-700 dark:text-stone-300">
+                    <span
+                      class="text-sm font-medium text-stone-700 dark:text-stone-300"
+                    >
                       Subscribe to Ta-Da! newsletter
                     </span>
-                    <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5">
-                      Occasional updates on mindfulness and gentle progress. No spam, unsubscribe anytime.
+                    <p
+                      class="text-xs text-stone-500 dark:text-stone-400 mt-0.5"
+                    >
+                      Occasional updates on mindfulness and gentle progress. No
+                      spam, unsubscribe anytime.
                     </p>
                   </div>
                 </label>
@@ -1046,7 +1056,362 @@ onMounted(() => {
 
         <!-- Voice & AI Settings -->
         <section id="section-voice">
-          <SettingsVoiceSettings />
+          <h2
+            class="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-4"
+          >
+            Voice & AI
+          </h2>
+
+          <div class="space-y-4">
+            <!-- Voice Input Provider -->
+            <div
+              class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 p-4"
+            >
+              <label
+                class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2"
+              >
+                Speech-to-Text Provider
+              </label>
+              <p class="text-xs text-stone-500 dark:text-stone-400 mb-3">
+                Choose how voice recordings are transcribed
+              </p>
+              <select
+                class="w-full px-3 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-700 text-stone-800 dark:text-stone-100 text-sm focus:outline-none focus:ring-2 focus:ring-tada-500"
+              >
+                <option value="auto">Auto (Browser → Whisper fallback)</option>
+                <option value="browser">Browser Only (Web Speech API)</option>
+                <option value="whisper">Whisper (Cloud)</option>
+              </select>
+            </div>
+
+            <!-- AI Processing Provider -->
+            <div
+              class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 p-4"
+            >
+              <label
+                class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2"
+              >
+                AI Processing Provider
+              </label>
+              <p class="text-xs text-stone-500 dark:text-stone-400 mb-3">
+                Choose which AI processes voice transcriptions
+              </p>
+              <select
+                class="w-full px-3 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-700 text-stone-800 dark:text-stone-100 text-sm focus:outline-none focus:ring-2 focus:ring-tada-500 mb-3"
+              >
+                <option value="auto">Auto (Server default)</option>
+                <option value="groq">Groq (Fast, Free tier)</option>
+                <option value="openai">OpenAI (GPT-4)</option>
+                <option value="anthropic">Anthropic (Claude)</option>
+              </select>
+
+              <!-- API Key input (shown when not using auto) -->
+              <div class="pt-3 border-t border-stone-200 dark:border-stone-700">
+                <label
+                  class="block text-xs font-medium text-stone-600 dark:text-stone-400 mb-2"
+                >
+                  API Key (BYOK - Bring Your Own Key)
+                </label>
+                <p class="text-xs text-stone-500 dark:text-stone-400 mb-2">
+                  Optional. Use your own API key for unlimited usage.
+                </p>
+                <div class="flex gap-2">
+                  <input
+                    type="password"
+                    placeholder="Paste API key here (stored encrypted)"
+                    class="flex-1 px-3 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-700 text-stone-800 dark:text-stone-100 text-sm focus:outline-none focus:ring-2 focus:ring-tada-500"
+                  />
+                  <button
+                    class="px-4 py-2 bg-tada-600 hover:opacity-90 text-white text-sm font-medium rounded-lg"
+                  >
+                    Save
+                  </button>
+                </div>
+                <p class="text-xs text-stone-500 dark:text-stone-400 mt-2">
+                  🔐 Keys are encrypted and stored locally in your browser
+                </p>
+              </div>
+            </div>
+
+            <!-- Usage Stats -->
+            <div
+              class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 p-4"
+            >
+              <div class="flex items-center justify-between mb-2">
+                <span
+                  class="text-sm font-medium text-stone-700 dark:text-stone-300"
+                >
+                  Voice Entries This Month
+                </span>
+                <span class="text-sm text-stone-500 dark:text-stone-400">
+                  0 / 50
+                </span>
+              </div>
+              <div
+                class="w-full bg-stone-200 dark:bg-stone-700 rounded-full h-2"
+              >
+                <div
+                  class="bg-tada-600 h-2 rounded-full transition-all"
+                  style="width: 0%"
+                />
+              </div>
+              <p class="text-xs text-stone-500 dark:text-stone-400 mt-2">
+                Free tier includes 50 voice entries per month. Use BYOK for
+                unlimited.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Ta-Da! Settings -->
+        <section id="section-tada">
+          <h2
+            class="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-4"
+          >
+            Ta-Da!
+          </h2>
+
+          <!-- Ta-Da! Sounds -->
+          <div
+            class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700"
+          >
+            <div class="p-4">
+              <label
+                class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-3"
+              >
+                Celebration sound
+              </label>
+              <p class="text-xs text-stone-500 dark:text-stone-400 mb-3">
+                Choose the sound that plays when you add an accomplishment
+              </p>
+              <div class="space-y-2">
+                <label
+                  v-for="option in tadaSoundOptions"
+                  :key="option.value"
+                  class="flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors"
+                  :class="
+                    settings.tadaSound === option.value
+                      ? 'border-tada-500 bg-tada-50 dark:bg-tada-900/20'
+                      : 'border-stone-200 dark:border-stone-600 hover:bg-stone-50 dark:hover:bg-stone-700'
+                  "
+                >
+                  <input
+                    v-model="settings.tadaSound"
+                    type="radio"
+                    name="tadaSound"
+                    :value="option.value"
+                    class="w-4 h-4 text-tada-600"
+                    @change="saveSettings"
+                  />
+                  <div class="flex-1">
+                    <span
+                      class="text-sm font-medium text-stone-800 dark:text-stone-100"
+                    >
+                      {{ option.label }}
+                    </span>
+                    <p class="text-xs text-stone-500 dark:text-stone-400">
+                      {{ option.description }}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    class="p-2 rounded-lg bg-stone-100 dark:bg-stone-600 hover:bg-stone-200 dark:hover:bg-stone-500 transition-colors"
+                    title="Preview sound"
+                    @click.prevent="previewTadaSound(option.file)"
+                  >
+                    🔊
+                  </button>
+                </label>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Moments Settings -->
+        <section id="section-moments">
+          <h2
+            class="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-4"
+          >
+            Moments
+          </h2>
+
+          <!-- Categories link -->
+          <NuxtLink
+            to="/categories"
+            :external="false"
+            class="block bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 p-4 hover:bg-stone-50 dark:hover:bg-stone-700/50 transition-colors mb-4 cursor-pointer relative z-10"
+          >
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <span class="text-xl">📁</span>
+                <div>
+                  <span
+                    class="text-sm font-medium text-stone-700 dark:text-stone-300 block"
+                  >
+                    Manage Categories
+                  </span>
+                  <span class="text-xs text-stone-500 dark:text-stone-400">
+                    Customize emojis, visibility, and add custom categories
+                  </span>
+                </div>
+              </div>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5 text-stone-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </div>
+          </NuxtLink>
+
+          <!-- Moment Types -->
+          <h3
+            class="text-sm font-medium text-stone-500 dark:text-stone-400 uppercase tracking-wide mb-3"
+          >
+            Moment Types
+          </h3>
+          <p class="text-sm text-stone-500 dark:text-stone-400 mb-3">
+            Show or hide moment types from the journal add page
+          </p>
+          <div
+            class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 divide-y divide-stone-200 dark:divide-stone-700"
+          >
+            <!-- Built-in entry types -->
+            <div
+              v-for="entryType in builtInEntryTypes"
+              :key="entryType.value"
+              class="p-4 flex items-center justify-between"
+            >
+              <div class="flex items-center gap-3">
+                <span class="text-xl">{{ entryType.emoji }}</span>
+                <div>
+                  <span class="font-medium text-stone-800 dark:text-stone-100">
+                    {{ entryType.label }}
+                  </span>
+                  <p class="text-xs text-stone-500 dark:text-stone-400">
+                    {{ entryType.description }}
+                  </p>
+                </div>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  :checked="isEntryTypeVisible(entryType.value)"
+                  class="sr-only peer"
+                  @change="toggleEntryTypeVisibility(entryType.value)"
+                />
+                <div
+                  class="w-11 h-6 bg-stone-300 dark:bg-stone-600 rounded-full peer peer-checked:bg-tada-600 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"
+                />
+              </label>
+            </div>
+
+            <!-- Custom entry types -->
+            <div
+              v-for="customType in customEntryTypes"
+              :key="customType.name"
+              class="p-4 flex items-center justify-between"
+            >
+              <div class="flex items-center gap-3">
+                <span class="text-xl">{{ customType.emoji }}</span>
+                <div>
+                  <span class="font-medium text-stone-800 dark:text-stone-100">
+                    {{ customType.name }}
+                  </span>
+                  <span
+                    class="ml-2 text-xs px-1.5 py-0.5 bg-tada-100 dark:bg-tada-900/30 text-tada-700 dark:text-tada-300 rounded"
+                  >
+                    Custom
+                  </span>
+                </div>
+              </div>
+              <button
+                class="p-2 text-stone-400 hover:text-red-500 dark:hover:text-red-400 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-700"
+                title="Remove custom type"
+                @click="removeCustomType(customType.name)"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <!-- Add custom entry type -->
+            <div class="p-4">
+              <button
+                v-if="!isAddingCustomType"
+                class="w-full flex items-center justify-center gap-2 py-2 text-tada-600 dark:text-tada-400 hover:bg-stone-50 dark:hover:bg-stone-700/50 rounded-lg transition-colors"
+                @click="isAddingCustomType = true"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+                Add custom moment type
+              </button>
+
+              <div v-else class="space-y-3">
+                <div class="flex gap-2">
+                  <button
+                    class="text-2xl p-2 border border-stone-300 dark:border-stone-600 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-700"
+                    @click="openCustomTypeEmojiPicker"
+                  >
+                    {{ newCustomType.emoji || "😀" }}
+                  </button>
+                  <input
+                    v-model="newCustomType.name"
+                    type="text"
+                    placeholder="Moment type name"
+                    class="flex-1 px-3 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-700 text-stone-800 dark:text-stone-100 text-sm focus:outline-none focus:ring-2 focus:ring-tada-500"
+                  />
+                </div>
+                <div class="flex gap-2">
+                  <button
+                    class="flex-1 py-2 px-3 bg-tada-600 text-white text-sm font-medium rounded-lg hover:opacity-90 disabled:opacity-50"
+                    :disabled="!newCustomType.name.trim()"
+                    @click="addCustomType"
+                  >
+                    Add
+                  </button>
+                  <button
+                    class="flex-1 py-2 px-3 bg-stone-200 dark:bg-stone-600 text-stone-700 dark:text-stone-200 text-sm font-medium rounded-lg hover:opacity-90"
+                    @click="cancelAddCustomType"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
 
         <!-- Sessions (Timer settings + Presets) -->
@@ -1117,7 +1482,9 @@ onMounted(() => {
           </div>
 
           <!-- Session Presets -->
-          <h3 class="text-sm font-medium text-stone-500 dark:text-stone-400 uppercase tracking-wide mb-3">
+          <h3
+            class="text-sm font-medium text-stone-500 dark:text-stone-400 uppercase tracking-wide mb-3"
+          >
             Saved Presets
           </h3>
           <div
@@ -1245,240 +1612,39 @@ onMounted(() => {
           </div>
         </section>
 
-        <!-- Features (Categories, Entry Types, Sounds) -->
-        <section id="section-features">
+        <!-- Tallies Settings -->
+        <section id="section-tallies">
           <h2
             class="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-4"
           >
-            Features
+            Tallies
           </h2>
 
-          <!-- Categories link -->
-          <NuxtLink
-            to="/settings/categories"
-            class="block bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 p-4 hover:bg-stone-50 dark:hover:bg-stone-700/50 transition-colors mb-4"
-          >
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-3">
-                <span class="text-xl">📁</span>
-                <div>
-                  <span class="text-sm font-medium text-stone-700 dark:text-stone-300 block">
-                    Manage Categories
-                  </span>
-                  <span class="text-xs text-stone-500 dark:text-stone-400">
-                    Customize emojis, visibility, and add custom categories
-                  </span>
-                </div>
-              </div>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-5 w-5 text-stone-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </div>
-          </NuxtLink>
-
-          <!-- Entry Types -->
-          <h3 class="text-sm font-medium text-stone-500 dark:text-stone-400 uppercase tracking-wide mb-3">
-            Journal Entry Types
-          </h3>
-          <p class="text-sm text-stone-500 dark:text-stone-400 mb-3">
-            Show or hide entry types from the journal add page
-          </p>
           <div
-            class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 divide-y divide-stone-200 dark:divide-stone-700"
+            class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 p-4"
           >
-            <!-- Built-in entry types -->
-            <div
-              v-for="entryType in builtInEntryTypes"
-              :key="entryType.value"
-              class="p-4 flex items-center justify-between"
-            >
-              <div class="flex items-center gap-3">
-                <span class="text-xl">{{ entryType.emoji }}</span>
-                <div>
-                  <span class="font-medium text-stone-800 dark:text-stone-100">
-                    {{ entryType.label }}
-                  </span>
-                  <p class="text-xs text-stone-500 dark:text-stone-400">
-                    {{ entryType.description }}
-                  </p>
-                </div>
-              </div>
-              <label class="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  :checked="isEntryTypeVisible(entryType.value)"
-                  class="sr-only peer"
-                  @change="toggleEntryTypeVisibility(entryType.value)"
-                />
-                <div
-                  class="w-11 h-6 bg-stone-300 dark:bg-stone-600 rounded-full peer peer-checked:bg-tada-600 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"
-                />
-              </label>
-            </div>
-
-            <!-- Custom entry types -->
-            <div
-              v-for="customType in customEntryTypes"
-              :key="customType.name"
-              class="p-4 flex items-center justify-between"
-            >
-              <div class="flex items-center gap-3">
-                <span class="text-xl">{{ customType.emoji }}</span>
-                <div>
-                  <span class="font-medium text-stone-800 dark:text-stone-100">
-                    {{ customType.name }}
-                  </span>
-                  <span
-                    class="ml-2 text-xs px-1.5 py-0.5 bg-tada-100 dark:bg-tada-900/30 text-tada-700 dark:text-tada-300 rounded"
-                  >
-                    Custom
-                  </span>
-                </div>
-              </div>
-              <button
-                class="p-2 text-stone-400 hover:text-red-500 dark:hover:text-red-400 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-700"
-                title="Remove custom type"
-                @click="removeCustomType(customType.name)"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            <!-- Add custom entry type -->
-            <div class="p-4">
-              <button
-                v-if="!isAddingCustomType"
-                class="w-full flex items-center justify-center gap-2 py-2 text-tada-600 dark:text-tada-400 hover:bg-stone-50 dark:hover:bg-stone-700/50 rounded-lg transition-colors"
-                @click="isAddingCustomType = true"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-                Add custom entry type
-              </button>
-
-              <div v-else class="space-y-3">
-                <div class="flex gap-2">
-                  <button
-                    class="text-2xl p-2 border border-stone-300 dark:border-stone-600 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-700"
-                    @click="openCustomTypeEmojiPicker"
-                  >
-                    {{ newCustomType.emoji || "😀" }}
-                  </button>
-                  <input
-                    v-model="newCustomType.name"
-                    type="text"
-                    placeholder="Entry type name"
-                    class="flex-1 px-3 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-700 text-stone-800 dark:text-stone-100 text-sm focus:outline-none focus:ring-2 focus:ring-tada-500"
-                  />
-                </div>
-                <div class="flex gap-2">
-                  <button
-                    class="flex-1 py-2 px-3 bg-tada-600 text-white text-sm font-medium rounded-lg hover:opacity-90 disabled:opacity-50"
-                    :disabled="!newCustomType.name.trim()"
-                    @click="addCustomType"
-                  >
-                    Add
-                  </button>
-                  <button
-                    class="flex-1 py-2 px-3 bg-stone-200 dark:bg-stone-600 text-stone-700 dark:text-stone-200 text-sm font-medium rounded-lg hover:opacity-90"
-                    @click="cancelAddCustomType"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            </div>
+            <p class="text-sm text-stone-600 dark:text-stone-400">
+              Tally settings coming soon. You can already use quick presets when
+              adding tally entries.
+            </p>
           </div>
+        </section>
 
-          <!-- Ta-Da! Sounds -->
-          <h3 class="text-sm font-medium text-stone-500 dark:text-stone-400 uppercase tracking-wide mb-3 mt-6">
-            Ta-Da! Sounds
-          </h3>
-          <div
-            class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700"
+        <!-- Rhythms Settings -->
+        <section id="section-rhythms">
+          <h2
+            class="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-4"
           >
-            <div class="p-4">
-              <label
-                class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-3"
-              >
-                Celebration sound
-              </label>
-              <div class="space-y-2">
-                <label
-                  v-for="option in tadaSoundOptions"
-                  :key="option.value"
-                  class="flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors"
-                  :class="
-                    settings.tadaSound === option.value
-                      ? 'border-tada-500 bg-tada-50 dark:bg-tada-900/20'
-                      : 'border-stone-200 dark:border-stone-600 hover:bg-stone-50 dark:hover:bg-stone-700'
-                  "
-                >
-                  <input
-                    v-model="settings.tadaSound"
-                    type="radio"
-                    name="tadaSound"
-                    :value="option.value"
-                    class="w-4 h-4 text-tada-600"
-                    @change="saveSettings"
-                  />
-                  <div class="flex-1">
-                    <span
-                      class="text-sm font-medium text-stone-800 dark:text-stone-100"
-                    >
-                      {{ option.label }}
-                    </span>
-                    <p class="text-xs text-stone-500 dark:text-stone-400">
-                      {{ option.description }}
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    class="p-2 rounded-lg bg-stone-100 dark:bg-stone-600 hover:bg-stone-200 dark:hover:bg-stone-500 transition-colors"
-                    title="Preview sound"
-                    @click.prevent="previewTadaSound(option.file)"
-                  >
-                    🔊
-                  </button>
-                </label>
-              </div>
-            </div>
+            Rhythms
+          </h2>
+
+          <div
+            class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 p-4"
+          >
+            <p class="text-sm text-stone-600 dark:text-stone-400">
+              Rhythm settings coming soon. Configure grace periods, chain
+              styles, and rhythm goals.
+            </p>
           </div>
         </section>
 
@@ -1673,19 +1839,20 @@ onMounted(() => {
         <!-- Version footer (About page accessible via help panel) -->
         <div class="text-center py-4">
           <p class="text-xs text-stone-500 dark:text-stone-500 mb-2">
-            Ta-Da! v{{ appVersion }}<template v-if="gitHash">+{{ gitHash }}</template>
+            Ta-Da! v{{ appVersion
+            }}<template v-if="gitHash">+{{ gitHash }}</template>
           </p>
           <div class="flex items-center justify-center gap-4 text-sm">
-            <NuxtLink 
-              to="/about" 
+            <NuxtLink
+              to="/about"
               class="font-medium text-tada-600 dark:text-tada-400 hover:underline hover:text-tada-700 dark:hover:text-tada-300 transition-colors"
             >
               📖 About Ta-Da!
             </NuxtLink>
             <span class="text-stone-300 dark:text-stone-600">·</span>
-            <a 
-              href="https://github.com/InfantLab/tada" 
-              target="_blank" 
+            <a
+              href="https://github.com/InfantLab/tada"
+              target="_blank"
               class="text-stone-600 dark:text-stone-400 hover:underline hover:text-stone-700 dark:hover:text-stone-300 transition-colors"
             >
               GitHub
