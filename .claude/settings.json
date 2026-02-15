@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(DATABASE_URL=file:../data/db.sqlite bun run:*)"
+    ]
+  }
+}

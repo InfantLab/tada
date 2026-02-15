@@ -1,0 +1,41 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git fetch:*)",
+      "Bash(ls:*)",
+      "Bash(.specify/scripts/bash/setup-plan.sh:*)",
+      "Bash(.specify/scripts/bash/check-prerequisites.sh:*)",
+      "Bash(tree:*)",
+      "Bash(npm install:*)",
+      "Bash(bun add:*)",
+      "Bash(bun run:*)",
+      "Bash(sqlite3:*)",
+      "Bash(DATABASE_URL=file:./data/db.sqlite bun run:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push)",
+      "Bash(git push:*)",
+      "Bash(gh pr create:*)",
+      "Bash(git checkout:*)",
+      "Bash(git pull:*)",
+      "Bash(git merge:*)",
+      "Bash(node -e:*)",
+      "Bash(git reset:*)",
+      "Bash(grep:*)",
+      "Bash(npm run test:*)",
+      "Bash(npx nuxt typecheck:*)",
+      "Bash(bun install)",
+      "Bash(npm run typecheck:*)",
+      "Bash(pnpm run typecheck:*)",
+      "Bash(./node_modules/.bin/eslint:*)",
+      "Bash(npx nuxi:*)",
+      "Bash(pnpm nuxi typecheck:*)",
+      "Bash(git stash push:*)",
+      "Bash(git stash:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(gh run list:*)",
+      "Bash(git remote:*)",
+      "Bash(find:*)"
+    ]
+  }
+}
