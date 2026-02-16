@@ -87,8 +87,6 @@ onMounted(async () => {
           "note", // backward compat for old data
           "gratitude",
           "magic",
-          "reflection",
-          "memory",
         ].includes(e.type) ||
         e.category === "moments" ||
         e.subcategory === "journal",
@@ -129,10 +127,6 @@ function getTypeIcon(type: string, subcategory?: string | null): string {
       return "🪄";
     case "gratitude":
       return "🙏";
-    case "reflection":
-      return "💭";
-    case "memory":
-      return "📸";
     case "journal":
     case "note": // backward compat
       return "🪶";
@@ -614,26 +608,10 @@ function handleVoiceCancel() {
       <h2 class="text-xl font-semibold text-stone-700 dark:text-stone-200 mb-2">
         No moments yet
       </h2>
-      <p class="text-stone-500 dark:text-stone-400 max-w-md mx-auto mb-6">
+      <p class="text-stone-500 dark:text-stone-400 max-w-md mx-auto">
         Capture magic moments, record dreams, practice gratitude, or jot down
-        thoughts.
+        thoughts. Use the voice button above to get started.
       </p>
-      <div class="flex flex-col sm:flex-row gap-3 justify-center">
-        <button
-          type="button"
-          class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-medium transition-colors"
-          @click="voiceSubcategory = 'magic'"
-        >
-          🪄 Capture magic
-        </button>
-        <button
-          type="button"
-          class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg font-medium transition-colors"
-          @click="voiceSubcategory = 'dream'"
-        >
-          🌙 Record a dream
-        </button>
-      </div>
     </div>
 
     <!-- Entries list -->

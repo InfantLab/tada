@@ -213,10 +213,10 @@ async function toggleCategoryVisibility(category: string) {
 // Entry type management
 const builtInEntryTypes = [
   {
-    value: "tada",
-    label: "Ta-Da!",
-    emoji: "⚡",
-    description: "Celebrate an accomplishment",
+    value: "magic",
+    label: "Magic",
+    emoji: "🪄",
+    description: "Capture a magical moment",
   },
   {
     value: "dream",
@@ -225,15 +225,15 @@ const builtInEntryTypes = [
     description: "Record a dream",
   },
   {
-    value: "note",
-    label: "Note",
-    emoji: "📝",
-    description: "Capture a thought",
+    value: "gratitude",
+    label: "Gratitude",
+    emoji: "🙏",
+    description: "Express gratitude",
   },
   {
     value: "journal",
     label: "Journal",
-    emoji: "💭",
+    emoji: "🪶",
     description: "Write a journal entry",
   },
 ];
@@ -367,7 +367,7 @@ const passwordSuccess = ref(false);
 const emailForm = ref({
   email: "",
 });
-const _isUpdatingEmail = ref(false); // TODO: implement email update API
+const isUpdatingEmail = ref(false);
 const emailError = ref<string | null>(null);
 const emailSuccess = ref(false);
 
@@ -499,6 +499,58 @@ async function changePassword() {
     }
   } finally {
     isChangingPassword.value = false;
+  }
+}
+
+// Update email function
+async function updateEmail() {
+  emailError.value = null;
+  emailSuccess.value = false;
+
+  const email = emailForm.value.email?.trim();
+  if (!email) {
+    emailError.value = "Email is required";
+    return;
+  }
+
+  // Basic email validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    emailError.value = "Please enter a valid email address";
+    return;
+  }
+
+  isUpdatingEmail.value = true;
+
+  try {
+    const result = await $fetch<{
+      success: boolean;
+      message: string;
+      emailVerified: boolean;
+    }>("/api/auth/update-email", {
+      method: "POST",
+      body: { email },
+    });
+
+    emailSuccess.value = true;
+
+    // Update current user state
+    if (currentUser.value) {
+      currentUser.value.email = email;
+      currentUser.value.emailVerified = result.emailVerified;
+    }
+
+    showSuccess(result.message);
+  } catch (err: unknown) {
+    console.error("Email update failed:", err);
+    if (err && typeof err === "object" && "data" in err) {
+      const errorData = err.data as { statusMessage?: string };
+      emailError.value = errorData.statusMessage || "Email update failed";
+    } else {
+      emailError.value = "Email update failed. Please try again.";
+    }
+  } finally {
+    isUpdatingEmail.value = false;
   }
 }
 
@@ -736,6 +788,7 @@ const sidebarNavItems = [
   { id: "account", label: "Account", icon: "👤" },
   { id: "security", label: "Security", icon: "🔒" },
   { id: "voice", label: "Voice & AI", icon: "🎤" },
+  { id: "categories", label: "Categories", icon: "🏷️" },
   { id: "tada", label: "Ta-Da!", icon: "🎉" },
   { id: "moments", label: "Moments", icon: "✨" },
   { id: "sessions", label: "Sessions", icon: "⏱️" },
@@ -934,28 +987,73 @@ onMounted(() => {
           >
             <!-- Email (if available) -->
             <div class="p-4">
-              <label
-                class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2"
-              >
-                Email Address
-              </label>
+              <div class="flex items-center justify-between mb-2">
+                <label
+                  class="block text-sm font-medium text-stone-700 dark:text-stone-300"
+                >
+                  Email Address
+                </label>
+                <span
+                  v-if="currentUser.emailVerified"
+                  class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 flex items-center gap-1"
+                >
+                  ✓ Verified
+                </span>
+                <span
+                  v-else-if="currentUser.email"
+                  class="px-2 py-1 text-xs font-medium rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300"
+                >
+                  Unverified
+                </span>
+              </div>
               <p class="text-xs text-stone-500 dark:text-stone-400 mb-3">
-                Used for password recovery. Optional for self-hosted.
+                <template v-if="isCloudMode">
+                  Required for password recovery and becoming a supporter.
+                </template>
+                <template v-else>
+                  Used for password recovery. Optional for self-hosted.
+                </template>
               </p>
               <div class="flex gap-2">
                 <input
                   v-model="emailForm.email"
                   type="email"
                   placeholder="your@email.com"
-                  class="flex-1 px-3 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-700 text-stone-800 dark:text-stone-100 text-sm focus:outline-none focus:ring-2 focus:ring-tada-500"
+                  :disabled="isUpdatingEmail"
+                  class="flex-1 px-3 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-700 text-stone-800 dark:text-stone-100 text-sm focus:outline-none focus:ring-2 focus:ring-tada-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  @keyup.enter="updateEmail"
                 />
-                <span
-                  v-if="currentUser.emailVerified"
-                  class="px-2 py-2 text-xs text-green-600 dark:text-green-400 flex items-center gap-1"
+                <button
+                  :disabled="isUpdatingEmail || !emailForm.email"
+                  class="px-4 py-2 bg-tada-600 hover:bg-tada-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                  @click="updateEmail"
                 >
-                  ✓ Verified
-                </span>
+                  {{ isUpdatingEmail ? "Saving..." : "Save" }}
+                </button>
               </div>
+
+              <!-- Email verification section -->
+              <div
+                v-if="currentUser.email && !currentUser.emailVerified"
+                class="mt-3 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg"
+              >
+                <p class="text-sm text-amber-800 dark:text-amber-200 mb-2">
+                  📧 Please verify your email address
+                </p>
+                <p class="text-xs text-amber-700 dark:text-amber-300 mb-3">
+                  We've sent a verification link to {{ currentUser.email }}. Click the link in the email to verify.
+                </p>
+                <NuxtLink
+                  to="/account"
+                  class="inline-flex items-center gap-1 text-sm font-medium text-tada-600 dark:text-tada-400 hover:underline"
+                >
+                  Resend verification email
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                </NuxtLink>
+              </div>
+
               <p
                 v-if="emailSuccess"
                 class="mt-2 text-sm text-green-600 dark:text-green-400"
@@ -1163,6 +1261,46 @@ onMounted(() => {
           </div>
         </section>
 
+        <!-- Categories Settings -->
+        <section id="section-categories">
+          <h2
+            class="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-4"
+          >
+            Categories
+          </h2>
+
+          <div
+            class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 p-4 mb-4"
+          >
+            <p class="text-sm text-stone-600 dark:text-stone-400 mb-3">
+              Categories organize your entries across all types (Moments, Sessions, etc.).
+              Customize emojis, visibility, subcategories, and more.
+            </p>
+            <NuxtLink
+              to="/categories"
+              :external="false"
+              class="inline-flex items-center gap-2 px-4 py-2 bg-tada-600 hover:bg-tada-700 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer relative z-10"
+            >
+              <span>🏷️</span>
+              <span>Manage Categories</span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </NuxtLink>
+          </div>
+        </section>
+
         <!-- Ta-Da! Settings -->
         <section id="section-tada">
           <h2
@@ -1234,43 +1372,6 @@ onMounted(() => {
           >
             Moments
           </h2>
-
-          <!-- Categories link -->
-          <NuxtLink
-            to="/categories"
-            :external="false"
-            class="block bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 p-4 hover:bg-stone-50 dark:hover:bg-stone-700/50 transition-colors mb-4 cursor-pointer relative z-10"
-          >
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-3">
-                <span class="text-xl">📁</span>
-                <div>
-                  <span
-                    class="text-sm font-medium text-stone-700 dark:text-stone-300 block"
-                  >
-                    Manage Categories
-                  </span>
-                  <span class="text-xs text-stone-500 dark:text-stone-400">
-                    Customize emojis, visibility, and add custom categories
-                  </span>
-                </div>
-              </div>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-5 w-5 text-stone-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </div>
-          </NuxtLink>
 
           <!-- Moment Types -->
           <h3
