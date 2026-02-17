@@ -1,11 +1,11 @@
-CREATE TABLE `backronyms` (
+CREATE TABLE IF NOT EXISTS `backronyms` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`backronym` text NOT NULL,
 	`slogan` text NOT NULL,
 	`created_at` integer DEFAULT (unixepoch()) NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE `email_verification_tokens` (
+CREATE TABLE IF NOT EXISTS `email_verification_tokens` (
 	`id` text PRIMARY KEY NOT NULL,
 	`user_id` text NOT NULL,
 	`token_hash` text NOT NULL,
@@ -15,7 +15,7 @@ CREATE TABLE `email_verification_tokens` (
 	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
-CREATE TABLE `feedback` (
+CREATE TABLE IF NOT EXISTS `feedback` (
 	`id` text PRIMARY KEY NOT NULL,
 	`user_id` text,
 	`type` text NOT NULL,
@@ -31,7 +31,7 @@ CREATE TABLE `feedback` (
 	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE set null
 );
 --> statement-breakpoint
-CREATE TABLE `newsletter_subscribers` (
+CREATE TABLE IF NOT EXISTS `newsletter_subscribers` (
 	`id` text PRIMARY KEY NOT NULL,
 	`email` text NOT NULL,
 	`status` text DEFAULT 'active' NOT NULL,
@@ -42,8 +42,8 @@ CREATE TABLE `newsletter_subscribers` (
 	`created_at` text DEFAULT (datetime('now')) NOT NULL
 );
 --> statement-breakpoint
-CREATE UNIQUE INDEX `newsletter_subscribers_email_unique` ON `newsletter_subscribers` (`email`);--> statement-breakpoint
-CREATE TABLE `subscription_events` (
+CREATE UNIQUE INDEX IF NOT EXISTS `newsletter_subscribers_email_unique` ON `newsletter_subscribers` (`email`);--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS `subscription_events` (
 	`id` text PRIMARY KEY NOT NULL,
 	`user_id` text NOT NULL,
 	`event_type` text NOT NULL,

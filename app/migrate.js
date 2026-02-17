@@ -141,7 +141,21 @@ async function runMigrations() {
       .filter((s) => s.length > 0);
 
     for (const statement of statements) {
-      runSQL(statement);
+      try {
+        runSQL(statement);
+      } catch (err) {
+        // Handle idempotent migrations: duplicate columns/tables are not fatal
+        const msg = err.message || "";
+        if (
+          msg.includes("duplicate column name") ||
+          msg.includes("already exists")
+        ) {
+          const short = statement.substring(0, 60).replace(/\n/g, " ");
+          console.log(`    ⚠ Skipped (already applied): ${short}...`);
+          continue;
+        }
+        throw err;
+      }
     }
 
     // Record migration
