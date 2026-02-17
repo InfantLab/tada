@@ -126,16 +126,16 @@ export const CHAIN_CONFIGS: ChainConfig[] = [
   },
   {
     type: "weekly_target",
-    label: "Weekly Target",
-    shortLabel: "Wk Goal",
-    description: "Minutes per week",
+    label: "Weekly Total",
+    shortLabel: "Min/Wk",
+    description: "Total minutes per week",
     unit: "weeks",
   },
   {
     type: "monthly_target",
-    label: "Monthly Target",
-    shortLabel: "Mo Goal",
-    description: "Minutes per month",
+    label: "Monthly Total",
+    shortLabel: "Min/Mo",
+    description: "Total minutes per month",
     unit: "months",
   },
 ];

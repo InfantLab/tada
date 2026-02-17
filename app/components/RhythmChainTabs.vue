@@ -3,7 +3,8 @@
  * RhythmChainTabs - All chain types displayed simultaneously
  *
  * Shows every chain type in a compact grid. Active chains (current > 0)
- * are visually accented; inactive ones are dimmed. Personal bests are flagged.
+ * are visually accented; inactive ones are dimmed but still show their
+ * all-time best prominently.
  */
 
 import {
@@ -37,7 +38,8 @@ const enrichedChains = computed(() =>
       unit: stat?.unit ?? config.unit,
       isActive: (stat?.current ?? 0) > 0,
       isPersonalBest:
-        (stat?.current ?? 0) > 0 && (stat?.current ?? 0) >= (stat?.longest ?? 0),
+        (stat?.current ?? 0) > 0 &&
+        (stat?.current ?? 0) >= (stat?.longest ?? 0),
     };
   }),
 );
@@ -58,7 +60,10 @@ const inactiveChains = computed(() =>
     </h4>
 
     <!-- Active chains — full accent -->
-    <div v-if="activeChains.length > 0" class="grid grid-cols-2 gap-2 sm:grid-cols-3">
+    <div
+      v-if="activeChains.length > 0"
+      class="grid grid-cols-2 gap-2 sm:grid-cols-3"
+    >
       <div
         v-for="chain in activeChains"
         :key="chain.config.type"
@@ -66,7 +71,7 @@ const inactiveChains = computed(() =>
       >
         <div class="flex items-center justify-between">
           <span class="text-xs font-medium text-tada-600 dark:text-tada-400">
-            {{ chain.config.shortLabel }}
+            {{ chain.config.label }}
           </span>
           <span
             v-if="chain.isPersonalBest"
@@ -75,6 +80,9 @@ const inactiveChains = computed(() =>
           >
             🏆
           </span>
+        </div>
+        <div class="text-[10px] text-tada-500/70 dark:text-tada-400/60">
+          {{ chain.config.description }}
         </div>
         <div class="mt-1 text-lg font-bold text-tada-700 dark:text-tada-200">
           🔗 {{ formatChainValue(chain.current, chain.unit) }}
@@ -85,28 +93,35 @@ const inactiveChains = computed(() =>
       </div>
     </div>
 
-    <!-- Inactive chains — dimmed, compact -->
+    <!-- Inactive chains — dimmed but best shown prominently -->
     <div
       v-if="inactiveChains.length > 0"
       class="grid grid-cols-2 gap-2 sm:grid-cols-3"
-      :class="{ 'mt-1': activeChains.length > 0 }"
     >
       <div
         v-for="chain in inactiveChains"
         :key="chain.config.type"
         class="rounded-lg bg-stone-50 px-3 py-2 ring-1 ring-stone-200/50 dark:bg-stone-800/50 dark:ring-stone-700/30"
       >
-        <span class="text-xs font-medium text-stone-400 dark:text-stone-500">
-          {{ chain.config.shortLabel }}
-        </span>
-        <div class="mt-1 text-sm text-stone-300 dark:text-stone-600">
-          —
+        <div class="text-xs font-medium text-stone-400 dark:text-stone-500">
+          {{ chain.config.label }}
+        </div>
+        <div class="text-[10px] text-stone-400/70 dark:text-stone-500/60">
+          {{ chain.config.description }}
         </div>
         <div
           v-if="chain.longest > 0"
-          class="mt-0.5 text-xs text-stone-400 dark:text-stone-500"
+          class="mt-1"
         >
-          best: {{ formatChainValue(chain.longest, chain.unit) }}
+          <div class="text-sm font-semibold text-stone-500 dark:text-stone-400">
+            {{ formatChainValue(chain.longest, chain.unit) }}
+          </div>
+          <div class="text-[10px] text-stone-400 dark:text-stone-500">
+            all-time best
+          </div>
+        </div>
+        <div v-else class="mt-1 text-sm text-stone-300 dark:text-stone-600">
+          —
         </div>
       </div>
     </div>
