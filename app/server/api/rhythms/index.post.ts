@@ -13,7 +13,7 @@ import { getDefaultThresholdType } from "~/server/utils/rhythmCalculator";
 
 interface CreateRhythmBody {
   name: string;
-  matchCategory: string;
+  matchCategory?: string | null;
   matchSubcategory?: string | null;
   matchType?: string | null;
   matchName?: string | null;
@@ -49,7 +49,11 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  if (!body.matchCategory) {
+  // Get the entry type early (needed for validation)
+  const matchType = body.matchType || "timed";
+
+  // matchCategory is required for timed/tally but optional for moment/tada
+  if (!body.matchCategory && matchType !== "moment" && matchType !== "tada") {
     throw createError({
       statusCode: 400,
       message: "Category is required",
@@ -75,8 +79,7 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  // Get the entry type (default to timed for backward compatibility)
-  const matchType = body.matchType || "timed";
+  // matchType already determined above
 
   // Determine completion mode
   const isSessionBased =
