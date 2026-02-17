@@ -173,8 +173,19 @@ const calendarDays = computed(() => {
   const prevMonthDays = prevMonth.getDate();
 
   // Helper to calculate intensity level
-  const getIntensityLevel = (seconds: number, isFuture: boolean): number => {
-    if (isFuture || seconds === 0) return 0;
+  const getIntensityLevel = (seconds: number, isFuture: boolean, isComplete?: boolean, entryCount?: number): number => {
+    if (isFuture) return 0;
+
+    // For session-based rhythms: isComplete with 0 seconds means activity-based
+    if (isComplete && seconds === 0) {
+      const count = entryCount || 0;
+      if (count === 0) return 0;
+      if (count === 1) return 2;
+      if (count <= 3) return 3;
+      return 4;
+    }
+
+    if (seconds === 0) return 0;
     const threshold = props.thresholdSeconds || 360;
     if (seconds < threshold * 0.5) return 1;
     if (seconds < threshold) return 2;
@@ -199,7 +210,7 @@ const calendarDays = computed(() => {
       isFuture,
       isComplete: status?.isComplete ?? false,
       totalSeconds,
-      intensityLevel: getIntensityLevel(totalSeconds, isFuture),
+      intensityLevel: getIntensityLevel(totalSeconds, isFuture, status?.isComplete, status?.entryCount),
     });
   }
 
@@ -219,7 +230,7 @@ const calendarDays = computed(() => {
       isFuture,
       isComplete: status?.isComplete ?? false,
       totalSeconds,
-      intensityLevel: getIntensityLevel(totalSeconds, isFuture),
+      intensityLevel: getIntensityLevel(totalSeconds, isFuture, status?.isComplete, status?.entryCount),
     });
   }
 
@@ -241,7 +252,7 @@ const calendarDays = computed(() => {
       isFuture,
       isComplete: status?.isComplete ?? false,
       totalSeconds,
-      intensityLevel: getIntensityLevel(totalSeconds, isFuture),
+      intensityLevel: getIntensityLevel(totalSeconds, isFuture, status?.isComplete, status?.entryCount),
     });
   }
 

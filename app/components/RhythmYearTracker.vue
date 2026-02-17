@@ -315,6 +315,16 @@ function getIntensityLevel(day: DayData): number {
   if (!day.status || day.isEmpty) return 0;
   if (day.isFuture) return 0;
 
+  // For session-based rhythms (activity type), use isComplete + entryCount
+  if (day.status.isComplete && day.status.totalSeconds === 0) {
+    // Activity-based: intensity by entry count
+    const count = day.status.entryCount || 0;
+    if (count === 0) return 0;
+    if (count === 1) return 2;
+    if (count <= 3) return 3;
+    return 4;
+  }
+
   // Choose metric and threshold based on goal type
   const value =
     props.goalType === "count"
@@ -358,13 +368,18 @@ function getDayTooltip(day: DayData): string {
     year: "numeric",
   });
 
-  if (!day.status || day.status.totalSeconds === 0) {
+  if (!day.status || (!day.status.isComplete && day.status.totalSeconds === 0 && day.status.entryCount === 0)) {
     return `${dateStr}: No activity`;
   }
 
+  const entries = day.status.entryCount;
+  // Activity-based (0 duration): show entry count only
+  if (day.status.totalSeconds === 0) {
+    return `${dateStr}: ${entries} ${entries === 1 ? "activity" : "activities"}`;
+  }
+
   const minutes = Math.round(day.status.totalSeconds / 60);
-  const sessions = day.status.entryCount;
-  return `${dateStr}: ${minutes} min (${sessions} ${sessions === 1 ? "activity" : "activities"})`;
+  return `${dateStr}: ${minutes} min (${entries} ${entries === 1 ? "activity" : "activities"})`;
 }
 </script>
 
