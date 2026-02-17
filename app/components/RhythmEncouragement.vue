@@ -11,7 +11,7 @@
     <div v-if="totals" class="totals-grid">
       <div class="stat-card">
         <span class="stat-value">{{ totals.totalSessions }}</span>
-        <span class="stat-label">Sessions</span>
+        <span class="stat-label">Activities</span>
       </div>
       <div class="stat-card">
         <template v-if="matchType === 'tally'">

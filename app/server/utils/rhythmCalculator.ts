@@ -204,17 +204,19 @@ export function entriesToDayStatuses(
 /**
  * Calculate chain statistics for a specific chain type
  *
- * Supports multiple chain types:
- * - daily: Consecutive days with activity - counted in days
- * - weekly_high: 5+ days per week - counted in weeks
- * - weekly_low: 3+ days per week - counted in weeks
- * - weekly_target: Cumulative minutes per week - counted in weeks
- * - monthly_target: Cumulative minutes per month - counted in months
+ * All chain types are based on "completed days" — a day is complete when it
+ * meets the rhythm's threshold (duration, count, or any entry for activity).
+ *
+ * - daily: Consecutive completed days - counted in days
+ * - weekly_high: 5+ completed days/week - counted in weeks
+ * - weekly_low: 3+ completed days/week - counted in weeks
+ * - weekly_target: 1+ completed day/week - counted in weeks
+ * - monthly_target: 4+ completed days/month - counted in months
  */
 export function calculateTypedChainStats(
   dayStatuses: DayStatus[],
   chainType: ChainType,
-  targetMinutes?: number, // Required for weekly_target and monthly_target
+  _targetMinutes?: number, // Kept for API compat, no longer used
 ): ChainStat {
   const config = getChainConfig(chainType);
 
@@ -230,17 +232,9 @@ export function calculateTypedChainStats(
     case "weekly_low":
       return calculateWeeklyDaysChain(dayStatuses, 3, config.unit);
     case "weekly_target":
-      return calculateWeeklyTargetChain(
-        dayStatuses,
-        (targetMinutes || 0) * 60,
-        config.unit,
-      );
+      return calculateWeeklyDaysChain(dayStatuses, 1, config.unit);
     case "monthly_target":
-      return calculateMonthlyTargetChain(
-        dayStatuses,
-        (targetMinutes || 0) * 60,
-        config.unit,
-      );
+      return calculateMonthlyDaysChain(dayStatuses, 4, config.unit);
     default:
       return { type: chainType, current: 0, longest: 0, unit: config.unit };
   }
@@ -338,7 +332,8 @@ function calculateWeeklyDaysChain(
   minDays: number,
   unit: ChainUnit,
 ): ChainStat {
-  const chainType: ChainType = minDays >= 5 ? "weekly_high" : "weekly_low";
+  const chainType: ChainType =
+    minDays >= 5 ? "weekly_high" : minDays >= 3 ? "weekly_low" : "weekly_target";
 
   // Group days by week
   const weekMap = new Map<string, number>(); // weekStart -> daysCompleted
@@ -407,98 +402,29 @@ function calculateWeeklyDaysChain(
 }
 
 /**
- * Calculate weekly target chain: cumulative seconds per week
+ * Calculate monthly chain based on completed days per month
  */
-function calculateWeeklyTargetChain(
+function calculateMonthlyDaysChain(
   dayStatuses: DayStatus[],
-  targetSeconds: number,
+  minDays: number,
   unit: ChainUnit,
 ): ChainStat {
-  // Group by week and sum seconds
-  const weekMap = new Map<string, number>(); // weekStart -> totalSeconds
+  // Group completed days by month
+  const monthMap = new Map<string, number>(); // YYYY-MM -> daysCompleted
 
   for (const day of dayStatuses) {
-    const weekStart = formatDate(getWeekStart(new Date(day.date)));
-    weekMap.set(weekStart, (weekMap.get(weekStart) || 0) + day.totalSeconds);
-  }
-
-  // Sort weeks chronologically
-  const weeks = Array.from(weekMap.entries())
-    .map(([weekStart, totalSeconds]) => ({
-      weekStart,
-      totalSeconds,
-      meetsTarget: totalSeconds >= targetSeconds,
-    }))
-    .sort((a, b) => a.weekStart.localeCompare(b.weekStart));
-
-  if (weeks.length === 0) {
-    return { type: "weekly_target", current: 0, longest: 0, unit };
-  }
-
-  // Calculate longest chain
-  let longest = 0;
-  let currentChain = 0;
-
-  for (const week of weeks) {
-    if (week.meetsTarget) {
-      currentChain++;
-      longest = Math.max(longest, currentChain);
-    } else {
-      currentChain = 0;
+    if (day.isComplete) {
+      const monthKey = formatMonth(new Date(day.date));
+      monthMap.set(monthKey, (monthMap.get(monthKey) || 0) + 1);
     }
-  }
-
-  // Calculate current chain (from most recent week)
-  const reversedWeeks = [...weeks].reverse();
-  currentChain = 0;
-
-  for (let i = 0; i < reversedWeeks.length; i++) {
-    const week = reversedWeeks[i];
-    if (!week) continue;
-
-    // Check if weeks are consecutive
-    if (i > 0) {
-      const prevWeek = reversedWeeks[i - 1];
-      if (prevWeek && !isConsecutiveWeek(week.weekStart, prevWeek.weekStart)) {
-        break;
-      }
-    }
-
-    if (week.meetsTarget) {
-      currentChain++;
-    } else {
-      if (i === 0) {
-        currentChain = 0;
-      }
-      break;
-    }
-  }
-
-  return { type: "weekly_target", current: currentChain, longest, unit };
-}
-
-/**
- * Calculate monthly target chain: cumulative seconds per month
- */
-function calculateMonthlyTargetChain(
-  dayStatuses: DayStatus[],
-  targetSeconds: number,
-  unit: ChainUnit,
-): ChainStat {
-  // Group by month and sum seconds
-  const monthMap = new Map<string, number>(); // YYYY-MM -> totalSeconds
-
-  for (const day of dayStatuses) {
-    const monthKey = formatMonth(new Date(day.date));
-    monthMap.set(monthKey, (monthMap.get(monthKey) || 0) + day.totalSeconds);
   }
 
   // Sort months chronologically
   const months = Array.from(monthMap.entries())
-    .map(([monthKey, totalSeconds]) => ({
+    .map(([monthKey, daysCompleted]) => ({
       monthKey,
-      totalSeconds,
-      meetsTarget: totalSeconds >= targetSeconds,
+      daysCompleted,
+      meetsThreshold: daysCompleted >= minDays,
     }))
     .sort((a, b) => a.monthKey.localeCompare(b.monthKey));
 
@@ -511,7 +437,7 @@ function calculateMonthlyTargetChain(
   let currentChain = 0;
 
   for (const month of months) {
-    if (month.meetsTarget) {
+    if (month.meetsThreshold) {
       currentChain++;
       longest = Math.max(longest, currentChain);
     } else {
@@ -538,7 +464,7 @@ function calculateMonthlyTargetChain(
       }
     }
 
-    if (month.meetsTarget) {
+    if (month.meetsThreshold) {
       currentChain++;
     } else {
       if (i === 0) {

@@ -580,7 +580,7 @@ async function save() {
                 Minimum duration per day
               </label>
               <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                Sessions shorter than this won't count toward your streak
+                Activities shorter than this won't count toward your streak
               </p>
               <div class="mt-2 flex flex-wrap gap-2">
                 <button

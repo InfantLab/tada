@@ -8,12 +8,14 @@
  * - Weekly: 1-2 days per week
  * - Starting: New rhythm, not enough data yet
  *
- * Chain Types (v0.3.1+):
- * - daily: Consecutive days with min X minutes - counted in days
- * - weekly_high: 5+ days/week with min X min/day - counted in weeks
- * - weekly_low: 3+ days/week with min X min/day - counted in weeks
- * - weekly_target: Y+ cumulative minutes/week - counted in weeks
- * - monthly_target: Y+ cumulative minutes/month - counted in months
+ * Chain Types (v0.4.1+):
+ * All chains are based on "completed days" — a day is complete when it meets
+ * the rhythm's threshold (duration for timed, count for tally, any entry for activity).
+ * - daily: Consecutive days completed - counted in days
+ * - weekly_high: 5+ completed days/week - counted in weeks
+ * - weekly_low: 3+ completed days/week - counted in weeks
+ * - weekly_target: 1+ completed day/week - counted in weeks
+ * - monthly_target: 4+ completed days/month - counted in months
  */
 
 // ============================================================================
@@ -31,11 +33,11 @@ export type TierName =
  * Chain types determine how streaks are calculated and counted
  */
 export type ChainType =
-  | "daily" // Consecutive days with min duration
-  | "weekly_high" // 5+ days per week - counted in weeks
-  | "weekly_low" // 3+ days per week - counted in weeks
-  | "weekly_target" // Cumulative minutes per week - counted in weeks
-  | "monthly_target"; // Cumulative minutes per month - counted in months
+  | "daily" // Consecutive completed days - counted in days
+  | "weekly_high" // 5+ completed days per week - counted in weeks
+  | "weekly_low" // 3+ completed days per week - counted in weeks
+  | "weekly_target" // 1+ completed day per week - counted in weeks
+  | "monthly_target"; // 4+ completed days per month - counted in months
 
 /**
  * Unit of measurement for a chain
@@ -51,9 +53,7 @@ export interface ChainConfig {
   shortLabel: string;
   description: string;
   unit: ChainUnit;
-  // For day-based chains (daily, weekly_high, weekly_low)
-  minDaysPerPeriod?: number; // Days required per period (7 for daily, 5 for high, 3 for low)
-  // For target-based chains: targetMinutes is configured per-rhythm
+  minDaysPerPeriod: number; // Completed days required per period
 }
 
 /**
@@ -104,15 +104,15 @@ export const CHAIN_CONFIGS: ChainConfig[] = [
     type: "daily",
     label: "Daily",
     shortLabel: "Daily",
-    description: "Consecutive days you showed up",
+    description: "Consecutive days completed",
     unit: "days",
-    minDaysPerPeriod: 1, // Per day
+    minDaysPerPeriod: 1,
   },
   {
     type: "weekly_high",
     label: "5×/Week",
     shortLabel: "5×/wk",
-    description: "Consecutive weeks with 5+ days",
+    description: "Weeks with 5+ days completed",
     unit: "weeks",
     minDaysPerPeriod: 5,
   },
@@ -120,23 +120,25 @@ export const CHAIN_CONFIGS: ChainConfig[] = [
     type: "weekly_low",
     label: "3×/Week",
     shortLabel: "3×/wk",
-    description: "Consecutive weeks with 3+ days",
+    description: "Weeks with 3+ days completed",
     unit: "weeks",
     minDaysPerPeriod: 3,
   },
   {
     type: "weekly_target",
-    label: "Weekly Time Goal",
-    shortLabel: "Wk Time",
-    description: "Consecutive weeks hitting your time target",
+    label: "1×/Week",
+    shortLabel: "1×/wk",
+    description: "Weeks with at least 1 day completed",
     unit: "weeks",
+    minDaysPerPeriod: 1,
   },
   {
     type: "monthly_target",
-    label: "Monthly Time Goal",
-    shortLabel: "Mo Time",
-    description: "Consecutive months hitting your time target",
+    label: "4×/Month",
+    shortLabel: "4×/mo",
+    description: "Months with 4+ days completed",
     unit: "months",
+    minDaysPerPeriod: 4,
   },
 ];
 
@@ -452,8 +454,9 @@ export function generateChainNudge(
     }
 
     case "weekly_high":
-    case "weekly_low": {
-      const minDays = config.minDaysPerPeriod ?? 3;
+    case "weekly_low":
+    case "weekly_target": {
+      const minDays = config.minDaysPerPeriod;
       const needed = minDays - daysCompleted;
 
       // Already met the threshold this week
@@ -465,7 +468,7 @@ export function generateChainNudge(
       return `${needed} more ${needed === 1 ? "day" : "days"} this week for your ${config.shortLabel} chain`;
     }
 
-    // Target-based chains don't need day-count nudges
+    // Monthly chains don't generate weekly nudges
     default:
       return null;
   }

@@ -364,7 +364,7 @@ function getDayTooltip(day: DayData): string {
 
   const minutes = Math.round(day.status.totalSeconds / 60);
   const sessions = day.status.entryCount;
-  return `${dateStr}: ${minutes} min (${sessions} ${sessions === 1 ? "session" : "sessions"})`;
+  return `${dateStr}: ${minutes} min (${sessions} ${sessions === 1 ? "activity" : "activities"})`;
 }
 </script>
 

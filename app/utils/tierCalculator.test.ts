@@ -9,9 +9,10 @@ import {
   formatDate,
   getDaysRemainingInWeek,
   calculateWeeklyProgress,
-  generateNudgeMessage,
+  generateChainNudge,
   TIERS,
   TIER_ORDER,
+  CHAIN_CONFIGS,
   type DayStatus,
   type WeeklyProgress,
 } from "./tierCalculator";
@@ -215,64 +216,54 @@ describe("tierCalculator", () => {
     });
   });
 
-  describe("generateNudgeMessage", () => {
-    it("returns null when target tier is already achieved", () => {
-      const progress: WeeklyProgress = {
-        startDate: "2026-01-12",
-        endDate: "2026-01-18",
-        daysCompleted: 5,
-        achievedTier: "most_days",
-        bestPossibleTier: "daily",
-        daysRemaining: 2,
-      };
-
-      expect(generateNudgeMessage(progress, "most_days")).toBeNull();
+  describe("generateChainNudge", () => {
+    it("returns null for daily chain when already completed today", () => {
+      expect(generateChainNudge("daily", 3, 4, 5, true)).toBeNull();
     });
 
-    it("returns nudge for achievable tier", () => {
-      const progress: WeeklyProgress = {
-        startDate: "2026-01-12",
-        endDate: "2026-01-18",
-        daysCompleted: 4,
-        achievedTier: "few_times",
-        bestPossibleTier: "daily",
-        daysRemaining: 3,
-      };
-
-      expect(generateNudgeMessage(progress, "daily")).toBe(
-        "3 more times to hit 'Every Day'",
+    it("nudges to keep daily streak going", () => {
+      expect(generateChainNudge("daily", 3, 4, 5, false)).toBe(
+        "Log today to keep your 5-day streak going",
       );
     });
 
-    it("suggests best achievable when target is impossible", () => {
-      const progress: WeeklyProgress = {
-        startDate: "2026-01-12",
-        endDate: "2026-01-18",
-        daysCompleted: 2,
-        achievedTier: "weekly",
-        bestPossibleTier: "few_times",
-        daysRemaining: 2,
-      };
+    it("returns null for daily chain with no current streak", () => {
+      expect(generateChainNudge("daily", 0, 7, 0, false)).toBeNull();
+    });
 
-      // Target daily (7 days) is impossible with 2+2=4 max
-      expect(generateNudgeMessage(progress, "daily")).toBe(
-        "1 more time to hit 'Several Times'",
+    it("nudges for weekly_high when achievable", () => {
+      expect(generateChainNudge("weekly_high", 3, 3, 2, false)).toBe(
+        "2 more days this week for your 5×/wk chain",
       );
     });
 
-    it("handles singular 'time' correctly", () => {
-      const progress: WeeklyProgress = {
-        startDate: "2026-01-12",
-        endDate: "2026-01-18",
-        daysCompleted: 4,
-        achievedTier: "few_times",
-        bestPossibleTier: "most_days",
-        daysRemaining: 2,
-      };
+    it("returns null for weekly_high when already met", () => {
+      expect(generateChainNudge("weekly_high", 5, 2, 3, false)).toBeNull();
+    });
 
-      expect(generateNudgeMessage(progress, "most_days")).toBe(
-        "1 more time to hit 'Most Days'",
+    it("returns null for weekly_high when not achievable", () => {
+      // Need 3 more but only 1 day remaining
+      expect(generateChainNudge("weekly_high", 2, 1, 2, false)).toBeNull();
+    });
+
+    it("nudges for weekly_low when achievable", () => {
+      expect(generateChainNudge("weekly_low", 2, 2, 1, false)).toBe(
+        "1 more day this week for your 3×/wk chain",
       );
+    });
+
+    it("nudges for weekly_target (1×/wk) when achievable", () => {
+      expect(generateChainNudge("weekly_target", 0, 3, 4, false)).toBe(
+        "1 more day this week for your 1×/wk chain",
+      );
+    });
+
+    it("returns null for weekly_target when already met", () => {
+      expect(generateChainNudge("weekly_target", 1, 3, 4, false)).toBeNull();
+    });
+
+    it("returns null for monthly_target", () => {
+      expect(generateChainNudge("monthly_target", 2, 3, 1, false)).toBeNull();
     });
   });
 
@@ -286,6 +277,27 @@ describe("tierCalculator", () => {
         "weekly",
         "starting",
       ]);
+    });
+  });
+
+  describe("CHAIN_CONFIGS", () => {
+    it("has 5 chain types all with minDaysPerPeriod", () => {
+      expect(CHAIN_CONFIGS).toHaveLength(5);
+      for (const config of CHAIN_CONFIGS) {
+        expect(config.minDaysPerPeriod).toBeGreaterThan(0);
+      }
+    });
+
+    it("weekly_target requires 1 day per week", () => {
+      const wt = CHAIN_CONFIGS.find((c) => c.type === "weekly_target");
+      expect(wt?.minDaysPerPeriod).toBe(1);
+      expect(wt?.unit).toBe("weeks");
+    });
+
+    it("monthly_target requires 4 days per month", () => {
+      const mt = CHAIN_CONFIGS.find((c) => c.type === "monthly_target");
+      expect(mt?.minDaysPerPeriod).toBe(4);
+      expect(mt?.unit).toBe("months");
     });
   });
 });
