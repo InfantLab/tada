@@ -363,6 +363,19 @@ function journeyStageBadgeClass(stage: string): string {
                 {{ rhythm.journeyStageEmoji }}
                 {{ rhythm.journeyStageLabel }}
               </span>
+              <span
+                class="ml-auto text-xs text-stone-400 dark:text-stone-500"
+              >
+                <template v-if="rhythm.matchType === 'tally'">
+                  {{ rhythm.countThreshold || '—' }} reps/day
+                </template>
+                <template v-else-if="rhythm.matchType === 'moment' || rhythm.matchType === 'tada'">
+                  just show up
+                </template>
+                <template v-else>
+                  {{ Math.floor(rhythm.durationThresholdSeconds / 60) }} min/day
+                </template>
+              </span>
             </div>
 
             <!-- Weekly status + streak -->
