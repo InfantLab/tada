@@ -151,36 +151,6 @@ export const CHAIN_TYPE_ORDER: ChainType[] = [
   "monthly_target",
 ];
 
-export interface FrequencyTier {
-  name: TierName;
-  label: string;
-  shortLabel: string;
-  description: string;
-  minDays: number;
-  maxDays: number;
-}
-
-export interface WeeklyProgress {
-  startDate: string; // Monday of the week (YYYY-MM-DD)
-  endDate: string; // Sunday of the week (YYYY-MM-DD)
-  daysCompleted: number;
-  achievedTier: TierName;
-  bestPossibleTier: TierName;
-  daysRemaining: number;
-}
-
-export interface DayStatus {
-  date: string; // YYYY-MM-DD
-  totalSeconds: number;
-  isComplete: boolean;
-  totalCount: number; // Total reps/counts for the day
-  entryCount: number;
-}
-
-// ============================================================================
-// Constants
-// ============================================================================
-
 export const TIERS: FrequencyTier[] = [
   {
     name: "daily",
