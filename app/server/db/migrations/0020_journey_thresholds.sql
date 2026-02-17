@@ -14,3 +14,6 @@ ALTER TABLE rhythms ADD COLUMN journey_thresholds TEXT;
 UPDATE rhythms SET journey_threshold_type = 'count' WHERE match_type = 'tally';
 UPDATE rhythms SET journey_threshold_type = 'sessions' WHERE match_type IN ('moment', 'tada');
 UPDATE rhythms SET completion_mode = 'session' WHERE match_type IN ('moment', 'tada');
+
+-- Fix: Clear forced matchCategory for tada/moment rhythms (matchType is sufficient)
+UPDATE rhythms SET match_category = NULL WHERE match_type IN ('tada', 'moment') AND match_category IN ('celebration', 'reflection');

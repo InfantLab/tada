@@ -32,5 +32,15 @@ const client = createClient({
 // Create Drizzle instance with schema
 export const db = drizzle(client, { schema });
 
+// One-time data fix: clear forced matchCategory for tada/moment rhythms (v0.4.1)
+// matchType alone is sufficient for these types — matchCategory caused matching failures
+client
+  .execute(
+    "UPDATE rhythms SET match_category = NULL WHERE match_type IN ('tada', 'moment') AND match_category IN ('celebration', 'reflection')",
+  )
+  .catch(() => {
+    // Silently ignore — table may not exist yet during first migration
+  });
+
 // Export for type inference
 export type Database = typeof db;

@@ -199,11 +199,10 @@ watch(entryType, (newType) => {
     completionMode.value = "threshold";
   }
 
-  // Auto-set category for moment/tada types
-  if (newType === "moment") {
-    category.value = "reflection";
-  } else if (newType === "tada") {
-    category.value = "celebration";
+  // Auto-set category defaults
+  if (newType === "moment" || newType === "tada") {
+    // Don't force a category — matchType is sufficient for matching
+    category.value = "";
   } else {
     const validCategories = categoryOptions.value.map((c) => c.value);
     if (!validCategories.includes(category.value)) {
@@ -302,7 +301,7 @@ async function save() {
       // Create mode - emit save with type-specific data
       const rhythmData: any = {
         name: name.value.trim(),
-        matchCategory: category.value,
+        matchCategory: category.value || null,
         matchType: entryType.value,
         completionMode: completionMode.value,
         frequency: "daily", // Always daily - all rhythms are graceful
