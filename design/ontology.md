@@ -1,9 +1,10 @@
-# Tada Entry Ontology
+# Ta-Da! Entry Ontology
 
-_Defining the category hierarchy, type system, and emoji conventions for lifelogging entries._
+**Version:** 0.4.0
+**Last Updated:** February 2026
+**Status:** Current
 
-**Status:** v0.4.0 Refined
-**Last Updated:** 2026-02-02
+_Defines the category hierarchy, type system, and emoji conventions for all Ta-Da! entries._
 
 ---
 
@@ -226,13 +227,10 @@ Content-focused: "What am I capturing?"
 
 | Subcategory  | Emoji | Description                                    |
 | ------------ | ----- | ---------------------------------------------- |
-| `journal`    | 🪶    | Daily thoughts, what's happening (default)     |
-| `dream`      | 🌙    | Dream recording                                |
-| `memory`     | 📸    | A past moment worth preserving                 |
-| `idea`       | 💡    | A thought, spark, concept                      |
-| `gratitude`  | 🙏    | Something you're thankful for                  |
-| `intention`  | 🎯    | Something you want to do/be/have               |
 | `magic`      | 🪄    | Serendipity, pronoia, wonder, pure joy         |
+| `dream`      | 🌙    | Dream recording with lucidity and vividness    |
+| `gratitude`  | 🙏    | Something you're thankful for                  |
+| `journal`    | 🪶    | Daily thoughts, freeform reflection            |
 
 ### Life Admin Subcategories
 

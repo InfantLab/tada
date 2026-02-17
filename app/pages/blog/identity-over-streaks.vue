@@ -126,7 +126,7 @@ useSeoMeta({
       </p>
 
       <ul>
-        <li><strong>Journey stages</strong> (Starting → Building → Becoming → Being) mark accumulated hours, not consecutive days</li>
+        <li><strong>Journey stages</strong> (Beginning → Building → Becoming → Being) mark accumulated hours, not consecutive days</li>
         <li><strong>Graceful chains</strong> celebrate consistency while tolerating gaps</li>
         <li><strong>Total hours</strong> matter more than daily streaks</li>
         <li><strong>Encouragement messages</strong> use identity language: "You're becoming a meditator"</li>

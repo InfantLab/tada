@@ -144,13 +144,10 @@ export const CATEGORY_DEFAULTS: Record<string, CategoryDefinition> = {
     color: "#6366F1",
     label: "Moments",
     subcategories: [
-      { slug: "journal", emoji: "🪶", label: "Journal" },
-      { slug: "dream", emoji: "🌙", label: "Dream" },
-      { slug: "memory", emoji: "📸", label: "Memory" },
-      { slug: "idea", emoji: "💡", label: "Idea" },
-      { slug: "gratitude", emoji: "🙏", label: "Gratitude" },
-      { slug: "intention", emoji: "🎯", label: "Intention" },
       { slug: "magic", emoji: "🪄", label: "Magic" },
+      { slug: "dream", emoji: "🌙", label: "Dream" },
+      { slug: "gratitude", emoji: "🙏", label: "Gratitude" },
+      { slug: "journal", emoji: "🪶", label: "Journal" },
     ],
   },
   events: {

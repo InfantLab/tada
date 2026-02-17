@@ -23,35 +23,35 @@ const { encouragements: encouragementsTable } = schemaModule;
 
 const encouragementData = [
   // =========================================================================
-  // Starting stage (Week 1)
+  // Beginning stage (Week 1)
   // =========================================================================
   {
-    stage: "starting",
+    stage: "beginning",
     context: "general",
     activityType: "general",
     message: "Every journey begins with a single breath",
   },
   {
-    stage: "starting",
+    stage: "beginning",
     context: "general",
     activityType: "general",
     message: "You've taken the first step. That's often the hardest one.",
   },
   {
-    stage: "starting",
+    stage: "beginning",
     context: "general",
     activityType: "mindfulness",
     message: "A moment of stillness is a gift to yourself",
   },
   {
-    stage: "starting",
+    stage: "beginning",
     context: "tier_achieved",
     activityType: "general",
     tierName: "weekly",
     message: "You showed up this week. That matters.",
   },
   {
-    stage: "starting",
+    stage: "beginning",
     context: "tier_achieved",
     activityType: "general",
     tierName: "few_times",
@@ -164,7 +164,7 @@ const encouragementData = [
     message: "Keep the momentum going—{remaining} to go",
   },
   {
-    stage: "starting",
+    stage: "beginning",
     context: "mid_week_nudge",
     activityType: "general",
     message: "Just {remaining} more to make this week count",

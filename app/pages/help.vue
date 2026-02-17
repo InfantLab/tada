@@ -78,7 +78,7 @@ const faqs: FAQ[] = [
     category: "Rhythms",
     question: "How do the journey stages work?",
     answer:
-      "Journey stages mark your accumulated practice time: Starting (0-10 hours), Building (10-100 hours), Becoming (100-1000 hours), and Being (1000+ hours). These aren't about speed — they celebrate the depth of your practice over time.",
+      "Journey stages mark your accumulated practice time: Beginning (0-10 hours), Building (10-100 hours), Becoming (100-1000 hours), and Being (1000+ hours). These aren't about speed — they celebrate the depth of your practice over time.",
   },
   // Privacy & Data
   {

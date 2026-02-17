@@ -47,7 +47,7 @@ interface RhythmTotals {
   weeksActive: number;
 }
 
-type JourneyStage = "starting" | "building" | "becoming" | "being";
+type JourneyStage = "beginning" | "building" | "becoming" | "being";
 
 const props = defineProps<{
   encouragement?: string;
@@ -61,7 +61,7 @@ const props = defineProps<{
  */
 const journeyStageLabel = computed(() => {
   const labels: Record<JourneyStage, string> = {
-    starting: "🌱 Beginning",
+    beginning: "🌱 Beginning",
     building: "🌿 Building",
     becoming: "🌳 Becoming",
     being: "⭐ You Are",

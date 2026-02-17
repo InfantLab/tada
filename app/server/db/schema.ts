@@ -331,7 +331,7 @@ export const encouragements = sqliteTable("encouragements", {
   id: text("id").primaryKey(), // UUID
 
   // Categorization
-  stage: text("stage").notNull(), // 'starting', 'building', 'becoming'
+  stage: text("stage").notNull(), // 'beginning', 'building', 'becoming', 'being'
   context: text("context").notNull(), // 'tier_achieved', 'streak_milestone', 'general', 'mid_week_nudge'
   activityType: text("activity_type").notNull().default("general"), // 'mindfulness', 'movement', 'general'
 

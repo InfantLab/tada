@@ -60,7 +60,7 @@ export interface CachedChainData {
   lastEntryTimestamp: string | null;
 }
 
-export type JourneyStage = "starting" | "building" | "becoming" | "being";
+export type JourneyStage = "beginning" | "building" | "becoming" | "being";
 
 // ============================================================================
 // Functions
@@ -607,7 +607,7 @@ export function getJourneyStage(totalHours: number): JourneyStage {
   if (totalHours >= 1000) return "being";
   if (totalHours >= 100) return "becoming";
   if (totalHours >= 10) return "building";
-  return "starting";
+  return "beginning";
 }
 
 /**
@@ -680,7 +680,7 @@ export async function selectEncouragement(
 
   // Fallback messages by stage
   const fallbacks: Record<JourneyStage, string> = {
-    starting: "Every journey begins with a single step",
+    beginning: "Every journey begins with a single step",
     building: "A practice is forming",
     becoming: "This is who you are becoming",
     being: "This is who you are",

@@ -60,11 +60,10 @@ const subtypeOptions: Array<{
   label: string;
   emoji: string;
 }> = [
-  { value: "note", label: "Note", emoji: "📝" },
-  { value: "reflection", label: "Reflection", emoji: "💭" },
+  { value: "magic", label: "Magic", emoji: "🪄" },
   { value: "dream", label: "Dream", emoji: "🌙" },
   { value: "gratitude", label: "Gratitude", emoji: "🙏" },
-  { value: "memory", label: "Memory", emoji: "📸" },
+  { value: "journal", label: "Journal", emoji: "🪶" },
 ];
 
 // Initialize editable text when transcription changes

@@ -1,21 +1,22 @@
-# Tada! — Philosophy & Vision
+# Ta-Da! Philosophy
 
-**Date:** January 9, 2026  
-**Status:** Exploratory
+**Version:** 0.4.0
+**Last Updated:** February 2026
+**Status:** Current
 
 ---
 
 ## The Big Reframe: From "Tracking" to "Noticing"
 
-Most apps treat logging as **data entry**—tedious, obligatory, guilt-inducing. But what if logging felt more like **collecting seashells on a beach**? Each entry is a small treasure you chose to pick up. Not because you _should_, but because it caught your eye.
+Most apps treat logging as **data entry** — tedious, obligatory, guilt-inducing. Ta-Da! treats it like **collecting seashells on a beach**. Each entry is a small treasure you chose to pick up. Not because you _should_, but because it caught your eye.
 
-**Tada isn't a tracker. It's a collection.**
+**Ta-Da! isn't a tracker. It's a collection.**
 
 ---
 
-## The Philosophical Core
+## What Ta-Da! Is
 
-Tada answers three questions:
+Ta-Da! answers three questions:
 
 1. **"What have I done?"** — The accomplishment record
 2. **"Who am I becoming?"** — The pattern recognition
@@ -25,17 +26,15 @@ It's not about productivity. It's not about optimization. It's about **noticing 
 
 ---
 
-## The Tone
+## How Ta-Da! Feels
 
-Tada should feel like:
-
+**Ta-Da! feels like:**
 - A **journal** you actually want to open
 - A **game** where the score is your life well-lived
 - A **friend** who remembers things you've forgotten
 - A **mirror** that shows you patterns you didn't see
 
-Not like:
-
+**Never feels like:**
 - A **boss** tracking your performance
 - A **doctor** measuring your vitals
 - A **guilt machine** showing what you didn't do
@@ -45,224 +44,184 @@ Not like:
 
 ## Core Principles
 
-### ⏱️ Timers Count Up, Never Down
+### 1. Count Up, Never Down ⬆️
 
-We never say "you need to do 20 minutes." We celebrate that you did 20 seconds — and that might encourage you to do 20 more. All timers count upward. Frame as "you've done X" not "you must do Y."
+Timers count upward, celebrating what you accomplished rather than what's remaining. This isn't just a design preference — it's a fundamental philosophical stance.
 
-**Why this matters:** Countdown timers create anxiety and imply minimum requirements. Count-up timers celebrate whatever you actually did. Even 30 seconds of meditation is worth noticing.
+**Traditional countdown:** "You have 13 minutes left" (creates pressure)
+**Ta-Da! count-up:** "You've practiced for 47 minutes!" (celebrates accomplishment)
 
-### 🎯 Minimize Friction: Fewer Clicks, More Flow
+Even 30 seconds of meditation is worth noticing. The celebration starts immediately, not when you hit some arbitrary minimum.
 
-Every additional click is a barrier between intention and action. When a user presses a button, assume they want the action to happen **immediately**, not to be presented with another confirmation step.
+### 2. Identity Over Behavior 🧘
 
-**Examples:**
-- Voice recorder: First press starts recording (don't wait for a second click)
-- Entry creation: One button saves, no "are you sure?" dialogs
-- Timer start: Tap to start, no setup screens unless explicitly requested
+The transformation isn't from "someone who doesn't meditate" to "someone who meditates occasionally." It's from "someone who meditates" to "**a meditator**."
 
-**Why this matters:** Each friction point is an opportunity for hesitation, second-guessing, or abandonment. The app should feel as effortless as jotting in a physical notebook. Speed and directness build momentum; unnecessary steps break it.
+Ta-Da! supports this through:
+- **Journey stages:** Beginning → Building → Becoming → Being
+- **Encouragement messages:** "You're becoming a writer" not "You wrote 5 times"
+- **Total hours:** Accumulate forever, never reset
+- **Identity-forming language:** Throughout the experience
 
-### 🦋 Identity Over Behavior (Tanya's Insight)
-
-The journey isn't from "someone who doesn't run" to "someone who runs occasionally." It's from "someone who goes running" to "**a runner**."
-
-Ta-Da! supports this transformation:
-
-- "You're becoming a writer" not "You wrote 5 times"
-- "You're becoming a meditator" not "47 sessions logged"
-- The rhythms page celebrates identity, not just streaks
-
-### 📉 Chains That Bend, Not Break
+### 3. Graceful Chains, Not Brittle Streaks 🔗
 
 Traditional streak tracking is all-or-nothing: miss one day, lose everything. This creates anxiety and, paradoxically, makes people quit entirely.
 
-Ta-Da! uses **graceful degradation**:
+**Ta-Da! uses graceful chains:**
+- **Daily:** Consecutive days (for those who want it)
+- **Weekly High:** 5+ days per week (most days)
+- **Weekly Regular:** 3+ days per week (several times)
+- **Weekly Target:** Cumulative minutes per week
+- **Monthly Target:** Cumulative minutes per month
 
-- **Tier 1:** Daily (strict Seinfeld chain)
-- **Tier 2:** 5 days/week
-- **Tier 3:** 3 days/week
-- **Tier 4:** 30 minutes/week
-- **Tier 5:** X times/month
+When you're struggling, Ta-Da! tracks a more sustainable rhythm instead of showing a broken streak. A chain that bends is stronger than one that snaps.
 
-When you're struggling, Ta-Da! suggests an easier tier instead of showing a broken chain. The goal is to keep you going, not to make you feel like a failure. A chain that bends is stronger than one that snaps.
+### 4. Minimize Friction 🎯
 
----
+Every additional click is a barrier between intention and action. When you press a button, the action happens **immediately** — no confirmation dialogs, no extra steps.
 
-## Expanding the Canvas
+**Examples:**
+- Voice recorder: First press starts recording
+- Entry creation: One button saves
+- Timer start: Tap to start, no setup screens
 
-### 🎬 Experiences
+Speed and directness build momentum; unnecessary steps break it.
 
-- Films watched (with that specific cinema, who you were with, the mood it left you in)
-- Concerts attended (the setlist you half-remember, the moment the crowd sang along)
-- Plays, exhibitions, lectures, festivals
-- Meals that were _memorable_ (not every lunch, but that birthday dinner)
-- Travel moments (not a full itinerary, but "stood on that cliff at sunset")
+### 5. Celebration Over Obligation ⚡
 
-### 📚 Consumption
-
-- Books read (with quotes that struck you)
-- Albums you fell into
-- Podcasts that changed how you think
-- Articles worth remembering
-- Games completed
-
-### 🌱 Growth
-
-- Skills practiced (music, language, craft)
-- Courses progressed
-- Projects shipped
-- Creative works made (even small ones)
-- Problems solved ("finally fixed the bathroom tap")
-
-### 💭 Inner Life
-
-- Dreams remembered
-- Insights that struck you
-- Moods and energy (not as metrics, but as weather)
-- Gratitudes (without the toxic positivity)
-- Difficult things faced
-
-### 👥 Connections
-
-- Meaningful conversations
-- People met for the first time
-- Friends seen (when did I last see Alex?)
-- Letters/messages sent that mattered
-- Kindnesses given and received
-
-### 🔄 Rituals
-
-- Morning routines completed
-- Weekly reviews done
-- Seasonal traditions observed
-- Personal ceremonies (however small)
+Ta-Da! inverts the todo list. Instead of pressure about what you haven't done, it celebrates what you have done. This isn't semantic — it's a fundamental reframe from obligation to accomplishment, anxiety to joy.
 
 ---
 
-## The Insight Layer: What Emerges
+## What Ta-Da! Tracks
 
-The magic isn't in individual entries—it's in what **patterns emerge** when you look back.
+### Entry Types
 
-### The Year in Review
+Four core types cover all life activities:
 
-_"In 2026, you meditated for 147 hours across 892 sessions. You read 34 books. You saw 12 films in cinemas. You had 8 memorable meals with friends. You solved 23 problems you'd been avoiding. You dreamed of flying 7 times."_
+| Type | Purpose | Data | Examples |
+|------|---------|------|----------|
+| **Ta-Da!** | Celebrate wins | Significance, content | "Finished the painting!", "Called mom" |
+| **Session** | Timed practices | Duration, started/ended | Meditation, piano practice, focused work |
+| **Moment** | Quick captures | Content, mood, themes | Dream journal, gratitude, magic moments |
+| **Tally** | Count-based | Count, unit | Push-ups, glasses of water, pages read |
 
-### The Unexpected Correlations
+### Life Domains (Categories)
 
-_"You tend to have lucid dreams the night after evening meditation sessions."_
-
-_"Your longest creative streaks happen in weeks when you practice music at least twice."_
-
-### The Social Map
-
-_"You haven't seen Jamie in 4 months. You last saw them at that Vietnamese place."_
-
-### The Seasonal Rhythms
-
-_"You read more in winter. You run more in spring. You dream more vividly in autumn."_
-
-### The Achievement Archaeology
-
-_"3 years ago today, you started learning piano. You've now logged 200 hours of practice."_
-
----
-
-## Wild Features
-
-### 🎲 Random Memory Surfacing
-
-Like Timehop, but for _everything_. "On this day 2 years ago, you finished reading Dune and rated it ★★★★★"
-
-### 📸 Photo Anchoring
-
-Attach a single photo to any entry. Not a photo library—just _the_ photo that captures it.
-
-### 🗣️ Voice-First Entry
-
-"Hey Tada, I just finished a really good book called Project Hail Mary, five stars, absolutely loved the protagonist"—and it just _understands_.
-
-### 🧵 Threads
-
-Connect related entries across time. Your "learning Spanish" thread links scattered lessons, trips to Spain, conversations attempted, books read in Spanish...
-
-### 🏆 Milestone Ceremonies
-
-When you hit 1000 meditation sessions, Tada doesn't just increment a counter—it _celebrates_. Shows you where you started. The longest session. The longest streak. The categories you've explored.
-
-### 📊 Anti-Dashboard
-
-Instead of overwhelming charts, offer **one insight per day**. A single surprising fact surfaced when you open the app.
-
-### ✍️ The Commonplace Book
-
-A place for quotes, snippets, ideas—attached to their source. "This quote came from that book you read in March 2025."
-
-### 🌅 Morning/Evening Modes
-
-- **Morning**: What are you grateful for? What's one intention?
-- **Evening**: What did you do today? What's worth remembering?
-
-### 🎭 Mood Weather
-
-Not "rate your mood 1-10"—instead, pick a weather metaphor. Sunny, overcast, stormy, foggy, crisp, humid... Surprisingly expressive.
+Ten categories span all life activities:
+- **Mindfulness** 🧘 - Meditation, breathing, contemplative practices
+- **Movement** 🏃 - Exercise, sports, physical practices
+- **Creative** 🎨 - Music, art, writing, making
+- **Learning** 📚 - Study, courses, skill acquisition
+- **Health** 💚 - Wellness, sleep, nutrition, self-care
+- **Work** 💼 - Career, professional achievements
+- **Social** 👥 - Relationships, community, connection
+- **Life Admin** 🏠 - Chores, errands, household
+- **Moments** 💭 - Inner life (dreams, ideas, reflections)
+- **Events** 🎭 - Concerts, movies, experiences
 
 ---
 
-## Avoiding Mission Creep: The Plugin Solution
+## Design Principles
 
-The core stays minimal:
+### Voice & Tone
 
-- **Activities** (the unified model)
-- **Rhythms** (aggregations with streaks)
-- **Timeline** (chronological view of everything)
+See [STYLE_GUIDE.md](STYLE_GUIDE.md) for complete guidelines. Key principles:
 
-Everything else is a **plugin**:
+- **Warm but not precious** - Friendly without being overly cute
+- **Clear but not cold** - Professional without being corporate
+- **Encouraging but not pushy** - Supportive without nagging
+- **Simple but not simplistic** - Accessible without talking down
 
-| Plugin         | Function                                     |
-| -------------- | -------------------------------------------- |
-| 📚 Books       | ISBN lookup, Goodreads import, quotes        |
-| 🎬 Films       | TMDB integration, cinema tracking            |
-| 🎵 Concerts    | Songkick/Bandsintown, setlists               |
-| ✈️ Travel      | Location tagging, trip threading             |
-| 👥 People      | "Last seen" tracking, relationship mapping   |
-| 💭 Dreams      | Tag system, Obsidian sync, lucidity tracking |
-| 📝 Commonplace | Quotes, snippets, linked to sources          |
-| 🏃 Fitness     | GPX import, Strava sync                      |
-| 🎹 Practice    | Music/skill session logging                  |
+### Terminology
 
-Each plugin:
+**Celebrate** not track. **Notice** not monitor. **Capture** not log. **Practice** not task. **Rhythm** not habit. **Journey stages** not progress levels.
 
-- Defines its own activity type with custom fields
-- Provides its own specialized UI
-- Adds its own import/export formats
-- Contributes to the unified timeline
+Every word choice serves the philosophy of celebration over obligation.
 
-**The core is 10% of the vision. Plugins are 90%.**
+### User Experience
+
+**Friction-free:** Capture in seconds, not minutes
+**Offline-first:** Works without internet
+**Privacy-focused:** Your data is yours, always exportable
+**Self-hostable:** Run on your own server if you want
+**Open source:** Transparent, auditable, forkable
 
 ---
 
-## Tagline Candidates
+## What Emerges: The Insight Layer
 
-> _"Notice your life."_
+The magic isn't in individual entries — it's in what **patterns emerge** when you look back.
 
-> _"Remember what you've done."_
+### Year in Review
 
-> _"Your life, collected."_
+> "In 2025, you meditated for 147 hours across 892 sessions. You read 34 books. You celebrated 156 wins. You practiced piano for 78 hours. You're becoming a meditator, a reader, a musician."
 
-> _"What did you do today?"_
+### Natural Rhythms
 
----
+> "You read more in winter. You run more in spring. Your creative sessions cluster on weekends."
 
-## What Tada Is Not
+### Identity Confirmation
 
-- Not a todo list (that's anxiety-inducing)
-- Not a social network (no followers, no comparison)
-- Not a quantified-self dashboard (no obsessive metrics)
-- Not a productivity system (no GTD, no Pomodoro mandates)
-- Not a health app (no calorie counting, no step goals)
-
-Tada is a **personal archaeology tool**. It helps you see the shape of your days, months, years—the texture of a life being lived.
+> "Three years ago, you started learning piano. You've now logged 200 hours. You're not learning piano anymore — you're a pianist."
 
 ---
 
-_This document captures the spirit. The SDR captures the structure. Both are needed._
+## What Ta-Da! Is Not
+
+- ❌ **Not a todo list** - That's anxiety-inducing
+- ❌ **Not a social network** - No followers, no comparison
+- ❌ **Not a quantified-self dashboard** - No obsessive metrics
+- ❌ **Not a productivity system** - No GTD, no Pomodoro mandates
+- ❌ **Not a health app** - No calorie counting, no step goals
+
+Ta-Da! is a **personal archaeology tool**. It helps you see the shape of your days, months, years — the texture of a life being lived.
+
+---
+
+## Inspirations
+
+Ta-Da! stands on the shoulders of:
+
+- **[Meditator Helper Plus](https://multiordinal.co.uk/mhp.html)** - The original meditation timer that counted up
+- **[The Cult of Done Manifesto](https://medium.com/@bre/the-cult-of-done-manifesto-724ca1c2ff13)** - Celebrating doing over perfect planning
+- **[Atomic Habits](https://jamesclear.com/atomic-habits)** by James Clear - Identity-based behavior change
+- **Buddhist wisdom** - Non-attachment, present-moment awareness, compassion for self
+- **Growth psychology** - Carol Dweck's growth mindset, self-determination theory
+
+---
+
+## Technical Philosophy
+
+### Data Model
+
+**Unified entry model:** Everything is an entry with `type`, `category`, `subcategory`. No separate tables for meditations, dreams, or wins. One flexible model enables infinite extensibility.
+
+**Why:** Simplicity. One data model, one API, infinite flexibility. Add new activity types without schema migrations. Your life is different from mine.
+
+### Architecture Choices
+
+- **SQLite** - Simple, local-first, no server complexity
+- **Nuxt/Vue** - Modern, reactive, excellent DX
+- **PWA** - Installable, works offline, feels native
+- **Self-hostable** - Docker, one command, your server
+
+Every technical choice serves the philosophy: friction-free, privacy-focused, user-controlled.
+
+---
+
+## The Ta-Da! Test
+
+Every feature, every word, every interaction should pass:
+
+1. **Would this make someone feel better about themselves?**
+2. **Does it explain why, not just what?**
+3. **Could a meditator and a developer both appreciate it?**
+4. **Is it honest without being harsh?**
+5. **Does it celebrate the journey, not just the destination?**
+
+If the answer is "no" to any of these, we revise.
+
+---
+
+*"Ta-Da! is about celebrating who you're becoming, not tracking what you should be doing."*
