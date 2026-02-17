@@ -277,10 +277,10 @@ const blogPosts = [
         <div>
           <h3 class="font-semibold text-stone-800 dark:text-stone-100 mb-2">Inspired by</h3>
           <p class="text-stone-600 dark:text-stone-400">
-            The "count up" philosophy from meditation timers, 
-            <a href="https://www.goodreads.com/book/show/52036" target="_blank" class="text-tada-600 dark:text-tada-400 hover:underline">Atomic Habits</a> by James Clear, 
-            and the mindful approach of 
-            <a href="https://zenhabits.net/" target="_blank" class="text-tada-600 dark:text-tada-400 hover:underline">Leo Babauta</a>.
+            <a href="https://multiordinal.co.uk/mhp.html" target="_blank" class="text-tada-600 dark:text-tada-400 hover:underline">Meditator Helper Plus</a>,
+            the <a href="https://medium.com/@bre/the-cult-of-done-manifesto-724ca1c2ff13" target="_blank" class="text-tada-600 dark:text-tada-400 hover:underline">Cult of Done</a>,
+            <a href="https://jamesclear.com/atomic-habits" target="_blank" class="text-tada-600 dark:text-tada-400 hover:underline">Atomic Habits</a> by James Clear,
+            and two and a half millenia of Buddhist wisdom.
           </p>
         </div>
 

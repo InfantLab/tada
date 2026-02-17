@@ -52,6 +52,10 @@ const emoji = ref<string | null>(null);
 const durationSeconds = ref<number | null>(null);
 const tallyCount = ref<number | null>(null);
 
+// Dream-specific fields
+const dreamVividness = ref<number | null>(null); // 1-5 scale
+const dreamLucid = ref<boolean>(false);
+
 // Auto-grow textarea as user types
 function autoGrow() {
   const textarea = notesTextarea.value;
@@ -88,6 +92,20 @@ async function loadEntry() {
       "count" in data.data
     ) {
       tallyCount.value = Number(data.data["count"]) || null;
+    }
+
+    // Load dream fields from data if this is a dream entry
+    if (
+      data.type === "dream" &&
+      data.data &&
+      typeof data.data === "object"
+    ) {
+      if ("vividness" in data.data) {
+        dreamVividness.value = Number(data.data["vividness"]) || null;
+      }
+      if ("lucid" in data.data) {
+        dreamLucid.value = Boolean(data.data["lucid"]);
+      }
     }
   } catch (err: unknown) {
     console.error("Failed to load entry:", err);
@@ -139,6 +157,14 @@ async function saveEntry() {
   // For tally entries, include the count in the data field
   if (entry.value.type === "tally" && tallyCount.value !== null) {
     updateData["data"] = { count: tallyCount.value };
+  }
+
+  // For dream entries, include vividness and lucid in the data field
+  if (entry.value.type === "dream") {
+    updateData["data"] = {
+      ...(dreamVividness.value !== null && { vividness: dreamVividness.value }),
+      lucid: dreamLucid.value,
+    };
   }
 
   const result = await updateEntry(entryId, updateData, {
@@ -484,6 +510,55 @@ function getMoodEmoji(mood: number): string {
             >
               +
             </button>
+          </div>
+        </div>
+
+        <!-- Dream Fields (for dream entries) -->
+        <div
+          v-if="entry.type === 'dream'"
+          class="space-y-4 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl border border-indigo-100 dark:border-indigo-800"
+        >
+          <!-- Lucid toggle -->
+          <label
+            class="flex items-center gap-3 cursor-pointer"
+          >
+            <input
+              v-model="dreamLucid"
+              type="checkbox"
+              class="w-5 h-5 text-indigo-600 bg-white dark:bg-stone-800 border-indigo-300 dark:border-indigo-700 rounded focus:ring-2 focus:ring-indigo-400"
+            />
+            <span class="text-sm font-medium text-indigo-700 dark:text-indigo-300">
+              🌟 Lucid Dream
+            </span>
+          </label>
+
+          <!-- Vividness rating -->
+          <div class="space-y-2">
+            <label
+              class="block text-sm font-medium text-indigo-700 dark:text-indigo-300"
+            >
+              ✨ Vividness
+            </label>
+            <div class="flex items-center gap-2">
+              <button
+                v-for="star in 5"
+                :key="star"
+                type="button"
+                class="text-3xl transition-transform hover:scale-110 focus:outline-none"
+                :class="star <= (dreamVividness || 0) ? 'opacity-100' : 'opacity-30'"
+                @click="dreamVividness = star"
+              >
+                {{ star <= (dreamVividness || 0) ? '⭐' : '☆' }}
+              </button>
+              <button
+                v-if="dreamVividness !== null"
+                type="button"
+                class="ml-2 text-sm text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-200"
+                @click="dreamVividness = null"
+              >
+                Clear
+              </button>
+            </div>
           </div>
         </div>
 

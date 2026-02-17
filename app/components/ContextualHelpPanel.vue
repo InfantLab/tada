@@ -116,25 +116,31 @@ const helpContent: Record<string, PageHelp> = {
   "/moments": {
     title: "Moments",
     description:
-      "Dreams, reflections, ideas, and magic. These quiet captures become treasures worth revisiting.",
+      "Dreams, magic, gratitude, and reflections. These quiet captures become treasures worth revisiting.",
     sections: [
       {
-        title: "Dreams",
-        icon: "💭",
-        content:
-          "Capture dreams right after waking. They fade quickly, but even fragments can reveal patterns and insights over time.",
-      },
-      {
-        title: "Magic moments",
+        title: "Magic",
         icon: "🪄",
         content:
-          "Life's delightful surprises — joy, serendipity, wonder, gratitude. Noticing magic amplifies it.",
+          "Life's delightful surprises — joy, serendipity, wonder, beauty. Noticing magic amplifies it and helps you spot more of it.",
       },
       {
-        title: "Voice capture",
-        icon: "🎙️",
+        title: "Dreams",
+        icon: "🌙",
         content:
-          "Use voice input to quickly capture thoughts without typing. Ta-Da! structures your words into entries.",
+          "Capturing dreams helps you remember them better and can lead to lucid dreaming. Even fragments matter — patterns emerge over time.",
+      },
+      {
+        title: "Gratitude",
+        icon: "🙏",
+        content:
+          "Appreciation for people, moments, or experiences. Regular gratitude practice shifts your attention toward what's working in life.",
+      },
+      {
+        title: "Journal",
+        icon: "🪶",
+        content:
+          "Thoughts, reflections, and freeform writing. Sometimes you just need to get words out — no structure required.",
       },
     ],
   },
@@ -166,7 +172,7 @@ const helpContent: Record<string, PageHelp> = {
         title: "Graceful chains",
         icon: "🔗",
         content:
-          "Traditional streaks punish you for missing a single day. Our chains celebrate consistency while forgiving the occasional gap.",
+          "Traditional streaks punish you for missing a single day. Our chains celebrate consistency while forgiving the occasional gap. Choose from daily, weekly, or monthly targets — 3 days a week is just as valid as daily.",
       },
       {
         title: "What if I miss a day?",
@@ -178,13 +184,7 @@ const helpContent: Record<string, PageHelp> = {
         title: "Journey stages",
         icon: "🛤️",
         content:
-          "Starting (0-10h), Building (10-100h), Becoming (100-1000h), Being (1000h+). These celebrate depth over speed.",
-      },
-      {
-        title: "Chain types",
-        icon: "📊",
-        content:
-          "Daily, weekly, or monthly targets. Choose what works for your practice — 3 days a week is just as valid as daily.",
+          "Beginning (0-10h), Building (10-100h), Becoming (100-1000h), Being (1000h+). These celebrate depth over speed.",
       },
     ],
   },

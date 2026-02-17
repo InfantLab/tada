@@ -61,7 +61,7 @@ const props = defineProps<{
  */
 const journeyStageLabel = computed(() => {
   const labels: Record<JourneyStage, string> = {
-    starting: "🌱 Starting",
+    starting: "🌱 Beginning",
     building: "🌿 Building",
     becoming: "🌳 Becoming",
     being: "⭐ You Are",

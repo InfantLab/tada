@@ -227,6 +227,7 @@ watch(zoomLevel, (newLevel) => {
       <YearView
         v-if="zoomLevel === 'year'"
         :key="'year'"
+        :category="selectedCategory"
         @zoom-to-year="handleZoomToYear"
       />
 
@@ -235,6 +236,7 @@ watch(zoomLevel, (newLevel) => {
         v-else-if="zoomLevel === 'month'"
         :key="'month-' + selectedYear"
         :year="selectedYear"
+        :category="selectedCategory"
         @zoom-to-month="handleZoomToMonth"
         @back="handleBackFromMonth"
       />
@@ -243,6 +245,7 @@ watch(zoomLevel, (newLevel) => {
       <WeekView
         v-else-if="zoomLevel === 'week'"
         :key="'week'"
+        :category="selectedCategory"
         @zoom-to-week="handleZoomToWeek"
       />
 

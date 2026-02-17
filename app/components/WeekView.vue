@@ -3,10 +3,12 @@
 
 interface Props {
   year?: string; // If provided, show weeks for this year only
+  category?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   year: "",
+  category: "",
 });
 
 const emit = defineEmits<{
@@ -42,6 +44,9 @@ async function fetchSummary() {
     if (props.year) {
       params.set("year", props.year);
     }
+    if (props.category) {
+      params.set("category", props.category);
+    }
     summaryData.value = await $fetch<SummaryResponse>(
       `/api/entries/summary?${params.toString()}`,
     );
@@ -53,8 +58,8 @@ async function fetchSummary() {
   }
 }
 
-// Reload when year changes
-watch(() => props.year, fetchSummary);
+// Reload when year or category changes
+watch(() => [props.year, props.category], fetchSummary);
 onMounted(fetchSummary);
 
 function handleWeekClick(period: string) {
