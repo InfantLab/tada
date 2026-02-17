@@ -24,10 +24,10 @@ import {
 } from "~/server/utils/rhythmCalculator";
 import {
   calculateWeeklyProgress,
-  generateNudgeMessage,
+  generateChainNudge,
   getChainConfig,
   CHAIN_TYPE_ORDER,
-  type TierName,
+  formatDate,
   type ChainType,
   type ChainStat,
 } from "~/utils/tierCalculator";
@@ -193,10 +193,17 @@ export default defineEventHandler(async (event) => {
     // Calculate current week progress
     const weekProgress = calculateWeeklyProgress(allDayStatuses, new Date());
 
-    // Generate nudge message if applicable
-    const targetTier: TierName =
-      rhythm.frequency === "daily" ? "daily" : "weekly";
-    const nudgeMessage = generateNudgeMessage(weekProgress, targetTier);
+    // Generate chain-aware nudge message
+    const primaryChainStat = chains.find(c => c.type === primaryChainType);
+    const todayStr = formatDate(new Date());
+    const completedToday = allDayStatuses.some(d => d.date === todayStr && d.isComplete);
+    const nudgeMessage = generateChainNudge(
+      primaryChainType,
+      weekProgress.daysCompleted,
+      weekProgress.daysRemaining,
+      primaryChainStat?.current ?? 0,
+      completedToday,
+    );
 
     // Determine journey stage using rhythm's configured threshold type
     const thresholdType =

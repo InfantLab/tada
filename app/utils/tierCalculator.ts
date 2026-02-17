@@ -126,16 +126,16 @@ export const CHAIN_CONFIGS: ChainConfig[] = [
   },
   {
     type: "weekly_target",
-    label: "Weekly Total",
-    shortLabel: "Min/Wk",
-    description: "Total minutes per week",
+    label: "Weekly Minutes",
+    shortLabel: "Wk Mins",
+    description: "Hit a minutes goal each week",
     unit: "weeks",
   },
   {
     type: "monthly_target",
-    label: "Monthly Total",
-    shortLabel: "Min/Mo",
-    description: "Total minutes per month",
+    label: "Monthly Minutes",
+    shortLabel: "Mo Mins",
+    description: "Hit a minutes goal each month",
     unit: "months",
   },
 ];
@@ -426,33 +426,55 @@ export function calculateWeeklyProgress(
 }
 
 /**
- * Generate a nudge message for mid-week guidance
- * Returns null if no nudge is needed (already on track or too late)
+ * Generate a nudge message based on the rhythm's chain type.
+ *
+ * - daily chains: encourage maintaining the streak today
+ * - weekly day-count chains (3×/wk, 5×/wk): "X more days this week"
+ *   only if still achievable given days remaining
+ * - weekly/monthly target chains: no day-count nudge
  */
+export function generateChainNudge(
+  chainType: ChainType,
+  daysCompleted: number,
+  daysRemaining: number,
+  currentChain: number,
+  completedToday: boolean,
+): string | null {
+  const config = getChainConfig(chainType);
+
+  switch (chainType) {
+    case "daily": {
+      if (completedToday) return null;
+      if (currentChain > 0) {
+        return `Log today to keep your ${currentChain}-day streak going`;
+      }
+      return null;
+    }
+
+    case "weekly_high":
+    case "weekly_low": {
+      const minDays = config.minDaysPerPeriod ?? 3;
+      const needed = minDays - daysCompleted;
+
+      // Already met the threshold this week
+      if (needed <= 0) return null;
+
+      // Not achievable with remaining days
+      if (needed > daysRemaining) return null;
+
+      return `${needed} more ${needed === 1 ? "day" : "days"} this week for your ${config.shortLabel} chain`;
+    }
+
+    // Target-based chains don't need day-count nudges
+    default:
+      return null;
+  }
+}
+
+/** @deprecated Use generateChainNudge instead */
 export function generateNudgeMessage(
   progress: WeeklyProgress,
-  targetTier: TierName,
+  _targetTier: TierName,
 ): string | null {
-  const targetInfo = getTierInfo(targetTier);
-  const daysNeeded = targetInfo.minDays - progress.daysCompleted;
-
-  // Already achieved target tier
-  if (daysNeeded <= 0) {
-    return null;
-  }
-
-  // Can't achieve target tier anymore
-  if (daysNeeded > progress.daysRemaining) {
-    // Suggest the best achievable tier instead
-    if (progress.bestPossibleTier !== "starting") {
-      const bestInfo = getTierInfo(progress.bestPossibleTier);
-      const bestNeeded = bestInfo.minDays - progress.daysCompleted;
-      if (bestNeeded > 0 && bestNeeded <= progress.daysRemaining) {
-        return `${bestNeeded} more ${bestNeeded === 1 ? "time" : "times"} to hit '${bestInfo.label}'`;
-      }
-    }
-    return null;
-  }
-
-  return `${daysNeeded} more ${daysNeeded === 1 ? "time" : "times"} to hit '${targetInfo.label}'`;
+  return null;
 }
