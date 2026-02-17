@@ -522,28 +522,28 @@ function handleVoiceCancel() {
         <!-- Dream-specific fields -->
         <div
           v-if="voiceSubcategory === 'dream'"
-          class="flex flex-wrap gap-4 rounded-lg border border-indigo-200 bg-indigo-50 dark:border-indigo-800 dark:bg-indigo-900/20 p-4"
+          class="flex flex-wrap items-end gap-5 rounded-lg border border-indigo-200 bg-gradient-to-br from-indigo-50 to-purple-50 dark:border-indigo-800 dark:from-indigo-900/20 dark:to-purple-900/20 p-4"
         >
           <!-- Vividness -->
-          <div class="flex-1 min-w-[140px]">
+          <div class="flex-1 min-w-[160px]">
             <label class="block text-sm font-medium text-indigo-700 dark:text-indigo-300 mb-2">
-              Vividness
+              ✨ How vivid?
             </label>
-            <div class="flex gap-1">
+            <div class="flex gap-1.5">
               <button
                 v-for="level in 5"
                 :key="level"
                 type="button"
-                class="w-8 h-8 rounded-lg text-sm font-medium transition-colors"
+                class="w-9 h-9 rounded-lg text-lg transition-all"
                 :class="
                   dreamVividness >= level
-                    ? 'bg-indigo-500 text-white'
-                    : 'bg-white dark:bg-stone-700 text-stone-400 dark:text-stone-500 hover:bg-indigo-100 dark:hover:bg-indigo-900/50'
+                    ? 'scale-110'
+                    : 'grayscale opacity-40 hover:opacity-70 hover:grayscale-0'
                 "
                 :title="`Vividness ${level}/5`"
                 @click="dreamVividness = dreamVividness === level ? 0 : level"
               >
-                {{ level }}
+                ⭐
               </button>
             </div>
           </div>
@@ -551,19 +551,19 @@ function handleVoiceCancel() {
           <!-- Lucid -->
           <div>
             <label class="block text-sm font-medium text-indigo-700 dark:text-indigo-300 mb-2">
-              Lucid?
+              🔮 Lucid?
             </label>
             <button
               type="button"
-              class="px-4 py-1.5 rounded-lg text-sm font-medium transition-colors"
+              class="px-4 py-1.5 rounded-lg text-sm font-medium transition-all"
               :class="
                 dreamLucid
-                  ? 'bg-purple-500 text-white'
+                  ? 'bg-purple-500 text-white shadow-md shadow-purple-200 dark:shadow-purple-900'
                   : 'bg-white dark:bg-stone-700 text-stone-400 dark:text-stone-500 hover:bg-purple-100 dark:hover:bg-purple-900/50'
               "
               @click="dreamLucid = !dreamLucid"
             >
-              {{ dreamLucid ? '✓ Lucid' : 'No' }}
+              {{ dreamLucid ? '🌟 Yes!' : 'No' }}
             </button>
           </div>
         </div>
