@@ -26,6 +26,10 @@ const title = ref("");
 const notes = ref("");
 const notesTextarea = ref<HTMLTextAreaElement | null>(null);
 
+// Dream-specific fields
+const dreamVividness = ref<number>(0);
+const dreamLucid = ref(false);
+
 // Extracted ta-das from voice
 const extractedTadas = ref<ExtractedTada[]>([]);
 
@@ -202,6 +206,15 @@ async function handleTextSubmit() {
   }
 
   try {
+    // Build entry data, including dream-specific fields
+    const entryData: Record<string, unknown> = {
+      source: showVoicePanel.value ? "voice" : "text",
+    };
+    if (voiceSubcategory.value === "dream") {
+      if (dreamVividness.value > 0) entryData.vivid = dreamVividness.value;
+      if (dreamLucid.value) entryData.lucid = true;
+    }
+
     const result = await createEntry({
       type: "moment",
       subcategory: voiceSubcategory.value,
@@ -209,9 +222,7 @@ async function handleTextSubmit() {
       notes: notes.value.trim() || undefined,
       emoji: getTypeIcon(voiceSubcategory.value),
       timestamp: new Date().toISOString(),
-      data: {
-        source: showVoicePanel.value ? "voice" : "text",
-      },
+      data: entryData,
     });
 
     if (result) {
@@ -227,6 +238,8 @@ async function handleTextSubmit() {
       // Clear form
       title.value = "";
       notes.value = "";
+      dreamVividness.value = 0;
+      dreamLucid.value = false;
       showVoicePanel.value = false;
       extractedTadas.value = [];
 
@@ -504,6 +517,55 @@ function handleVoiceCancel() {
             class="w-full px-3 py-2 border border-stone-300 dark:border-stone-600 rounded-lg bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-tada-500 focus:border-transparent resize-none"
             @input="autoGrow"
           />
+        </div>
+
+        <!-- Dream-specific fields -->
+        <div
+          v-if="voiceSubcategory === 'dream'"
+          class="flex flex-wrap gap-4 rounded-lg border border-indigo-200 bg-indigo-50 dark:border-indigo-800 dark:bg-indigo-900/20 p-4"
+        >
+          <!-- Vividness -->
+          <div class="flex-1 min-w-[140px]">
+            <label class="block text-sm font-medium text-indigo-700 dark:text-indigo-300 mb-2">
+              Vividness
+            </label>
+            <div class="flex gap-1">
+              <button
+                v-for="level in 5"
+                :key="level"
+                type="button"
+                class="w-8 h-8 rounded-lg text-sm font-medium transition-colors"
+                :class="
+                  dreamVividness >= level
+                    ? 'bg-indigo-500 text-white'
+                    : 'bg-white dark:bg-stone-700 text-stone-400 dark:text-stone-500 hover:bg-indigo-100 dark:hover:bg-indigo-900/50'
+                "
+                :title="`Vividness ${level}/5`"
+                @click="dreamVividness = dreamVividness === level ? 0 : level"
+              >
+                {{ level }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Lucid -->
+          <div>
+            <label class="block text-sm font-medium text-indigo-700 dark:text-indigo-300 mb-2">
+              Lucid?
+            </label>
+            <button
+              type="button"
+              class="px-4 py-1.5 rounded-lg text-sm font-medium transition-colors"
+              :class="
+                dreamLucid
+                  ? 'bg-purple-500 text-white'
+                  : 'bg-white dark:bg-stone-700 text-stone-400 dark:text-stone-500 hover:bg-purple-100 dark:hover:bg-purple-900/50'
+              "
+              @click="dreamLucid = !dreamLucid"
+            >
+              {{ dreamLucid ? '✓ Lucid' : 'No' }}
+            </button>
+          </div>
         </div>
 
         <!-- Extracted Ta-das Panel (if any) -->
