@@ -1,6 +1,10 @@
 <script setup lang="ts">
 // YearView - Shows yearly summary cards with tap-to-zoom into months
 
+interface Props {
+  category?: string;
+}
+
 interface PeriodSummary {
   label: string;
   period: string;
@@ -18,6 +22,8 @@ interface SummaryResponse {
   };
 }
 
+const props = defineProps<Props>();
+
 const emit = defineEmits<{
   "zoom-to-year": [year: string];
 }>();
@@ -30,8 +36,12 @@ async function fetchSummary() {
   try {
     isLoading.value = true;
     error.value = null;
+    const params = new URLSearchParams({ period: "year" });
+    if (props.category) {
+      params.append("category", props.category);
+    }
     summaryData.value = await $fetch<SummaryResponse>(
-      "/api/entries/summary?period=year",
+      `/api/entries/summary?${params.toString()}`,
     );
   } catch (err: unknown) {
     console.error("Failed to fetch year summary:", err);
@@ -42,6 +52,9 @@ async function fetchSummary() {
 }
 
 onMounted(fetchSummary);
+
+// Re-fetch when category changes
+watch(() => props.category, fetchSummary);
 
 function handleYearClick(period: string) {
   emit("zoom-to-year", period);

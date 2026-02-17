@@ -13,12 +13,22 @@ const navigation = [
 const route = useRoute();
 const { triggerRefresh } = useTimelineRefresh();
 
+// Quick add menu state
+const showQuickAddMenu = ref(false);
+
 // Quick entry modal state
 const showQuickEntryModal = ref(false);
 const quickEntryMode = ref<EntryMode>("timed");
 
 // Contextual help panel state
 const showHelpPanel = ref(false);
+
+// Handle menu selection - close menu and open modal with selected mode
+function handleMenuSelect(mode: EntryMode) {
+  showQuickAddMenu.value = false;
+  quickEntryMode.value = mode;
+  showQuickEntryModal.value = true;
+}
 
 // Handle entry saved - close modal and refresh timeline
 function handleEntrySaved() {
@@ -54,11 +64,10 @@ function handleKeydown(event: KeyboardEvent) {
     return;
   }
 
-  // "n" key alone: Open quick entry (when not in input)
+  // "n" key alone: Open quick add menu (when not in input)
   if (event.key === "n" && !event.metaKey && !event.ctrlKey && !event.altKey) {
     event.preventDefault();
-    quickEntryMode.value = "timed";
-    showQuickEntryModal.value = true;
+    showQuickAddMenu.value = true;
     return;
   }
 
@@ -302,7 +311,7 @@ onUnmounted(() => {
       class="fixed right-4 bottom-20 sm:bottom-6 z-50 w-14 h-14 rounded-full bg-tada-600 hover:bg-tada-700 text-white shadow-lg hover:shadow-xl transition-all transform hover:scale-105 flex items-center justify-center"
       title="Quick Add Entry"
       aria-label="Quick add entry"
-      @click="showQuickEntryModal = true"
+      @click="showQuickAddMenu = true"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -319,6 +328,13 @@ onUnmounted(() => {
         />
       </svg>
     </button>
+
+    <!-- Quick Add Menu -->
+    <QuickAddMenu
+      :open="showQuickAddMenu"
+      @select="handleMenuSelect"
+      @close="showQuickAddMenu = false"
+    />
 
     <!-- Quick Entry Modal -->
     <QuickEntryModal

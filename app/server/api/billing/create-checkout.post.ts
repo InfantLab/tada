@@ -24,6 +24,7 @@ const logger = createLogger("api:billing:create-checkout");
 
 interface CreateCheckoutBody {
   plan: "monthly" | "yearly";
+  amount?: number;
 }
 
 export default defineEventHandler(async (event) => {
@@ -93,6 +94,15 @@ export default defineEventHandler(async (event) => {
     });
   }
 
+  // Validate amount if provided (must be one of the valid support levels)
+  const validAmounts = [1, 5, 12, 25, 50];
+  if (body.amount && !validAmounts.includes(body.amount)) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: `Invalid amount. Must be one of: ${validAmounts.join(", ")}`,
+    });
+  }
+
   // Create checkout session
   const appUrl = getAppUrl();
   const result = await createCheckoutSession(
@@ -100,6 +110,7 @@ export default defineEventHandler(async (event) => {
     user.email,
     user.username,
     body.plan,
+    body.amount || 12, // Default to Oak level (£12) if not specified
     `${appUrl}/account?success=true`,
     `${appUrl}/account?canceled=true`
   );

@@ -93,16 +93,26 @@ async function handleEmojiSelect(emoji: string) {
   const { type, key } = emojiPickerTarget.value;
 
   if (type === "category" || type === "subcategory") {
-    await setCustomEmoji(key, emoji);
-    showSuccess("Emoji updated");
-  } else if (type === "custom") {
-    // Handle custom category emoji update
-    const customCats = [...(preferences.value.customCategories || [])];
-    const idx = customCats.findIndex((c) => c.slug === key);
-    if (idx !== -1) {
-      customCats[idx] = { ...customCats[idx], emoji };
-      await savePreferences({ customCategories: customCats });
+    // Special handling for new subcategory
+    if (key === "_new_sub") {
+      subcategoryFormData.value.emoji = emoji;
+    } else {
+      await setCustomEmoji(key, emoji);
       showSuccess("Emoji updated");
+    }
+  } else if (type === "custom") {
+    // Handle new category emoji selection
+    if (key === "_new") {
+      newCategory.value.emoji = emoji;
+    } else {
+      // Handle custom category emoji update
+      const customCats = [...(preferences.value.customCategories || [])];
+      const idx = customCats.findIndex((c) => c.slug === key);
+      if (idx !== -1) {
+        customCats[idx] = { ...customCats[idx], emoji };
+        await savePreferences({ customCategories: customCats });
+        showSuccess("Emoji updated");
+      }
     }
   }
 
@@ -179,6 +189,170 @@ async function removeCustomCategory(slug: string) {
   );
   await savePreferences({ customCategories: customCats });
   showSuccess("Category removed");
+}
+
+// Subcategory management
+const showAddSubcategoryModal = ref(false);
+const editingSubcategory = ref<{ catSlug: string; subSlug: string; label: string } | null>(null);
+const subcategoryFormData = ref({ name: "", emoji: "🏷️" });
+const activeCategory = ref<string | null>(null);
+
+function openAddSubcategoryModal(catSlug: string) {
+  activeCategory.value = catSlug;
+  subcategoryFormData.value = { name: "", emoji: "🏷️" };
+  showAddSubcategoryModal.value = true;
+}
+
+async function addSubcategory() {
+  if (!activeCategory.value || !subcategoryFormData.value.name.trim()) {
+    showError("Please enter a subcategory name");
+    return;
+  }
+
+  const catSlug = activeCategory.value;
+  const subName = subcategoryFormData.value.name.trim();
+  const subSlug = subName.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
+
+  // Check if this is a built-in or custom category
+  const isBuiltIn = Object.keys(CATEGORY_DEFAULTS).includes(catSlug);
+
+  if (isBuiltIn) {
+    // For built-in categories, we store custom subcategories in preferences
+    const customSubs = preferences.value.customSubcategories || {};
+    const catCustomSubs = customSubs[catSlug] || [];
+
+    // Check for duplicates
+    const existingSlugs = [
+      ...getSubcategoriesForCategory(catSlug).map(s => s.slug),
+      ...catCustomSubs.map(s => s.slug),
+    ];
+
+    if (existingSlugs.includes(subSlug)) {
+      showError("A subcategory with this name already exists");
+      return;
+    }
+
+    catCustomSubs.push({
+      slug: subSlug,
+      label: subName,
+      emoji: subcategoryFormData.value.emoji,
+    });
+
+    customSubs[catSlug] = catCustomSubs;
+    await savePreferences({ customSubcategories: customSubs });
+  } else {
+    // For custom categories, update the category's subcategories array
+    const customCats = [...(preferences.value.customCategories || [])];
+    const catIndex = customCats.findIndex(c => c.slug === catSlug);
+
+    if (catIndex === -1) return;
+
+    const cat = customCats[catIndex];
+    const existingSlugs = (cat.subcategories || []).map(s => s.slug);
+
+    if (existingSlugs.includes(subSlug)) {
+      showError("A subcategory with this name already exists");
+      return;
+    }
+
+    cat.subcategories = [
+      ...(cat.subcategories || []),
+      {
+        slug: subSlug,
+        label: subName,
+        emoji: subcategoryFormData.value.emoji,
+      },
+    ];
+
+    customCats[catIndex] = cat;
+    await savePreferences({ customCategories: customCats });
+  }
+
+  showSuccess(`Added subcategory "${subName}"`);
+  showAddSubcategoryModal.value = false;
+}
+
+async function removeSubcategory(catSlug: string, subSlug: string) {
+  if (!confirm("Remove this subcategory? Existing entries will keep their data.")) {
+    return;
+  }
+
+  const isBuiltIn = Object.keys(CATEGORY_DEFAULTS).includes(catSlug);
+
+  if (isBuiltIn) {
+    // Remove from custom subcategories
+    const customSubs = { ...(preferences.value.customSubcategories || {}) };
+    if (customSubs[catSlug]) {
+      customSubs[catSlug] = customSubs[catSlug].filter(s => s.slug !== subSlug);
+      await savePreferences({ customSubcategories: customSubs });
+    }
+  } else {
+    // Remove from custom category
+    const customCats = [...(preferences.value.customCategories || [])];
+    const catIndex = customCats.findIndex(c => c.slug === catSlug);
+    if (catIndex !== -1) {
+      const cat = customCats[catIndex];
+      cat.subcategories = (cat.subcategories || []).filter(s => s.slug !== subSlug);
+      customCats[catIndex] = cat;
+      await savePreferences({ customCategories: customCats });
+    }
+  }
+
+  showSuccess("Subcategory removed");
+}
+
+async function resetCategoryToDefault(catSlug: string) {
+  if (!confirm("Reset this category to default? All custom emojis and subcategories will be removed.")) {
+    return;
+  }
+
+  // Remove custom emojis for this category
+  const customEmojis = { ...(preferences.value.customEmojis || {}) };
+  const keysToRemove = Object.keys(customEmojis).filter(key =>
+    key === catSlug || key.startsWith(`${catSlug}:`)
+  );
+
+  keysToRemove.forEach(key => {
+    delete customEmojis[key];
+  });
+
+  // Remove custom subcategories
+  const customSubs = { ...(preferences.value.customSubcategories || {}) };
+  delete customSubs[catSlug];
+
+  await savePreferences({
+    customEmojis,
+    customSubcategories: customSubs,
+  });
+
+  showSuccess(`Reset "${catSlug}" to default`);
+}
+
+// Get all subcategories for a category (built-in + custom)
+function getAllSubcategories(catSlug: string) {
+  const isBuiltIn = Object.keys(CATEGORY_DEFAULTS).includes(catSlug);
+
+  if (isBuiltIn) {
+    const builtInSubs = getSubcategoriesForCategory(catSlug);
+    const customSubs = (preferences.value.customSubcategories?.[catSlug] || []);
+    return [...builtInSubs, ...customSubs];
+  } else {
+    // Custom category
+    const customCat = (preferences.value.customCategories || []).find(c => c.slug === catSlug);
+    return customCat?.subcategories || [];
+  }
+}
+
+// Check if subcategory is custom (not built-in)
+function isCustomSubcategory(catSlug: string, subSlug: string): boolean {
+  const isBuiltIn = Object.keys(CATEGORY_DEFAULTS).includes(catSlug);
+
+  if (isBuiltIn) {
+    const builtInSubs = getSubcategoriesForCategory(catSlug).map(s => s.slug);
+    return !builtInSubs.includes(subSlug);
+  }
+
+  return true; // All subcategories of custom categories are custom
 }
 
 // Get resolved emoji for display
@@ -296,19 +470,51 @@ function getSubcatDisplayEmoji(catSlug: string, subcatSlug: string): string {
               class="px-4 pb-4 pt-0"
             >
               <div class="border-t border-stone-200 dark:border-stone-700 pt-4">
-                <p class="text-xs text-stone-500 dark:text-stone-400 mb-3">
-                  Click any emoji to customize
-                </p>
-                <div class="flex flex-wrap gap-2">
+                <div class="flex items-center justify-between mb-3">
+                  <p class="text-xs text-stone-500 dark:text-stone-400">
+                    Click emoji to customize, × to remove custom subcategories
+                  </p>
                   <button
-                    v-for="sub in cat.subcategories"
-                    :key="sub.slug"
                     type="button"
-                    class="flex items-center gap-1.5 px-3 py-1.5 bg-stone-100 dark:bg-stone-700 rounded-lg hover:bg-stone-200 dark:hover:bg-stone-600 transition-colors"
-                    @click="openEmojiPicker('subcategory', `${cat.slug}:${sub.slug}`, sub.label)"
+                    class="text-xs text-tada-600 dark:text-tada-400 hover:underline"
+                    @click="resetCategoryToDefault(cat.slug)"
                   >
-                    <span class="text-lg">{{ getSubcatDisplayEmoji(cat.slug, sub.slug) }}</span>
-                    <span class="text-sm text-stone-700 dark:text-stone-300">{{ sub.label }}</span>
+                    Reset to default
+                  </button>
+                </div>
+                <div class="flex flex-wrap gap-2 mb-3">
+                  <div
+                    v-for="sub in getAllSubcategories(cat.slug)"
+                    :key="sub.slug"
+                    class="group relative"
+                  >
+                    <button
+                      type="button"
+                      class="flex items-center gap-1.5 px-3 py-1.5 bg-stone-100 dark:bg-stone-700 rounded-lg hover:bg-stone-200 dark:hover:bg-stone-600 transition-colors"
+                      @click="openEmojiPicker('subcategory', `${cat.slug}:${sub.slug}`, sub.label)"
+                    >
+                      <span class="text-lg">{{ getSubcatDisplayEmoji(cat.slug, sub.slug) }}</span>
+                      <span class="text-sm text-stone-700 dark:text-stone-300">{{ sub.label }}</span>
+                    </button>
+                    <!-- Remove button for custom subcategories -->
+                    <button
+                      v-if="isCustomSubcategory(cat.slug, sub.slug)"
+                      type="button"
+                      class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                      title="Remove subcategory"
+                      @click.stop="removeSubcategory(cat.slug, sub.slug)"
+                    >
+                      ×
+                    </button>
+                  </div>
+
+                  <!-- Add subcategory button -->
+                  <button
+                    type="button"
+                    class="px-3 py-1.5 border-2 border-dashed border-stone-300 dark:border-stone-600 text-stone-500 dark:text-stone-400 rounded-lg hover:border-tada-500 hover:text-tada-600 dark:hover:text-tada-400 transition-colors text-sm"
+                    @click="openAddSubcategoryModal(cat.slug)"
+                  >
+                    + Add subcategory
                   </button>
                 </div>
               </div>
@@ -402,7 +608,7 @@ function getSubcatDisplayEmoji(catSlug: string, subcatSlug: string): string {
     <!-- Emoji Picker Modal -->
     <EmojiPicker
       v-model="showEmojiPicker"
-      @emoji-click="handleEmojiSelect"
+      @select="handleEmojiSelect"
     />
 
     <!-- Add Category Modal -->
@@ -454,6 +660,60 @@ function getSubcatDisplayEmoji(catSlug: string, subcatSlug: string): string {
                 @click="addCustomCategory"
               >
                 Add Category
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add Subcategory Modal -->
+      <div
+        v-if="showAddSubcategoryModal"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+      >
+        <div
+          class="absolute inset-0 bg-black/50"
+          @click="showAddSubcategoryModal = false"
+        />
+        <div
+          class="relative bg-white dark:bg-stone-800 rounded-xl shadow-xl max-w-sm w-full p-6"
+        >
+          <h3 class="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-4">
+            Add Subcategory
+          </h3>
+
+          <div class="space-y-4">
+            <div class="flex items-center gap-4">
+              <button
+                type="button"
+                class="text-4xl p-2 bg-stone-100 dark:bg-stone-700 rounded-xl hover:bg-stone-200 dark:hover:bg-stone-600 transition-colors"
+                @click="openEmojiPicker('subcategory', '_new_sub', 'New Subcategory')"
+              >
+                {{ subcategoryFormData.emoji }}
+              </button>
+              <input
+                v-model="subcategoryFormData.name"
+                type="text"
+                placeholder="Subcategory name"
+                class="flex-1 px-3 py-2 border border-stone-300 dark:border-stone-600 rounded-lg bg-white dark:bg-stone-700 text-stone-800 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-tada-500"
+                @keyup.enter="addSubcategory"
+              />
+            </div>
+
+            <div class="flex gap-3">
+              <button
+                type="button"
+                class="flex-1 px-4 py-2 bg-stone-100 dark:bg-stone-700 text-stone-700 dark:text-stone-200 rounded-lg hover:bg-stone-200 dark:hover:bg-stone-600 transition-colors"
+                @click="showAddSubcategoryModal = false"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                class="flex-1 px-4 py-2 bg-tada-600 text-white rounded-lg hover:bg-tada-700 transition-colors"
+                @click="addSubcategory"
+              >
+                Add Subcategory
               </button>
             </div>
           </div>

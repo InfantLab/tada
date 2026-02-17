@@ -106,6 +106,46 @@ async function updateEmoji(emoji: string) {
 
 <template>
   <div>
+    <!-- Notice: Main page now shows recent ta-das -->
+    <div
+      class="mb-4 rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-900/20 p-4"
+    >
+      <div class="flex items-start gap-3">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5 text-blue-500 dark:text-blue-400 flex-shrink-0 mt-0.5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+        <div class="flex-1">
+          <h3
+            class="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-1"
+          >
+            💡 Tip: Your recent ta-das are now on the main page!
+          </h3>
+          <p class="text-sm text-blue-700 dark:text-blue-300">
+            The
+            <NuxtLink
+              to="/tada"
+              class="underline hover:text-blue-900 dark:hover:text-blue-100"
+            >
+              main Ta-da page
+            </NuxtLink>
+            now shows your recent accomplishments right below the add form. This
+            page shows your complete history.
+          </p>
+        </div>
+      </div>
+    </div>
+
     <!-- Page header with Ta-Da! logotype -->
     <div class="flex items-center justify-between mb-6">
       <div class="flex items-center gap-4">

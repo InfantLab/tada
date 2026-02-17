@@ -159,6 +159,28 @@ function selectSuggestion(suggestion: { name: string; category?: string }) {
   showSuggestions.value = false;
 }
 
+// Auto-fill category when user types a known activity name
+async function checkAndFillCategory() {
+  const name = activityName.value.trim();
+  if (!name || name.length < 2) return;
+
+  try {
+    const response = await $fetch<{ category: string | null; count: number }>(
+      "/api/activities/category",
+      {
+        query: { name, type: "tally" },
+      },
+    );
+
+    // Only auto-fill if we found a commonly used category
+    if (response.category && response.count > 0) {
+      category.value = response.category;
+    }
+  } catch {
+    // Silently ignore errors - this is just a convenience feature
+  }
+}
+
 // Hide suggestions with delay (for blur handling)
 function hideSuggestions() {
   setTimeout(() => {
@@ -217,6 +239,8 @@ async function handleSave() {
       data: {
         count: count.value,
       },
+    }, {
+      skipSuccessToast: true, // We show our own custom toast below
     });
 
     if (result) {
@@ -303,7 +327,6 @@ async function savePendingTallies() {
         type: "tally",
         name: tally.activity,
         category: tally.category || "movement",
-        subcategory: tally.subcategory || undefined,
         emoji: tally.emoji,
         count: tally.count,
         timestamp: new Date().toISOString(),
@@ -480,11 +503,11 @@ function handleVoiceError(message: string) {
                 type="button"
                 class="px-2 py-0.5 rounded text-xs font-medium transition-colors"
                 :class="
-                  tally.subcategory === cat.value
+                  tally.category === cat.value
                     ? 'bg-amber-200 dark:bg-amber-800/50 text-amber-800 dark:text-amber-200'
                     : 'bg-stone-100 dark:bg-stone-700 text-stone-500 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-600'
                 "
-                @click="pendingTallies[idx].subcategory = cat.value"
+                @click="pendingTallies[idx].category = cat.value"
               >
                 {{ cat.emoji }} {{ cat.label }}
               </button>
@@ -527,7 +550,7 @@ function handleVoiceError(message: string) {
             class="w-full px-4 py-3 bg-stone-50 dark:bg-stone-700 border border-stone-200 dark:border-stone-600 rounded-lg text-stone-800 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-tada-500 focus:border-transparent"
             autocomplete="off"
             @focus="showSuggestions = true"
-            @blur="hideSuggestions"
+            @blur="hideSuggestions(); checkAndFillCategory()"
           />
 
           <!-- Suggestions dropdown -->

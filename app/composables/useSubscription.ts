@@ -145,7 +145,7 @@ export function useSubscription() {
   /**
    * Create a Stripe Checkout session and redirect to it.
    */
-  async function createCheckout(plan: "monthly" | "yearly"): Promise<void> {
+  async function createCheckout(plan: "monthly" | "yearly", amount?: number): Promise<void> {
     if (!billing.value?.canUpgrade) {
       error.value = "Cannot upgrade at this time";
       return;
@@ -157,7 +157,7 @@ export function useSubscription() {
     try {
       const result = await $fetch<{ url: string }>("/api/billing/create-checkout", {
         method: "POST",
-        body: { plan },
+        body: { plan, amount },
       });
 
       // Redirect to Stripe Checkout

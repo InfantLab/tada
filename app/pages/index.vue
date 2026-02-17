@@ -186,7 +186,12 @@ watch(zoomLevel, (newLevel) => {
       <ZoomToggle v-model="zoomLevel" />
     </div>
 
-    <!-- Filters (only shown in day view) -->
+    <!-- Category Filter (shown for all views) -->
+    <div v-if="zoomLevel !== 'day'" class="mb-6">
+      <CategoryFilter v-model="selectedCategory" />
+    </div>
+
+    <!-- Full Filters (only shown in day view) -->
     <div v-if="zoomLevel === 'day'" class="mb-6">
       <TimelineHeader
         v-model="searchQuery"

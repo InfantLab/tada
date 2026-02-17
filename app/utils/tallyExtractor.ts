@@ -10,7 +10,6 @@ export interface ExtractedTally {
   activity: string;
   count: number;
   category?: string;
-  subcategory?: string;
   emoji?: string;
   confidence: number;
   originalText?: string;
@@ -30,99 +29,85 @@ const ACTIVITY_PATTERNS: Array<{
   patterns: RegExp[];
   activity: string;
   category: string;
-  subcategory?: string;
   emoji: string;
 }> = [
   // Strength training
   {
     patterns: [/push[- ]?ups?/i, /press[- ]?ups?/i],
     activity: "Push-ups",
-    category: "movement",
-    subcategory: "strength",
+    category: "strength",
     emoji: "💪",
   },
   {
     patterns: [/pull[- ]?ups?/i, /chin[- ]?ups?/i],
     activity: "Pull-ups",
-    category: "movement",
-    subcategory: "strength",
+    category: "strength",
     emoji: "💪",
   },
   {
     patterns: [/sit[- ]?ups?/i, /crunche?s?/i],
     activity: "Sit-ups",
-    category: "movement",
-    subcategory: "strength",
+    category: "strength",
     emoji: "💪",
   },
   {
     patterns: [/squats?/i],
     activity: "Squats",
-    category: "movement",
-    subcategory: "strength",
+    category: "strength",
     emoji: "🦵",
   },
   {
     patterns: [/lunges?/i],
     activity: "Lunges",
-    category: "movement",
-    subcategory: "strength",
+    category: "strength",
     emoji: "🦵",
   },
   {
     patterns: [/burpee?s?/i],
     activity: "Burpees",
-    category: "movement",
-    subcategory: "strength",
+    category: "strength",
     emoji: "🔥",
   },
   {
     patterns: [/plank/i],
     activity: "Planks",
-    category: "movement",
-    subcategory: "strength",
+    category: "strength",
     emoji: "🧘",
   },
   {
     patterns: [/kettle[- ]?bell?s?/i, /kb/i],
     activity: "Kettlebells",
-    category: "movement",
-    subcategory: "strength",
+    category: "strength",
     emoji: "🏋️",
   },
   {
     patterns: [/dumb[- ]?bell?s?/i],
     activity: "Dumbbells",
-    category: "movement",
-    subcategory: "strength",
+    category: "strength",
     emoji: "🏋️",
   },
   {
     patterns: [/deadlift?s?/i],
     activity: "Deadlifts",
-    category: "movement",
-    subcategory: "strength",
+    category: "strength",
     emoji: "🏋️",
   },
   {
     patterns: [/bench[- ]?press/i],
     activity: "Bench Press",
-    category: "movement",
-    subcategory: "strength",
+    category: "strength",
     emoji: "🏋️",
   },
   {
     patterns: [/dip?s?\b/i],
     activity: "Dips",
-    category: "movement",
-    subcategory: "strength",
+    category: "strength",
     emoji: "💪",
   },
   {
     patterns: [/row?s?\b/i],
     activity: "Rows",
-    category: "movement",
-    subcategory: "strength",
+    category: "strength",
     emoji: "🏋️",
   },
 
@@ -130,36 +115,31 @@ const ACTIVITY_PATTERNS: Array<{
   {
     patterns: [/jumping[- ]?jack?s?/i, /star[- ]?jump?s?/i],
     activity: "Jumping Jacks",
-    category: "movement",
-    subcategory: "gym",
+    category: "strength",
     emoji: "⭐",
   },
   {
     patterns: [/step?s?\b/i],
     activity: "Steps",
-    category: "movement",
-    subcategory: "walking",
+    category: "strength",
     emoji: "👟",
   },
   {
     patterns: [/lap?s?\b/i],
     activity: "Laps",
-    category: "movement",
-    subcategory: "swimming",
+    category: "strength",
     emoji: "🏊",
   },
   {
     patterns: [/mile?s?\b/i],
     activity: "Miles",
-    category: "movement",
-    subcategory: "running",
+    category: "strength",
     emoji: "🏃",
   },
   {
     patterns: [/km\b|kilometer?s?/i],
     activity: "Kilometers",
-    category: "movement",
-    subcategory: "running",
+    category: "strength",
     emoji: "🏃",
   },
 
@@ -167,29 +147,25 @@ const ACTIVITY_PATTERNS: Array<{
   {
     patterns: [/page?s?\b/i],
     activity: "Pages",
-    category: "learning",
-    subcategory: "reading",
+    category: "reading",
     emoji: "📖",
   },
   {
     patterns: [/chapter?s?\b/i],
     activity: "Chapters",
-    category: "learning",
-    subcategory: "reading",
+    category: "reading",
     emoji: "📚",
   },
   {
     patterns: [/song?s?\b/i],
     activity: "Songs",
-    category: "creative",
-    subcategory: "music",
+    category: "other",
     emoji: "🎵",
   },
   {
     patterns: [/scale?s?\b/i],
     activity: "Scales",
-    category: "creative",
-    subcategory: "music",
+    category: "other",
     emoji: "🎹",
   },
 
@@ -197,21 +173,19 @@ const ACTIVITY_PATTERNS: Array<{
   {
     patterns: [/glass(?:es)?\s+(?:of\s+)?water/i, /water/i],
     activity: "Glasses of Water",
-    category: "health",
+    category: "other",
     emoji: "💧",
   },
   {
     patterns: [/rep?s?\b/i],
     activity: "Reps",
-    category: "movement",
-    subcategory: "strength",
+    category: "strength",
     emoji: "🔄",
   },
   {
     patterns: [/set?s?\b/i],
     activity: "Sets",
-    category: "movement",
-    subcategory: "strength",
+    category: "strength",
     emoji: "🔢",
   },
 ];
@@ -320,7 +294,6 @@ export function extractTalliesRuleBased(text: string): TallyExtractionResult {
       activity: foundActivity?.activity || formatActivityName(activityText),
       count,
       category: foundActivity?.category || "movement",
-      subcategory: foundActivity?.subcategory,
       emoji: foundActivity?.emoji,
       confidence: foundActivity ? 0.95 : 0.7,
       originalText: match[0].trim(),
@@ -370,8 +343,7 @@ OUTPUT FORMAT (JSON):
     {
       "activity": "Push-ups",
       "count": 10,
-      "category": "movement",
-      "subcategory": "strength",
+      "category": "strength",
       "emoji": "💪",
       "confidence": 0.95,
       "original_text": "10 push-ups"
@@ -409,7 +381,6 @@ export function parseTallyExtractionResponse(
         activity: string;
         count: number;
         category?: string;
-        subcategory?: string;
         emoji?: string;
         confidence?: number;
         original_text?: string;
@@ -428,7 +399,6 @@ export function parseTallyExtractionResponse(
         activity: t.activity,
         count: t.count,
         category: t.category || "movement",
-        subcategory: t.subcategory,
         emoji: t.emoji,
         confidence: t.confidence ?? 0.8,
         originalText: t.original_text,

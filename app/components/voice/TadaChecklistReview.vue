@@ -242,10 +242,6 @@ function getCategoryDisplay(categorySlug: string): string {
               </svg>
             </button>
 
-                  v-if="tada.category"
-                  class="tada-checklist__item-category"
-                >
-                  {{ getCategoryDisplay(tada.category)
             <div
               class="tada-checklist__item-content"
               @click="expandTada(tada.id)"
@@ -259,8 +255,11 @@ function getCategoryDisplay(categorySlug: string): string {
                 }}
               </p>
               <div class="tada-checklist__item-meta">
-                <span class="tada-checklist__item-category">
-                  {{ tada.category }}
+                <span
+                  v-if="tada.category"
+                  class="tada-checklist__item-category"
+                >
+                  {{ getCategoryDisplay(tada.category) }}
                 </span>
                 <span
                   v-if="tada.significance !== 'normal'"
@@ -333,15 +332,15 @@ function getCategoryDisplay(categorySlug: string): string {
                     updateTada(tada.id, {
                       category: (e.target as HTMLSelectElement).value,
                     })
+                "
+              >
+                <option
                   v-for="cat in categoryOptions"
                   :key="cat.value"
                   :value="cat.value"
                 >
                   {{ cat.emoji }} {{ cat.label }}
                 </option>
-                <option value="finance">Finance</option>
-                <option value="errands">Errands</option>
-                <option value="personal">Personal</option>
               </select>
             </label>
 

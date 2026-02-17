@@ -163,7 +163,7 @@ File: `/app/pages/about.vue`
 - 🌱 Beginning (0-10h) - You're beginning your journey
 - 🌿 Building (10-100h) - Developing the habit
 - 🌳 Becoming (100-1000h) - Established practitioner
-- ⭐ You Are (1000h+) - Fully embodied identity
+- ⭐ Being (1000h+) - You ARE a musician/meditator/etc. Fully embodied identity
 
 **Files to check:**
 - `/app/components/RhythmEncouragement.vue`

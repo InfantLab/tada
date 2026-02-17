@@ -32,11 +32,36 @@ const liveTranscriptionText = ref("");
 // User preferences for custom emojis (for emoji resolution in composable)
 const { loadPreferences } = usePreferences();
 
+// Recent ta-das
+const recentTadas = ref<Entry[]>([]);
+const isLoadingHistory = ref(true);
+
 // Load preferences and last used defaults on mount
-onMounted(() => {
+onMounted(async () => {
   loadPreferences();
   loadLastUsedDefaults();
+  await fetchRecentTadas();
 });
+
+// Fetch recent ta-das from API
+async function fetchRecentTadas() {
+  try {
+    isLoadingHistory.value = true;
+    const data = await $fetch<{
+      entries: Entry[];
+      nextCursor: string | null;
+      hasMore: boolean;
+    }>("/api/entries", {
+      query: { type: "tada", limit: 10 },
+    });
+    recentTadas.value = data.entries;
+  } catch (err: unknown) {
+    logError("tada.fetchRecentTadas", err);
+    recentTadas.value = [];
+  } finally {
+    isLoadingHistory.value = false;
+  }
+}
 
 // Auto-grow textarea as user types
 function autoGrow() {
@@ -170,10 +195,39 @@ function celebrate() {
   showSuccess("Ta-Da! 🎉 Great job!");
 }
 
-// Handle celebration completion - navigate to timeline
-function onCelebrationComplete() {
+// Handle celebration completion - refresh recent list
+async function onCelebrationComplete() {
   showCelebration.value = false;
-  navigateTo("/");
+  await fetchRecentTadas();
+}
+
+// Handle clicking on a recent entry
+function handleRecentEntryClick(entry: Entry, event: MouseEvent) {
+  const selection = window.getSelection();
+  if (selection && selection.toString().trim().length > 0) {
+    return;
+  }
+  if ((event.target as HTMLElement).closest("a, button")) {
+    return;
+  }
+  navigateTo(`/entry/${entry.id}`);
+}
+
+// Format relative date for recent entries
+function formatRelativeDate(dateStr: string): string {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return "Just now";
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays === 1) return "Yesterday";
+  if (diffDays < 7) return `${diffDays} days ago`;
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
 /**
@@ -276,6 +330,7 @@ async function submitEntry() {
 
     if (result && result.length > 0) {
       exitMultiMode();
+      await fetchRecentTadas();
       celebrate();
     }
     return;
@@ -302,6 +357,7 @@ async function submitEntry() {
 
   // Only celebrate if save succeeded
   if (result) {
+    await fetchRecentTadas();
     celebrate();
   }
 }
@@ -509,6 +565,7 @@ async function handleTadaSave(tadas: ExtractedTada[]) {
     showTadaChecklist.value = false;
     extractedTadas.value = [];
     currentTranscription.value = null;
+    await fetchRecentTadas();
     celebrate();
   }
 }
@@ -826,14 +883,87 @@ function handleReRecord() {
       </button>
     </form>
 
-    <!-- Link to history (outside the form card) -->
-    <div class="text-center mt-4">
-      <NuxtLink
-        to="/tada/history"
-        class="text-sm text-stone-500 dark:text-stone-400 hover:text-amber-600 dark:hover:text-amber-400 underline"
+    <!-- Recent Ta-das Section -->
+    <div class="mt-8">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold text-stone-700 dark:text-stone-200">
+          Recent Ta-Das
+        </h2>
+        <NuxtLink
+          to="/tada/history"
+          class="text-sm text-amber-600 dark:text-amber-400 hover:underline"
+        >
+          View all →
+        </NuxtLink>
+      </div>
+
+      <!-- Loading state -->
+      <div v-if="isLoadingHistory" class="flex items-center justify-center py-8">
+        <div
+          class="animate-spin rounded-full h-8 w-8 border-2 border-amber-300 border-t-transparent dark:border-amber-600"
+        />
+      </div>
+
+      <!-- Empty state -->
+      <div
+        v-else-if="recentTadas.length === 0"
+        class="text-center py-12 bg-stone-50 dark:bg-stone-800/50 rounded-xl"
       >
-        View all your accomplishments →
-      </NuxtLink>
+        <div class="text-5xl mb-4">⚡</div>
+        <h3 class="text-lg font-medium text-stone-700 dark:text-stone-200 mb-2">
+          No ta-das yet
+        </h3>
+        <p class="text-sm text-stone-500 dark:text-stone-400 max-w-xs mx-auto">
+          Add your first accomplishment above to start celebrating your wins!
+        </p>
+      </div>
+
+      <!-- Recent entries list -->
+      <div v-else class="space-y-2">
+        <div
+          v-for="entry in recentTadas"
+          :key="entry.id"
+          class="flex items-center gap-3 bg-white dark:bg-stone-800 rounded-lg p-3 border border-stone-200 dark:border-stone-700 hover:border-amber-300 dark:hover:border-amber-600 transition-colors cursor-pointer"
+          @click="handleRecentEntryClick(entry, $event)"
+        >
+          <!-- Emoji badge -->
+          <div
+            class="flex-shrink-0 w-12 h-12 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center text-2xl"
+          >
+            {{ entry.emoji || "⚡" }}
+          </div>
+
+          <!-- Content -->
+          <div class="flex-1 min-w-0">
+            <h3 class="font-medium text-stone-800 dark:text-stone-100 truncate">
+              {{ entry.name }}
+            </h3>
+            <div
+              class="flex items-center gap-2 text-xs text-stone-500 dark:text-stone-400"
+            >
+              <span>{{ formatRelativeDate(entry.timestamp) }}</span>
+              <span v-if="entry.subcategory" class="text-stone-400">·</span>
+              <span v-if="entry.subcategory">{{ entry.subcategory }}</span>
+            </div>
+          </div>
+
+          <!-- Arrow -->
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5 text-stone-300 dark:text-stone-600 flex-shrink-0"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 5l7 7-7 7"
+            />
+          </svg>
+        </div>
+      </div>
     </div>
 
     <!-- Voice Status Indicator (floats when recording/processing) -->

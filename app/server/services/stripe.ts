@@ -101,6 +101,28 @@ export async function getOrCreateCustomer(
 }
 
 /**
+ * Get the Stripe Price ID for a given amount (yearly only).
+ * Maps amounts to environment variables for different support levels.
+ */
+function getPriceId(amount: number): string | undefined {
+  // Map amounts to environment variable names (yearly only)
+  const priceMap: Record<number, string> = {
+    1: "STRIPE_PRICE_ID_YEARLY_1",
+    5: "STRIPE_PRICE_ID_YEARLY_5",
+    12: "STRIPE_PRICE_ID_YEARLY_12",
+    25: "STRIPE_PRICE_ID_YEARLY_25",
+    50: "STRIPE_PRICE_ID_YEARLY_50",
+  };
+
+  const envVarName = priceMap[amount];
+  if (!envVarName) {
+    return undefined;
+  }
+
+  return process.env[envVarName];
+}
+
+/**
  * Create a Stripe Checkout session for subscription.
  */
 export async function createCheckoutSession(
@@ -108,6 +130,7 @@ export async function createCheckoutSession(
   email: string,
   username: string,
   plan: "monthly" | "yearly",
+  amount: number,
   successUrl: string,
   cancelUrl: string
 ): Promise<{ url: string } | { error: string }> {
@@ -116,13 +139,15 @@ export async function createCheckoutSession(
     return { error: "Billing is not configured" };
   }
 
-  const priceId =
-    plan === "monthly"
-      ? process.env["STRIPE_PRICE_ID_MONTHLY"]
-      : process.env["STRIPE_PRICE_ID_YEARLY"];
+  // Only yearly plans are supported
+  if (plan !== "yearly") {
+    return { error: "Only yearly subscriptions are supported" };
+  }
+
+  const priceId = getPriceId(amount);
 
   if (!priceId) {
-    return { error: `Price ID not configured for ${plan} plan` };
+    return { error: `Price ID not configured for yearly plan at £${amount}. Please set STRIPE_PRICE_ID_YEARLY_${amount} in environment variables.` };
   }
 
   try {

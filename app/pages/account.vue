@@ -31,6 +31,18 @@ const checkoutCanceled = computed(() => route.query["canceled"] === "true");
 const isSendingVerification = ref(false);
 const verificationSent = ref(false);
 
+// Pricing state
+const selectedAmount = ref(12);
+
+// Support level tiers
+const supportLevels = [
+  { amount: 1, label: "🌱 Seedling", description: "Every little bit helps" },
+  { amount: 5, label: "🌿 Sapling", description: "Growing support" },
+  { amount: 12, label: "🌳 Oak", description: "Suggested amount" },
+  { amount: 25, label: "🌲 Redwood", description: "Strong support" },
+  { amount: 50, label: "🌲🌳🌲 Forest", description: "Generous supporter" },
+];
+
 // Delete account state
 const showDeleteDialog = ref(false);
 const deleteConfirmation = ref("");
@@ -64,7 +76,8 @@ async function handleSendVerification() {
 }
 
 async function handleUpgrade(plan: "monthly" | "yearly") {
-  await createCheckout(plan);
+  // Pass the selected amount to the checkout
+  await createCheckout(plan, selectedAmount.value);
 }
 
 async function handleManageSubscription() {
@@ -292,22 +305,57 @@ function formatDate(dateString: string | null): string {
           </p>
         </div>
 
-        <div class="text-center mb-4">
-          <div class="text-3xl font-bold text-stone-800 dark:text-stone-100 mb-1">
-            £12<span class="text-lg text-stone-500 dark:text-stone-400">/year</span>
-          </div>
-          <p class="text-sm text-stone-500 dark:text-stone-400">
-            Suggested — or pay what you want (min £1/year)
+        <!-- Support Level Options -->
+        <div class="space-y-3 mb-4">
+          <p class="text-sm font-medium text-stone-700 dark:text-stone-300 mb-2">
+            Choose your support level:
           </p>
+
+          <!-- Support level options -->
+          <div
+            v-for="level in supportLevels"
+            :key="level.amount"
+            class="cursor-pointer"
+            @click="selectedAmount = level.amount"
+          >
+            <label
+              class="flex items-center gap-3 p-3 rounded-lg border-2 transition-all cursor-pointer"
+              :class="
+                selectedAmount === level.amount
+                  ? 'border-tada-500 bg-tada-50 dark:bg-tada-900/20'
+                  : 'border-stone-200 dark:border-stone-600 hover:border-tada-300 dark:hover:border-tada-700'
+              "
+            >
+              <input
+                type="radio"
+                name="supportLevel"
+                :value="level.amount"
+                :checked="selectedAmount === level.amount"
+                class="w-4 h-4 text-tada-600"
+              />
+              <div class="flex-1">
+                <div class="flex items-center gap-2">
+                  <span class="font-medium text-stone-800 dark:text-stone-100">
+                    {{ level.label }}
+                  </span>
+                  <span class="text-sm text-stone-600 dark:text-stone-400">
+                    £{{ level.amount }}/year
+                  </span>
+                </div>
+                <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5">
+                  {{ level.description }}
+                </p>
+              </div>
+            </label>
+          </div>
         </div>
 
         <button
-          class="w-full px-6 py-3 bg-tada-600 hover:bg-tada-700 text-white rounded-lg font-medium transition-colors"
+          class="w-full px-6 py-3 bg-tada-600 hover:bg-tada-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           :disabled="!canUpgrade || isLoading"
-          :class="{ 'opacity-50 cursor-not-allowed': !canUpgrade }"
           @click="handleUpgrade('yearly')"
         >
-          Become a Supporter
+          Support with £{{ selectedAmount }}/year
         </button>
 
         <p class="text-xs text-center text-stone-500 dark:text-stone-400 mt-3">

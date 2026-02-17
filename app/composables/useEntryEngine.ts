@@ -39,6 +39,8 @@ export interface CreateEntryOptions {
   skipEmojiResolution?: boolean;
   /** Skip conflict checking */
   skipConflictCheck?: boolean;
+  /** Skip showing success toast (let caller handle it) */
+  skipSuccessToast?: boolean;
 }
 
 export interface SaveDraftOptions {
@@ -125,7 +127,9 @@ export function useEntryEngine() {
 
       // If we got an entry back, it was successful
       if (entry && entry.id) {
-        toast.success(`${input.name} saved successfully`);
+        if (!options.skipSuccessToast) {
+          toast.success(`${input.name} saved successfully`);
+        }
         return entry;
       }
 
