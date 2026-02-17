@@ -9,8 +9,15 @@ import {
   useRhythms,
   type RhythmSummary,
   type RhythmProgress,
+  type TypedChain,
 } from "~/composables/useRhythms";
 import { useToast } from "~/composables/useToast";
+import {
+  CHAIN_CONFIGS,
+  CHAIN_TYPE_ORDER,
+  formatChainValue,
+  type ChainType,
+} from "~/utils/tierCalculator";
 
 definePageMeta({
   layout: "default",
@@ -184,6 +191,28 @@ function getCategoryEmoji(category: string | null): string {
 }
 
 /**
+ * Pick the most impressive active chain for the collapsed view.
+ * Ranks by difficulty (daily > weekly_high > weekly_low > weekly_target > monthly_target).
+ * Only considers chains with current > 0.
+ */
+function getBestActiveChain(rhythmId: string): TypedChain | null {
+  const progress = getProgress(rhythmId);
+  if (!progress?.chains) return null;
+
+  const active = progress.chains.filter((c) => c.current > 0);
+  if (active.length === 0) return null;
+
+  // Sort by difficulty order (daily first = index 0 = hardest)
+  active.sort((a, b) => {
+    const aIdx = CHAIN_TYPE_ORDER.indexOf(a.type as ChainType);
+    const bIdx = CHAIN_TYPE_ORDER.indexOf(b.type as ChainType);
+    return aIdx - bIdx;
+  });
+
+  return active[0] ?? null;
+}
+
+/**
  * Days elapsed this week (Mon=1, Tue=2, ..., Sun=7).
  * Same for all rhythms — independent of completion status.
  */
@@ -346,11 +375,11 @@ function journeyStageBadgeClass(stage: string): string {
                 {{ daysElapsedThisWeek === 1 ? "day" : "days" }}
               </span>
               <span
-                v-if="rhythm.currentChain > 0"
+                v-if="getBestActiveChain(rhythm.id)"
                 class="flex items-center gap-1"
               >
-                🔗 {{ rhythm.currentChain }} {{ rhythm.chainUnit }}
-                {{ rhythm.chainLabel }} streak
+                🔗 {{ formatChainValue(getBestActiveChain(rhythm.id)!.current, getBestActiveChain(rhythm.id)!.unit) }}
+                {{ getBestActiveChain(rhythm.id)!.label }} streak
               </span>
             </div>
 
