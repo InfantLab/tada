@@ -16,6 +16,7 @@ Feature ideas and future plans, organized by version releases.
 | **v0.3.0** | Magic & Voice               | ✅ Shipped Jan 2026 |
 | **v0.3.1** | REST API                    | ✅ Shipped Jan 2026 |
 | **v0.4.0** | Ontology & Cloud Service    | ✅ Shipped Feb 2026 |
+| **v0.4.1** | Polish & Fixes              | Feb 2026            |
 | **v0.5.0** | Rituals, Celestial & AI     | Q4 2026             |
 | **v0.6.0** | Integrations                | 2027+               |
 
@@ -386,7 +387,7 @@ _Core infrastructure implemented in commit `54a2dd5` (Feb 2026)._
   - [ ] Contemplative practice traditions
 - [x] SEO optimization
 - [x] Email newsletter (opt-in with database storage)
-
+cd a
 **tada.living Deployment:** ✅
 
 - [x] CapRover deployment (manual via CLI)
@@ -397,6 +398,26 @@ _Core infrastructure implemented in commit `54a2dd5` (Feb 2026)._
 - [x] Account management section in Settings
 - [ ] Automated backup scripts (can defer)
 - [ ] Set up dedicated support@tada.living email account (can defer)
+
+---
+
+## v0.4.1: Polish & Fixes
+
+_Target: February 2026_
+
+**Theme:** Fix rough edges from v0.4.0 launch, especially around voice input and mobile experience.
+
+### 🎙️ Voice Entry Quirks
+
+- [ ] Fix voice recording reliability on Android (PWA microphone issues)
+- [ ] Improve LLM extraction accuracy (smarter parsing of ambiguous input)
+- [ ] Clarify BYOK (Bring Your Own Key) settings — current UI is unclear about what keys are needed and where to get them
+- [ ] Voice entries should set `category: "moments"` when creating moment subtypes (magic, dream, gratitude, journal)
+
+### 🧹 Bug Fixes
+
+- [x] Fix double toast notifications on entry creation (engine + caller both showing success)
+- [ ] Review and fix "Starting" label appearing in rhythm UI (should use journey stage names: Beginning, Building, Becoming, Being)
 
 ---
 
@@ -413,6 +434,24 @@ Optional "magic" layer for those who want it, completely invisible to those who 
 - [ ] Optional: planetary hours, astrological transits
 - [ ] Ritual timing suggestions (opt-in)
 - [ ] Celestial data in entry metadata (moon phase when entry was created)
+
+### 🔔 Supportive Push Notifications
+
+Gentle, celebratory nudges — never pushy, never guilt-tripping.
+
+**Philosophy:**
+
+- Notifications celebrate, never nag
+- "You meditated 5 days this week!" not "You haven't meditated today"
+- User controls frequency and types completely
+- Off by default — opt-in only
+
+**Features:**
+
+- [ ] Web Push API integration (PWA)
+- [ ] Notification types: milestone celebrations, rhythm encouragement, weekly reflections
+- [ ] Quiet hours and frequency controls
+- [ ] Tone: warm, supportive, never pressuring
 
 ### 🔧 Smarter Conflict Resolution
 

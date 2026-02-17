@@ -223,7 +223,7 @@ async function handleTextSubmit() {
       emoji: getTypeIcon(voiceSubcategory.value),
       timestamp: new Date().toISOString(),
       data: entryData,
-    });
+    }, { skipSuccessToast: true });
 
     if (result) {
       toast.success(

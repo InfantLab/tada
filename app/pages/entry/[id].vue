@@ -1,9 +1,5 @@
 <script setup lang="ts">
 import type { Entry } from "~/server/db/schema";
-import {
-  CATEGORY_DEFAULTS,
-  getSubcategoriesForCategory,
-} from "~/utils/categoryDefaults";
 import type { EntryInput, EntryType } from "~/utils/entrySchemas";
 
 const { error: showError, success: showSuccess } = useToast();
@@ -21,9 +17,6 @@ const { addToUndo } = useUndo({
     console.debug("Undo expired for entry:", item.id);
   },
 });
-
-// User preferences for category visibility
-const { loadPreferences, isCategoryVisible } = usePreferences();
 
 definePageMeta({
   layout: "default",
@@ -70,7 +63,6 @@ function autoGrow() {
 async function loadEntry() {
   try {
     isLoading.value = true;
-    await loadPreferences();
     const data = await $fetch<Entry>(`/api/entries/${entryId}`);
     entry.value = data;
 
@@ -116,27 +108,6 @@ async function loadEntry() {
 }
 
 onMounted(loadEntry);
-
-// Category options
-const categoryOptions = computed(() => {
-  return Object.keys(CATEGORY_DEFAULTS)
-    .filter((slug) => isCategoryVisible(slug))
-    .map((slug) => ({
-      value: slug,
-      label: CATEGORY_DEFAULTS[slug]!.label,
-      emoji: CATEGORY_DEFAULTS[slug]!.emoji,
-    }));
-});
-
-// Subcategory options based on selected category
-const subcategoryOptions = computed(() => {
-  if (!category.value) return [];
-  return getSubcategoriesForCategory(category.value).map((s) => ({
-    value: s.slug,
-    label: s.label,
-    emoji: s.emoji,
-  }));
-});
 
 // Save changes
 async function saveEntry() {
@@ -230,7 +201,7 @@ async function restoreEntry(data: Entry) {
       tags: data.tags ?? undefined,
       notes: data.notes ?? undefined,
     } as EntryInput,
-    { skipEmojiResolution: true },
+    { skipEmojiResolution: true, skipSuccessToast: true },
   );
 
   if (result) {
@@ -423,54 +394,16 @@ function getMoodEmoji(mood: number): string {
         </div>
 
         <!-- Category & Subcategory -->
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label
-              class="block text-sm font-medium text-stone-600 dark:text-stone-400 mb-2"
-            >
-              Category
-            </label>
-            <select
-              v-model="category"
-              class="w-full px-4 py-2.5 rounded-xl border border-stone-200 dark:border-stone-600 bg-white/80 dark:bg-stone-900/80 text-stone-900 dark:text-white focus:ring-2 focus:ring-stone-400/50 focus:border-stone-300 dark:focus:border-stone-500"
-            >
-              <option value="">No category</option>
-              <option
-                v-for="cat in categoryOptions"
-                :key="cat.value"
-                :value="cat.value"
-              >
-                {{ cat.emoji }} {{ cat.label }}
-              </option>
-            </select>
-          </div>
-          <div>
-            <label
-              class="block text-sm font-medium text-stone-600 dark:text-stone-400 mb-2"
-            >
-              Subcategory
-            </label>
-            <select
-              v-model="subcategory"
-              :disabled="!category"
-              class="w-full px-4 py-2.5 rounded-xl border border-stone-200 dark:border-stone-600 bg-white/80 dark:bg-stone-900/80 text-stone-900 dark:text-white focus:ring-2 focus:ring-stone-400/50 focus:border-stone-300 dark:focus:border-stone-500 disabled:opacity-50"
-            >
-              <option value="">No subcategory</option>
-              <option
-                v-for="sub in subcategoryOptions"
-                :key="sub.value"
-                :value="sub.value"
-              >
-                {{ sub.emoji }} {{ sub.label }}
-              </option>
-            </select>
-          </div>
-        </div>
+        <CategorySubcategoryPicker
+          v-model:category="category"
+          v-model:subcategory="subcategory"
+        />
 
         <!-- Duration (for timed entries) -->
-        <DurationInput
+        <DurationPicker
           v-if="entry.type === 'timed' || entry.type === 'meditation'"
           v-model="durationSeconds"
+          variant="precise"
           label="Duration"
         />
 

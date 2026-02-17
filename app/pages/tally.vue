@@ -334,7 +334,7 @@ async function savePendingTallies() {
           count: tally.count,
           source: "voice",
         },
-      });
+      }, { skipSuccessToast: true });
       if (result) successCount++;
     } catch (err) {
       logError("tally.savePendingTallies.saveOne", err);

@@ -15,11 +15,6 @@ import type { EntryMode } from "./EntryTypeToggle.vue";
 import type { DurationContext } from "./DurationPicker.vue";
 import type { EntryInput } from "~/utils/entrySchemas";
 import type { CreateEntryOptions } from "~/composables/useEntryEngine";
-import {
-  CATEGORY_DEFAULTS,
-  getSubcategoriesForCategory,
-} from "~/utils/categoryDefaults";
-
 const props = withDefaults(
   defineProps<{
     /** Whether the modal is open */
@@ -69,35 +64,6 @@ const count = ref<number | null>(null);
 const notes = ref("");
 const emoji = ref<string | null>(null);
 const showEmojiPicker = ref(false);
-
-// User preferences for category visibility
-const { loadPreferences, isCategoryVisible } = usePreferences();
-
-// Load preferences on mount
-onMounted(() => {
-  loadPreferences();
-});
-
-// Category options
-const categoryOptions = computed(() => {
-  return Object.keys(CATEGORY_DEFAULTS)
-    .filter((slug) => isCategoryVisible(slug))
-    .map((slug) => ({
-      value: slug,
-      label: CATEGORY_DEFAULTS[slug]!.label,
-      emoji: CATEGORY_DEFAULTS[slug]!.emoji,
-    }));
-});
-
-// Subcategory options based on selected category
-const subcategoryOptions = computed(() => {
-  if (!category.value) return [];
-  return getSubcategoriesForCategory(category.value).map((s) => ({
-    value: s.slug,
-    label: s.label,
-    emoji: s.emoji,
-  }));
-});
 
 // Handle activity selection from autocomplete
 function handleActivitySelect(suggestion: {
@@ -275,7 +241,10 @@ async function handleSave(resolution?: "allow-both" | "replace") {
     }
 
     // Determine resolution based on conflict state
-    const saveOptions: CreateEntryOptions = { skipEmojiResolution: false };
+    const saveOptions: CreateEntryOptions = {
+      skipEmojiResolution: false,
+      skipSuccessToast: true,
+    };
     if (resolution === "replace") {
       saveOptions.resolution = "replace";
     } else if (
@@ -510,50 +479,12 @@ const modeLabels: Record<EntryMode, string> = {
                 />
               </div>
 
-              <!-- Category & Subcategory (two selects side by side) -->
-              <div class="grid grid-cols-2 gap-3">
-                <div class="space-y-1">
-                  <label
-                    class="block text-sm font-medium text-stone-700 dark:text-stone-300"
-                  >
-                    Category
-                  </label>
-                  <select
-                    v-model="category"
-                    class="w-full px-3 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 text-stone-900 dark:text-white focus:ring-2 focus:ring-tada-500 focus:border-transparent"
-                  >
-                    <option value="">None</option>
-                    <option
-                      v-for="cat in categoryOptions"
-                      :key="cat.value"
-                      :value="cat.value"
-                    >
-                      {{ cat.emoji }} {{ cat.label }}
-                    </option>
-                  </select>
-                </div>
-                <div class="space-y-1">
-                  <label
-                    class="block text-sm font-medium text-stone-700 dark:text-stone-300"
-                  >
-                    Subcategory
-                  </label>
-                  <select
-                    v-model="subcategory"
-                    :disabled="!category"
-                    class="w-full px-3 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 text-stone-900 dark:text-white focus:ring-2 focus:ring-tada-500 focus:border-transparent disabled:opacity-50"
-                  >
-                    <option value="">None</option>
-                    <option
-                      v-for="sub in subcategoryOptions"
-                      :key="sub.value"
-                      :value="sub.value"
-                    >
-                      {{ sub.emoji }} {{ sub.label }}
-                    </option>
-                  </select>
-                </div>
-              </div>
+              <!-- Category & Subcategory -->
+              <CategorySubcategoryPicker
+                v-model:category="category"
+                v-model:subcategory="subcategory"
+                variant="compact"
+              />
 
               <!-- Duration (timed mode) -->
               <DurationPicker

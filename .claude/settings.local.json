@@ -35,7 +35,14 @@
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(gh run list:*)",
       "Bash(git remote:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(npm run build:*)",
+      "Bash(bun:*)",
+      "Bash(/bin/cat /workspaces/tada/app/composables/useJournalTypeDetection.ts)",
+      "Bash(/usr/bin/head:*)",
+      "Bash(git restore:*)",
+      "Bash(node:*)",
+      "Bash(git diff:*)"
     ]
   }
 }
