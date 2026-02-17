@@ -16,6 +16,8 @@ import type {
 // Types
 // ============================================================================
 
+export type JourneyStage = "beginning" | "building" | "becoming" | "being";
+
 export interface RhythmSummary {
   id: string;
   name: string;
@@ -25,8 +27,13 @@ export interface RhythmSummary {
   durationThresholdSeconds: number;
   countThreshold?: number | null;
   frequency: string;
+  journeyStage: JourneyStage;
+  journeyStageLabel: string;
+  journeyStageEmoji: string;
   currentTier: TierName;
   currentTierLabel: string;
+  daysCompleted: number;
+  daysRemaining: number;
   currentChain: number;
   longestChain: number;
   chainUnit: ChainUnit;
@@ -75,7 +82,7 @@ export interface RhythmProgress {
     weeksActive: number;
     monthsActive: number;
   };
-  journeyStage: "starting" | "building" | "becoming" | "being";
+  journeyStage: JourneyStage;
   encouragement: string;
 }
 
@@ -174,11 +181,16 @@ export function useRhythms() {
         body: input,
       });
 
-      // Add to local state with default tier info
+      // Add to local state with defaults
       const rhythmWithDefaults: RhythmSummary = {
         ...newRhythm,
+        journeyStage: "beginning",
+        journeyStageLabel: "Beginning",
+        journeyStageEmoji: "🌱",
         currentTier: "starting",
         currentTierLabel: "Starting",
+        daysCompleted: 0,
+        daysRemaining: 7,
         currentChain: 0,
         longestChain: 0,
         chainUnit: "weeks",

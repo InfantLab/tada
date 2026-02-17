@@ -182,6 +182,23 @@ function getCategoryEmoji(category: string | null): string {
   };
   return emojis[category || ""] || "✨";
 }
+
+function journeyStageBadgeClass(stage: string): string {
+  const classes: Record<string, string> = {
+    beginning:
+      "bg-emerald-100/40 text-emerald-700 dark:bg-emerald-600/20 dark:text-emerald-300",
+    building:
+      "bg-teal-100/40 text-teal-700 dark:bg-teal-600/20 dark:text-teal-300",
+    becoming:
+      "bg-green-100/40 text-green-700 dark:bg-green-600/20 dark:text-green-300",
+    being:
+      "bg-amber-100/40 text-amber-700 dark:bg-amber-600/20 dark:text-amber-300",
+  };
+  return (
+    classes[stage] ||
+    "bg-stone-100/40 text-stone-600 dark:bg-stone-600/20 dark:text-stone-400"
+  );
+}
 </script>
 
 <template>
@@ -302,32 +319,29 @@ function getCategoryEmoji(category: string | null): string {
                 {{ rhythm.name }}
               </h3>
               <span
-                class="rounded-full bg-tada-100/30 px-2 py-0.5 text-xs text-tada-700 dark:bg-tada-600/20 dark:text-tada-300"
+                :class="journeyStageBadgeClass(rhythm.journeyStage)"
+                class="rounded-full px-2 py-0.5 text-xs"
               >
-                {{ rhythm.currentTierLabel }}
+                {{ rhythm.journeyStageEmoji }}
+                {{ rhythm.journeyStageLabel }}
               </span>
             </div>
 
-            <!-- Chain info -->
+            <!-- Weekly status + streak -->
             <div
               class="flex flex-wrap items-center gap-2 text-sm text-stone-500 sm:gap-4 dark:text-stone-400"
             >
               <span class="flex items-center gap-1">
-                🔥 {{ rhythm.currentChain }} {{ rhythm.chainUnit }} streak
+                This week: {{ rhythm.daysCompleted }} of
+                {{ 7 - rhythm.daysRemaining }}
+                {{ rhythm.daysCompleted === 1 ? "day" : "days" }}
               </span>
               <span
-                class="flex items-center gap-1 text-xs text-stone-400 dark:text-stone-500"
+                v-if="rhythm.currentChain > 0"
+                class="flex items-center gap-1"
               >
-                ({{ rhythm.chainLabel }})
-              </span>
-              <span class="flex items-center gap-1">
-                <template v-if="rhythm.matchType === 'tally'">
-                  🔢 {{ rhythm.countThreshold }} reps threshold
-                </template>
-                <template v-else>
-                  ⏱️ {{ Math.floor(rhythm.durationThresholdSeconds / 60) }} min
-                  threshold
-                </template>
+                🔗 {{ rhythm.currentChain }} {{ rhythm.chainUnit }}
+                {{ rhythm.chainLabel }} streak
               </span>
             </div>
 

@@ -33,7 +33,9 @@ const emit = defineEmits<{
     rhythm: {
       name: string;
       matchCategory: string;
+      matchSubcategory?: string;
       matchType: string;
+      completionMode?: string;
       durationThresholdSeconds?: number;
       countThreshold?: number;
       frequency: string;
@@ -52,16 +54,28 @@ const emit = defineEmits<{
 
 // Form state
 const name = ref("");
-const entryType = ref<"timed" | "tally">("timed");
+const entryType = ref<"timed" | "tally" | "moment" | "tada">("timed");
 const durationMinutes = ref(6);
 const customDuration = ref("");
 const countValue = ref(10);
 const customCount = ref("");
 const category = ref("mindfulness");
+const subcategory = ref<string | null>(null);
+const completionMode = ref<"threshold" | "session">("threshold");
 const matchingScope = ref<"all" | "specific">("all");
 const specificActivityName = ref("");
 const saving = ref(false);
 const error = ref<string | null>(null);
+
+// Whether the current entry type uses session-based completion by default
+const isSessionBasedByDefault = computed(
+  () => entryType.value === "moment" || entryType.value === "tada",
+);
+
+// Whether threshold settings should be shown
+const showThresholdSettings = computed(
+  () => completionMode.value === "threshold",
+);
 
 // Reset form when modal opens/closes
 watch(
@@ -72,13 +86,22 @@ watch(
         // Edit mode
         name.value = props.editRhythm.name;
         entryType.value =
-          (props.editRhythm.matchType as "timed" | "tally") || "timed";
+          (props.editRhythm.matchType as
+            | "timed"
+            | "tally"
+            | "moment"
+            | "tada") || "timed";
         durationMinutes.value = Math.floor(
           props.editRhythm.durationThresholdSeconds / 60,
         );
         countValue.value = props.editRhythm.countThreshold || 10;
         category.value = props.editRhythm.matchCategory ?? "mindfulness";
-        matchingScope.value = "all"; // Simplified for now
+        subcategory.value = null;
+        completionMode.value =
+          entryType.value === "moment" || entryType.value === "tada"
+            ? "session"
+            : "threshold";
+        matchingScope.value = "all";
         specificActivityName.value = "";
       } else {
         // Create mode - reset to defaults
@@ -89,6 +112,8 @@ watch(
         countValue.value = 10;
         customCount.value = "";
         category.value = "mindfulness";
+        subcategory.value = null;
+        completionMode.value = "threshold";
         matchingScope.value = "all";
         specificActivityName.value = "";
       }
@@ -105,16 +130,17 @@ const modalTitle = computed(() =>
 
 // Entry type options
 const entryTypeOptions = [
-  {
-    value: "timed",
-    label: "Timed",
-    icon: "⏱️",
-  },
-  {
-    value: "tally",
-    label: "Tally",
-    icon: "🔢",
-  },
+  { value: "timed", label: "Timed", icon: "⏱️" },
+  { value: "tally", label: "Tally", icon: "🔢" },
+  { value: "moment", label: "Moment", icon: "📝" },
+  { value: "tada", label: "Ta-da!", icon: "🎉" },
+];
+
+// Subcategory options for moments
+const momentSubcategories = [
+  { value: null, label: "All moments", emoji: "📝" },
+  { value: "journal", label: "Journal entries", emoji: "📔" },
+  { value: "dream", label: "Dream log", emoji: "💤" },
 ];
 
 // Category options (filtered by entry type)
@@ -163,11 +189,26 @@ const categoryOptions = computed(() => {
   return allCategories;
 });
 
-// Update category when switching entry type if current category is invalid
+// Update category and completion mode when switching entry type
 watch(entryType, (newType) => {
-  const validCategories = categoryOptions.value.map((c) => c.value);
-  if (!validCategories.includes(category.value)) {
-    category.value = newType === "timed" ? "mindfulness" : "movement";
+  // Set default completion mode based on entry type
+  if (newType === "moment" || newType === "tada") {
+    completionMode.value = "session";
+    subcategory.value = null;
+  } else {
+    completionMode.value = "threshold";
+  }
+
+  // Auto-set category for moment/tada types
+  if (newType === "moment") {
+    category.value = "reflection";
+  } else if (newType === "tada") {
+    category.value = "celebration";
+  } else {
+    const validCategories = categoryOptions.value.map((c) => c.value);
+    if (!validCategories.includes(category.value)) {
+      category.value = newType === "timed" ? "mindfulness" : "movement";
+    }
   }
 });
 
@@ -220,25 +261,21 @@ const currentCount = computed(() => {
 // Validation
 const isValid = computed(() => {
   const hasName = name.value.trim().length > 0;
-  const hasCategory = !!category.value;
   const hasSpecificName =
     matchingScope.value === "all" ||
     specificActivityName.value.trim().length > 0;
 
+  // Session-based types (moment/tada) or "just show up" mode only need a name
+  if (completionMode.value === "session") {
+    return hasName && hasSpecificName;
+  }
+
   if (entryType.value === "timed") {
     const duration = currentDuration.value;
-    return (
-      hasName &&
-      hasCategory &&
-      hasSpecificName &&
-      duration >= 1 &&
-      duration <= 1440
-    );
+    return hasName && hasSpecificName && duration >= 1 && duration <= 1440;
   } else {
     const count = currentCount.value;
-    return (
-      hasName && hasCategory && hasSpecificName && count >= 1 && count <= 10000
-    );
+    return hasName && hasSpecificName && count >= 1 && count <= 10000;
   }
 });
 
@@ -267,8 +304,14 @@ async function save() {
         name: name.value.trim(),
         matchCategory: category.value,
         matchType: entryType.value,
+        completionMode: completionMode.value,
         frequency: "daily", // Always daily - all rhythms are graceful
       };
+
+      // Add subcategory for moment entries
+      if (entryType.value === "moment" && subcategory.value) {
+        rhythmData.matchSubcategory = subcategory.value;
+      }
 
       // Add specific activity name if narrowing down
       if (
@@ -278,10 +321,13 @@ async function save() {
         rhythmData.matchName = specificActivityName.value.trim();
       }
 
-      if (entryType.value === "timed") {
-        rhythmData.durationThresholdSeconds = currentDuration.value * 60;
-      } else {
-        rhythmData.countThreshold = currentCount.value;
+      // Only add thresholds for threshold-based completion
+      if (completionMode.value === "threshold") {
+        if (entryType.value === "timed") {
+          rhythmData.durationThresholdSeconds = currentDuration.value * 60;
+        } else if (entryType.value === "tally") {
+          rhythmData.countThreshold = currentCount.value;
+        }
       }
 
       emit("save", rhythmData);
@@ -362,13 +408,13 @@ async function save() {
               >
                 Entry Type
               </label>
-              <div class="flex gap-2">
+              <div class="grid grid-cols-2 gap-2">
                 <button
                   v-for="option in entryTypeOptions"
                   :key="option.value"
                   type="button"
                   :class="[
-                    'flex-1 flex items-center justify-center gap-2 rounded-lg border-2 px-4 py-3 text-sm font-medium transition-colors',
+                    'flex items-center justify-center gap-2 rounded-lg border-2 px-3 py-2.5 text-sm font-medium transition-colors',
                     entryType === option.value
                       ? 'border-primary-500 bg-primary-50 text-primary-700 dark:bg-primary-900/20 dark:text-primary-300'
                       : 'border-gray-200 text-gray-700 hover:border-gray-300 dark:border-gray-600 dark:text-gray-300 dark:hover:border-gray-500',
@@ -381,8 +427,65 @@ async function save() {
               </div>
             </div>
 
-            <!-- Category -->
-            <div>
+            <!-- Subcategory for moments -->
+            <div v-if="entryType === 'moment' && !isEditing">
+              <label
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
+                Type of moment
+              </label>
+              <div class="flex gap-2">
+                <button
+                  v-for="option in momentSubcategories"
+                  :key="String(option.value)"
+                  type="button"
+                  :class="[
+                    'flex-1 flex items-center justify-center gap-2 rounded-lg border-2 px-3 py-2 text-sm font-medium transition-colors',
+                    subcategory === option.value
+                      ? 'border-primary-500 bg-primary-50 text-primary-700 dark:bg-primary-900/20 dark:text-primary-300'
+                      : 'border-gray-200 text-gray-700 hover:border-gray-300 dark:border-gray-600 dark:text-gray-300 dark:hover:border-gray-500',
+                  ]"
+                  @click="subcategory = option.value"
+                >
+                  <span>{{ option.emoji }}</span>
+                  <span>{{ option.label }}</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Session-based info for moment/tada -->
+            <div
+              v-if="isSessionBasedByDefault"
+              class="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300"
+            >
+              Each day you log an entry counts toward your rhythm.
+            </div>
+
+            <!-- "Just show up" toggle for timed/tally -->
+            <div v-if="!isSessionBasedByDefault && !isEditing">
+              <label class="flex items-center gap-3 cursor-pointer">
+                <input
+                  v-model="completionMode"
+                  type="checkbox"
+                  :true-value="'session'"
+                  :false-value="'threshold'"
+                  class="h-4 w-4 rounded text-primary-500 focus:ring-primary-500"
+                />
+                <div>
+                  <span
+                    class="text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
+                    Just show up
+                  </span>
+                  <p class="text-xs text-gray-500 dark:text-gray-400">
+                    Any entry counts — no minimum duration or count needed
+                  </p>
+                </div>
+              </label>
+            </div>
+
+            <!-- Category (hidden for moment/tada — they auto-set) -->
+            <div v-if="entryType !== 'moment' && entryType !== 'tada'">
               <label
                 class="block text-sm font-medium text-gray-700 dark:text-gray-300"
               >
@@ -469,8 +572,8 @@ async function save() {
               </div>
             </div>
 
-            <!-- Duration Threshold (for timed rhythms) -->
-            <div v-if="entryType === 'timed'">
+            <!-- Duration Threshold (for timed rhythms, threshold mode only) -->
+            <div v-if="entryType === 'timed' && showThresholdSettings">
               <label
                 class="block text-sm font-medium text-gray-700 dark:text-gray-300"
               >
@@ -512,8 +615,8 @@ async function save() {
               </div>
             </div>
 
-            <!-- Count Threshold (for tally rhythms) -->
-            <div v-if="entryType === 'tally'">
+            <!-- Count Threshold (for tally rhythms, threshold mode only) -->
+            <div v-if="entryType === 'tally' && showThresholdSettings">
               <label
                 class="block text-sm font-medium text-gray-700 dark:text-gray-300"
               >

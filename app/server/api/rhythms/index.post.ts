@@ -9,12 +9,15 @@ import { createLogger } from "~/server/utils/logger";
 
 const logger = createLogger("api:rhythms:create");
 
+import { getDefaultThresholdType } from "~/server/utils/rhythmCalculator";
+
 interface CreateRhythmBody {
   name: string;
   matchCategory: string;
   matchSubcategory?: string | null;
   matchType?: string | null;
   matchName?: string | null;
+  completionMode?: string | null;
   durationThresholdSeconds?: number;
   countThreshold?: number;
   frequency: string;
@@ -75,11 +78,25 @@ export default defineEventHandler(async (event) => {
   // Get the entry type (default to timed for backward compatibility)
   const matchType = body.matchType || "timed";
 
-  // Validate thresholds based on rhythm type
+  // Determine completion mode
+  const isSessionBased =
+    body.completionMode === "session" ||
+    matchType === "moment" ||
+    matchType === "tada";
+  const completionMode = isSessionBased ? "session" : "threshold";
+
+  // Determine journey threshold type
+  const journeyThresholdType = getDefaultThresholdType(matchType);
+
+  // Validate thresholds based on rhythm type and completion mode
   let durationThreshold = 360; // Default 6 minutes
   let countThreshold = null;
 
-  if (matchType === "timed") {
+  if (isSessionBased) {
+    // Session-based: no thresholds needed
+    durationThreshold = 0;
+    countThreshold = null;
+  } else if (matchType === "timed") {
     durationThreshold = body.durationThresholdSeconds ?? 360;
     if (durationThreshold < 0 || durationThreshold > 86400) {
       throw createError({
@@ -121,17 +138,33 @@ export default defineEventHandler(async (event) => {
       matchCategory: body.matchCategory,
       matchSubcategory: body.matchSubcategory || null,
       matchName: body.matchName || null,
+      completionMode: completionMode,
+      journeyThresholdType: journeyThresholdType,
       durationThresholdSeconds: durationThreshold,
       countThreshold: countThreshold,
       frequency: body.frequency,
       frequencyTarget: body.frequencyTarget || null,
-      goalType: body.goalType || (matchType === "timed" ? "duration" : "count"),
+      goalType:
+        body.goalType ||
+        (isSessionBased
+          ? "boolean"
+          : matchType === "timed"
+            ? "duration"
+            : "count"),
       goalValue:
         body.goalValue ||
-        (matchType === "timed"
-          ? Math.floor(durationThreshold / 60)
-          : countThreshold || 10),
-      goalUnit: body.goalUnit || (matchType === "timed" ? "minutes" : "reps"),
+        (isSessionBased
+          ? 1
+          : matchType === "timed"
+            ? Math.floor(durationThreshold / 60)
+            : countThreshold || 10),
+      goalUnit:
+        body.goalUnit ||
+        (isSessionBased
+          ? "sessions"
+          : matchType === "timed"
+            ? "minutes"
+            : "reps"),
       currentStreak: 0,
       longestStreak: 0,
       lastCompletedDate: null,

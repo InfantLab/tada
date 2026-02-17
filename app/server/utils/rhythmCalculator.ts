@@ -61,6 +61,30 @@ export interface CachedChainData {
 }
 
 export type JourneyStage = "beginning" | "building" | "becoming" | "being";
+export type JourneyThresholdType = "hours" | "sessions" | "count";
+
+export const DEFAULT_JOURNEY_THRESHOLDS: Record<
+  JourneyThresholdType,
+  { building: number; becoming: number; being: number }
+> = {
+  hours: { building: 10, becoming: 100, being: 1000 },
+  sessions: { building: 21, becoming: 100, being: 365 },
+  count: { building: 100, becoming: 1000, being: 10000 },
+};
+
+const JOURNEY_STAGE_LABELS: Record<JourneyStage, string> = {
+  beginning: "Beginning",
+  building: "Building",
+  becoming: "Becoming",
+  being: "Being",
+};
+
+const JOURNEY_STAGE_EMOJIS: Record<JourneyStage, string> = {
+  beginning: "🌱",
+  building: "🌿",
+  becoming: "🌳",
+  being: "⭐",
+};
 
 // ============================================================================
 // Functions
@@ -110,12 +134,16 @@ export async function getMatchingEntries(
 
 /**
  * Convert entries to day statuses, summing durations per day
- * Supports both duration-based and count-based completion criteria
+ * Supports three completion modes:
+ * - Duration-based: totalSeconds >= durationThresholdSeconds
+ * - Count-based: totalCount >= countThreshold
+ * - Session-based: any entry on a day = complete ("just show up")
  */
 export function entriesToDayStatuses(
   matchingEntries: Entry[],
   durationThresholdSeconds: number,
   countThreshold?: number | null,
+  sessionBased?: boolean,
 ): DayStatus[] {
   const dayMap = new Map<
     string,
@@ -141,9 +169,12 @@ export function entriesToDayStatuses(
 
   const dayStatuses: DayStatus[] = [];
   for (const [date, data] of dayMap.entries()) {
-    // Determine completion based on available criteria
+    // Determine completion based on completion mode
     let isComplete = false;
-    if (
+    if (sessionBased) {
+      // Session-based: any entry on this day = complete ("just show up")
+      isComplete = data.entryCount >= 1;
+    } else if (
       countThreshold !== null &&
       countThreshold !== undefined &&
       countThreshold > 0
@@ -596,18 +627,76 @@ export function calculateTotals(
 }
 
 /**
- * Determine journey stage based on total hours of practice
+ * Determine journey stage based on accumulated practice.
  *
- * - Starting: < 10 hours (just getting started)
- * - Building: 10-100 hours (developing the habit)
- * - Becoming: 100-1000 hours (established practitioner)
- * - Being: 1000+ hours (you ARE this - fully embodied identity)
+ * Supports three threshold types:
+ * - hours: Total hours (default for timed entries)
+ * - sessions: Total sessions (default for moment/tada entries)
+ * - count: Total reps/count (default for tally entries)
+ *
+ * Custom thresholds can override the defaults per-rhythm.
  */
-export function getJourneyStage(totalHours: number): JourneyStage {
-  if (totalHours >= 1000) return "being";
-  if (totalHours >= 100) return "becoming";
-  if (totalHours >= 10) return "building";
+export function getJourneyStage(
+  value: number,
+  thresholdType: JourneyThresholdType = "hours",
+  customThresholds?: { building: number; becoming: number; being: number } | null,
+): JourneyStage {
+  const thresholds =
+    customThresholds || DEFAULT_JOURNEY_THRESHOLDS[thresholdType];
+  if (value >= thresholds.being) return "being";
+  if (value >= thresholds.becoming) return "becoming";
+  if (value >= thresholds.building) return "building";
   return "beginning";
+}
+
+/**
+ * Get the default journey threshold type for a given entry type.
+ */
+export function getDefaultThresholdType(
+  matchType: string | null,
+): JourneyThresholdType {
+  switch (matchType) {
+    case "timed":
+      return "hours";
+    case "tally":
+      return "count";
+    case "moment":
+    case "tada":
+      return "sessions";
+    default:
+      return "hours";
+  }
+}
+
+/**
+ * Get the metric value to use for journey stage calculation.
+ */
+export function getJourneyMetric(
+  thresholdType: JourneyThresholdType,
+  totals: RhythmTotals,
+): number {
+  switch (thresholdType) {
+    case "hours":
+      return totals.totalHours;
+    case "sessions":
+      return totals.totalSessions;
+    case "count":
+      return totals.totalCount;
+  }
+}
+
+/**
+ * Get the display label for a journey stage.
+ */
+export function getJourneyStageLabel(stage: JourneyStage): string {
+  return JOURNEY_STAGE_LABELS[stage];
+}
+
+/**
+ * Get the emoji for a journey stage.
+ */
+export function getJourneyStageEmoji(stage: JourneyStage): string {
+  return JOURNEY_STAGE_EMOJIS[stage];
 }
 
 /**

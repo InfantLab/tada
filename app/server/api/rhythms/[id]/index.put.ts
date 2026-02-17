@@ -14,6 +14,12 @@ interface UpdateRhythmBody {
   name?: string;
   emoji?: string;
   durationThresholdSeconds?: number;
+  countThreshold?: number | null;
+  completionMode?: "threshold" | "session";
+  chainType?: string;
+  chainTargetMinutes?: number | null;
+  journeyThresholdType?: "hours" | "sessions" | "count";
+  journeyThresholds?: { building: number; becoming: number; being: number } | null;
   frequency?: string;
   panelPreferences?: {
     showYearTracker?: boolean;
@@ -105,6 +111,74 @@ export default defineEventHandler(async (event) => {
         });
       }
       updateData["frequency"] = body.frequency;
+    }
+
+    if (body.countThreshold !== undefined) {
+      if (body.countThreshold !== null && (body.countThreshold < 1 || body.countThreshold > 10000)) {
+        throw createError({
+          statusCode: 400,
+          message: "Count threshold must be between 1 and 10000",
+        });
+      }
+      updateData["countThreshold"] = body.countThreshold;
+    }
+
+    if (body.completionMode !== undefined) {
+      const validModes = ["threshold", "session"];
+      if (!validModes.includes(body.completionMode)) {
+        throw createError({
+          statusCode: 400,
+          message: "Invalid completion mode",
+        });
+      }
+      updateData["completionMode"] = body.completionMode;
+    }
+
+    if (body.chainType !== undefined) {
+      const validChainTypes = [
+        "daily",
+        "weekly_high",
+        "weekly_low",
+        "weekly_target",
+        "monthly_target",
+      ];
+      if (!validChainTypes.includes(body.chainType)) {
+        throw createError({
+          statusCode: 400,
+          message: "Invalid chain type",
+        });
+      }
+      updateData["chainType"] = body.chainType;
+      // Invalidate cached chain stats when chain type changes
+      updateData["cachedChainStats"] = null;
+    }
+
+    if (body.chainTargetMinutes !== undefined) {
+      updateData["chainTargetMinutes"] = body.chainTargetMinutes;
+    }
+
+    if (body.journeyThresholdType !== undefined) {
+      const validTypes = ["hours", "sessions", "count"];
+      if (!validTypes.includes(body.journeyThresholdType)) {
+        throw createError({
+          statusCode: 400,
+          message: "Invalid journey threshold type",
+        });
+      }
+      updateData["journeyThresholdType"] = body.journeyThresholdType;
+    }
+
+    if (body.journeyThresholds !== undefined) {
+      if (body.journeyThresholds !== null) {
+        const { building, becoming, being } = body.journeyThresholds;
+        if (building >= becoming || becoming >= being) {
+          throw createError({
+            statusCode: 400,
+            message: "Thresholds must be in ascending order",
+          });
+        }
+      }
+      updateData["journeyThresholds"] = body.journeyThresholds;
     }
 
     if (body.panelPreferences !== undefined) {

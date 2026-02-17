@@ -17,7 +17,10 @@ import {
   calculateTypedChainStats,
   calculateTotals,
   getJourneyStage,
+  getDefaultThresholdType,
+  getJourneyMetric,
   selectEncouragement,
+  type JourneyThresholdType,
 } from "~/server/utils/rhythmCalculator";
 import {
   calculateWeeklyProgress,
@@ -114,10 +117,12 @@ export default defineEventHandler(async (event) => {
     );
 
     // Convert ALL entries to day statuses - used for visualization and calculations
+    const sessionBased = rhythm.completionMode === "session";
     const allDayStatuses = entriesToDayStatuses(
       allMatchingEntries,
       rhythm.durationThresholdSeconds,
       rhythm.countThreshold,
+      sessionBased,
     );
 
     // Check if we can use cached chain/totals data
@@ -193,10 +198,17 @@ export default defineEventHandler(async (event) => {
       rhythm.frequency === "daily" ? "daily" : "weekly";
     const nudgeMessage = generateNudgeMessage(weekProgress, targetTier);
 
-    // Determine journey stage based on metric appropriate to type (hours for timed, count for tally)
-    const journeyMetric =
-      rhythm.matchType === "tally" ? totals.totalCount : totals.totalHours;
-    const journeyStage = getJourneyStage(journeyMetric);
+    // Determine journey stage using rhythm's configured threshold type
+    const thresholdType =
+      (rhythm.journeyThresholdType as JourneyThresholdType) ||
+      getDefaultThresholdType(rhythm.matchType);
+    const customThresholds = rhythm.journeyThresholds as {
+      building: number;
+      becoming: number;
+      being: number;
+    } | null;
+    const journeyMetric = getJourneyMetric(thresholdType, totals);
+    const journeyStage = getJourneyStage(journeyMetric, thresholdType, customThresholds);
 
     // Select encouragement message
     const activityType = rhythm.matchCategory || "general";

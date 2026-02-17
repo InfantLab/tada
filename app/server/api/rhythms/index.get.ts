@@ -13,6 +13,13 @@ import {
   getMatchingEntries,
   entriesToDayStatuses,
   calculateTypedChainStats,
+  getJourneyStage,
+  getJourneyStageLabel,
+  getJourneyStageEmoji,
+  getDefaultThresholdType,
+  getJourneyMetric,
+  type JourneyThresholdType,
+  type CachedChainData,
 } from "~/server/utils/rhythmCalculator";
 import {
   calculateWeeklyProgress,
@@ -59,10 +66,12 @@ export default defineEventHandler(async (event) => {
           endDate,
         );
 
+        const sessionBased = rhythm.completionMode === "session";
         const dayStatuses = entriesToDayStatuses(
           matchingEntries,
           rhythm.durationThresholdSeconds,
           rhythm.countThreshold,
+          sessionBased,
         );
 
         // Calculate current week progress
@@ -76,6 +85,24 @@ export default defineEventHandler(async (event) => {
           chainType,
           rhythm.chainTargetMinutes || undefined,
         );
+
+        // Compute journey stage from cached totals (avoids all-time entry fetch)
+        const thresholdType =
+          (rhythm.journeyThresholdType as JourneyThresholdType) ||
+          getDefaultThresholdType(rhythm.matchType);
+        const customThresholds = rhythm.journeyThresholds as {
+          building: number;
+          becoming: number;
+          being: number;
+        } | null;
+        const cached = rhythm.cachedChainStats as CachedChainData | null;
+        let journeyStage: "beginning" | "building" | "becoming" | "being";
+        if (cached?.totals) {
+          const metric = getJourneyMetric(thresholdType, cached.totals);
+          journeyStage = getJourneyStage(metric, thresholdType, customThresholds);
+        } else {
+          journeyStage = "beginning";
+        }
 
         // Parse panel preferences
         const panelPrefs = rhythm.panelPreferences || {
@@ -97,8 +124,13 @@ export default defineEventHandler(async (event) => {
           frequency: rhythm.frequency,
           chainType: chainType,
           chainLabel: chainConfig.shortLabel,
+          journeyStage,
+          journeyStageLabel: getJourneyStageLabel(journeyStage),
+          journeyStageEmoji: getJourneyStageEmoji(journeyStage),
           currentTier: weekProgress.achievedTier,
           currentTierLabel: getTierLabel(weekProgress.achievedTier),
+          daysCompleted: weekProgress.daysCompleted,
+          daysRemaining: weekProgress.daysRemaining,
           currentChain: chain.current,
           longestChain: chain.longest,
           chainUnit: chain.unit,

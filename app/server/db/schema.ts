@@ -254,6 +254,26 @@ export const rhythms = sqliteTable("rhythms", {
   // Minimum count per day for tally rhythms (e.g., 10 reps)
   countThreshold: integer("count_threshold"),
 
+  // Completion mode: how a day is counted as "complete"
+  // - 'threshold': Must meet duration or count threshold (default for timed/tally)
+  // - 'session': Any entry on that day = complete, "just show up" (default for moment/tada)
+  completionMode: text("completion_mode").notNull().default("threshold"),
+
+  // Journey stage threshold type: what metric drives Beginning→Building→Becoming→Being
+  // - 'hours': Total hours of practice (default for timed)
+  // - 'sessions': Total number of sessions (default for moment/tada)
+  // - 'count': Total reps/count accumulated (default for tally)
+  journeyThresholdType: text("journey_threshold_type").notNull().default("hours"),
+
+  // Custom journey stage thresholds (JSON, nullable)
+  // When null, uses system defaults for the threshold type
+  // Format: { building: number, becoming: number, being: number }
+  journeyThresholds: text("journey_thresholds", { mode: "json" }).$type<{
+    building: number; // threshold to move from beginning → building
+    becoming: number; // threshold to move from building → becoming
+    being: number; // threshold to move from becoming → being
+  } | null>(),
+
   // Chain type configuration (v0.3.1+)
   // Determines how chains are calculated and counted
   // - 'daily': Consecutive days with min duration - counted in days
