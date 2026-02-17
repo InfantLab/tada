@@ -350,7 +350,7 @@ const modeLabels: Record<EntryMode, string> = {
         >
           <div
             v-if="open"
-            class="relative w-full sm:max-w-md mx-auto bg-white dark:bg-stone-900 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden"
+            class="relative w-full sm:max-w-md mx-auto bg-white dark:bg-stone-900 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
           >
             <!-- Header -->
             <div
@@ -568,7 +568,7 @@ const modeLabels: Record<EntryMode, string> = {
 
         <!-- Modal content -->
         <div
-          class="relative bg-white dark:bg-stone-800 rounded-xl shadow-xl max-w-md w-full p-5 space-y-4"
+          class="relative bg-white dark:bg-stone-800 rounded-xl shadow-xl max-w-md w-full p-5 space-y-4 max-h-[90vh] overflow-y-auto"
         >
           <ConflictWarning
             :conflict="conflicts"

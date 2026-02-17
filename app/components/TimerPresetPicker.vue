@@ -250,7 +250,7 @@ onMounted(loadPresets);
           @click.self="showSaveModal = false"
         >
           <div
-            class="bg-white dark:bg-stone-800 rounded-xl p-6 w-full max-w-md mx-4 shadow-2xl"
+            class="bg-white dark:bg-stone-800 rounded-xl p-6 w-full max-w-md mx-4 shadow-2xl max-h-[90vh] overflow-y-auto"
           >
             <h3
               class="text-lg font-semibold mb-4 text-stone-800 dark:text-stone-100"

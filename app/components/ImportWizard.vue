@@ -755,7 +755,7 @@
       @click="showSaveRecipeDialog = false"
     >
       <div
-        class="bg-white dark:bg-cosmic-indigo rounded-lg p-6 max-w-md w-full mx-4"
+        class="bg-white dark:bg-cosmic-indigo rounded-lg p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto"
         @click.stop
       >
         <h3

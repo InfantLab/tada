@@ -119,7 +119,7 @@ onUnmounted(() => {
         @click="close"
       >
         <div
-          class="bg-white dark:bg-stone-800 rounded-xl shadow-xl overflow-hidden"
+          class="bg-white dark:bg-stone-800 rounded-xl shadow-xl overflow-hidden max-h-[90vh]"
           @click.stop
         >
           <!-- Header -->

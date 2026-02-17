@@ -2018,7 +2018,7 @@ onMounted(() => {
 
         <!-- Modal -->
         <div
-          class="relative bg-white dark:bg-stone-800 rounded-2xl shadow-xl max-w-md w-full p-6"
+          class="relative bg-white dark:bg-stone-800 rounded-2xl shadow-xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto"
         >
           <h3 class="text-lg font-bold text-stone-800 dark:text-stone-100 mb-4">
             Delete Category Data

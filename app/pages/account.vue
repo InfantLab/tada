@@ -511,7 +511,7 @@ function formatDate(dateString: string | null): string {
 
         <!-- Dialog -->
         <div
-          class="relative bg-white dark:bg-stone-800 rounded-xl shadow-xl max-w-md w-full p-6"
+          class="relative bg-white dark:bg-stone-800 rounded-xl shadow-xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto"
         >
           <h3 class="text-xl font-semibold text-stone-800 dark:text-stone-100 mb-2">
             Delete Your Account?

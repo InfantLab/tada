@@ -622,7 +622,7 @@ function getSubcatDisplayEmoji(catSlug: string, subcatSlug: string): string {
           @click="showAddCategoryModal = false"
         />
         <div
-          class="relative bg-white dark:bg-stone-800 rounded-xl shadow-xl max-w-sm w-full p-6"
+          class="relative bg-white dark:bg-stone-800 rounded-xl shadow-xl max-w-sm w-full p-6 max-h-[90vh] overflow-y-auto"
         >
           <h3 class="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-4">
             Add Custom Category
@@ -676,7 +676,7 @@ function getSubcatDisplayEmoji(catSlug: string, subcatSlug: string): string {
           @click="showAddSubcategoryModal = false"
         />
         <div
-          class="relative bg-white dark:bg-stone-800 rounded-xl shadow-xl max-w-sm w-full p-6"
+          class="relative bg-white dark:bg-stone-800 rounded-xl shadow-xl max-w-sm w-full p-6 max-h-[90vh] overflow-y-auto"
         >
           <h3 class="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-4">
             Add Subcategory

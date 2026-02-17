@@ -1809,7 +1809,7 @@ onUnmounted(() => {
       class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
     >
       <div
-        class="bg-white dark:bg-stone-800 rounded-2xl shadow-xl max-w-md w-full p-6 space-y-6"
+        class="bg-white dark:bg-stone-800 rounded-2xl shadow-xl max-w-md w-full p-6 space-y-6 max-h-[90vh] overflow-y-auto"
       >
         <h2
           class="text-xl font-semibold text-stone-800 dark:text-stone-100 text-center"
@@ -2016,7 +2016,7 @@ onUnmounted(() => {
       class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
     >
       <div
-        class="bg-white dark:bg-stone-800 rounded-2xl shadow-xl max-w-md w-full p-6 space-y-6"
+        class="bg-white dark:bg-stone-800 rounded-2xl shadow-xl max-w-md w-full p-6 space-y-6 max-h-[90vh] overflow-y-auto"
       >
         <h2
           class="text-xl font-semibold text-stone-800 dark:text-stone-100 text-center"

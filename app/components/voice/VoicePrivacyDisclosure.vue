@@ -43,7 +43,7 @@ function handleAccept() {
         @click.self="$emit('decline')"
       >
         <div
-          class="bg-white dark:bg-stone-800 rounded-2xl shadow-xl max-w-md w-full overflow-hidden"
+          class="bg-white dark:bg-stone-800 rounded-2xl shadow-xl max-w-md w-full overflow-hidden max-h-[90vh]"
         >
           <!-- Header -->
           <div class="p-6 pb-4">
