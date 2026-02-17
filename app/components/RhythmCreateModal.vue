@@ -344,7 +344,7 @@ async function save() {
     <Transition name="modal">
       <div
         v-if="isOpen"
-        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+        class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4"
         @click.self="close"
       >
         <!-- Backdrop -->
@@ -352,7 +352,7 @@ async function save() {
 
         <!-- Modal -->
         <div
-          class="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-xl dark:bg-gray-800"
+          class="relative my-auto w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-xl dark:bg-gray-800"
         >
           <!-- Header -->
           <div class="mb-6 flex items-center justify-between">
