@@ -183,6 +183,15 @@ function getCategoryEmoji(category: string | null): string {
   return emojis[category || ""] || "✨";
 }
 
+/**
+ * Days elapsed this week (Mon=1, Tue=2, ..., Sun=7).
+ * Same for all rhythms — independent of completion status.
+ */
+const daysElapsedThisWeek = computed(() => {
+  const day = new Date().getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+  return day === 0 ? 7 : day;
+});
+
 function journeyStageBadgeClass(stage: string): string {
   const classes: Record<string, string> = {
     beginning:
@@ -333,8 +342,8 @@ function journeyStageBadgeClass(stage: string): string {
             >
               <span class="flex items-center gap-1">
                 This week: {{ rhythm.daysCompleted }} of
-                {{ 7 - rhythm.daysRemaining }}
-                {{ rhythm.daysCompleted === 1 ? "day" : "days" }}
+                {{ daysElapsedThisWeek }}
+                {{ daysElapsedThisWeek === 1 ? "day" : "days" }}
               </span>
               <span
                 v-if="rhythm.currentChain > 0"
