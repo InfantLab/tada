@@ -1,4 +1,5 @@
 import { eq } from "drizzle-orm";
+import { db } from "~/server/db";
 import { newsletterSubscribers } from "~/server/db/schema";
 
 /**
@@ -33,15 +34,14 @@ export default defineEventHandler(async (event) => {
   }
 
   const source = body?.source || "blog";
-  const db = useDatabase();
 
   try {
     // Check if email already exists
-    const existing = await db
+    const [existing] = await db
       .select()
       .from(newsletterSubscribers)
       .where(eq(newsletterSubscribers.email, email))
-      .get();
+      .limit(1);
 
     if (existing) {
       // If already subscribed and active, just return success

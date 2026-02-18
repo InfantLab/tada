@@ -16,6 +16,7 @@ interface EmailConfig {
   user: string;
   password: string;
   from: string;
+  replyTo?: string;
 }
 
 interface SendEmailOptions {
@@ -47,6 +48,7 @@ function getEmailConfig(): EmailConfig | null {
     user,
     password,
     from: process.env["SMTP_FROM"] || `Ta-Da! <${user}>`,
+    replyTo: process.env["SMTP_REPLY_TO"] || undefined,
   };
 }
 
@@ -115,6 +117,7 @@ export async function sendEmail(options: SendEmailOptions): Promise<boolean> {
   try {
     const result = await transport.sendMail({
       from: emailConfig.from,
+      replyTo: emailConfig.replyTo,
       to: options.to,
       subject: options.subject,
       html: options.html,

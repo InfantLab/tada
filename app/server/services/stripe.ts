@@ -110,16 +110,22 @@ export async function getOrCreateCustomer(
 
 /**
  * Get the Stripe Price ID for a given amount (yearly only).
- * Maps amounts to environment variables for different support levels.
+ * Maps amounts to named support levels in environment variables.
+ *
+ * Support levels:
+ *   £1/yr  → Seedling  (STRIPE_PRICE_SEEDLING)
+ *   £5/yr  → Sapling   (STRIPE_PRICE_SAPLING)
+ *   £12/yr → Oak       (STRIPE_PRICE_OAK)
+ *   £25/yr → Redwood   (STRIPE_PRICE_REDWOOD)
+ *   £50/yr → Forest    (STRIPE_PRICE_FOREST)
  */
 function getPriceId(amount: number): string | undefined {
-  // Map amounts to environment variable names (yearly only)
   const priceMap: Record<number, string> = {
-    1: "STRIPE_PRICE_ID_YEARLY_1",
-    5: "STRIPE_PRICE_ID_YEARLY_5",
-    12: "STRIPE_PRICE_ID_YEARLY_12",
-    25: "STRIPE_PRICE_ID_YEARLY_25",
-    50: "STRIPE_PRICE_ID_YEARLY_50",
+    1: "STRIPE_PRICE_SEEDLING",
+    5: "STRIPE_PRICE_SAPLING",
+    12: "STRIPE_PRICE_OAK",
+    25: "STRIPE_PRICE_REDWOOD",
+    50: "STRIPE_PRICE_FOREST",
   };
 
   const envVarName = priceMap[amount];
