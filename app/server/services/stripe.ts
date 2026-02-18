@@ -289,8 +289,14 @@ export async function handleWebhookEvent(
   try {
     event = stripe.webhooks.constructEvent(payload, signature, webhookSecret);
   } catch (error) {
+    const errorMessage = error instanceof Error
+      ? error.message
+      : typeof error === "string"
+        ? error
+        : JSON.stringify(error);
     logger.error("Webhook signature verification failed", {
-      error: error instanceof Error ? error.message : "Unknown error",
+      error: errorMessage,
+      secretPrefix: webhookSecret.substring(0, 10) + "...",
     });
     return { success: false, message: "Invalid signature" };
   }
