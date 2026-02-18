@@ -3,7 +3,7 @@ import { useToast } from "~/composables/useToast";
 
 definePageMeta({
   layout: "default",
-  middleware: ["auth"],
+  auth: false,
 });
 
 const router = useRouter();
