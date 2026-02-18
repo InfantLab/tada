@@ -335,8 +335,12 @@ export async function handleWebhookEvent(
 
     return { success: true, message: "Event processed" };
   } catch (error) {
-    logger.error("Error processing webhook event", {
-      error: error instanceof Error ? error.message : "Unknown error",
+    const errorMsg = error instanceof Error
+      ? error.message
+      : typeof error === "string"
+        ? error
+        : JSON.stringify(error);
+    logger.error("Error processing webhook event", error instanceof Error ? error : new Error(errorMsg), {
       type: event.type,
       id: event.id,
     });
