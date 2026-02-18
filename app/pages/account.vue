@@ -7,7 +7,7 @@ definePageMeta({
 
 const router = useRouter();
 const route = useRoute();
-const { showSuccess, showError } = useToast();
+const { success: showSuccess, error: showError } = useToast();
 
 const {
   subscription,

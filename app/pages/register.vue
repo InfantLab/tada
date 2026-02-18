@@ -7,7 +7,7 @@ definePageMeta({
 });
 
 const router = useRouter();
-const { showError, showSuccess } = useToast();
+const { error: showError, success: showSuccess } = useToast();
 
 const username = ref("");
 const email = ref("");

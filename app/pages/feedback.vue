@@ -19,7 +19,7 @@ useSeoMeta({
 });
 
 const config = useRuntimeConfig();
-const { showSuccess, showError } = useToast();
+const { success: showSuccess, error: showError } = useToast();
 
 // Form state
 const feedbackType = ref<"bug" | "feedback" | "question">("feedback");
