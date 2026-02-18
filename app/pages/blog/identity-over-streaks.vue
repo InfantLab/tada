@@ -126,14 +126,14 @@ useSeoMeta({
       </p>
 
       <ul>
-        <li><strong>Journey stages</strong> (Beginning → Building → Becoming → Being) mark accumulated hours, not consecutive days</li>
-        <li><strong>Graceful chains</strong> celebrate consistency while tolerating gaps</li>
+        <li><strong>Journey stages</strong> mark your accumulated practice — 🌱 Beginning (0–10h), 🌿 Building (10–100h), 🌳 Becoming (100–1,000h), ⭐ Being (1,000h+). These reflect who you're becoming, not how many days you didn't miss.</li>
+        <li><strong>Graceful chains</strong> celebrate consistency while tolerating gaps — from 5×/Week for committed practitioners to 1×/Week for gentler rhythms</li>
         <li><strong>Total hours</strong> matter more than daily streaks</li>
         <li><strong>Encouragement messages</strong> use identity language: "You're becoming a meditator"</li>
       </ul>
 
       <p>
-        Missing a day doesn't reset your 200 hours of practice. It doesn't change your journey stage. It's just one day.
+        Missing a day doesn't reset your 200 hours of practice. It doesn't change your journey stage. It's just one day. You're still Building. Still Becoming. Still who your practice has made you.
       </p>
 
       <h2>A Kinder Frame</h2>

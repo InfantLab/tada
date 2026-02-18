@@ -87,19 +87,19 @@ useSeoMeta({
       <h2>How Graceful Chains Work</h2>
 
       <p>
-        Ta-Da! offers several chain types, each tracking consistency in a different way:
+        Ta-Da! offers five chain types, each tracking consistency at a different frequency:
       </p>
 
       <ul>
-        <li><strong>Daily:</strong> Traditional consecutive days (for those who want it)</li>
-        <li><strong>Weekly High:</strong> 5+ days per week (most days)</li>
-        <li><strong>Weekly Low:</strong> 3+ days per week (several times per week)</li>
-        <li><strong>Weekly Target:</strong> Cumulative minutes per week</li>
-        <li><strong>Monthly Target:</strong> Cumulative minutes per month</li>
+        <li><strong>Daily:</strong> Consecutive days (for those who want it)</li>
+        <li><strong>5×/Week:</strong> 5+ days per week (most days, with breathing room)</li>
+        <li><strong>3×/Week:</strong> 3+ days per week (a sustainable rhythm)</li>
+        <li><strong>1×/Week:</strong> At least once per week (gentle consistency)</li>
+        <li><strong>4×/Month:</strong> 4+ days per month (roughly weekly)</li>
       </ul>
 
       <p>
-        A "Weekly Low" chain of 10 weeks means you've practiced at least 3 days per week for 10 weeks straight. That's 30+ sessions of consistency — regardless of which specific days you chose or how many you missed.
+        A 3×/Week chain of 10 weeks means you've practiced at least 3 days per week for 10 weeks straight. That's 30+ sessions of consistency — regardless of which specific days you chose or how many you missed.
       </p>
 
       <h2>Why This Matters Psychologically</h2>
@@ -133,6 +133,23 @@ useSeoMeta({
         The goal isn't perfect consistency. It's showing up enough that the practice becomes part of who you are. That's measured in patterns, not perfect streaks.
       </p>
 
+      <h2>Chains and Your Journey</h2>
+
+      <p>
+        Graceful chains work hand-in-hand with Ta-Da!'s <em>journey stages</em>. As you accumulate practice time, you move through four stages:
+      </p>
+
+      <ul>
+        <li><strong>🌱 Beginning</strong> (0–10 hours) — You're planting seeds. Every session matters.</li>
+        <li><strong>🌿 Building</strong> (10–100 hours) — Roots are forming. Your practice is becoming part of you.</li>
+        <li><strong>🌳 Becoming</strong> (100–1,000 hours) — Deep growth. You don't just do this — you <em>are</em> this.</li>
+        <li><strong>⭐ Being</strong> (1,000+ hours) — Mastery through presence. The practice and the person are one.</li>
+      </ul>
+
+      <p>
+        Notice that journey stages track <em>accumulated hours</em>, not consecutive days. A missed day doesn't reset your journey — it's just one day. Your 200 hours of practice are still 200 hours, and you're still Becoming.
+      </p>
+
       <h2>Choosing Your Rhythm</h2>
 
       <p>
@@ -140,10 +157,10 @@ useSeoMeta({
       </p>
 
       <ul>
-        <li><strong>Daily chain:</strong> Best for practices that truly benefit from daily consistency (like some meditation traditions)</li>
-        <li><strong>Weekly High (5+ days):</strong> For committed practitioners who want some flexibility</li>
-        <li><strong>Weekly Low (3+ days):</strong> For building a new practice sustainably</li>
-        <li><strong>Target-based:</strong> For practices where total time matters more than frequency</li>
+        <li><strong>Daily:</strong> Best for practices that truly benefit from daily consistency (like some meditation traditions)</li>
+        <li><strong>5×/Week:</strong> For committed practitioners who want some flexibility</li>
+        <li><strong>3×/Week:</strong> For building a new practice sustainably</li>
+        <li><strong>1×/Week or 4×/Month:</strong> For gentler rhythms, or practices you're just beginning to explore</li>
       </ul>
 
       <p>

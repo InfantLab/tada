@@ -104,8 +104,9 @@ useSeoMeta({
 
       <ul>
         <li><strong>Rhythms</strong> track your patterns without punishing gaps</li>
-        <li><strong>Chains</strong> celebrate consistency without breaking from one missed day</li>
+        <li><strong>Graceful chains</strong> celebrate consistency without breaking from one missed day</li>
         <li><strong>Ta-Das</strong> capture wins rather than tracking uncompleted tasks</li>
+        <li><strong>Journey stages</strong> (🌱 Beginning → 🌿 Building → 🌳 Becoming → ⭐ Being) celebrate accumulated hours, not perfect attendance</li>
       </ul>
 
       <p>

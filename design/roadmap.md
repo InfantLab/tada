@@ -92,12 +92,12 @@ See [CHANGELOG.md](../CHANGELOG.md) and [RELEASE_NOTES_v0.2.0.md](../RELEASE_NOT
 
 - Multiple chain types:
   - Daily: Consecutive days with activity
-  - Weekly High: 5+ days per week
-  - Weekly Low: 3+ days per week
-  - Weekly Target: Cumulative minutes per week
-  - Monthly Target: Cumulative minutes per month
+  - 5×/Week: 5+ days per week
+  - 3×/Week: 3+ days per week
+  - 1×/Week: At least 1 day per week
+  - 4×/Month: 4+ days per month
 - Journey stages based on total hours:
-  - Starting (<10h) → Building (10-100h) → Becoming (100-1000h) → Being (1000h+)
+  - Beginning (<10h) → Building (10-100h) → Becoming (100-1000h) → Being (1000h+)
 - Year tracker (GitHub-style heatmap) with historical navigation
 - Bar chart (28-day histogram) with period navigation
 - Chain tabs for switching between chain types
@@ -383,8 +383,9 @@ _Core infrastructure implemented in commit `54a2dd5` (Feb 2026)._
   - [x] "Why We Count Up" - the count-up timer philosophy
   - [x] "Identity Over Streaks" - identity-based behavior change
   - [x] "The Case for Graceful Rhythms" - flexible consistency
-  - [ ] Benefits of mindfulness tracking
-  - [ ] Contemplative practice traditions
+  - [ ] "The Four Seasons of Practice" - deep dive into Beginning → Building → Becoming → Being journey stages
+  - [ ] "Your Data, Your Practice" - why open source and self-hostable matter for personal mindfulness data
+  - [ ] "Moments, Not Metrics" - celebrating the unquantifiable (magic, dreams, gratitude, journal)
 - [x] SEO optimization
 - [x] Email newsletter (opt-in with database storage)
 cd a
