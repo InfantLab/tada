@@ -122,15 +122,41 @@ tar -cvf deploy.tar --exclude=node_modules --exclude=.git .
 
 ---
 
-## Environment Variables (Optional)
+## Environment Variables
 
 These can be set in **"App Configs"** → **"Environmental Variables"**:
+
+### Required for Cloud Mode (tada.living)
+
+| Variable                     | Example                     | Description                           |
+| ---------------------------- | --------------------------- | ------------------------------------- |
+| `NUXT_PUBLIC_APP_URL`        | `https://tada.living`       | Public URL (removes dev banner)       |
+| `NUXT_PUBLIC_IS_CLOUD_MODE`  | `true`                      | Enables cloud features & subscription UI |
+| `STRIPE_SECRET_KEY`          | `sk_live_xxx`               | Stripe API key                        |
+| `STRIPE_WEBHOOK_SECRET`      | `whsec_xxx`                 | Stripe webhook signing secret         |
+| `STRIPE_PRICE_ID_YEARLY`     | `price_xxx`                 | Stripe price ID for yearly plan       |
+
+### Email (SMTP)
+
+| Variable        | Example                      | Description                          |
+| --------------- | ---------------------------- | ------------------------------------ |
+| `SMTP_HOST`     | `smtp.gmail.com`             | SMTP server                          |
+| `SMTP_PORT`     | `25`                         | Port (see note below)                |
+| `SMTP_SECURE`   | `false`                      | `true` for port 465, `false` for 25/587 |
+| `SMTP_USER`     | `you@gmail.com`              | SMTP username                        |
+| `SMTP_PASSWORD` | `xxxx xxxx xxxx xxxx`        | Gmail app password                   |
+| `SMTP_FROM`     | `Ta-Da! <noreply@tada.living>` | From address                       |
+
+> **⚠️ Hetzner SMTP Note:** Hetzner blocks outbound port 587. Use **port 25** with `SMTP_SECURE=false` (STARTTLS). Port 465 may also be blocked. Test with `swaks` if unsure.
+
+### Optional
 
 | Variable       | Default                    | Description                  |
 | -------------- | -------------------------- | ---------------------------- |
 | `NODE_ENV`     | `production`               | Should stay as production    |
-| `DATABASE_URL` | `file:/app/data/db.sqlite` | SQLite database path         |
+| `DATABASE_URL` | `file:/data/db.sqlite`     | SQLite database path         |
 | `PORT`         | `3000`                     | Internal port (don't change) |
+| `GROQ_API_KEY` | -                          | Voice AI (Groq Whisper)      |
 
 ---
 
