@@ -40,8 +40,9 @@ export default defineEventHandler(async (event): Promise<SummaryResponse> => {
     const userId = user.id;
     const period = (query["period"] as Period) || "month";
     const year = query["year"] as string | undefined;
+    const category = query["category"] as string | undefined;
 
-    logger.debug("Fetching entry summary", { userId, period, year });
+    logger.debug("Fetching entry summary", { userId, period, year, category });
 
     // timestamp is THE canonical timeline field - always set, never null
 
@@ -73,6 +74,11 @@ export default defineEventHandler(async (event): Promise<SummaryResponse> => {
     if (year) {
       conditions.push(gte(entries.timestamp, `${year}-01-01`));
       conditions.push(lte(entries.timestamp, `${year}-12-31T23:59:59`));
+    }
+
+    // Filter by category if provided
+    if (category) {
+      conditions.push(eq(entries.category, category));
     }
 
     // Get aggregated stats grouped by period

@@ -34,25 +34,31 @@ const helpContent: Record<string, PageHelp> = {
   "/": {
     title: "Your Timeline",
     description:
-      "Everything you've captured, in one place. Your timeline is a celebration of what you've done, not a to-do list of what's left.",
+      "Everything you've captured, in one place. Use the zoom toggle to switch between Day, Week, Month, and Year views.",
     sections: [
       {
-        title: "Why count up?",
-        icon: "⬆️",
+        title: "Zoom views",
+        icon: "🔭",
         content:
-          "Traditional timers count down, creating pressure. Ta-Da! counts up — celebrating what you accomplished rather than what's remaining.",
+          "Day shows individual entries. Week, Month, and Year show summaries — tap any period card to zoom in and see its details.",
+      },
+      {
+        title: "Filtering",
+        icon: "🔍",
+        content:
+          "Tap a category chip to filter by category across all views. In Day view you can also search by text and filter by time range.",
       },
       {
         title: "Quick capture",
         icon: "➕",
         content:
-          "Tap the + button to quickly log sessions, moments, or wins. Keyboard shortcuts: 'n' for new entry, 'm' for moment.",
+          "Tap the + button to log a session, moment, ta-da, or tally. On desktop, press 'n' for new entry or 'm' for a quick moment.",
       },
       {
-        title: "Finding entries",
-        icon: "🔍",
+        title: "Navigating",
+        icon: "📅",
         content:
-          "Use the search icon to find specific entries. Filter by category using the emoji chips, or change the time range.",
+          "In Year view, tap a year to see its months. Tap a month or week to jump to the Day view for that period. Use the back button or zoom toggle to return.",
       },
     ],
   },

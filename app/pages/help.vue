@@ -2,18 +2,20 @@
 /**
  * Help & FAQ Page
  *
- * Zen-like FAQ page with searchable, categorized questions.
- * Warm, philosophical tone matching the app's identity.
+ * Comprehensive, searchable FAQ organised by feature area.
+ * Shortcut chips at the top for quick navigation.
+ * Warm, encouraging tone matching the Ta-Da! style guide.
  */
 
 definePageMeta({
   layout: "default",
-  auth: false, // Public page
+  auth: false,
 });
 
 useSeoMeta({
   title: "Help & FAQ - Ta-Da!",
-  description: "Answers to common questions about using Ta-Da! for mindful life tracking.",
+  description:
+    "Answers to common questions about using Ta-Da! for celebrating your daily moments.",
 });
 
 interface FAQ {
@@ -22,139 +24,380 @@ interface FAQ {
   category: string;
 }
 
+// Section metadata for shortcuts and headings
+const sectionMeta: Record<string, { emoji: string; id: string }> = {
+  Timeline: { emoji: "📅", id: "timeline" },
+  "Ta-Da!": { emoji: "⚡", id: "tada" },
+  Moments: { emoji: "✨", id: "moments" },
+  Sessions: { emoji: "⏱️", id: "sessions" },
+  Tallies: { emoji: "📊", id: "tallies" },
+  Rhythms: { emoji: "🔗", id: "rhythms" },
+  Settings: { emoji: "⚙️", id: "settings" },
+  Account: { emoji: "👤", id: "account" },
+  Categories: { emoji: "📁", id: "categories" },
+  Privacy: { emoji: "🔒", id: "privacy" },
+  Site: { emoji: "🌐", id: "site" },
+  Support: { emoji: "💬", id: "support" },
+};
+
+const sectionOrder = [
+  "Timeline",
+  "Ta-Da!",
+  "Moments",
+  "Sessions",
+  "Tallies",
+  "Rhythms",
+  "Settings",
+  "Account",
+  "Categories",
+  "Privacy",
+  "Site",
+  "Support",
+];
+
 const faqs: FAQ[] = [
-  // Getting Started
+  // ── Timeline ────────────────────────────────────────────
   {
-    category: "Getting Started",
-    question: "What is Ta-Da! and who is it for?",
+    category: "Timeline",
+    question: "What is the timeline?",
     answer:
-      "Ta-Da! is a mindful life tracker for anyone who wants to notice and celebrate their daily moments — meditation sessions, accomplishments, dreams, and the rhythms that shape who you're becoming. It's built on a philosophy of counting up (celebrating what you did) rather than counting down (focusing on what's left).",
+      "Everything you've captured, in one place. The timeline shows your sessions, ta-das, moments, and tallies in chronological order. It's a celebration of what you've done — not a to-do list of what's left.",
   },
   {
-    category: "Getting Started",
-    question: "How do I get started?",
+    category: "Timeline",
+    question: "What are the zoom views?",
     answer:
-      "Start by capturing something! Try a meditation session in Sessions, log a win in Ta-Da!, or write a reflection in Moments. There's no right way to use Ta-Da! — it adapts to what matters to you.",
+      "Use the Day / Week / Month / Year toggle to change how you see your history. Day shows individual entries. Week, Month, and Year show summaries — tap any period card to zoom in and see its details.",
   },
   {
-    category: "Getting Started",
-    question: "Can I use Ta-Da! offline?",
+    category: "Timeline",
+    question: "How do I filter the timeline?",
     answer:
-      "Yes! Ta-Da! is a Progressive Web App (PWA). Once installed, sessions and basic features work offline. Your entries will sync when you're back online. For the best experience, install Ta-Da! to your home screen.",
+      "Tap a category chip to filter by category — this works across all zoom views. In Day view you can also search by text and narrow by time range (Today, This week, This month, This year, or All time).",
   },
-  // Sessions
+  {
+    category: "Timeline",
+    question: "How do I navigate between views?",
+    answer:
+      "In Year view, tap a year to see its months. Tap a month or week card to jump to the Day view for that period. Use the back button or zoom toggle to return to a wider view.",
+  },
+  {
+    category: "Timeline",
+    question: "Are there keyboard shortcuts?",
+    answer:
+      "Yes! Press 'n' to open the quick-add menu, or 'm' to capture a moment instantly. On desktop you can also use Cmd/Ctrl + N (new entry) or Cmd/Ctrl + Shift + N (new moment).",
+  },
+
+  // ── Ta-Da! ──────────────────────────────────────────────
+  {
+    category: "Ta-Da!",
+    question: "What is a Ta-Da!?",
+    answer:
+      "A Ta-Da! is the opposite of a to-do. It's an accomplishment you want to celebrate — big or small. Finished a painting, tidied the kitchen, shipped a feature? That's a Ta-Da!",
+  },
+  {
+    category: "Ta-Da!",
+    question: "Why celebrate small wins?",
+    answer:
+      "Research shows that acknowledging small accomplishments builds momentum and motivation. Ta-Da! helps you notice what you're doing right, rather than fixating on what's undone.",
+  },
+  {
+    category: "Ta-Da!",
+    question: "How do categories help with wins?",
+    answer:
+      "Wins span all of life — work, health, creative projects, social connections. Use categories to see patterns in where you're thriving.",
+  },
+  {
+    category: "Ta-Da!",
+    question: "How do wins build identity?",
+    answer:
+      "Regular wins in an area build identity: 'I'm someone who finishes projects' or 'I take care of my health.' This is more powerful than streaks because identity persists even when habits wobble.",
+  },
+
+  // ── Moments ─────────────────────────────────────────────
+  {
+    category: "Moments",
+    question: "What are moments?",
+    answer:
+      "Dreams, magic, gratitude, and reflections. These quiet captures become treasures worth revisiting. There are four types: Magic, Dream, Gratitude, and Journal — plus any custom types you create.",
+  },
+  {
+    category: "Moments",
+    question: "What is a Magic moment?",
+    answer:
+      "Life's delightful surprises — joy, serendipity, wonder, beauty. Noticing magic amplifies it and helps you spot more of it.",
+  },
+  {
+    category: "Moments",
+    question: "How does the dream journal work?",
+    answer:
+      "Capture dreams as soon as you wake up — even fragments matter. Over time, patterns emerge. You can note how vivid or lucid the dream was to spot trends.",
+  },
+  {
+    category: "Moments",
+    question: "What about gratitude and journal entries?",
+    answer:
+      "Gratitude entries are appreciation for people, moments, or experiences — regular gratitude practice shifts your attention toward what's working. Journal entries are freeform reflections — sometimes you just need to get words out, no structure required.",
+  },
+
+  // ── Sessions ────────────────────────────────────────────
   {
     category: "Sessions",
-    question: "Why does the session timer count up instead of down?",
+    question: "What are sessions?",
     answer:
-      "Counting up celebrates what you accomplished rather than what's remaining. When you meditate for 47 minutes, the celebration is \"You did 47 minutes!\" not \"You have 13 minutes left.\" This philosophy extends throughout Ta-Da! — we focus on what you did, not what you missed.",
+      "Timed practices like meditation, focused work, or creative flow. Start a timer, do your thing, and stop when you're done. The timer celebrates what you did, not what's left.",
   },
   {
     category: "Sessions",
-    question: "What are the interval bells for?",
+    question: "Why does the timer count up instead of down?",
     answer:
-      "Interval bells can mark time during your session without interrupting flow. You might set a gentle chime every 10 minutes to maintain awareness, or use them for walking meditation segments. They're completely optional — many people prefer silence.",
+      "When you meditate for 47 minutes, the celebration is 'You did 47 minutes!' not 'You have 13 minutes left.' Counting up removes pressure and turns every session into a win.",
   },
   {
     category: "Sessions",
-    question: "Why does my session stop when I switch tabs?",
+    question: "What are interval bells?",
     answer:
-      "Browsers throttle background tabs to save battery. The session will continue tracking, but bells might be delayed. For the most accurate experience, keep the Ta-Da! tab in the foreground during sessions. Consider using \"Do Not Disturb\" mode on your device.",
+      "Optional bells mark time without interrupting flow. Set a gentle chime every 10 minutes to maintain awareness, or practise in silence — it's your choice.",
   },
-  // Rhythms
+  {
+    category: "Sessions",
+    question: "Why do bells seem delayed when I switch tabs?",
+    answer:
+      "Browsers throttle background tabs to save battery. Your session still records accurately, but bells may fire late. For the best experience, keep Ta-Da! in the foreground during sessions. Consider using Do Not Disturb on your device.",
+  },
+  {
+    category: "Sessions",
+    question: "What are practice links?",
+    answer:
+      "Connect sessions to guided content. Ta-Da! auto-detects YouTube, Insight Timer, and Spotify links so you can revisit what you practised.",
+  },
+  {
+    category: "Sessions",
+    question: "Can I save favourite timer setups?",
+    answer:
+      "Yes! Create session presets in Settings with your preferred duration, bells, and background audio. Name them meaningfully — 'Morning Sit', 'Pomodoro', 'Creative Flow' — then start one with a single tap.",
+  },
+
+  // ── Tallies ─────────────────────────────────────────────
+  {
+    category: "Tallies",
+    question: "What are tallies?",
+    answer:
+      "Quick counts for exercises, habits, or anything you want to capture numerically. 10 push-ups, 3 glasses of water, 5 pages read — simple and friction-free.",
+  },
+  {
+    category: "Tallies",
+    question: "What are tally presets?",
+    answer:
+      "Create presets for activities you capture regularly. One tap to record 10 push-ups or a glass of water — no typing needed.",
+  },
+  {
+    category: "Tallies",
+    question: "Can I use voice for tallies?",
+    answer:
+      "Yes! Say '10 push-ups, 12 kettlebells, 30 squats' and Ta-Da! creates multiple tally entries at once. Press the microphone icon to start.",
+  },
+
+  // ── Rhythms ─────────────────────────────────────────────
+  {
+    category: "Rhythms",
+    question: "What are rhythms?",
+    answer:
+      "Rhythms are views of your entries — they show patterns over time without storing separate data. Deleting a rhythm never deletes your underlying sessions, tallies, moments, or ta-das.",
+  },
   {
     category: "Rhythms",
     question: "What are the three rhythm types?",
     answer:
-      "Timed rhythms track duration-based activities (like meditation) — a day counts when you meet your time threshold. Tally rhythms track counts (like press-ups) — a day counts when you hit your rep target. Activity rhythms track moments and ta-das — just showing up counts. Any entry on a day marks it complete.",
+      "Timed rhythms celebrate duration (e.g., 6 minutes of meditation). Tally rhythms celebrate counts (e.g., 5 press-ups). Activity rhythms just need you to show up — any matching entry on a day counts.",
   },
   {
     category: "Rhythms",
-    question: "What are 'graceful chains'?",
+    question: "What are graceful chains?",
     answer:
-      "Graceful chains are our alternative to harsh streaks. Choose from 5 types: Daily (consecutive days), 5×/Week, 3×/Week, 1×/Week, or 4×/Month. All count completed days — not cumulative time. Missing a day doesn't break your identity as a practitioner. Chains bend, not break.",
+      "Our alternative to harsh streaks. Choose from 5 types: Daily (every day), 5×/Week, 3×/Week, 1×/Week, or 4×/Month. All count completed days. Missing a day doesn't erase your progress — chains bend, not break.",
   },
   {
     category: "Rhythms",
     question: "What happens if I miss a day?",
     answer:
-      "Nothing dramatic! Your rhythm continues. Ta-Da! tracks patterns, not perfection. You might see a small gap in your year tracker, but your accumulated experience and journey stage remain. We believe identity ('I am a meditator') matters more than streaks ('I haven't missed a day').",
+      "Nothing dramatic. Your rhythm continues. You might see a small gap in the year view, but your accumulated experience and journey stage remain. We believe identity — 'I am a meditator' — matters more than an unbroken streak.",
   },
   {
     category: "Rhythms",
-    question: "How do the journey stages work?",
+    question: "How do journey stages work?",
     answer:
-      "Journey stages mark your total experience: Beginning, Building, Becoming, and Being. The thresholds adapt to rhythm type — hours for timed activities (10/100/1,000), session count for activities (21/100/365), or reps for tallies (100/1,000/10,000). Your stage never goes backward, even when chains break.",
+      "Journey stages mark your total experience: Beginning, Building, Becoming, and Being. Thresholds adapt to rhythm type — hours for timed activities (10 / 100 / 1,000), session count for activities (21 / 100 / 365), or reps for tallies (100 / 1,000 / 10,000). Your stage never goes backward, even when chains break.",
   },
   {
     category: "Rhythms",
     question: "Does deleting a rhythm delete my data?",
     answer:
-      "No. Rhythms are views of your entries, not separate data. Deleting a rhythm removes only the tracking configuration — all your sessions, tallies, moments, and ta-das remain untouched. You can always create a new rhythm that matches the same entries.",
+      "No. Rhythms are derived data. Deleting a rhythm removes only the configuration — all your entries remain untouched. You can always create a new rhythm that matches the same entries.",
   },
-  // Privacy & Data
+
+  // ── Settings ────────────────────────────────────────────
   {
-    category: "Privacy",
-    question: "Is my data private?",
+    category: "Settings",
+    question: "What can I customise in Settings?",
     answer:
-      "Absolutely. Your entries, reflections, and personal data are yours alone. We never sell your data, use it for advertising, or train AI models with it. You can export all your data anytime from Settings.",
+      "Theme (light, dark, or system), celebration sounds, session presets with bells and background audio, voice input provider, notification preferences, and more. Settings is where you make Ta-Da! feel like yours.",
   },
   {
-    category: "Privacy",
-    question: "Can I self-host Ta-Da!?",
+    category: "Settings",
+    question: "What are celebration sounds?",
     answer:
-      "Yes! Ta-Da! is fully open source. You can run it on your own server for complete control over your data. Check our GitHub repository for setup instructions. Self-hosted instances have no limitations.",
+      "When you save a Ta-Da!, a short celebratory sound plays. Choose from Ta-Da Short, Ta-Da Long, or Twinkle — or turn them off if you prefer silence. You can preview each in Settings.",
   },
   {
-    category: "Privacy",
-    question: "What happens to my data if I cancel?",
+    category: "Settings",
+    question: "How does data export work?",
     answer:
-      "If you're on the free tier, you always have access to your last 12 months of data, and you can export everything anytime. If you cancel Premium, you simply revert to the free tier — nothing is deleted. You can delete your account entirely from Settings if you wish.",
-  },
-  // Import
-  {
-    category: "Import",
-    question: "How do I import from Insight Sessions?",
-    answer:
-      "Go to Settings → Data → Import. Select the Insight Sessions recipe, upload your CSV export from Insight Sessions, and Ta-Da! will map the columns automatically. You can preview the import before confirming.",
+      "Go to Settings and tap Export. Your entire history downloads as a JSON file. Your data is yours — no lock-in, ever.",
   },
   {
-    category: "Import",
+    category: "Settings",
     question: "Can I import from other apps?",
     answer:
-      "Yes! Ta-Da! has a flexible CSV importer that works with any app that can export to CSV. You can map columns manually or create custom import recipes for apps you use frequently.",
+      "Yes! Ta-Da! has a flexible CSV importer that works with any app. There's a built-in recipe for Insight Timer that maps columns automatically, and you can create custom recipes for other apps. Preview imports before confirming.",
   },
-  // Account
+
+  // ── Account ─────────────────────────────────────────────
   {
     category: "Account",
     question: "What's the difference between free and premium?",
     answer:
-      "Free gives you all features with a 1-year data history window. Premium ($5/month or $50/year) provides unlimited history, priority support, and early access to new features. Self-hosted instances are always unlimited.",
+      "Free gives you all features with a 12-month data history window. Premium provides unlimited history, priority support, and early access to new features. Self-hosted instances are always unlimited.",
   },
   {
     category: "Account",
     question: "How do I change my password?",
     answer:
-      "Go to Settings → Security → Change Password. You'll need your current password to set a new one. If you've forgotten your password, use the 'Forgot Password' link on the login page.",
+      "Go to your Account page and choose Change Password. You'll need your current password to set a new one. If you've forgotten it, use the 'Forgot Password' link on the login page.",
+  },
+  {
+    category: "Account",
+    question: "How do I update my email?",
+    answer:
+      "Visit your Account page and update the email field. You'll need to verify your new address before it takes effect.",
+  },
+  {
+    category: "Account",
+    question: "Can I delete my account?",
+    answer:
+      "Yes. Go to your Account page, scroll to the bottom, and choose Delete Account. This is permanent — all your entries, rhythms, and settings will be removed. You'll be asked to type DELETE to confirm.",
+  },
+  {
+    category: "Account",
+    question: "What happens to my data if I cancel premium?",
+    answer:
+      "You simply revert to the free tier — nothing is deleted. You keep access to your most recent 12 months of data, and you can export everything anytime.",
+  },
+
+  // ── Categories ──────────────────────────────────────────
+  {
+    category: "Categories",
+    question: "What are categories?",
+    answer:
+      "Categories organise your entries by area of life — Meditation, Work, Health, Creative, Social, and more. They appear as filter chips on the timeline and help you spot where you're showing up.",
+  },
+  {
+    category: "Categories",
+    question: "Can I customise categories?",
+    answer:
+      "Yes! You can change the emoji for any category or subcategory, add your own custom categories, create new subcategories, and hide built-in categories you don't use. Go to Categories from the sidebar.",
+  },
+  {
+    category: "Categories",
+    question: "Can I delete all entries in a category?",
+    answer:
+      "Yes. In the Categories page, open a category and choose 'Delete all entries.' You'll have 15 seconds to undo before it becomes permanent. The category itself remains — only the entries are removed.",
+  },
+
+  // ── Privacy ──────────────────────────────────────────────
+  {
+    category: "Privacy",
+    question: "Is my data private?",
+    answer:
+      "Absolutely. Your entries, reflections, and personal data are yours alone. We never sell your data, use it for advertising, or train AI models with it. You can export everything anytime.",
+  },
+  {
+    category: "Privacy",
+    question: "Can I self-host Ta-Da!?",
+    answer:
+      "Yes! Ta-Da! is fully open source. Run it on your own server for complete control over your data. Self-hosted instances have no feature limitations.",
+  },
+  {
+    category: "Privacy",
+    question: "What happens to my data if I delete my account?",
+    answer:
+      "Everything is permanently removed — entries, rhythms, settings, and account details. There is no recovery after deletion. We recommend exporting your data first from Settings.",
+  },
+  {
+    category: "Privacy",
+    question: "Does voice input send my audio to external services?",
+    answer:
+      "It depends on your chosen provider. The browser provider processes speech locally on your device. Cloud providers (Whisper, Groq, OpenAI) send audio to their servers for transcription. You'll see a privacy disclosure before first use, and you can change provider anytime in Settings.",
+  },
+
+  // ── Site ────────────────────────────────────────────────
+  {
+    category: "Site",
+    question: "Can I install Ta-Da! as an app?",
+    answer:
+      "Yes! Ta-Da! is a Progressive Web App. On mobile, tap 'Add to Home Screen' from your browser menu. On desktop, look for the install icon in the address bar. Once installed, it launches full-screen like a native app.",
+  },
+  {
+    category: "Site",
+    question: "Does Ta-Da! work offline?",
+    answer:
+      "Basic features work offline once the app is installed. Sessions continue recording even without a connection. Your entries will sync when you're back online.",
+  },
+  {
+    category: "Site",
+    question: "How does voice input work?",
+    answer:
+      "Tap the microphone icon to speak instead of type. Ta-Da! uses speech-to-text to capture your words. You can configure the voice provider in Settings. Free accounts get 50 voice entries per month.",
+  },
+  {
+    category: "Site",
+    question: "Is Ta-Da! open source?",
+    answer:
+      "Yes! The full source code is available on GitHub. You can contribute, report issues, or run your own instance.",
+  },
+
+  // ── Support ─────────────────────────────────────────────
+  {
+    category: "Support",
+    question: "How do I report a bug or request a feature?",
+    answer:
+      "Use the Feedback page (linked from the sidebar) to send us a message directly. You can also email us — we read everything and respond personally.",
+  },
+  {
+    category: "Support",
+    question: "Where can I learn about Ta-Da!'s philosophy?",
+    answer:
+      "Check out the blog posts in the sidebar — they explain why Ta-Da! counts up, why identity matters more than streaks, and how graceful rhythms replace rigid habits.",
+  },
+  {
+    category: "Support",
+    question: "I have another question not listed here",
+    answer:
+      "We'd love to help! Send us a message via the Feedback page or email us directly. No question is too small.",
   },
 ];
 
-const categories = [...new Set(faqs.map((f) => f.category))];
-
 const route = useRoute();
-
-// Support pre-filtering via ?q= query parameter
 const searchQuery = ref((route.query["q"] as string) || "");
 const expandedQuestions = ref<Set<string>>(new Set());
 
 const filteredFaqs = computed(() => {
   if (!searchQuery.value.trim()) return faqs;
-
-  const query = searchQuery.value.toLowerCase();
+  const q = searchQuery.value.toLowerCase();
   return faqs.filter(
     (faq) =>
-      faq.question.toLowerCase().includes(query) ||
-      faq.answer.toLowerCase().includes(query)
+      faq.question.toLowerCase().includes(q) ||
+      faq.answer.toLowerCase().includes(q),
   );
 });
 
@@ -175,12 +418,18 @@ function toggleQuestion(question: string) {
   } else {
     expandedQuestions.value.add(question);
   }
-  // Trigger reactivity
   expandedQuestions.value = new Set(expandedQuestions.value);
 }
 
 function isExpanded(question: string) {
   return expandedQuestions.value.has(question);
+}
+
+function scrollToSection(id: string) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 }
 </script>
 
@@ -192,17 +441,45 @@ function isExpanded(question: string) {
         to="/"
         class="inline-flex items-center gap-2 text-stone-600 dark:text-stone-400 hover:text-stone-800 dark:hover:text-stone-200 transition-colors mb-4"
       >
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        <svg
+          class="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M15 19l-7-7 7-7"
+          />
         </svg>
         Back
       </NuxtLink>
-      <h1 class="text-3xl font-bold text-stone-800 dark:text-stone-100 mb-2">
+      <h1
+        class="text-3xl font-bold text-stone-800 dark:text-stone-100 mb-2"
+      >
         Help & FAQ
       </h1>
       <p class="text-stone-600 dark:text-stone-400">
-        Answers to common questions about Ta-Da!
+        Everything you need to know about Ta-Da!
       </p>
+    </div>
+
+    <!-- Shortcut chips -->
+    <div
+      class="flex flex-wrap gap-2 mb-6"
+    >
+      <button
+        v-for="section in sectionOrder"
+        :key="section"
+        type="button"
+        class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm whitespace-nowrap bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"
+        @click="scrollToSection(sectionMeta[section]!.id)"
+      >
+        <span>{{ sectionMeta[section]!.emoji }}</span>
+        <span>{{ section }}</span>
+      </button>
     </div>
 
     <!-- Search -->
@@ -245,23 +522,24 @@ function isExpanded(question: string) {
       </button>
     </div>
 
-    <!-- FAQ Categories -->
-    <div v-else class="space-y-8">
-      <section v-for="category in categories" :key="category">
-        <template v-if="faqsByCategory[category]?.length">
-          <h2 class="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-4 flex items-center gap-2">
-            <span v-if="category === 'Getting Started'">🚀</span>
-            <span v-else-if="category === 'Sessions'">⏱️</span>
-            <span v-else-if="category === 'Rhythms'">📊</span>
-            <span v-else-if="category === 'Privacy'">🔒</span>
-            <span v-else-if="category === 'Import'">📥</span>
-            <span v-else-if="category === 'Account'">👤</span>
-            <span v-else>❓</span>
-            {{ category }}
+    <!-- FAQ Sections -->
+    <div v-else class="space-y-10">
+      <section
+        v-for="section in sectionOrder"
+        :key="section"
+        :id="sectionMeta[section]!.id"
+        class="scroll-mt-20"
+      >
+        <template v-if="faqsByCategory[section]?.length">
+          <h2
+            class="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-4 flex items-center gap-2"
+          >
+            <span>{{ sectionMeta[section]!.emoji }}</span>
+            {{ section }}
           </h2>
           <div class="space-y-3">
             <div
-              v-for="faq in faqsByCategory[category]"
+              v-for="faq in faqsByCategory[section]"
               :key="faq.question"
               class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 overflow-hidden"
             >
@@ -269,7 +547,9 @@ function isExpanded(question: string) {
                 class="w-full px-5 py-4 text-left flex items-center justify-between gap-4"
                 @click="toggleQuestion(faq.question)"
               >
-                <span class="font-medium text-stone-800 dark:text-stone-100">
+                <span
+                  class="font-medium text-stone-800 dark:text-stone-100"
+                >
                   {{ faq.question }}
                 </span>
                 <svg
@@ -299,7 +579,7 @@ function isExpanded(question: string) {
                   v-if="isExpanded(faq.question)"
                   class="px-5 pb-4 text-stone-600 dark:text-stone-400 border-t border-stone-100 dark:border-stone-700"
                 >
-                  <p class="pt-4">{{ faq.answer }}</p>
+                  <p class="pt-4 leading-relaxed">{{ faq.answer }}</p>
                 </div>
               </Transition>
             </div>
@@ -309,19 +589,28 @@ function isExpanded(question: string) {
     </div>
 
     <!-- Still have questions? -->
-    <div class="mt-12 pt-8 border-t border-stone-200 dark:border-stone-700 text-center">
-      <h3 class="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-2">
+    <div
+      class="mt-12 pt-8 border-t border-stone-200 dark:border-stone-700 text-center"
+    >
+      <h3
+        class="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-2"
+      >
         Still have questions?
       </h3>
       <p class="text-stone-600 dark:text-stone-400 mb-4">
-        We're here to help!
+        We'd love to help!
       </p>
       <div class="flex flex-col sm:flex-row gap-4 justify-center">
         <NuxtLink
           to="/feedback"
           class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-tada-600 text-white rounded-xl font-medium hover:bg-tada-700 transition-colors"
         >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg
+            class="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -335,7 +624,12 @@ function isExpanded(question: string) {
           href="mailto:infantologist@gmail.com"
           class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-stone-100 dark:bg-stone-700 text-stone-700 dark:text-stone-200 rounded-xl font-medium hover:bg-stone-200 dark:hover:bg-stone-600 transition-colors"
         >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg
+            class="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -349,7 +643,9 @@ function isExpanded(question: string) {
     </div>
 
     <!-- Footer Links -->
-    <div class="mt-12 pt-8 border-t border-stone-200 dark:border-stone-700 flex gap-4 text-sm justify-center">
+    <div
+      class="mt-12 pt-8 border-t border-stone-200 dark:border-stone-700 flex gap-4 text-sm justify-center"
+    >
       <NuxtLink
         to="/privacy"
         class="text-stone-600 dark:text-stone-400 hover:text-tada-600 dark:hover:text-tada-400"

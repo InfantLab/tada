@@ -140,7 +140,7 @@ function toggleSearch() {
       </div>
 
       <!-- Category chips -->
-      <div class="flex items-center gap-1 overflow-x-auto scrollbar-hide">
+      <div class="flex-1 min-w-0 flex items-center gap-1 overflow-x-auto scrollbar-hide">
         <button
           v-for="cat in categories"
           :key="cat.value"

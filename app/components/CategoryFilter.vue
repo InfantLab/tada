@@ -34,7 +34,7 @@ const categories = computed(() => [
 </script>
 
 <template>
-  <div class="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-2">
+  <div class="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-2 max-w-full">
     <button
       v-for="cat in categories"
       :key="cat.value"
