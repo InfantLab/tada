@@ -109,6 +109,26 @@ export async function getOrCreateCustomer(
 }
 
 /**
+ * Get the subscription period end as an ISO string.
+ * In Stripe API 2026-01-28+, current_period_end moved from subscription
+ * top-level to subscription.items.data[].current_period_end.
+ */
+function getSubscriptionPeriodEnd(subscription: Stripe.Subscription): string {
+  // Try new location first (items), then legacy top-level
+  const periodEnd =
+    subscription.items?.data?.[0]?.current_period_end ??
+    (subscription as Record<string, unknown>)["current_period_end"];
+
+  if (typeof periodEnd === "number" && periodEnd > 0) {
+    return new Date(periodEnd * 1000).toISOString();
+  }
+
+  // Fallback: 1 year from now
+  logger.warn("Could not determine subscription period end, using 1 year default");
+  return new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
+}
+
+/**
  * Get the Stripe Price ID for a given amount (yearly only).
  * Maps amounts to named support levels in environment variables.
  *
@@ -377,9 +397,7 @@ async function handleCheckoutComplete(event: Stripe.Event): Promise<void> {
       subscriptionTier: "premium",
       subscriptionStatus: "active",
       stripeCustomerId: session.customer as string,
-      subscriptionExpiresAt: new Date(
-        subscription.current_period_end * 1000
-      ).toISOString(),
+      subscriptionExpiresAt: getSubscriptionPeriodEnd(subscription),
       updatedAt: new Date().toISOString(),
     })
     .where(eq(users.id, userId));
@@ -566,23 +584,21 @@ async function updateUserSubscription(
     .set({
       subscriptionTier: status === "cancelled" ? "free" : "premium",
       subscriptionStatus: status,
-      subscriptionExpiresAt: new Date(
-        subscription.current_period_end * 1000
-      ).toISOString(),
+      subscriptionExpiresAt: getSubscriptionPeriodEnd(subscription),
       updatedAt: new Date().toISOString(),
     })
     .where(eq(users.id, userId));
 
   await logSubscriptionEvent(userId, "renewed", eventId, {
     status: subscription.status,
-    periodEnd: subscription.current_period_end,
+    periodEnd: getSubscriptionPeriodEnd(subscription),
   });
 
   logger.info("Updated user subscription", { userId, status });
 
   // Send renewal email for active renewals (not downgrades)
   if (status === "active") {
-    const nextDate = new Date(subscription.current_period_end * 1000)
+    const nextDate = new Date(getSubscriptionPeriodEnd(subscription))
       .toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
     await sendSubscriptionEmailWithArgs(userId, (username) =>
       subscriptionRenewedEmail(username, nextDate),
