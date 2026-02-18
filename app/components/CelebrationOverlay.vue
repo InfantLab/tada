@@ -14,7 +14,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  emoji: "🎉",
+  emoji: "⚡",
   text: "TA-DA!",
   soundFile: "/sounds/tada-f-versionD.mp3",
   duration: 2000,

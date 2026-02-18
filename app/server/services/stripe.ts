@@ -14,6 +14,14 @@ import { users, subscriptionEvents } from "~/server/db/schema";
 import { isBillingEnabled } from "~/server/utils/cloudMode";
 import { createLogger } from "~/server/utils/logger";
 import { generateId } from "~/server/utils/tokens";
+import { sendEmail, isEmailConfigured } from "~/server/utils/email";
+import {
+  supporterWelcomeEmail,
+  subscriptionRenewedEmail,
+  subscriptionCancelledEmail,
+  paymentFailedEmail,
+  paymentRecoveredEmail,
+} from "~/server/templates/email";
 
 const logger = createLogger("services:stripe");
 
@@ -365,6 +373,9 @@ async function handleCheckoutComplete(event: Stripe.Event): Promise<void> {
   });
 
   logger.info("User upgraded to premium", { userId, sessionId: session.id });
+
+  // Send supporter welcome email
+  await sendSubscriptionEmail(userId, supporterWelcomeEmail);
 }
 
 /**
@@ -433,6 +444,9 @@ async function handleSubscriptionDeleted(event: Stripe.Event): Promise<void> {
   await logSubscriptionEvent(user.id, "cancelled", event.id);
 
   logger.info("User downgraded to free", { userId: user.id });
+
+  // Send cancellation email
+  await sendSubscriptionEmail(user.id, subscriptionCancelledEmail);
 }
 
 /**
@@ -463,6 +477,9 @@ async function handlePaymentFailed(event: Stripe.Event): Promise<void> {
   await logSubscriptionEvent(user.id, "payment_failed", event.id);
 
   logger.warn("Payment failed for user", { userId: user.id });
+
+  // Send payment failed email
+  await sendSubscriptionEmail(user.id, paymentFailedEmail);
 }
 
 /**
@@ -495,6 +512,9 @@ async function handlePaymentSucceeded(event: Stripe.Event): Promise<void> {
     await logSubscriptionEvent(user.id, "payment_succeeded", event.id);
 
     logger.info("Payment succeeded, status cleared", { userId: user.id });
+
+    // Send payment recovered email
+    await sendSubscriptionEmail(user.id, paymentRecoveredEmail);
   }
 }
 
@@ -542,4 +562,61 @@ async function updateUserSubscription(
   });
 
   logger.info("Updated user subscription", { userId, status });
+
+  // Send renewal email for active renewals (not downgrades)
+  if (status === "active") {
+    const nextDate = new Date(subscription.current_period_end * 1000)
+      .toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+    await sendSubscriptionEmailWithArgs(userId, (username) =>
+      subscriptionRenewedEmail(username, nextDate),
+    );
+  }
+}
+
+/**
+ * Helper: look up user email/username and send a subscription lifecycle email.
+ * Silently fails if email not configured or user has no email.
+ */
+async function sendSubscriptionEmail(
+  userId: string,
+  templateFn: (username: string) => { subject: string; html: string; text: string },
+): Promise<void> {
+  await sendSubscriptionEmailWithArgs(userId, templateFn);
+}
+
+async function sendSubscriptionEmailWithArgs(
+  userId: string,
+  templateFn: (username: string) => { subject: string; html: string; text: string },
+): Promise<void> {
+  if (!isEmailConfigured()) return;
+
+  try {
+    const [user] = await db
+      .select({ username: users.username, email: users.email })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    if (!user?.email) {
+      logger.debug("No email for user, skipping subscription email", { userId });
+      return;
+    }
+
+    const emailContent = templateFn(user.username);
+    const sent = await sendEmail({
+      to: user.email,
+      subject: emailContent.subject,
+      html: emailContent.html,
+      text: emailContent.text,
+    });
+
+    if (sent) {
+      logger.info("Sent subscription email", { userId, subject: emailContent.subject });
+    }
+  } catch (error) {
+    logger.error("Failed to send subscription email", {
+      error: error instanceof Error ? error.message : "Unknown error",
+      userId,
+    });
+  }
 }

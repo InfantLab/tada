@@ -133,7 +133,7 @@ const entryTypeOptions = [
   { value: "timed", label: "Timed", icon: "⏱️" },
   { value: "tally", label: "Tally", icon: "🔢" },
   { value: "moment", label: "Moment", icon: "📝" },
-  { value: "tada", label: "Ta-da!", icon: "🎉" },
+  { value: "tada", label: "Ta-da!", icon: "⚡" },
 ];
 
 // Subcategory options for moments

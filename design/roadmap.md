@@ -454,6 +454,29 @@ Gentle, celebratory nudges — never pushy, never guilt-tripping.
 - [ ] Quiet hours and frequency controls
 - [ ] Tone: warm, supportive, never pressuring
 
+### 📧 Automated Email (Consider Carefully)
+
+Celebration-driven emails — never spam, never guilt. Same philosophy as push notifications: off by default, celebrate what you did, not what you missed.
+
+**Implemented in v0.4.0:**
+
+- [x] Email verification, password reset, welcome, password changed
+- [x] Supporter welcome (checkout complete)
+- [x] Subscription renewed, cancelled, payment failed, payment recovered
+
+**Consider for v0.5.0 (opt-in only):**
+
+- [ ] Journey milestone: "You've reached 🌿 Building stage in Meditation!" (on stage transition)
+- [ ] Anniversary: "You've been with Ta-Da! for 1 year!" (annual celebration)
+- [ ] Weekly/monthly digest: summary of sessions, ta-das, rhythm streaks (user must opt in)
+
+**Explicitly NOT doing:**
+
+- No "we miss you" re-engagement emails — if someone stops, respect that
+- No "you haven't practiced" guilt nudges
+- No marketing emails to existing users
+- No digest emails unless the user explicitly turns them on
+
 ### 🔧 Smarter Conflict Resolution
 
 Current "Replace" wipes all overlapping entries. Need more intelligent approach:

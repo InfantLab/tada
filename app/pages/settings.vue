@@ -789,7 +789,7 @@ const sidebarNavItems = [
   { id: "security", label: "Security", icon: "🔒" },
   { id: "voice", label: "Voice & AI", icon: "🎤" },
   { id: "categories", label: "Categories", icon: "🏷️" },
-  { id: "tada", label: "Ta-Da!", icon: "🎉" },
+  { id: "tada", label: "Ta-Da!", icon: "⚡" },
   { id: "moments", label: "Moments", icon: "✨" },
   { id: "sessions", label: "Sessions", icon: "⏱️" },
   { id: "tallies", label: "Tallies", icon: "🔢" },

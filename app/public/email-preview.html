@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ta-Da! Email Template Preview</title>
+  <style>
+    body { margin: 0; padding: 20px; background: #333; font-family: sans-serif; }
+    .preview-nav { max-width: 560px; margin: 0 auto 16px; display: flex; gap: 8px; flex-wrap: wrap; }
+    .preview-nav button { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; background: #555; color: #fff; transition: all 0.2s; }
+    .preview-nav button.active { background: #E6A800; color: #fff; }
+    .preview-nav button:hover { background: #E6A800; }
+    .preview-frame { max-width: 560px; margin: 0 auto; }
+    iframe { width: 100%; height: 700px; border: none; border-radius: 8px; }
+    h2 { color: #fff; text-align: center; margin-bottom: 16px; font-size: 18px; }
+  </style>
+</head>
+<body>
+  <h2>Ta-Da! Email Template Preview</h2>
+  <div class="preview-nav">
+    <button class="active" onclick="show('verify')">Verify Email</button>
+    <button onclick="show('welcome')">Welcome</button>
+    <button onclick="show('reset')">Password Reset</button>
+    <button onclick="show('changed')">Password Changed</button>
+    <button onclick="show('supporter')">New Supporter</button>
+    <button onclick="show('renewed')">Renewal</button>
+    <button onclick="show('payment-failed')">Payment Failed</button>
+    <button onclick="show('cancelled')">Cancelled</button>
+    <button onclick="show('payment-recovered')">Payment Recovered</button>
+  </div>
+  <div class="preview-frame">
+    <iframe id="frame" srcdoc=""></iframe>
+  </div>
+
+  <script>
+    const APP = 'https://tada.living';
+
+    function baseLayout(content) {
+      return `<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Ta-Da!</title></head>
+<body style="margin:0;padding:0;background-color:#F5F0EB;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#F5F0EB;">
+<tr><td align="center" style="padding:32px 16px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:520px;background-color:#FFFFFF;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+<tr><td style="background-color:#2B0F3A;padding:28px 32px;text-align:center;">
+<a href="${APP}" style="text-decoration:none;"><img src="${APP}/icons/tada-logotype.png" alt="Ta-Da!" width="180" style="display:block;margin:0 auto;max-width:180px;height:auto;border:0;" /></a>
+</td></tr>
+<tr><td style="padding:32px;">${content}</td></tr>
+<tr><td style="padding:0 32px 28px 32px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+<tr><td style="border-top:1px solid #E7E5E4;padding-top:20px;text-align:center;">
+<p style="margin:0 0 6px 0;font-size:13px;color:#78716C;">Sent from <a href="${APP}" style="color:#E6A800;text-decoration:none;font-weight:500;">Ta-Da!</a> — notice your life</p>
+<p style="margin:0;font-size:12px;color:#A8A29E;">If you didn't request this email, you can safely ignore it.</p>
+</td></tr></table>
+</td></tr></table>
+</td></tr></table></body></html>`;
+    }
+
+    function btn(label, url) {
+      return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:24px auto;">
+<tr><td align="center" style="background-color:#E6A800;border-radius:8px;">
+<a href="${url}" style="display:inline-block;padding:14px 32px;background-color:#E6A800;color:#FFFFFF;text-decoration:none;font-size:16px;font-weight:600;border-radius:8px;line-height:1;">${label}</a>
+</td></tr></table>`;
+    }
+
+    function callout(icon, text) {
+      return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:20px 0;">
+<tr><td style="background-color:#FFFBF5;border-left:3px solid #E6A800;padding:12px 16px;border-radius:0 6px 6px 0;">
+<p style="margin:0;font-size:14px;color:#44403C;">${icon} ${text}</p>
+</td></tr></table>`;
+    }
+
+    function fallback(url) {
+      return `<p style="margin:16px 0 0 0;font-size:12px;color:#A8A29E;line-height:1.5;">
+If the button doesn't work, copy and paste this link into your browser:<br>
+<a href="${url}" style="color:#E6A800;word-break:break-all;">${url}</a></p>`;
+    }
+
+    const templates = {
+      verify: () => {
+        const url = APP + '/verify-email?token=abc123';
+        return baseLayout(`
+          <h2 style="margin:0 0 8px 0;font-size:22px;font-weight:700;color:#1C1917;">Verify Your Email</h2>
+          <p style="margin:0 0 20px 0;font-size:15px;color:#57534E;line-height:1.6;">
+            Hi infantologist, please confirm your email address so you can get the most out of Ta-Da!
+          </p>
+          ${btn('Verify Email', url)}
+          ${callout('⏰', 'This link expires in 24 hours.')}
+          ${fallback(url)}
+        `);
+      },
+      welcome: () => baseLayout(`
+        <h2 style="margin:0 0 8px 0;font-size:22px;font-weight:700;color:#1C1917;">Welcome to Ta-Da! ⚡</h2>
+        <p style="margin:0 0 20px 0;font-size:15px;color:#57534E;line-height:1.6;">
+          Hi infantologist, you're in! Ta-Da! is your space for celebrating what you do — sessions, wins, moments, and the rhythms that shape who you're becoming.
+        </p>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px 0;">
+          <tr><td style="padding:6px 0;font-size:15px;color:#57534E;">⏱️ &nbsp;Timed sessions for meditation, focus, or creative flow</td></tr>
+          <tr><td style="padding:6px 0;font-size:15px;color:#57534E;">⚡ &nbsp;Ta-Da! wins — celebrate accomplishments big and small</td></tr>
+          <tr><td style="padding:6px 0;font-size:15px;color:#57534E;">✨ &nbsp;Moments — dreams, magic, gratitude, and reflections</td></tr>
+          <tr><td style="padding:6px 0;font-size:15px;color:#57534E;">📊 &nbsp;Tallies and rhythms that notice your patterns</td></tr>
+        </table>
+        ${btn('Get Started', APP)}
+      `),
+      reset: () => {
+        const url = APP + '/reset-password?token=abc123';
+        return baseLayout(`
+          <h2 style="margin:0 0 8px 0;font-size:22px;font-weight:700;color:#1C1917;">Reset Your Password</h2>
+          <p style="margin:0 0 20px 0;font-size:15px;color:#57534E;line-height:1.6;">
+            Hi infantologist, we received a request to reset your password. Tap the button below to create a new one.
+          </p>
+          ${btn('Reset Password', url)}
+          ${callout('⏰', "This link expires in 6 hours. If you didn't request this, you can safely ignore it.")}
+          ${fallback(url)}
+        `);
+      },
+      changed: () => baseLayout(`
+        <h2 style="margin:0 0 8px 0;font-size:22px;font-weight:700;color:#1C1917;">Password Changed</h2>
+        <p style="margin:0 0 20px 0;font-size:15px;color:#57534E;line-height:1.6;">
+          Hi infantologist, your Ta-Da! password was successfully changed.
+        </p>
+        ${callout('🔒', "If you didn't make this change, reset your password immediately.")}
+        ${btn('Reset Password', APP + '/forgot-password')}
+      `),
+      supporter: () => baseLayout(`
+        <h2 style="margin:0 0 8px 0;font-size:22px;font-weight:700;color:#1C1917;">You're a Supporter! ⚡</h2>
+        <p style="margin:0 0 20px 0;font-size:15px;color:#57534E;line-height:1.6;">
+          Hi infantologist, thank you for supporting Ta-Da! Your contribution keeps this project alive and independent.
+        </p>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px 0;">
+          <tr><td style="padding:6px 0;font-size:15px;color:#57534E;">🌳 &nbsp;Unlimited data retention — your journey is yours forever</td></tr>
+          <tr><td style="padding:6px 0;font-size:15px;color:#57534E;">☁️ &nbsp;Priority cloud features as they're built</td></tr>
+          <tr><td style="padding:6px 0;font-size:15px;color:#57534E;">💛 &nbsp;You're directly funding mindful, ad-free software</td></tr>
+        </table>
+        ${callout('🙏', 'Your support means the world. Ta-Da! is built by one person, for everyone.')}
+        ${btn('Continue to Ta-Da!', APP)}
+      `),
+      renewed: () => baseLayout(`
+        <h2 style="margin:0 0 8px 0;font-size:22px;font-weight:700;color:#1C1917;">Subscription Renewed ⚡</h2>
+        <p style="margin:0 0 20px 0;font-size:15px;color:#57534E;line-height:1.6;">
+          Hi infantologist, your Ta-Da! supporter subscription has been renewed. Thank you for another year of support!
+        </p>
+        ${callout('📅', 'Your next renewal is February 18, 2027.')}
+        <p style="margin:20px 0 0 0;font-size:14px;color:#78716C;line-height:1.5;">
+          You can manage your subscription anytime from <a href="${APP}/settings" style="color:#E6A800;text-decoration:none;font-weight:500;">Settings</a>.
+        </p>
+      `),
+      'payment-failed': () => baseLayout(`
+        <h2 style="margin:0 0 8px 0;font-size:22px;font-weight:700;color:#1C1917;">Payment Issue</h2>
+        <p style="margin:0 0 20px 0;font-size:15px;color:#57534E;line-height:1.6;">
+          Hi infantologist, we weren't able to process your latest payment for Ta-Da! This is usually a temporary issue with your card.
+        </p>
+        ${callout('💳', "We'll retry automatically over the next few days. If the issue persists, please update your payment method.")}
+        ${btn('Update Payment Method', APP + '/settings')}
+        <p style="margin:20px 0 0 0;font-size:14px;color:#78716C;line-height:1.5;">
+          Your account will remain active during this time. No action needed if the retry succeeds.
+        </p>
+      `),
+      cancelled: () => baseLayout(`
+        <h2 style="margin:0 0 8px 0;font-size:22px;font-weight:700;color:#1C1917;">Subscription Cancelled</h2>
+        <p style="margin:0 0 20px 0;font-size:15px;color:#57534E;line-height:1.6;">
+          Hi infantologist, your Ta-Da! supporter subscription has been cancelled. We're sorry to see you go.
+        </p>
+        ${callout('📋', "Your data is safe. You'll keep free-tier access with up to 365 days of data retention.")}
+        <p style="margin:20px 0 0 0;font-size:15px;color:#57534E;line-height:1.6;">
+          If you change your mind, you can resubscribe anytime. Your journey continues either way — Ta-Da! is about celebrating who you're becoming.
+        </p>
+        ${btn('Resubscribe', APP + '/settings')}
+      `),
+      'payment-recovered': () => baseLayout(`
+        <h2 style="margin:0 0 8px 0;font-size:22px;font-weight:700;color:#1C1917;">Payment Successful ⚡</h2>
+        <p style="margin:0 0 20px 0;font-size:15px;color:#57534E;line-height:1.6;">
+          Hi infantologist, great news — your payment has been processed successfully and your supporter subscription is back on track.
+        </p>
+        ${callout('✅', 'No action needed. Everything is working perfectly.')}
+        ${btn('Continue to Ta-Da!', APP)}
+      `),
+    };
+
+    function show(name) {
+      document.getElementById('frame').srcdoc = templates[name]();
+      document.querySelectorAll('.preview-nav button').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+    }
+
+    // Show verify by default
+    document.getElementById('frame').srcdoc = templates.verify();
+  </script>
+</body>
+</html>

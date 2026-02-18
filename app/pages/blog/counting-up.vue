@@ -124,7 +124,7 @@ useSeoMeta({
       </p>
 
       <p class="text-lg font-medium text-tada-600 dark:text-tada-400">
-        Ta-Da! 🎉
+        Ta-Da! ⚡
       </p>
     </div>
 

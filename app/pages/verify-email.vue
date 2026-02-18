@@ -66,7 +66,7 @@ function goToSettings() {
       <!-- Logo/Title -->
       <div class="text-center mb-8">
         <h1 class="text-4xl font-bold text-cosmic-violet dark:text-gold mb-2">
-          🎉 Ta-Da!
+          ⚡ Ta-Da!
         </h1>
         <p class="text-cosmic-violet/70 dark:text-pearl-base/70">
           Email Verification

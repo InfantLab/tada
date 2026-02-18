@@ -12,6 +12,22 @@ This guide ensures consistent voice, terminology, and philosophy across all Ta-D
 
 ---
 
+## Brand Emoji
+
+The canonical Ta-Da! emoji is **⚡** (lightning bolt / zap). Use it consistently wherever the Ta-Da! brand appears — logotype, email headers, success messages, and page headers.
+
+**Never use 🎉 (party popper) as the Ta-Da! emoji.** While 🎉 may appear elsewhere for generic celebration contexts (e.g., confetti overlays), it must never represent the Ta-Da! brand itself.
+
+| Context | Correct | Wrong |
+|---------|---------|-------|
+| Brand logotype | ⚡ Ta-Da! | 🎉 Ta-Da! |
+| Success toast | "Ta-Da! ⚡ Great job!" | "Ta-Da! 🎉 Great job!" |
+| Email header | ⚡ Ta-Da! | 🎉 Ta-Da! |
+| Page heading | ⚡ Ta-Da! | 🎉 Ta-Da! |
+| Celebration overlay | ⚡ Ta-Da! | 🎉 Ta-Da! |
+
+---
+
 ## Core Voice
 
 ### Characteristics
@@ -222,7 +238,7 @@ The four moment types:
 **Examples:**
 
 ✅ **Good:**
-> "Session saved! 🎉"
+> "Session saved! ⚡"
 
 > "Ta-Da! Your win is captured."
 

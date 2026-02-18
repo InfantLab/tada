@@ -48,7 +48,7 @@ const modes: ModeDefinition[] = [
     id: "tada",
     label: "Ta-Da!",
     shortLabel: "Ta-Da!",
-    icon: "🎉",
+    icon: "⚡",
     description: "Celebrate an accomplishment",
   },
   {

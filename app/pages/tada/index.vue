@@ -192,7 +192,7 @@ function getTadaSoundFile(): string {
 // Trigger celebration animation and sound
 function celebrate() {
   showCelebration.value = true;
-  showSuccess("Ta-Da! 🎉 Great job!");
+  showSuccess("Ta-Da! ⚡ Great job!");
 }
 
 // Handle celebration completion - refresh recent list
@@ -694,7 +694,7 @@ function handleReRecord() {
       <div v-else class="space-y-3">
         <div class="flex items-center justify-between mb-2">
           <span class="text-lg font-bold text-amber-700 dark:text-amber-300">
-            🎉 {{ multiTadaList.length }} Ta-Das Ready!
+            ⚡ {{ multiTadaList.length }} Ta-Das Ready!
           </span>
           <button
             type="button"
@@ -873,7 +873,7 @@ function handleReRecord() {
       >
         <span v-if="isSubmitting">Saving...</span>
         <template v-else-if="multiTadaMode">
-          <span class="text-3xl">🎉</span>
+          <span class="text-3xl">⚡</span>
           <span>Save {{ multiTadaList.length }} Ta-Das!</span>
         </template>
         <template v-else>
