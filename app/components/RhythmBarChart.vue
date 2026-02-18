@@ -270,7 +270,8 @@ function getValue(status?: DayStatus): number {
   if (!status) return 0;
   if (props.goalType === "count") {
     // For count mode, prefer totalCount (reps) if available, fall back to entryCount
-    return status.totalCount ?? status.entryCount;
+    // Use || not ?? because totalCount is 0 (not null) for activity-based entries like ta-da
+    return status.totalCount || status.entryCount;
   }
   // Duration: return minutes
   return Math.round(status.totalSeconds / 60);

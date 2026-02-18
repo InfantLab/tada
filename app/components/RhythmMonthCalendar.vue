@@ -323,6 +323,11 @@ function getDayTooltip(day: CalendarDay): string {
     day: "numeric",
   });
 
+  // Activity-based: complete but no duration
+  if (day.isComplete && day.totalSeconds === 0) {
+    return `${dateStr}: ✓ Activity logged`;
+  }
+
   if (day.totalSeconds === 0) {
     return `${dateStr}: No activity`;
   }

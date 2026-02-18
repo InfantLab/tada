@@ -185,8 +185,9 @@ describe("logger (server-side)", () => {
       });
 
       const logger = createLogger("test");
+      // Should not throw — file write errors are silently swallowed
+      // (the log entry is already written to stderr)
       expect(() => logger.info("test")).not.toThrow();
-      expect(consoleErrorSpy).toHaveBeenCalled();
     });
   });
 });

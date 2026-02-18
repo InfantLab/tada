@@ -166,25 +166,31 @@ const helpContent: Record<string, PageHelp> = {
   "/rhythms": {
     title: "Rhythms",
     description:
-      "Your patterns over time. Graceful chains celebrate consistency while acknowledging that life happens.",
+      "Rhythms are views of your entries — they show patterns over time without storing separate data. Deleting a rhythm never deletes your underlying entries.",
     sections: [
+      {
+        title: "Three rhythm types",
+        icon: "🎯",
+        content:
+          "Timed rhythms track duration (e.g., 6 min meditation). Tally rhythms track counts (e.g., 5 press-ups). Activity rhythms just need you to show up — any entry on a day counts.",
+      },
       {
         title: "Graceful chains",
         icon: "🔗",
         content:
-          "Traditional streaks punish you for missing a single day. Our chains celebrate consistency while forgiving the occasional gap. Choose from daily, weekly, or monthly targets — 3 days a week is just as valid as daily.",
-      },
-      {
-        title: "What if I miss a day?",
-        icon: "📅",
-        content:
-          "Nothing dramatic! Your rhythm continues. Missing a day doesn't break your identity as a meditator — it's just one day.",
+          "Choose from 5 chain types: Daily (every day), 5×/Week, 3×/Week, 1×/Week, or 4×/Month. All count completed days. Missing a day doesn't erase your progress — chains bend, not break.",
       },
       {
         title: "Journey stages",
-        icon: "🛤️",
+        icon: "🌱",
         content:
-          "Beginning (0-10h), Building (10-100h), Becoming (100-1000h), Being (1000h+). These celebrate depth over speed.",
+          "Beginning, Building, Becoming, Being — based on your total experience (hours, sessions, or reps depending on type). Your stage never goes backward, even if chains break.",
+      },
+      {
+        title: "Safe to experiment",
+        icon: "🧪",
+        content:
+          "Rhythms are derived data. Create, edit, or delete rhythms freely — your sessions, tallies, moments, and ta-das are always safe.",
       },
     ],
   },

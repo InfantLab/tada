@@ -47,10 +47,18 @@ const expandedPanels = ref<Set<string>>(new Set());
 // Progress data cache (by rhythm ID)
 const progressData = ref<Map<string, RhythmProgress>>(new Map());
 
+// Onboarding state — show intro when user has no rhythms
+const showOnboarding = ref(false);
+const onboardingDismissed = ref(false);
+
 // Fetch rhythms on mount
 onMounted(async () => {
   try {
     await fetchRhythms();
+    // Show onboarding if user has no rhythms
+    if (rhythms.value.length === 0) {
+      showOnboarding.value = true;
+    }
     // Fetch progress for all rhythms to show bar charts
     for (const rhythm of rhythms.value) {
       if (!progressData.value.has(rhythm.id)) {
@@ -67,6 +75,35 @@ onMounted(async () => {
     console.error("Failed to fetch rhythms:", err);
   }
 });
+
+// Seed demo rhythms for new users
+async function seedDemoRhythms() {
+  try {
+    await $fetch("/api/rhythms/seed-defaults", { method: "POST" });
+    showOnboarding.value = false;
+    onboardingDismissed.value = true;
+    await fetchRhythms();
+    // Fetch progress for newly created rhythms
+    for (const rhythm of rhythms.value) {
+      if (!progressData.value.has(rhythm.id)) {
+        fetchProgress(rhythm.id)
+          .then((progress) => {
+            progressData.value.set(rhythm.id, progress);
+          })
+          .catch(() => {});
+      }
+    }
+    showToast("Created 3 demo rhythms — you can delete them anytime", "success");
+  } catch (err) {
+    console.error("Failed to seed demos:", err);
+    showToast("Failed to create demo rhythms", "error");
+  }
+}
+
+function dismissOnboarding() {
+  showOnboarding.value = false;
+  onboardingDismissed.value = true;
+}
 
 // Toggle panel expansion and fetch progress if needed
 async function togglePanel(rhythmId: string) {
@@ -299,36 +336,44 @@ function journeyStageBadgeClass(stage: string): string {
       </button>
     </div>
 
-    <!-- Empty state -->
-    <div v-else-if="rhythms.length === 0" class="py-12 text-center">
-      <div class="mb-4 text-6xl">🌊</div>
-      <h2 class="mb-2 text-xl font-semibold text-stone-700 dark:text-stone-200">
-        No rhythms yet
-      </h2>
-      <p class="mx-auto mb-6 max-w-md text-stone-500 dark:text-stone-400">
-        Create rhythms to discover your natural patterns. Your practice will
-        reveal itself over time.
-      </p>
-      <button
-        class="inline-flex items-center gap-2 rounded-lg bg-tada-600 px-4 py-2 font-medium text-black transition-colors hover:opacity-90 dark:bg-tada-600 dark:text-white"
-        @click="showCreateModal = true"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-5 w-5"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
+    <!-- Empty state with onboarding -->
+    <div v-else-if="rhythms.length === 0">
+      <OnboardingRhythmsOnboarding
+        v-if="showOnboarding && !onboardingDismissed"
+        :visible="showOnboarding"
+        @seed-demos="seedDemoRhythms"
+        @dismiss="dismissOnboarding"
+      />
+      <div v-if="!showOnboarding || onboardingDismissed" class="py-12 text-center">
+        <div class="mb-4 text-6xl">🌊</div>
+        <h2 class="mb-2 text-xl font-semibold text-stone-700 dark:text-stone-200">
+          No rhythms yet
+        </h2>
+        <p class="mx-auto mb-6 max-w-md text-stone-500 dark:text-stone-400">
+          Create rhythms to discover your natural patterns. Your practice will
+          reveal itself over time.
+        </p>
+        <button
+          class="inline-flex items-center gap-2 rounded-lg bg-tada-600 px-4 py-2 font-medium text-black transition-colors hover:opacity-90 dark:bg-tada-600 dark:text-white"
+          @click="showCreateModal = true"
         >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M12 4v16m8-8H4"
-          />
-        </svg>
-        Create your first rhythm
-      </button>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 4v16m8-8H4"
+            />
+          </svg>
+          Create your first rhythm
+        </button>
+      </div>
     </div>
 
     <!-- Rhythms list -->
@@ -401,7 +446,7 @@ function journeyStageBadgeClass(stage: string): string {
               <RhythmBarChart
                 v-if="getProgress(rhythm.id)"
                 :days="getProgress(rhythm.id)!.days"
-                :goal-type="rhythm.matchType === 'tally' ? 'count' : 'duration'"
+                :goal-type="rhythm.matchType === 'timed' ? 'duration' : 'count'"
                 :threshold-seconds="rhythm.durationThresholdSeconds"
                 :threshold-count="rhythm.countThreshold"
               />
@@ -444,7 +489,7 @@ function journeyStageBadgeClass(stage: string): string {
             <div class="mb-6">
               <RhythmYearTracker
                 :days="getProgress(rhythm.id)!.days"
-                :goal-type="rhythm.matchType === 'tally' ? 'count' : 'duration'"
+                :goal-type="rhythm.matchType === 'timed' ? 'duration' : 'count'"
                 :threshold-seconds="rhythm.durationThresholdSeconds"
                 :threshold-count="rhythm.countThreshold"
               />
@@ -454,7 +499,7 @@ function journeyStageBadgeClass(stage: string): string {
             <RhythmChainTabs
               :days="getProgress(rhythm.id)!.days"
               :chains="getProgress(rhythm.id)!.chains"
-              :goal-type="rhythm.matchType === 'tally' ? 'count' : 'duration'"
+              :goal-type="rhythm.matchType === 'timed' ? 'duration' : 'count'"
               :threshold-seconds="rhythm.durationThresholdSeconds"
               :threshold-count="rhythm.countThreshold"
               :weekly-target-minutes="

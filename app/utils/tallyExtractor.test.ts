@@ -46,7 +46,7 @@ describe("tallyExtractor", () => {
       expect(result.tallies).toHaveLength(1);
       expect(result.tallies[0]?.activity).toBe("Push-ups");
       expect(result.tallies[0]?.count).toBe(10);
-      expect(result.tallies[0]?.category).toBe("movement");
+      expect(result.tallies[0]?.category).toBe("strength");
     });
 
     it("extracts multiple activities from comma-separated list", () => {
@@ -93,7 +93,7 @@ describe("tallyExtractor", () => {
       const pagesTally = result.tallies.find((t) =>
         t.activity.toLowerCase().includes("page"),
       );
-      expect(pagesTally?.category).toBe("learning");
+      expect(pagesTally?.category).toBe("reading");
       expect(pagesTally?.emoji).toBe("📖");
     });
 

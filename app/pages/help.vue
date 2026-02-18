@@ -64,21 +64,33 @@ const faqs: FAQ[] = [
   // Rhythms
   {
     category: "Rhythms",
+    question: "What are the three rhythm types?",
+    answer:
+      "Timed rhythms track duration-based activities (like meditation) — a day counts when you meet your time threshold. Tally rhythms track counts (like press-ups) — a day counts when you hit your rep target. Activity rhythms track moments and ta-das — just showing up counts. Any entry on a day marks it complete.",
+  },
+  {
+    category: "Rhythms",
     question: "What are 'graceful chains'?",
     answer:
-      "Graceful chains are our alternative to harsh streaks. Traditional streak counters punish you for missing a single day. Our chains celebrate consistency while acknowledging that life happens. Missing a day doesn't break your identity as a meditator — it's just one day.",
+      "Graceful chains are our alternative to harsh streaks. Choose from 5 types: Daily (consecutive days), 5×/Week, 3×/Week, 1×/Week, or 4×/Month. All count completed days — not cumulative time. Missing a day doesn't break your identity as a practitioner. Chains bend, not break.",
   },
   {
     category: "Rhythms",
     question: "What happens if I miss a day?",
     answer:
-      "Nothing dramatic! Your rhythm continues. Ta-Da! tracks patterns, not perfection. You might see a small gap in your year tracker, but your accumulated hours and overall journey remain. We believe identity ('I am a meditator') matters more than streaks ('I haven't missed a day').",
+      "Nothing dramatic! Your rhythm continues. Ta-Da! tracks patterns, not perfection. You might see a small gap in your year tracker, but your accumulated experience and journey stage remain. We believe identity ('I am a meditator') matters more than streaks ('I haven't missed a day').",
   },
   {
     category: "Rhythms",
     question: "How do the journey stages work?",
     answer:
-      "Journey stages mark your accumulated practice time: Beginning (0-10 hours), Building (10-100 hours), Becoming (100-1000 hours), and Being (1000+ hours). These aren't about speed — they celebrate the depth of your practice over time.",
+      "Journey stages mark your total experience: Beginning, Building, Becoming, and Being. The thresholds adapt to rhythm type — hours for timed activities (10/100/1,000), session count for activities (21/100/365), or reps for tallies (100/1,000/10,000). Your stage never goes backward, even when chains break.",
+  },
+  {
+    category: "Rhythms",
+    question: "Does deleting a rhythm delete my data?",
+    answer:
+      "No. Rhythms are views of your entries, not separate data. Deleting a rhythm removes only the tracking configuration — all your sessions, tallies, moments, and ta-das remain untouched. You can always create a new rhythm that matches the same entries.",
   },
   // Privacy & Data
   {
