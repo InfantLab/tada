@@ -134,7 +134,11 @@ These can be set in **"App Configs"** → **"Environmental Variables"**:
 | `NUXT_PUBLIC_IS_CLOUD_MODE`  | `true`                      | Enables cloud features & subscription UI |
 | `STRIPE_SECRET_KEY`          | `sk_live_xxx`               | Stripe API key                        |
 | `STRIPE_WEBHOOK_SECRET`      | `whsec_xxx`                 | Stripe webhook signing secret         |
-| `STRIPE_PRICE_ID_YEARLY`     | `price_xxx`                 | Stripe price ID for yearly plan       |
+| `STRIPE_PRICE_SEEDLING`     | `price_xxx`                 | Price ID for £1/year tier             |
+| `STRIPE_PRICE_SAPLING`      | `price_xxx`                 | Price ID for £5/year tier             |
+| `STRIPE_PRICE_OAK`          | `price_xxx`                 | Price ID for £12/year tier            |
+| `STRIPE_PRICE_REDWOOD`      | `price_xxx`                 | Price ID for £25/year tier            |
+| `STRIPE_PRICE_FOREST`       | `price_xxx`                 | Price ID for £50/year tier            |
 
 ### Email (SMTP)
 
@@ -145,7 +149,8 @@ These can be set in **"App Configs"** → **"Environmental Variables"**:
 | `SMTP_SECURE`   | `false`                      | `true` for port 465, `false` for 25/587 |
 | `SMTP_USER`     | `you@gmail.com`              | SMTP username                        |
 | `SMTP_PASSWORD` | `xxxx xxxx xxxx xxxx`        | Gmail app password                   |
-| `SMTP_FROM`     | `Ta-Da! <noreply@tada.living>` | From address                       |
+| `SMTP_FROM`     | `Caspar Addyman <infantologist@gmail.com>` | From address               |
+| `SMTP_REPLY_TO` | `Caspar Addyman <infantologist@gmail.com>` | Reply-to address           |
 
 > **⚠️ Hetzner SMTP Note:** Hetzner blocks outbound port 587. Use **port 25** with `SMTP_SECURE=false` (STARTTLS). Port 465 may also be blocked. Test with `swaks` if unsure.
 
@@ -293,4 +298,4 @@ Or use the in-app JSON export: **Settings** → **Export Data**
 
 ---
 
-_Last updated: January 2026_
+_Last updated: February 2026_

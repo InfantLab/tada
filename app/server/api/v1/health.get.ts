@@ -28,7 +28,7 @@ export default defineEventHandler(async (event) => {
 
     return {
       status: "healthy",
-      version: "0.3.1",
+      version: "0.4.0",
       api: "1.0.0",
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
@@ -43,7 +43,7 @@ export default defineEventHandler(async (event) => {
     setResponseStatus(event, 503);
     return {
       status: "unhealthy",
-      version: "1.0.0",
+      version: "0.4.0",
       timestamp: new Date().toISOString(),
       error: error instanceof Error ? error.message : "Unknown error",
       database: "disconnected",

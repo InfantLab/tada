@@ -153,6 +153,11 @@ When cloud mode is enabled:
 | `TADA_CLOUD_MODE`                 | Enable cloud features (`true`/`false`)         |
 | `STRIPE_SECRET_KEY`               | Stripe API key for billing                     |
 | `STRIPE_WEBHOOK_SECRET`           | Stripe webhook signature verification          |
+| `STRIPE_PRICE_SEEDLING`          | Stripe price ID for £1/year tier               |
+| `STRIPE_PRICE_SAPLING`           | Stripe price ID for £5/year tier               |
+| `STRIPE_PRICE_OAK`               | Stripe price ID for £12/year tier              |
+| `STRIPE_PRICE_REDWOOD`           | Stripe price ID for £25/year tier              |
+| `STRIPE_PRICE_FOREST`            | Stripe price ID for £50/year tier              |
 | `TADA_REQUIRE_EMAIL_VERIFICATION` | Require verified email (`true`/`false`)        |
 | `TADA_VERIFICATION_GRACE_DAYS`    | Days before verification required (default: 7) |
 | `TADA_FREE_RETENTION_DAYS`        | Data retention for free tier (default: 365)    |

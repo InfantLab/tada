@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 _No unreleased changes_
 
-## [0.4.0] - 2026-02-04
+## [0.4.0] - 2026-02-18
 
 ### Added
 
@@ -75,6 +75,14 @@ _No unreleased changes_
 
 ### Fixed
 
+- Stripe billing checkout (correct price ID env var mapping for pay-what-you-want tiers)
+- Stripe webhook processing (use `constructEventAsync` for Bun runtime compatibility)
+- Stripe API 2026-01-28 compatibility (`current_period_end` field relocation)
+- Newsletter subscribe endpoint (correct database import)
+- Supporter welcome email now personal and warm, signed by Caspar
+- All subscription lifecycle emails have personal sign-offs
+- Email reply-to set to Caspar's address for direct replies
+- Health endpoint version updated to 0.4.0
 - Dockerfile COPY command no longer includes .git directory
 - Various TypeScript strict mode improvements
 
