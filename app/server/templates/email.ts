@@ -302,36 +302,56 @@ export function supporterWelcomeEmail(
   const appUrl = getAppUrl();
 
   const content = `
-    <h2 style="margin: 0 0 8px 0; font-size: 22px; font-weight: 700; color: #1C1917;">You're a Supporter! ⚡</h2>
-    <p style="margin: 0 0 20px 0; font-size: 15px; color: #57534E; line-height: 1.6;">
-      Hi ${username}, thank you for supporting Ta-Da! Your contribution keeps this project alive and independent.
+    <h2 style="margin: 0 0 8px 0; font-size: 22px; font-weight: 700; color: #1C1917;">Welcome, Supporter! ⚡</h2>
+    <p style="margin: 0 0 16px 0; font-size: 15px; color: #57534E; line-height: 1.6;">
+      Hi ${username},
+    </p>
+    <p style="margin: 0 0 16px 0; font-size: 15px; color: #57534E; line-height: 1.6;">
+      I'm genuinely delighted you've chosen to support Ta-Da! It means a huge amount to me personally.
+    </p>
+    <p style="margin: 0 0 16px 0; font-size: 15px; color: #57534E; line-height: 1.6;">
+      I built Ta-Da! because I believe we should spend more time noticing the good things in our lives. The things we do, the small wins, the quiet moments. Your support helps keep it independent, ad-free, and focused on what matters.
+    </p>
+    <p style="margin: 0 0 8px 0; font-size: 15px; color: #57534E; line-height: 1.6;">
+      As a supporter you get:
     </p>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 24px 0;">
       <tr><td style="padding: 6px 0; font-size: 15px; color: #57534E;">🌳 &nbsp;Unlimited data retention — your journey is yours forever</td></tr>
-      <tr><td style="padding: 6px 0; font-size: 15px; color: #57534E;">☁️ &nbsp;Priority cloud features as they're built</td></tr>
-      <tr><td style="padding: 6px 0; font-size: 15px; color: #57534E;">💛 &nbsp;You're directly funding mindful, ad-free software</td></tr>
+      <tr><td style="padding: 6px 0; font-size: 15px; color: #57534E;">☁️ &nbsp;Priority access to new features as they're built</td></tr>
+      <tr><td style="padding: 6px 0; font-size: 15px; color: #57534E;">💛 &nbsp;The knowledge you're funding mindful, independent software</td></tr>
     </table>
-    ${calloutBox("🙏", "Your support means the world. Ta-Da! is built by one person, for everyone.")}
+    <p style="margin: 0 0 20px 0; font-size: 15px; color: #57534E; line-height: 1.6;">
+      If you ever have ideas, feedback, or just want to say hello, reply to this email. I read every message.
+    </p>
     ${ctaButton("Continue to Ta-Da!", appUrl)}
+    <p style="margin: 24px 0 0 0; font-size: 15px; color: #57534E; line-height: 1.6;">
+      With gratitude,<br>
+      <strong style="color: #1C1917;">Caspar</strong><br>
+      <span style="font-size: 13px; color: #78716C;">Creator of Ta-Da!</span>
+    </p>
   `;
 
   const text = `
-You're a Supporter! ⚡
+Welcome, Supporter! ⚡
 
 Hi ${username},
 
-Thank you for supporting Ta-Da! Your contribution keeps this project alive and independent.
+I'm genuinely delighted you've chosen to support Ta-Da! It means a huge amount to me personally.
 
-What you get:
+I built Ta-Da! because I believe we should spend more time noticing the good things in our lives. The things we do, the small wins, the quiet moments. Your support helps keep it independent, ad-free, and focused on what matters.
+
+As a supporter you get:
 - Unlimited data retention — your journey is yours forever
-- Priority cloud features as they're built
-- You're directly funding mindful, ad-free software
+- Priority access to new features as they're built
+- The knowledge you're funding mindful, independent software
 
-Your support means the world. Ta-Da! is built by one person, for everyone.
+If you ever have ideas, feedback, or just want to say hello, reply to this email. I read every message.
 
 Continue: ${appUrl}
 
-- Ta-Da!
+With gratitude,
+Caspar
+Creator of Ta-Da!
 `.trim();
 
   return {
@@ -353,11 +373,15 @@ export function subscriptionRenewedEmail(
   const content = `
     <h2 style="margin: 0 0 8px 0; font-size: 22px; font-weight: 700; color: #1C1917;">Subscription Renewed ⚡</h2>
     <p style="margin: 0 0 20px 0; font-size: 15px; color: #57534E; line-height: 1.6;">
-      Hi ${username}, your Ta-Da! supporter subscription has been renewed. Thank you for another year of support!
+      Hi ${username}, thank you for another year of supporting Ta-Da! Your continued support keeps this project going and I'm truly grateful.
     </p>
     ${calloutBox("📅", `Your next renewal is ${nextRenewalDate}.`)}
     <p style="margin: 20px 0 0 0; font-size: 14px; color: #78716C; line-height: 1.5;">
       You can manage your subscription anytime from <a href="${appUrl}/settings" style="color: #E6A800; text-decoration: none; font-weight: 500;">Settings</a>.
+    </p>
+    <p style="margin: 20px 0 0 0; font-size: 15px; color: #57534E; line-height: 1.6;">
+      With gratitude,<br>
+      <strong style="color: #1C1917;">Caspar</strong>
     </p>
   `;
 
@@ -366,13 +390,14 @@ Subscription Renewed ⚡
 
 Hi ${username},
 
-Your Ta-Da! supporter subscription has been renewed. Thank you for another year of support!
+Thank you for another year of supporting Ta-Da! Your continued support keeps this project going and I'm truly grateful.
 
 Next renewal: ${nextRenewalDate}
 
 Manage your subscription: ${appUrl}/settings
 
-- Ta-Da!
+With gratitude,
+Caspar
 `.trim();
 
   return {
@@ -400,6 +425,10 @@ export function subscriptionCancelledEmail(
       If you change your mind, you can resubscribe anytime. Your journey continues either way — Ta-Da! is about celebrating who you're becoming.
     </p>
     ${ctaButton("Resubscribe", `${appUrl}/settings`)}
+    <p style="margin: 20px 0 0 0; font-size: 15px; color: #57534E; line-height: 1.6;">
+      All the best,<br>
+      <strong style="color: #1C1917;">Caspar</strong>
+    </p>
   `;
 
   const text = `
@@ -415,7 +444,8 @@ If you change your mind, you can resubscribe anytime: ${appUrl}/settings
 
 Your journey continues either way — Ta-Da! is about celebrating who you're becoming.
 
-- Ta-Da!
+All the best,
+Caspar
 `.trim();
 
   return {
