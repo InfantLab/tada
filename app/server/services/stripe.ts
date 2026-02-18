@@ -287,7 +287,8 @@ export async function handleWebhookEvent(
   let event: Stripe.Event;
 
   try {
-    event = stripe.webhooks.constructEvent(payload, signature, webhookSecret);
+    // Use async version - Bun's SubtleCrypto doesn't support synchronous HMAC
+    event = await stripe.webhooks.constructEventAsync(payload, signature, webhookSecret);
   } catch (error) {
     const errorMessage = error instanceof Error
       ? error.message
