@@ -156,11 +156,11 @@ const philosophyPoints = [
             </div>
             <h3 class="text-xl font-bold text-stone-800 dark:text-stone-100 mb-2">Premium</h3>
             <p class="text-3xl font-bold text-stone-800 dark:text-stone-100 mb-4">
-              $5
-              <span class="text-base font-normal text-stone-500">/month</span>
+              £12
+              <span class="text-base font-normal text-stone-500">/year</span>
             </p>
             <p class="text-sm text-stone-500 dark:text-stone-400 mb-4">
-              or $50/year (save $10)
+              Just £1/month for unlimited history
             </p>
             <ul class="space-y-3 mb-6">
               <li class="flex items-center gap-2 text-stone-600 dark:text-stone-400">
