@@ -29,6 +29,13 @@ function acceptCookies() {
   localStorage.setItem("tada-cookie-consent-date", new Date().toISOString());
   showBanner.value = false;
 }
+
+function declineCookies() {
+  localStorage.setItem("tada-cookie-consent", "declined");
+  localStorage.setItem("tada-cookie-consent-date", new Date().toISOString());
+  showBanner.value = false;
+  // Note: Essential cookies (session, preferences) are still used as legally permitted
+}
 </script>
 
 <template>
@@ -63,13 +70,19 @@ function acceptCookies() {
               </p>
             </div>
 
-            <!-- Action -->
-            <div class="flex-shrink-0">
+            <!-- Actions - Equal prominence for both options (GDPR compliance) -->
+            <div class="flex-shrink-0 flex gap-2">
+              <button
+                class="w-full md:w-auto px-5 py-2 border border-stone-300 dark:border-stone-600 text-stone-700 dark:text-stone-300 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-700 transition-colors text-sm font-medium"
+                @click="declineCookies"
+              >
+                Decline
+              </button>
               <button
                 class="w-full md:w-auto px-5 py-2 bg-tada-600 text-white rounded-lg hover:bg-tada-700 transition-colors text-sm font-medium"
                 @click="acceptCookies"
               >
-                Got it
+                Accept
               </button>
             </div>
           </div>
