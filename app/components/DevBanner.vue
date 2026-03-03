@@ -6,9 +6,9 @@
  */
 
 const isDev = computed(() => {
-  // Check APP_URL env var - if it's not tada.living, show banner
-  const appUrl = useRuntimeConfig().public.appUrl || '';
-  return !appUrl.includes('tada.living');
+  // If we're running on tada.living, this is production — don't show banner
+  if (import.meta.server) return false;
+  return !window.location.hostname.includes('tada.living');
 });
 
 const dismissed = ref(false);
