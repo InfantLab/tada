@@ -64,6 +64,35 @@ async function countVoiceEntriesThisMonth(userId: string): Promise<number> {
 }
 
 /**
+ * Common Whisper hallucination patterns on short/silent audio
+ */
+const WHISPER_HALLUCINATIONS = new Set([
+  "you",
+  "you...",
+  "thank you",
+  "thanks",
+  "thanks for watching",
+  "thank you for watching",
+  "subscribe",
+  "like and subscribe",
+  "bye",
+  "the end",
+  "so",
+  "i",
+  "oh",
+  "uh",
+  "um",
+]);
+
+/**
+ * Check if transcription text is a known Whisper hallucination
+ */
+function isWhisperHallucination(text: string): boolean {
+  const cleaned = text.trim().toLowerCase().replace(/[.!?,]+$/g, "");
+  return WHISPER_HALLUCINATIONS.has(cleaned);
+}
+
+/**
  * Transcribe audio using Groq's Whisper API
  */
 async function transcribeWithGroq(
@@ -76,6 +105,11 @@ async function transcribeWithGroq(
   formData.append("file", blob, "audio.webm");
   formData.append("model", "whisper-large-v3");
   formData.append("response_format", "json");
+  formData.append("language", "en");
+  formData.append(
+    "prompt",
+    "This is a voice journal entry recording daily activities, accomplishments, and notes.",
+  );
 
   const response = await fetch(
     "https://api.groq.com/openai/v1/audio/transcriptions",
@@ -114,6 +148,11 @@ async function transcribeWithOpenAI(
   formData.append("file", blob, "audio.webm");
   formData.append("model", "whisper-1");
   formData.append("response_format", "json");
+  formData.append("language", "en");
+  formData.append(
+    "prompt",
+    "This is a voice journal entry recording daily activities, accomplishments, and notes.",
+  );
 
   const response = await fetch(
     "https://api.openai.com/v1/audio/transcriptions",
@@ -189,6 +228,8 @@ export default defineEventHandler(async (event) => {
 
   // Read multipart form data
   let audioData: ArrayBuffer;
+  let audioMeta: { byteOffset: number; byteLength: number; poolSize: number; mimeType?: string; filename?: string } | null = null;
+  let clientDurationMs = 0;
   let provider: "groq" | "openai" = "groq";
 
   try {
@@ -210,6 +251,15 @@ export default defineEventHandler(async (event) => {
         });
       }
 
+      // Capture diagnostic metadata before processing
+      audioMeta = {
+        byteOffset: audioFile.data.byteOffset,
+        byteLength: audioFile.data.byteLength,
+        poolSize: audioFile.data.buffer.byteLength,
+        mimeType: audioFile.type,
+        filename: audioFile.filename,
+      };
+
       // Node.js Buffers may reference a slice of a larger shared ArrayBuffer pool.
       // Using .buffer directly would include data outside the actual audio content,
       // corrupting the file sent to the transcription API.
@@ -225,6 +275,15 @@ export default defineEventHandler(async (event) => {
         : null;
       if (requestedProvider === "openai") {
         provider = "openai";
+      }
+
+      // Parse client-reported recording duration
+      const durationPart = formData.find((part) => part.name === "duration");
+      if (durationPart?.data) {
+        clientDurationMs = parseInt(
+          new TextDecoder().decode(durationPart.data),
+          10,
+        ) || 0;
       }
     } else {
       throw createError({
@@ -264,7 +323,24 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  logger.info(`Transcribing audio for user ${userId} using ${provider}`);
+  // Minimum audio size check (~1KB = ~0.25s of WebM/Opus, too short for speech)
+  const MIN_AUDIO_BYTES = 1500;
+  if (audioData.byteLength < MIN_AUDIO_BYTES) {
+    logger.info(
+      `Audio too small (${audioData.byteLength} bytes), skipping transcription`,
+    );
+    return { text: "", provider, tokensUsed: 0 };
+  }
+
+  logger.info(`Transcribing audio for user ${userId} using ${provider}`, {
+    audioBytes: audioData.byteLength,
+    clientDurationMs,
+    estimatedDurationSec: Math.round(audioData.byteLength / 4000 * 10) / 10,
+    ...(audioMeta && {
+      poolMismatch: audioMeta.poolSize !== audioMeta.byteLength,
+      mimeType: audioMeta.mimeType,
+    }),
+  });
 
   try {
     let result: TranscribeResponse;
@@ -273,6 +349,14 @@ export default defineEventHandler(async (event) => {
       result = await transcribeWithOpenAI(audioData, apiKey);
     } else {
       result = await transcribeWithGroq(audioData, apiKey);
+    }
+
+    // Filter Whisper hallucinations (common on short/silent audio)
+    if (isWhisperHallucination(result.text)) {
+      logger.info(
+        `Filtered Whisper hallucination: "${result.text.trim()}"`,
+      );
+      result.text = "";
     }
 
     // Update rate limit only AFTER successful transcription

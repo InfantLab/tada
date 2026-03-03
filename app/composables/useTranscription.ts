@@ -21,6 +21,8 @@ export interface TranscriptionOptions {
   language?: string;
   /** Callback for interim/partial results */
   onInterim?: (text: string) => void;
+  /** Recording duration in ms (for server-side diagnostics) */
+  recordingDuration?: number;
 }
 
 export interface UseTranscriptionReturn {
@@ -454,6 +456,9 @@ export function useTranscription(): UseTranscriptionReturn {
     const formData = new FormData();
     formData.append("audio", blob, "audio.webm");
     formData.append("language", language);
+    if (options.recordingDuration) {
+      formData.append("duration", String(options.recordingDuration));
+    }
 
     progress.value = 30;
 

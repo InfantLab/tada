@@ -223,6 +223,7 @@ watch(
       try {
         const whisperResult = await transcription.transcribe(blob, {
           forceProvider: "whisper-cloud",
+          recordingDuration: voiceCapture.duration.value,
         });
         console.log(`[VoiceRecorder] Whisper fallback result`, {
           timestamp: new Date().toISOString(),
