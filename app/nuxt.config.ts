@@ -56,6 +56,9 @@ export default defineNuxtConfig({
       // Voice feature flags
       voiceEnabled: process.env["VOICE_ENABLED"] !== "false",
       voiceFreeLimit: parseInt(process.env["VOICE_FREE_LIMIT"] || "50", 10),
+      // Umami analytics (optional) - set via NUXT_PUBLIC_UMAMI_HOST and NUXT_PUBLIC_UMAMI_WEBSITE_ID
+      umamiHost: "",
+      umamiWebsiteId: "",
     },
   },
 
@@ -146,16 +149,6 @@ export default defineNuxtConfig({
         { rel: "icon", type: "image/png", href: "/favicon.png" },
         { rel: "apple-touch-icon", href: "/icons/icon-192.png" },
       ],
-      // Optional analytics - configured via UMAMI_URL and UMAMI_WEBSITE_ID env vars
-      script: process.env["UMAMI_URL"] && process.env["UMAMI_WEBSITE_ID"]
-        ? [
-            {
-              src: process.env["UMAMI_URL"],
-              async: true,
-              "data-website-id": process.env["UMAMI_WEBSITE_ID"],
-            },
-          ]
-        : [],
     },
   },
 

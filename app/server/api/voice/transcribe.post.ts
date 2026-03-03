@@ -210,7 +210,13 @@ export default defineEventHandler(async (event) => {
         });
       }
 
-      audioData = audioFile.data.buffer as ArrayBuffer;
+      // Node.js Buffers may reference a slice of a larger shared ArrayBuffer pool.
+      // Using .buffer directly would include data outside the actual audio content,
+      // corrupting the file sent to the transcription API.
+      audioData = audioFile.data.buffer.slice(
+        audioFile.data.byteOffset,
+        audioFile.data.byteOffset + audioFile.data.byteLength,
+      );
 
       // Check for provider preference
       const providerPart = formData.find((part) => part.name === "provider");

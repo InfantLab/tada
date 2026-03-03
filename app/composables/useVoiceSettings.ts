@@ -45,10 +45,21 @@ function shouldResetCounter(resetDate: string | undefined): boolean {
   return storedMonth !== currentMonth;
 }
 
+// Module-level shared state (singleton across all composable instances)
+// This prevents multiple instances from overwriting each other's localStorage data.
+// Safe for SSR because loadPreferences() only runs on the client (import.meta.client check).
+let sharedPreferences: Ref<VoicePreferences> | null = null;
+let sharedIsLoaded: Ref<boolean> | null = null;
+
 export function useVoiceSettings() {
-  // State
-  const preferences = ref<VoicePreferences>({ ...DEFAULT_PREFERENCES });
-  const isLoaded = ref(false);
+  // Use shared state so all callers (VoiceRecorder, useTranscription, etc.)
+  // operate on the same reactive preferences instance
+  if (!sharedPreferences) {
+    sharedPreferences = ref<VoicePreferences>({ ...DEFAULT_PREFERENCES });
+    sharedIsLoaded = ref(false);
+  }
+  const preferences = sharedPreferences;
+  const isLoaded = sharedIsLoaded!;
 
   // Individual preference refs for convenience
   const sttProvider = computed({
@@ -224,8 +235,8 @@ export function useVoiceSettings() {
     savePreferences();
   }
 
-  // Auto-load on mount (client-side only)
-  if (import.meta.client) {
+  // Auto-load on mount (client-side only, and only once for the shared instance)
+  if (import.meta.client && !isLoaded.value) {
     loadPreferences();
   }
 
