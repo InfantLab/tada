@@ -151,7 +151,7 @@ export default defineNuxtConfig({
         ? [
             {
               src: process.env["UMAMI_URL"],
-              defer: true,
+              async: true,
               "data-website-id": process.env["UMAMI_WEBSITE_ID"],
             },
           ]
