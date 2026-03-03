@@ -192,12 +192,8 @@ export default defineEventHandler(async (event) => {
   const userApiKey = getHeader(event, "x-user-api-key");
 
   // Check API key availability BEFORE rate limiting
-  // This prevents 503 errors from consuming rate limit
-  // Nuxt runtimeConfig only picks up NUXT_* prefixed env vars at runtime.
-  // Fall back to process.env for legacy unprefixed names (GROQ_API_KEY, etc.)
-  const config = useRuntimeConfig();
-  const groqApiKey = config.groqApiKey || process.env.GROQ_API_KEY || "";
-  const openaiApiKey = config.openaiApiKey || process.env.OPENAI_API_KEY || "";
+  const groqApiKey = process.env.GROQ_API_KEY || "";
+  const openaiApiKey = process.env.OPENAI_API_KEY || "";
   if (!userApiKey && !groqApiKey && !openaiApiKey) {
     throw createError({
       statusCode: 503,

@@ -1,10 +1,8 @@
 /**
  * Umami Analytics Client Plugin
  *
- * Dynamically injects the Umami tracking script at runtime based on
- * public runtime config. No rebuild required — just set the env vars:
- *   NUXT_PUBLIC_UMAMI_HOST=https://your-umami.example.com/script.js
- *   NUXT_PUBLIC_UMAMI_WEBSITE_ID=your-website-id
+ * Dynamically injects the Umami tracking script at runtime.
+ * Set env vars: UMAMI_HOST and UMAMI_WEBSITE_ID
  */
 export default defineNuxtPlugin(() => {
   const config = useRuntimeConfig();

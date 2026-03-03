@@ -30,35 +30,26 @@ export default defineNuxtConfig({
     },
   },
 
-  // Runtime config (environment variables)
-  // Nuxt auto-maps NUXT_* env vars, but we also support legacy names
+  // Runtime config
+  //
+  // Server-only values (API keys, DB, Stripe, SMTP) are NOT here.
+  // Server code reads process.env directly — no runtimeConfig needed.
+  //
+  // Only "public" values go here because they must be sent to the browser.
+  // In Docker, override these with NUXT_PUBLIC_* env vars at container start.
+  // e.g. NUXT_PUBLIC_APP_URL=https://tada.living
   runtimeConfig: {
-    // Server-only (not exposed to client)
-    databaseUrl: process.env["DATABASE_URL"] || "file:./data/db.sqlite",
-
-    // Voice feature API keys (server-only)
-    // Nuxt auto-reads NUXT_GROQ_API_KEY to override groqApiKey
-    // We also check GROQ_API_KEY as fallback for convenience
-    groqApiKey: process.env["NUXT_GROQ_API_KEY"] || process.env["GROQ_API_KEY"] || "",
-    openaiApiKey: process.env["NUXT_OPENAI_API_KEY"] || process.env["OPENAI_API_KEY"] || "",
-    anthropicApiKey: process.env["NUXT_ANTHROPIC_API_KEY"] || process.env["ANTHROPIC_API_KEY"] || "",
-    deepgramApiKey: process.env["NUXT_DEEPGRAM_API_KEY"] || process.env["DEEPGRAM_API_KEY"] || "",
-
-    // Public (exposed to client)
     public: {
       appName: "Tada",
-      appVersion: "0.4.0",
+      appVersion: "0.4.1",
       appUrl: process.env["APP_URL"] || "http://localhost:3000",
-      // Cloud mode - for cookie consent, subscription UI, etc.
       isCloudMode:
         process.env["TADA_CLOUD_MODE"] === "true" ||
         !!process.env["STRIPE_SECRET_KEY"],
-      // Voice feature flags
       voiceEnabled: process.env["VOICE_ENABLED"] !== "false",
       voiceFreeLimit: parseInt(process.env["VOICE_FREE_LIMIT"] || "50", 10),
-      // Umami analytics (optional) - set via NUXT_PUBLIC_UMAMI_HOST and NUXT_PUBLIC_UMAMI_WEBSITE_ID
-      umamiHost: "",
-      umamiWebsiteId: "",
+      umamiHost: process.env["UMAMI_HOST"] || "",
+      umamiWebsiteId: process.env["UMAMI_WEBSITE_ID"] || "",
     },
   },
 
