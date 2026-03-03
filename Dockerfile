@@ -38,9 +38,10 @@ RUN addgroup --system --gid 1001 nodejs && \
 # Copy built application
 COPY --from=builder /app/.output ./.output
 
-# Copy full node_modules into .output/server for proper module resolution
-# Nitro creates partial node_modules there, we need the complete set including transitive deps
-COPY --from=builder /app/node_modules ./.output/server/node_modules
+# Copy only the native bindings that Nitro can't bundle (externalized in nuxt.config.ts)
+# Do NOT copy all of node_modules — it includes devtools and bloats the image
+COPY --from=builder /app/node_modules/@libsql ./.output/server/node_modules/@libsql
+COPY --from=builder /app/node_modules/libsql ./.output/server/node_modules/libsql
 
 # Copy migration files and script for database setup
 COPY --from=builder /app/migrate.js ./migrate.js
