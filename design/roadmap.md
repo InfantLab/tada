@@ -404,9 +404,24 @@ cd a
 
 ## v0.4.1: Polish & Fixes
 
-_Target: February 2026_
+_Target: March 2026_
 
-**Theme:** Fix rough edges from v0.4.0 launch, especially around voice input and mobile experience.
+**Theme:** Fix rough edges from v0.4.0 launch, session resilience, analytics, and mobile experience.
+
+### ⏱️ Session Recovery ✅
+
+Timed sessions are now resilient to interruptions (accidental navigation, phone calls, crashes).
+
+- [x] Draft persisted to localStorage on session start, updated every 5s and on visibility change
+- [x] Recovery modal on next visit: Resume, Save & Complete, or Discard
+- [x] Stale drafts (>24h) auto-discarded
+- [x] Works offline (PWA mode)
+- [x] Extracted shared `timerTick()` helper (deduplication refactor)
+
+### 📊 Optional Analytics ✅
+
+- [x] Optional Umami analytics support (privacy-friendly, opt-in via env vars)
+- [x] Zero impact when unconfigured — no scripts loaded
 
 ### 🎙️ Voice Entry Quirks
 
@@ -641,4 +656,4 @@ Things we're explicitly _not_ building:
 
 ---
 
-_Last updated: February 2026_
+_Last updated: March 2026_

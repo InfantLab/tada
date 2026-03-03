@@ -15,6 +15,22 @@ import type { EntryInput } from "~/utils/entrySchemas";
 // Use unified entry engine composable
 const { createEntry, createTadaEntry, isLoading: isSaving } = useEntryEngine();
 
+// Session recovery for interrupted timed entries
+const {
+  recoveredDraft,
+  showRecoveryModal,
+  recoveredDisplayTime,
+  recoveredDescription,
+  persistDraft,
+  updateDraft,
+  clearDraft,
+  checkForRecovery,
+  startPeriodicUpdates,
+  stopPeriodicUpdates,
+  setupVisibilityHandler,
+  teardownVisibilityHandler,
+} = useSessionRecovery();
+
 definePageMeta({
   layout: "default",
 });
@@ -445,6 +461,9 @@ onMounted(async () => {
   } catch (error) {
     console.error("Failed to load timer settings:", error);
   }
+
+  // Check for interrupted session draft
+  checkForRecovery();
 });
 
 // Bell sounds
@@ -562,6 +581,65 @@ function buildCumulativeTargets(intervals: number[]): number[] {
 // Track previous elapsed for milestone/interval boundary detection
 let _lastCheckedElapsed = 0;
 
+// Shared timer tick — updates elapsed time, checks milestones/intervals
+function timerTick() {
+  const now = Date.now();
+  const newElapsed =
+    Math.floor((now - sessionStartTime.value!) / 1000) + pausedElapsed.value;
+  elapsedSeconds.value = newElapsed;
+
+  // Check for milestones in count-up mode
+  if (timerMode.value === "unlimited") {
+    checkMilestones();
+  }
+
+  // Fixed mode interval boundaries and overtime
+  if (timerMode.value === "fixed") {
+    const intrvls =
+      fixedIntervals.value.length > 0
+        ? fixedIntervals.value
+        : [targetMinutes.value];
+    const cumulative = buildCumulativeTargets(intrvls);
+
+    // Handle potentially jumping past multiple intervals (backgrounded tab)
+    if (!isOvertime.value && nextIntervalIndex.value < cumulative.length) {
+      let crossedCount = 0;
+      let lastCrossedIndex = nextIntervalIndex.value;
+      while (lastCrossedIndex < cumulative.length) {
+        const target = cumulative[lastCrossedIndex] ?? 0;
+        if (elapsedSeconds.value >= target) {
+          ringsCount.value += 1;
+          crossedCount += 1;
+          lastCrossedIndex += 1;
+        } else {
+          break;
+        }
+      }
+      if (crossedCount > 0) {
+        playBell("interval", lastCrossedIndex - 1);
+
+        // Mark transition for smooth circle animation
+        if (lastCrossedIndex < cumulative.length) {
+          isTransitioningInterval.value = true;
+          setTimeout(() => {
+            isTransitioningInterval.value = false;
+          }, 1000);
+        }
+
+        nextIntervalIndex.value = lastCrossedIndex;
+      }
+      if (nextIntervalIndex.value >= cumulative.length) {
+        isOvertime.value = true;
+      }
+    }
+
+    if (isOvertime.value) {
+      const totalTarget = cumulative[cumulative.length - 1] || 0;
+      overtimeSeconds.value = Math.max(0, elapsedSeconds.value - totalTarget);
+    }
+  }
+}
+
 function beginSession() {
   isRunning.value = true;
   isPaused.value = false;
@@ -583,60 +661,38 @@ function beginSession() {
   pausedElapsed.value = 0;
   _lastCheckedElapsed = 0;
 
-  timerInterval.value = setInterval(() => {
-    // Calculate elapsed from actual time, not increments
-    const now = Date.now();
-    const newElapsed =
-      Math.floor((now - sessionStartTime.value!) / 1000) + pausedElapsed.value;
-    const _prevElapsed = elapsedSeconds.value;
-    elapsedSeconds.value = newElapsed;
+  // Persist session draft for crash recovery
+  persistDraft({
+    version: 1,
+    sessionStartTime: sessionStartTime.value,
+    elapsedSeconds: 0,
+    wasPaused: false,
+    pausedElapsed: 0,
+    timerMode: timerMode.value,
+    selectedCategory: selectedCategory.value,
+    selectedSubcategory: selectedSubcategory.value,
+    warmUpSeconds: warmUpSeconds.value,
+    practiceUrl: practiceUrl.value,
+    practiceTitle: practiceTitle.value,
+    intervals: intervals.value.map((int) => ({
+      durationMinutes: int.durationMinutes,
+      repeats: int.repeats,
+      bellSound: int.bellSound,
+    })),
+    lastSeenAt: Date.now(),
+    presetId: selectedPresetId.value,
+    presetName: selectedPresetName.value,
+  });
+  startPeriodicUpdates(
+    () => elapsedSeconds.value,
+    () => isPaused.value,
+  );
+  setupVisibilityHandler(
+    () => elapsedSeconds.value,
+    () => isPaused.value,
+  );
 
-    // Check for milestones in count-up mode
-    if (timerMode.value === "unlimited") {
-      checkMilestones();
-    }
-
-    // Fixed mode interval boundaries and overtime
-    if (timerMode.value === "fixed") {
-      const intrvls =
-        fixedIntervals.value.length > 0
-          ? fixedIntervals.value
-          : [targetMinutes.value];
-      const cumulative = buildCumulativeTargets(intrvls);
-
-      // Handle potentially jumping past multiple intervals (backgrounded tab)
-      if (!isOvertime.value && nextIntervalIndex.value < cumulative.length) {
-        // Count how many intervals we've crossed
-        let crossedCount = 0;
-        let lastCrossedIndex = nextIntervalIndex.value;
-        while (lastCrossedIndex < cumulative.length) {
-          const target = cumulative[lastCrossedIndex] ?? 0;
-          if (elapsedSeconds.value >= target) {
-            ringsCount.value += 1;
-            crossedCount += 1;
-            lastCrossedIndex += 1;
-          } else {
-            break;
-          }
-        }
-        // Play ONE bell for all crossed intervals (avoid cacophony)
-        if (crossedCount > 0) {
-          playBell("interval", lastCrossedIndex - 1);
-          nextIntervalIndex.value = lastCrossedIndex;
-        }
-        // Check if we've completed all intervals
-        if (nextIntervalIndex.value >= cumulative.length) {
-          isOvertime.value = true;
-        }
-      }
-
-      if (isOvertime.value) {
-        // Calculate overtime from difference
-        const totalTarget = cumulative[cumulative.length - 1] || 0;
-        overtimeSeconds.value = Math.max(0, elapsedSeconds.value - totalTarget);
-      }
-    }
-  }, 1000);
+  timerInterval.value = setInterval(timerTick, 1000);
 }
 
 // Timer controls
@@ -679,6 +735,7 @@ function pauseTimer() {
     clearInterval(timerInterval.value);
     timerInterval.value = null;
   }
+  updateDraft(elapsedSeconds.value, true);
 }
 
 function resumeTimer() {
@@ -699,65 +756,9 @@ function resumeTimer() {
 
   // Reset start time for resumed session, keeping accumulated elapsed
   sessionStartTime.value = Date.now();
+  updateDraft(elapsedSeconds.value, false);
 
-  timerInterval.value = setInterval(() => {
-    // Calculate elapsed from actual time
-    const now = Date.now();
-    const newElapsed =
-      Math.floor((now - sessionStartTime.value!) / 1000) + pausedElapsed.value;
-    elapsedSeconds.value = newElapsed;
-
-    // Check for milestones in count-up mode
-    if (timerMode.value === "unlimited") {
-      checkMilestones();
-    }
-
-    if (timerMode.value === "fixed") {
-      const intrvls =
-        fixedIntervals.value.length > 0
-          ? fixedIntervals.value
-          : [targetMinutes.value];
-      const cumulative = buildCumulativeTargets(intrvls);
-
-      // Handle potentially jumping past multiple intervals (backgrounded tab)
-      if (!isOvertime.value && nextIntervalIndex.value < cumulative.length) {
-        let crossedCount = 0;
-        let lastCrossedIndex = nextIntervalIndex.value;
-        while (lastCrossedIndex < cumulative.length) {
-          const target = cumulative[lastCrossedIndex] ?? 0;
-          if (elapsedSeconds.value >= target) {
-            ringsCount.value += 1;
-            crossedCount += 1;
-            lastCrossedIndex += 1;
-          } else {
-            break;
-          }
-        }
-        if (crossedCount > 0) {
-          playBell("interval", lastCrossedIndex - 1);
-
-          // Mark transition for smooth circle animation
-          if (lastCrossedIndex < cumulative.length) {
-            // We're moving to another interval (not overtime)
-            isTransitioningInterval.value = true;
-            setTimeout(() => {
-              isTransitioningInterval.value = false;
-            }, 1000); // Match the CSS transition duration
-          }
-
-          nextIntervalIndex.value = lastCrossedIndex;
-        }
-        if (nextIntervalIndex.value >= cumulative.length) {
-          isOvertime.value = true;
-        }
-      }
-
-      if (isOvertime.value) {
-        const totalTarget = cumulative[cumulative.length - 1] || 0;
-        overtimeSeconds.value = Math.max(0, elapsedSeconds.value - totalTarget);
-      }
-    }
-  }, 1000);
+  timerInterval.value = setInterval(timerTick, 1000);
 }
 
 function stopTimer() {
@@ -767,6 +768,8 @@ function stopTimer() {
     clearInterval(timerInterval.value);
     timerInterval.value = null;
   }
+  stopPeriodicUpdates();
+  teardownVisibilityHandler();
   // Reset time tracking
   sessionStartTime.value = null;
   pausedElapsed.value = 0;
@@ -775,6 +778,7 @@ function stopTimer() {
 
 function resetTimer() {
   stopTimer();
+  clearDraft();
   elapsedSeconds.value = 0;
   isWarmingUp.value = false;
   isOvertime.value = false;
@@ -980,6 +984,92 @@ async function saveSession(includeOvertime: boolean = true) {
   }
 }
 
+// --- Session recovery handlers ---
+
+function handleRecoveryResume() {
+  const draft = recoveredDraft.value;
+  if (!draft) return;
+
+  // Restore session configuration from draft
+  timerMode.value = draft.timerMode;
+  selectedCategory.value = draft.selectedCategory;
+  selectedSubcategory.value = draft.selectedSubcategory;
+  warmUpSeconds.value = draft.warmUpSeconds;
+  practiceUrl.value = draft.practiceUrl;
+  practiceTitle.value = draft.practiceTitle;
+  if (draft.presetId) selectedPresetId.value = draft.presetId;
+  if (draft.presetName) selectedPresetName.value = draft.presetName;
+  intervals.value = draft.intervals.map((int) => ({
+    ...int,
+    customDuration: "",
+  }));
+
+  // Close modal and set up timer state
+  showRecoveryModal.value = false;
+  isRunning.value = true;
+  isPaused.value = false;
+  showSettings.value = false;
+  requestWakeLock();
+
+  // Reset tracking state
+  milestoneFired.value = new Set();
+  ringsCount.value = 0;
+  isOvertime.value = false;
+  overtimeSeconds.value = 0;
+  nextIntervalIndex.value = 0;
+
+  // Resume from accumulated elapsed time
+  pausedElapsed.value = draft.elapsedSeconds;
+  elapsedSeconds.value = draft.elapsedSeconds;
+  sessionStartTime.value = Date.now();
+
+  // Re-persist and start updates
+  persistDraft({ ...draft, lastSeenAt: Date.now() });
+  startPeriodicUpdates(
+    () => elapsedSeconds.value,
+    () => isPaused.value,
+  );
+  setupVisibilityHandler(
+    () => elapsedSeconds.value,
+    () => isPaused.value,
+  );
+
+  timerInterval.value = setInterval(timerTick, 1000);
+}
+
+function handleRecoverySave() {
+  const draft = recoveredDraft.value;
+  if (!draft) return;
+
+  // Restore configuration so saveSession works correctly
+  timerMode.value = draft.timerMode;
+  selectedCategory.value = draft.selectedCategory;
+  selectedSubcategory.value = draft.selectedSubcategory;
+  practiceUrl.value = draft.practiceUrl;
+  practiceTitle.value = draft.practiceTitle;
+  warmUpSeconds.value = draft.warmUpSeconds;
+  intervals.value = draft.intervals.map((int) => ({
+    ...int,
+    customDuration: "",
+  }));
+  elapsedSeconds.value = draft.elapsedSeconds;
+
+  showRecoveryModal.value = false;
+  clearDraft();
+
+  // Route through normal save flow (includes post-session modal if enabled)
+  if (captureMood.value || captureReflection.value) {
+    pendingIncludeOvertime.value = true;
+    showPostSessionModal.value = true;
+  } else {
+    saveSession(true);
+  }
+}
+
+function handleRecoveryDiscard() {
+  clearDraft();
+}
+
 // Wake Lock API - keep screen on during meditation
 async function requestWakeLock() {
   try {
@@ -1097,6 +1187,8 @@ onUnmounted(() => {
   if (timerInterval.value) {
     clearInterval(timerInterval.value);
   }
+  stopPeriodicUpdates();
+  teardownVisibilityHandler();
   releaseWakeLock();
 });
 </script>
@@ -1801,6 +1893,62 @@ onUnmounted(() => {
           </svg>
         </button>
       </template>
+    </div>
+
+    <!-- Session recovery modal -->
+    <div
+      v-if="showRecoveryModal"
+      class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+    >
+      <div
+        class="bg-white dark:bg-stone-800 rounded-2xl shadow-xl max-w-md w-full p-6 space-y-6"
+      >
+        <h2
+          class="text-xl font-semibold text-stone-800 dark:text-stone-100 text-center"
+        >
+          Session interrupted
+        </h2>
+
+        <p class="text-sm text-stone-600 dark:text-stone-400 text-center">
+          You had a
+          <strong class="text-stone-800 dark:text-stone-100">{{
+            recoveredDescription
+          }}</strong>
+          session in progress.
+        </p>
+
+        <div class="text-center">
+          <span class="font-mono text-3xl text-stone-800 dark:text-stone-100">
+            {{ recoveredDisplayTime }}
+          </span>
+          <p class="text-xs text-stone-500 dark:text-stone-400 mt-1">
+            elapsed
+          </p>
+        </div>
+
+        <div class="space-y-3">
+          <button
+            class="w-full px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-medium transition-all shadow-md"
+            @click="handleRecoveryResume"
+          >
+            Resume session
+          </button>
+
+          <button
+            class="w-full px-6 py-3 rounded-xl bg-stone-200 dark:bg-stone-700 hover:bg-stone-300 dark:hover:bg-stone-600 text-stone-700 dark:text-stone-200 font-medium transition-all"
+            @click="handleRecoverySave"
+          >
+            Save {{ recoveredDisplayTime }} and complete
+          </button>
+
+          <button
+            class="w-full px-4 py-2 text-sm text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 transition-colors"
+            @click="handleRecoveryDiscard"
+          >
+            Discard session
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- Post-session capture modal -->
