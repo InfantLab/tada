@@ -193,8 +193,12 @@ export default defineEventHandler(async (event) => {
 
   // Check API key availability BEFORE rate limiting
   // This prevents 503 errors from consuming rate limit
+  // Nuxt runtimeConfig only picks up NUXT_* prefixed env vars at runtime.
+  // Fall back to process.env for legacy unprefixed names (GROQ_API_KEY, etc.)
   const config = useRuntimeConfig();
-  if (!userApiKey && !config.groqApiKey && !config.openaiApiKey) {
+  const groqApiKey = config.groqApiKey || process.env.GROQ_API_KEY || "";
+  const openaiApiKey = config.openaiApiKey || process.env.OPENAI_API_KEY || "";
+  if (!userApiKey && !groqApiKey && !openaiApiKey) {
     throw createError({
       statusCode: 503,
       statusMessage:
@@ -309,16 +313,16 @@ export default defineEventHandler(async (event) => {
     logger.info(`Using BYOK for ${provider} transcription`);
   } else {
     // Use server-side API key (already validated above)
-    if (provider === "groq" && config.groqApiKey) {
-      apiKey = config.groqApiKey;
-    } else if (provider === "openai" && config.openaiApiKey) {
-      apiKey = config.openaiApiKey;
-    } else if (config.groqApiKey) {
+    if (provider === "groq" && groqApiKey) {
+      apiKey = groqApiKey;
+    } else if (provider === "openai" && openaiApiKey) {
+      apiKey = openaiApiKey;
+    } else if (groqApiKey) {
       // Fallback to groq if openai was requested but not available
-      apiKey = config.groqApiKey;
+      apiKey = groqApiKey;
       provider = "groq";
     } else {
-      apiKey = config.openaiApiKey;
+      apiKey = openaiApiKey;
       provider = "openai";
     }
   }

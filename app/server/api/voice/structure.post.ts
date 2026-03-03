@@ -340,12 +340,17 @@ export default defineEventHandler(async (event) => {
 
   // Check API key availability BEFORE rate limiting
   // This prevents 503 errors from consuming rate limit
+  // Nuxt runtimeConfig only picks up NUXT_* prefixed env vars at runtime.
+  // Fall back to process.env for legacy unprefixed names.
   const config = useRuntimeConfig();
+  const groqApiKey = config.groqApiKey || process.env.GROQ_API_KEY || "";
+  const openaiApiKey = config.openaiApiKey || process.env.OPENAI_API_KEY || "";
+  const anthropicApiKey = config.anthropicApiKey || process.env.ANTHROPIC_API_KEY || "";
   if (
     !userApiKey &&
-    !config.groqApiKey &&
-    !config.openaiApiKey &&
-    !config.anthropicApiKey
+    !groqApiKey &&
+    !openaiApiKey &&
+    !anthropicApiKey
   ) {
     throw createError({
       statusCode: 503,
@@ -430,21 +435,21 @@ export default defineEventHandler(async (event) => {
     logger.info(`Using BYOK for ${provider} extraction`);
   } else {
     // Use server-side API key (already validated above)
-    if (provider === "groq" && config.groqApiKey) {
-      apiKey = config.groqApiKey;
-    } else if (provider === "openai" && config.openaiApiKey) {
-      apiKey = config.openaiApiKey;
-    } else if (provider === "anthropic" && config.anthropicApiKey) {
-      apiKey = config.anthropicApiKey;
-    } else if (config.groqApiKey) {
+    if (provider === "groq" && groqApiKey) {
+      apiKey = groqApiKey;
+    } else if (provider === "openai" && openaiApiKey) {
+      apiKey = openaiApiKey;
+    } else if (provider === "anthropic" && anthropicApiKey) {
+      apiKey = anthropicApiKey;
+    } else if (groqApiKey) {
       // Fallback to available provider
-      apiKey = config.groqApiKey;
+      apiKey = groqApiKey;
       provider = "groq";
-    } else if (config.openaiApiKey) {
-      apiKey = config.openaiApiKey;
+    } else if (openaiApiKey) {
+      apiKey = openaiApiKey;
       provider = "openai";
     } else {
-      apiKey = config.anthropicApiKey;
+      apiKey = anthropicApiKey;
       provider = "anthropic";
     }
   }
