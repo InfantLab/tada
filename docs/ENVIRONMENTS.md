@@ -115,13 +115,26 @@ volumes:
 
 ### Environment Variables
 
-| Variable        | Required    | Default                 | Purpose                     |
-| --------------- | ----------- | ----------------------- | --------------------------- |
-| `DATABASE_URL`  | No          | `file:/data/db.sqlite`  | Database path               |
-| `NODE_ENV`      | No          | `production`            | Environment mode            |
-| `APP_URL`       | Recommended | `http://localhost:3000` | Public URL for emails/links |
-| `VOICE_ENABLED` | No          | `true`                  | Enable voice input          |
-| `GROQ_API_KEY`  | No          | -                       | Voice transcription API     |
+| Variable            | Required    | Default                 | Purpose                              |
+| ------------------- | ----------- | ----------------------- | ------------------------------------ |
+| `DATABASE_URL`      | No          | `file:/data/db.sqlite`  | Database path                        |
+| `NODE_ENV`          | No          | `production`            | Environment mode                     |
+| `APP_URL`           | Recommended | `http://localhost:3000` | Public URL for emails/links          |
+| `VOICE_ENABLED`     | No          | `true`                  | Enable voice input                   |
+| `GROQ_API_KEY`      | No          | -                       | Voice transcription API              |
+| `UMAMI_URL`         | No          | -                       | Umami analytics script URL           |
+| `UMAMI_WEBSITE_ID`  | No          | -                       | Umami website ID for tracking        |
+
+#### Analytics (Optional)
+
+To enable [Umami](https://umami.is/) analytics, set both environment variables:
+
+```bash
+UMAMI_URL=https://your-umami-instance.com/script.js
+UMAMI_WEBSITE_ID=your-website-uuid
+```
+
+This is optional and privacy-friendly — no data is collected unless you configure it.
 
 ---
 

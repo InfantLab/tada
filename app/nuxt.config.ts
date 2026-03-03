@@ -146,6 +146,16 @@ export default defineNuxtConfig({
         { rel: "icon", type: "image/png", href: "/favicon.png" },
         { rel: "apple-touch-icon", href: "/icons/icon-192.png" },
       ],
+      // Optional analytics - configured via UMAMI_URL and UMAMI_WEBSITE_ID env vars
+      script: process.env["UMAMI_URL"] && process.env["UMAMI_WEBSITE_ID"]
+        ? [
+            {
+              src: process.env["UMAMI_URL"],
+              defer: true,
+              "data-website-id": process.env["UMAMI_WEBSITE_ID"],
+            },
+          ]
+        : [],
     },
   },
 
