@@ -115,22 +115,45 @@ volumes:
 
 ### Environment Variables
 
+There are two kinds of env vars in Docker/CapRover deployments:
+
+- **Server-only** — plain names (e.g. `GROQ_API_KEY`). Server code reads `process.env` directly at request time.
+- **Browser-visible** — must use `NUXT_PUBLIC_` prefix (e.g. `NUXT_PUBLIC_IS_CLOUD_MODE`). These are the only way to pass config to the browser after the Docker image is built.
+
+#### Server-Only (plain names)
+
 | Variable            | Required    | Default                 | Purpose                              |
 | ------------------- | ----------- | ----------------------- | ------------------------------------ |
 | `DATABASE_URL`      | No          | `file:/data/db.sqlite`  | Database path                        |
 | `NODE_ENV`          | No          | `production`            | Environment mode                     |
 | `APP_URL`           | Recommended | `http://localhost:3000` | Public URL for emails/links          |
 | `VOICE_ENABLED`     | No          | `true`                  | Enable voice input                   |
-| `GROQ_API_KEY`      | No          | -                       | Voice transcription API              |
-| `UMAMI_URL`         | No          | -                       | Umami analytics script URL           |
-| `UMAMI_WEBSITE_ID`  | No          | -                       | Umami website ID for tracking        |
+| `GROQ_API_KEY`      | No          | -                       | Voice transcription (Groq Whisper)   |
+| `OPENAI_API_KEY`    | No          | -                       | Voice transcription fallback         |
+
+#### Browser-Visible (NUXT_PUBLIC_ prefix required in Docker)
+
+| Variable                        | Required | Default | Purpose                               |
+| ------------------------------- | -------- | ------- | ------------------------------------- |
+| `NUXT_PUBLIC_IS_CLOUD_MODE`     | No       | `false` | Enables subscription UI, cookie consent|
+| `NUXT_PUBLIC_UMAMI_HOST`        | No       | -       | Umami analytics script URL            |
+| `NUXT_PUBLIC_UMAMI_WEBSITE_ID`  | No       | -       | Umami website tracking ID             |
+
+> **Why the prefix?** Nuxt bakes `runtimeConfig.public` values into the build. In Docker, env vars aren't available at build time. The `NUXT_PUBLIC_` prefix is Nuxt's mechanism to override those baked-in defaults at container startup. Server-only code doesn't have this limitation — it reads `process.env` at request time.
 
 #### Analytics (Optional)
 
-To enable [Umami](https://umami.is/) analytics, set both environment variables:
+To enable [Umami](https://umami.is/) analytics, set both in your deployment config:
 
 ```bash
-UMAMI_URL=https://your-umami-instance.com/script.js
+NUXT_PUBLIC_UMAMI_HOST=https://your-umami-instance.com/script.js
+NUXT_PUBLIC_UMAMI_WEBSITE_ID=your-website-uuid
+```
+
+For local development with `.env`, use plain names instead:
+
+```bash
+UMAMI_HOST=https://your-umami-instance.com/script.js
 UMAMI_WEBSITE_ID=your-website-uuid
 ```
 

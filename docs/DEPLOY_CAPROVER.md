@@ -124,44 +124,49 @@ tar -cvf deploy.tar --exclude=node_modules --exclude=.git .
 
 ## Environment Variables
 
-These can be set in **"App Configs"** → **"Environmental Variables"**:
+Set in **"App Configs"** → **"Environmental Variables"**.
 
-### Required for Cloud Mode (tada.living)
+There are two kinds of env vars:
 
-| Variable                     | Example                     | Description                           |
-| ---------------------------- | --------------------------- | ------------------------------------- |
-| `NUXT_PUBLIC_APP_URL`        | `https://tada.living`       | Public URL (removes dev banner)       |
-| `NUXT_PUBLIC_IS_CLOUD_MODE`  | `true`                      | Enables cloud features & subscription UI |
-| `STRIPE_SECRET_KEY`          | `sk_live_xxx`               | Stripe API key                        |
-| `STRIPE_WEBHOOK_SECRET`      | `whsec_xxx`                 | Stripe webhook signing secret         |
-| `STRIPE_PRICE_SEEDLING`     | `price_xxx`                 | Price ID for £1/year tier             |
-| `STRIPE_PRICE_SAPLING`      | `price_xxx`                 | Price ID for £5/year tier             |
-| `STRIPE_PRICE_OAK`          | `price_xxx`                 | Price ID for £12/year tier            |
-| `STRIPE_PRICE_REDWOOD`      | `price_xxx`                 | Price ID for £25/year tier            |
-| `STRIPE_PRICE_FOREST`       | `price_xxx`                 | Price ID for £50/year tier            |
+- **Server-only** (API keys, DB, Stripe, SMTP) — use plain names. Server code reads `process.env` directly.
+- **Browser-visible** — must use `NUXT_PUBLIC_` prefix. These are the only way to pass values to the browser at container startup in Docker.
 
-### Email (SMTP)
+### Server-Only Variables (plain names)
 
-| Variable        | Example                      | Description                          |
-| --------------- | ---------------------------- | ------------------------------------ |
-| `SMTP_HOST`     | `smtp.gmail.com`             | SMTP server                          |
-| `SMTP_PORT`     | `25`                         | Port (see note below)                |
-| `SMTP_SECURE`   | `false`                      | `true` for port 465, `false` for 25/587 |
-| `SMTP_USER`     | `you@gmail.com`              | SMTP username                        |
-| `SMTP_PASSWORD` | `xxxx xxxx xxxx xxxx`        | Gmail app password                   |
-| `SMTP_FROM`     | `Caspar Addyman <infantologist@gmail.com>` | From address               |
-| `SMTP_REPLY_TO` | `Caspar Addyman <infantologist@gmail.com>` | Reply-to address           |
+| Variable                | Example              | Description                          |
+| ----------------------- | -------------------- | ------------------------------------ |
+| `NODE_ENV`              | `production`         | Should stay as production            |
+| `DATABASE_URL`          | `file:/data/db.sqlite` | SQLite path (don't change!)        |
+| `GROQ_API_KEY`          | `gsk_xxx`            | Voice transcription (Groq Whisper)   |
+| `OPENAI_API_KEY`        | `sk-xxx`             | Voice transcription fallback         |
+| `ANTHROPIC_API_KEY`     | `sk-ant-xxx`         | AI extraction fallback               |
+| `STRIPE_SECRET_KEY`     | `sk_live_xxx`        | Stripe API key                       |
+| `STRIPE_WEBHOOK_SECRET` | `whsec_xxx`          | Stripe webhook signing secret        |
+| `STRIPE_PRICE_SEEDLING` | `price_xxx`          | Price ID for £1/year tier            |
+| `STRIPE_PRICE_SAPLING`  | `price_xxx`          | Price ID for £5/year tier            |
+| `STRIPE_PRICE_OAK`      | `price_xxx`          | Price ID for £12/year tier           |
+| `STRIPE_PRICE_REDWOOD`  | `price_xxx`          | Price ID for £25/year tier           |
+| `STRIPE_PRICE_FOREST`   | `price_xxx`          | Price ID for £50/year tier           |
+| `TADA_CLOUD_MODE`       | `true`               | Enable cloud features (server-side)  |
+| `SMTP_HOST`             | `smtp.gmail.com`     | SMTP server                          |
+| `SMTP_PORT`             | `25`                 | Port (see note below)                |
+| `SMTP_SECURE`           | `false`              | `true` for 465, `false` for 25/587   |
+| `SMTP_USER`             | `you@gmail.com`      | SMTP username                        |
+| `SMTP_PASSWORD`         | `xxxx xxxx xxxx xxxx`| Gmail app password                   |
+| `SMTP_FROM`             | `Name <email>`       | From address                         |
+| `SMTP_REPLY_TO`         | `Name <email>`       | Reply-to address                     |
 
 > **⚠️ Hetzner SMTP Note:** Hetzner blocks outbound port 587. Use **port 25** with `SMTP_SECURE=false` (STARTTLS). Port 465 may also be blocked. Test with `swaks` if unsure.
 
-### Optional
+### Browser-Visible Variables (NUXT_PUBLIC_ prefix required)
 
-| Variable       | Default                    | Description                  |
-| -------------- | -------------------------- | ---------------------------- |
-| `NODE_ENV`     | `production`               | Should stay as production    |
-| `DATABASE_URL` | `file:/data/db.sqlite`     | SQLite database path         |
-| `PORT`         | `3000`                     | Internal port (don't change) |
-| `GROQ_API_KEY` | -                          | Voice AI (Groq Whisper)      |
+These values are sent to the user's browser. In Docker, the app is built without env vars, so the `NUXT_PUBLIC_` prefix is the only way to override defaults at container startup.
+
+| Variable                        | Example                              | Description                               |
+| ------------------------------- | ------------------------------------ | ----------------------------------------- |
+| `NUXT_PUBLIC_IS_CLOUD_MODE`     | `true`                               | Enables subscription UI, cookie consent   |
+| `NUXT_PUBLIC_UMAMI_HOST`        | `https://umami.example.com/script.js`| Umami analytics script URL                |
+| `NUXT_PUBLIC_UMAMI_WEBSITE_ID`  | `9b167350-633d-...`                  | Umami website tracking ID                 |
 
 ---
 

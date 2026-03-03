@@ -47,8 +47,9 @@ NUXT_BETTER_AUTH_SECRET=your-secret-key-here  # Generate: openssl rand -base64 3
 NUXT_BETTER_AUTH_URL=https://yourdomain.com
 
 # Voice API Keys (optional - for voice transcription features)
-NUXT_OPENAI_API_KEY=sk-...
-NUXT_ANTHROPIC_API_KEY=sk-ant-...
+GROQ_API_KEY=gsk_...          # Primary (recommended) - Groq Whisper
+OPENAI_API_KEY=sk-...         # Fallback
+ANTHROPIC_API_KEY=sk-ant-...  # For AI extraction
 
 # CORS (optional)
 CORS_ALLOWED_ORIGINS=https://yourdomain.com,https://app.yourdomain.com
