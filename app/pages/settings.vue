@@ -840,8 +840,9 @@ async function createApiKey() {
     showCreateKeyForm.value = false;
     await fetchApiKeys();
     showSuccess("API key created");
-  } catch {
-    showError("Failed to create API key");
+  } catch (err: any) {
+    const msg = err?.data?.error?.message || "Failed to create API key";
+    showError(msg);
   } finally {
     isCreatingKey.value = false;
   }
@@ -854,8 +855,9 @@ async function revokeApiKey(keyId: string) {
     await $fetch(`/api/v1/auth/keys/${keyId}`, { method: "DELETE" });
     apiKeys.value = apiKeys.value.filter((k) => k.id !== keyId);
     showSuccess("API key revoked");
-  } catch {
-    showError("Failed to revoke API key");
+  } catch (err: any) {
+    const msg = err?.data?.error?.message || "Failed to revoke API key";
+    showError(msg);
   } finally {
     isDeletingKeyId.value = null;
   }

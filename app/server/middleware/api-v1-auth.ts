@@ -3,6 +3,9 @@
  *
  * Handles authentication for all /api/v1/* endpoints.
  * Supports both API key (Bearer token) and session-based authentication.
+ *
+ * NOTE: Nitro does NOT support directory-scoped _middleware.ts files in
+ * server/api/ — all server middleware must be in server/middleware/.
  */
 
 import type { H3Event } from "h3";
@@ -17,12 +20,13 @@ import {
 } from "~/server/utils/response";
 import type { ApiAuthContext } from "~/types/api";
 
-/**
- * Authentication middleware for API v1
- * Runs on all /api/v1/* requests
- */
 export default defineEventHandler(async (event: H3Event) => {
   const path = event.path;
+
+  // Only apply to /api/v1/ routes
+  if (!path.startsWith("/api/v1/")) {
+    return;
+  }
 
   // Skip middleware for health check endpoint
   if (path === "/api/v1/health") {
@@ -44,7 +48,6 @@ export default defineEventHandler(async (event: H3Event) => {
     const apiKeyRecord = await validateApiKey(token);
 
     if (apiKeyRecord) {
-      // Valid API key
       authContext = {
         userId: apiKeyRecord.userId,
         permissions: apiKeyRecord.permissions,
@@ -52,10 +55,8 @@ export default defineEventHandler(async (event: H3Event) => {
         type: "api_key",
       };
 
-      // Set auth context
       event.context.auth = authContext;
     } else {
-      // Invalid API key
       throw createError(unauthorized(event, "Invalid API key"));
     }
   } else {
@@ -63,7 +64,6 @@ export default defineEventHandler(async (event: H3Event) => {
     const { session, user } = await validateSessionRequest(event);
 
     if (session && user) {
-      // Valid session
       authContext = {
         userId: user.id,
         permissions: [], // Sessions have all permissions
@@ -71,7 +71,6 @@ export default defineEventHandler(async (event: H3Event) => {
         type: "session",
       };
 
-      // Set auth context
       event.context.auth = authContext;
     }
   }
@@ -82,7 +81,8 @@ export default defineEventHandler(async (event: H3Event) => {
   }
 
   // Determine rate limit type based on endpoint
-  let rateLimitType: "standard" | "export" | "pattern" | "webhook" = "standard";
+  let rateLimitType: "standard" | "export" | "pattern" | "webhook" =
+    "standard";
 
   if (path.includes("/export")) {
     rateLimitType = "export";
@@ -93,7 +93,8 @@ export default defineEventHandler(async (event: H3Event) => {
   }
 
   // Apply rate limiting
-  const identifier = authContext.apiKeyId || authContext.sessionId || authContext.userId;
+  const identifier =
+    authContext.apiKeyId || authContext.sessionId || authContext.userId;
   const rateLimit = checkRateLimit(identifier, rateLimitType);
 
   // Set rate limit headers on response
@@ -103,6 +104,4 @@ export default defineEventHandler(async (event: H3Event) => {
   if (!rateLimit.allowed) {
     throw createError(rateLimitExceeded(event, rateLimit.info));
   }
-
-  // Authentication and rate limiting passed - proceed to endpoint
 });

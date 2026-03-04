@@ -87,13 +87,20 @@ export default defineEventHandler(async (event) => {
       warning:
         "Save this API key now. You won't be able to see it again. If you lose it, you'll need to generate a new one.",
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error creating API key:", error);
+
+    // Surface useful detail for common failures
+    const message =
+      error?.message?.includes("no such table")
+        ? "API keys table not found — database migration required"
+        : "Failed to create API key";
+
     throw createError(
       apiError(
         event,
         "CREATE_KEY_FAILED",
-        "Failed to create API key",
+        message,
         500,
       ),
     );
