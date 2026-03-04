@@ -13,7 +13,7 @@ export default defineNuxtPlugin(() => {
   if (host && websiteId) {
     const script = document.createElement("script");
     script.async = true;
-    script.src = host;
+    script.src = `${host.replace(/\/+$/, "")}/script.js`;
     script.dataset.websiteId = websiteId;
     document.head.appendChild(script);
   }

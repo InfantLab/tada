@@ -13,7 +13,7 @@ import Papa from "papaparse";
 import { z } from "zod";
 import { db } from "~/server/db";
 import { entries } from "~/server/db/schema";
-import { eq, and, isNull } from "drizzle-orm";
+import { eq, and, gte, lte, isNull } from "drizzle-orm";
 import { createEntry, bulkCreateEntries } from "~/server/services/entries";
 import type { NewEntry } from "~/server/db/schema";
 
@@ -52,6 +52,188 @@ interface ImportPreview {
 interface ImportOptions {
   skipDuplicates?: boolean;
   updateExisting?: boolean;
+  fuzzyMatch?: boolean;
+  fuzzyToleranceMs?: number;
+}
+
+// ---------------------------------------------------------------------------
+// Fuzzy Duplicate Detection
+// ---------------------------------------------------------------------------
+
+export type FuzzyMatchType =
+  | "exact"
+  | "close"
+  | "close-suspicious"
+  | "overlap"
+  | "none";
+
+export type FuzzyResolution =
+  | "keep-new"
+  | "keep-existing"
+  | "keep-longer"
+  | "review";
+
+export interface FuzzyMatch {
+  newEntry: any;
+  matchType: FuzzyMatchType;
+  existingEntry?: {
+    id: string;
+    timestamp: string;
+    durationSeconds: number | null;
+    name: string;
+  };
+  timeDiffMs?: number;
+  durationRatio?: number;
+  suggestedResolution: FuzzyResolution;
+}
+
+export interface FuzzyDetectionResult {
+  unique: any[];
+  matches: FuzzyMatch[];
+}
+
+export interface FuzzyDetectionOptions {
+  toleranceMs?: number;
+  suspiciousRatio?: number;
+}
+
+const DEFAULT_TOLERANCE_MS = 5 * 60 * 1000; // 5 minutes
+const DEFAULT_SUSPICIOUS_RATIO = 2; // >2x duration difference
+
+/**
+ * Detect duplicate entries with fuzzy time matching.
+ *
+ * For each new entry, checks existing DB entries for:
+ * - Exact timestamp match
+ * - Close match (start times within tolerance)
+ * - Time range overlap (even if start times are far apart)
+ */
+export async function detectDuplicatesFuzzy(
+  userId: string,
+  newEntries: any[],
+  options: FuzzyDetectionOptions = {},
+): Promise<FuzzyDetectionResult> {
+  const toleranceMs = options.toleranceMs ?? DEFAULT_TOLERANCE_MS;
+  const suspiciousRatio = options.suspiciousRatio ?? DEFAULT_SUSPICIOUS_RATIO;
+
+  const unique: any[] = [];
+  const matches: FuzzyMatch[] = [];
+
+  for (const entry of newEntries) {
+    if (!entry.timestamp) {
+      unique.push(entry);
+      continue;
+    }
+
+    const newStart = new Date(entry.timestamp);
+    const newDuration = entry.durationSeconds || 0;
+    const newEnd = new Date(newStart.getTime() + newDuration * 1000);
+
+    // Query candidates in a window around this entry
+    const windowStart = new Date(
+      newStart.getTime() - Math.max(toleranceMs, 24 * 60 * 60 * 1000),
+    );
+    const windowEnd = new Date(
+      newEnd.getTime() + Math.max(toleranceMs, 24 * 60 * 60 * 1000),
+    );
+
+    const candidates = await db
+      .select({
+        id: entries.id,
+        timestamp: entries.timestamp,
+        durationSeconds: entries.durationSeconds,
+        name: entries.name,
+      })
+      .from(entries)
+      .where(
+        and(
+          eq(entries.userId, userId),
+          isNull(entries.deletedAt),
+          gte(entries.timestamp, windowStart.toISOString()),
+          lte(entries.timestamp, windowEnd.toISOString()),
+        ),
+      );
+
+    // Find closest by start time
+    let closest: (typeof candidates)[0] | null = null;
+    let closestDiffMs = Infinity;
+
+    for (const c of candidates) {
+      const diff = Math.abs(newStart.getTime() - new Date(c.timestamp).getTime());
+      if (diff < closestDiffMs) {
+        closestDiffMs = diff;
+        closest = c;
+      }
+    }
+
+    // Check for exact match
+    if (closest && closestDiffMs === 0) {
+      matches.push({
+        newEntry: entry,
+        matchType: "exact",
+        existingEntry: closest,
+        timeDiffMs: 0,
+        suggestedResolution: "keep-existing",
+      });
+      continue;
+    }
+
+    // Check for close match
+    if (closest && closestDiffMs <= toleranceMs) {
+      const existingDuration = closest.durationSeconds || 0;
+      const ratio =
+        existingDuration > 0 ? newDuration / existingDuration : Infinity;
+
+      const isSuspicious =
+        ratio > suspiciousRatio ||
+        (existingDuration > 0 && ratio < 1 / suspiciousRatio);
+
+      if (isSuspicious) {
+        matches.push({
+          newEntry: entry,
+          matchType: "close-suspicious",
+          existingEntry: closest,
+          timeDiffMs: closestDiffMs,
+          durationRatio: ratio,
+          suggestedResolution: "review",
+        });
+      } else {
+        matches.push({
+          newEntry: entry,
+          matchType: "close",
+          existingEntry: closest,
+          timeDiffMs: closestDiffMs,
+          durationRatio: ratio,
+          suggestedResolution: "keep-longer",
+        });
+      }
+      continue;
+    }
+
+    // Check for time range overlap
+    if (newDuration > 0) {
+      const overlapping = candidates.filter((c) => {
+        const cStart = new Date(c.timestamp);
+        const cEnd = new Date(cStart.getTime() + (c.durationSeconds || 0) * 1000);
+        return newStart < cEnd && newEnd > cStart;
+      });
+
+      if (overlapping.length > 0) {
+        matches.push({
+          newEntry: entry,
+          matchType: "overlap",
+          existingEntry: overlapping[0],
+          suggestedResolution: "review",
+        });
+        continue;
+      }
+    }
+
+    // No match found
+    unique.push(entry);
+  }
+
+  return { unique, matches };
 }
 
 interface ImportResult {

@@ -42,7 +42,18 @@
       "Bash(/usr/bin/head:*)",
       "Bash(git restore:*)",
       "Bash(node:*)",
-      "Bash(git diff:*)"
+      "Bash(git diff:*)",
+      "Bash(python3:*)",
+      "Bash(npx vue-tsc:*)",
+      "Bash(file:*)",
+      "Bash(stat:*)",
+      "Bash(lsof:*)",
+      "Bash(pgrep:*)",
+      "Bash(curl:*)",
+      "Bash(npx tsc:*)",
+      "Bash(bunx nuxi typecheck:*)",
+      "Bash(git status:*)",
+      "Bash(APP_URL=https://tada.living bun:*)"
     ]
   }
 }

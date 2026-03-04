@@ -31,6 +31,43 @@ Decisions made during design, with rationale. This complements the SDR.
 
 ---
 
+### Native Mobile: Not Yet, But Know the Path
+
+**Decision:** Stay with PWA for now. If native apps are ever needed, the prerequisite is decoupling the frontend from SSR into a static SPA + REST API architecture.
+
+**Date:** March 2026
+
+**Context:**
+
+Tada is a full SSR Nuxt app — server API routes (auth, database, Stripe, email, voice transcription) are tightly integrated with the frontend. This makes it impossible to wrap in Capacitor or similar native shells, since there's no Node/Bun server running on the phone.
+
+**PWA limitations in practice:**
+
+- Background timers don't run reliably (main limitation, good workarounds exist via session recovery)
+- Android has microphone quirks in PWA mode
+- No App Store discoverability
+
+**What native apps would require:**
+
+1. **Decouple frontend from SSR** — rebuild as a static SPA that talks to a hosted REST API. This is the single biggest prerequisite and a significant refactor given 90+ server routes interleaved with pages.
+2. **Capacitor shell** — wrap the SPA in native WebView for iOS/Android. Gets native mic, push notifications, App Store presence.
+3. **Native plugin replacements** — microphone, storage, possibly speech recognition (Web Speech API unavailable in iOS WebView).
+4. **App Store overhead** — Apple Developer ($99/yr), Google Play ($25), review cycles, privacy nutrition labels.
+5. **Three codebases to maintain** — web + iOS + Android builds, even if sharing most code.
+
+**Why not now:**
+
+- The gap between "PWA with good workarounds" and "native app done properly" is enormous
+- The middle ground (Capacitor wrapping a server-dependent app) gives surprisingly little for the effort
+- Whisper WASM and Web Speech API have quirky support in mobile WebViews
+- A local-first architecture (on-device SQLite + sync protocol) would be the real unlock but is a distributed systems problem
+
+**If we ever do it:**
+
+The SPA decoupling step is valuable regardless — it improves the architecture, enables native wrapping, and makes the API a true standalone service. It belongs on the wishlist as a foundational step, not tied to any specific native mobile timeline.
+
+---
+
 ## Technology Stack
 
 ### Language: TypeScript (Strict Mode)

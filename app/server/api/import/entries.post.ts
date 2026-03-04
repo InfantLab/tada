@@ -4,6 +4,8 @@ import { entries, importLogs } from "~/server/db/schema";
 import { createLogger } from "~/server/utils/logger";
 import { checkRateLimit } from "~/server/utils/rateLimiter";
 import { inArray } from "drizzle-orm";
+import { detectDuplicatesFuzzy } from "~/server/services/import";
+import type { FuzzyMatch } from "~/server/services/import";
 
 const logger = createLogger("api:import-entries");
 
@@ -49,6 +51,8 @@ export default defineEventHandler(async (event) => {
     recipeName = "Custom Import",
     recipeId = null,
     filename = "unknown.csv",
+    fuzzyMatch = false,
+    fuzzyToleranceMs,
   } = body;
 
   const startTime = Date.now();
@@ -98,6 +102,43 @@ export default defineEventHandler(async (event) => {
       });
     }
 
+    // Fuzzy duplicate detection (opt-in)
+    let fuzzyMatches: FuzzyMatch[] = [];
+    let fuzzyFiltered = entriesToImport;
+
+    if (fuzzyMatch) {
+      logger.info("Running fuzzy duplicate detection", {
+        toleranceMs: fuzzyToleranceMs,
+      });
+
+      // Filter out externalId duplicates first
+      const afterExternalIdDedup = entriesToImport.filter(
+        (e: { externalId?: string }) =>
+          !e.externalId || !existingExternalIds.has(e.externalId),
+      );
+
+      const fuzzyResult = await detectDuplicatesFuzzy(
+        user.id,
+        afterExternalIdDedup,
+        { toleranceMs: fuzzyToleranceMs },
+      );
+
+      fuzzyFiltered = fuzzyResult.unique;
+      fuzzyMatches = fuzzyResult.matches;
+
+      // Auto-skip exact duplicates, flag everything else
+      const autoSkipped = fuzzyResult.matches.filter(
+        (m) => m.matchType === "exact",
+      );
+      results.skipped += autoSkipped.length;
+
+      logger.info("Fuzzy detection complete", {
+        unique: fuzzyResult.unique.length,
+        matches: fuzzyResult.matches.length,
+        autoSkipped: autoSkipped.length,
+      });
+    }
+
     // Prepare all valid entries first
     const entriesToInsert: Array<{
       id: string;
@@ -117,11 +158,13 @@ export default defineEventHandler(async (event) => {
       externalId: string | null;
     }> = [];
 
-    for (let i = 0; i < entriesToImport.length; i++) {
-      const entryData = entriesToImport[i];
+    const sourceEntries = fuzzyMatch ? fuzzyFiltered : entriesToImport;
+    for (let i = 0; i < sourceEntries.length; i++) {
+      const entryData = sourceEntries[i];
 
-      // Skip duplicates
+      // Skip duplicates (externalId check, only when not using fuzzy which already filtered)
       if (
+        !fuzzyMatch &&
         entryData.externalId &&
         existingExternalIds.has(entryData.externalId)
       ) {
@@ -240,6 +283,9 @@ export default defineEventHandler(async (event) => {
         skipped: results.skipped,
         errors: results.errors.slice(0, 10), // Limit errors in response
       },
+      ...(fuzzyMatches.length > 0 && {
+        fuzzyMatches: fuzzyMatches.filter((m) => m.matchType !== "exact"),
+      }),
       durationMs,
     };
   } catch (error) {

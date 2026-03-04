@@ -783,6 +783,108 @@ function previewTadaSound(file: string) {
   }
 }
 
+// API Keys (Developer section)
+interface ApiKeyInfo {
+  id: string;
+  name: string;
+  keyPrefix: string;
+  permissions: string[];
+  createdAt: string;
+  lastUsedAt: string | null;
+  expiresAt: string | null;
+}
+
+const apiKeys = ref<ApiKeyInfo[]>([]);
+const isLoadingApiKeys = ref(false);
+const showCreateKeyForm = ref(false);
+const newKeyName = ref("");
+const newKeyPermissions = ref<string[]>(["entries:read", "entries:write"]);
+const isCreatingKey = ref(false);
+const newlyCreatedKey = ref<string | null>(null);
+const isDeletingKeyId = ref<string | null>(null);
+
+const {
+  isCloudMode: devIsCloudMode,
+  isPremium: devIsPremium,
+  loadAll: loadSubscriptionData,
+} = useSubscription();
+
+const canAccessApiKeys = computed(() => !devIsCloudMode.value || devIsPremium.value);
+
+async function fetchApiKeys() {
+  isLoadingApiKeys.value = true;
+  try {
+    const res = await $fetch<{ data: ApiKeyInfo[] }>("/api/v1/auth/keys");
+    apiKeys.value = res.data;
+  } catch {
+    // Silently fail — section just won't show keys
+  } finally {
+    isLoadingApiKeys.value = false;
+  }
+}
+
+async function createApiKey() {
+  if (!newKeyName.value.trim()) return;
+  isCreatingKey.value = true;
+  newlyCreatedKey.value = null;
+  try {
+    const res = await $fetch<{ data: { key: string } }>("/api/v1/auth/keys", {
+      method: "POST",
+      body: {
+        name: newKeyName.value.trim(),
+        permissions: newKeyPermissions.value,
+      },
+    });
+    newlyCreatedKey.value = res.data.key;
+    newKeyName.value = "";
+    showCreateKeyForm.value = false;
+    await fetchApiKeys();
+    showSuccess("API key created");
+  } catch {
+    showError("Failed to create API key");
+  } finally {
+    isCreatingKey.value = false;
+  }
+}
+
+async function revokeApiKey(keyId: string) {
+  if (!confirm("Revoke this API key? Any integrations using it will stop working.")) return;
+  isDeletingKeyId.value = keyId;
+  try {
+    await $fetch(`/api/v1/auth/keys/${keyId}`, { method: "DELETE" });
+    apiKeys.value = apiKeys.value.filter((k) => k.id !== keyId);
+    showSuccess("API key revoked");
+  } catch {
+    showError("Failed to revoke API key");
+  } finally {
+    isDeletingKeyId.value = null;
+  }
+}
+
+function copyToClipboard(text: string) {
+  navigator.clipboard.writeText(text).then(
+    () => showSuccess("Copied to clipboard"),
+    () => showError("Failed to copy"),
+  );
+}
+
+function formatKeyDate(dateStr: string | null): string {
+  if (!dateStr) return "Never";
+  return new Date(dateStr).toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
+
+// Load API keys when developer section becomes visible
+onMounted(async () => {
+  await loadSubscriptionData();
+  if (canAccessApiKeys.value) {
+    fetchApiKeys();
+  }
+});
+
 // Sidebar navigation - organized by entry type
 const sidebarNavItems = [
   { id: "account", label: "Account", icon: "👤" },
@@ -796,6 +898,7 @@ const sidebarNavItems = [
   { id: "rhythms", label: "Rhythms", icon: "🌊" },
   { id: "appearance", label: "Appearance", icon: "🎨" },
   { id: "data", label: "Data", icon: "💾" },
+  { id: "developer", label: "Developer", icon: "🔑" },
 ];
 
 const activeSection = ref("account");
@@ -1934,6 +2037,162 @@ onMounted(() => {
                 />
               </svg>
             </button>
+          </div>
+        </section>
+
+        <!-- Developer (API Keys) -->
+        <section id="section-developer">
+          <h2
+            class="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-4"
+          >
+            Developer
+          </h2>
+
+          <!-- Locked state for free cloud users -->
+          <div
+            v-if="!canAccessApiKeys"
+            class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 p-4"
+          >
+            <p class="text-sm text-stone-500 dark:text-stone-400">
+              API access is available for supporters.
+              <NuxtLink
+                to="/account"
+                class="text-tada-600 dark:text-tada-400 hover:underline"
+              >
+                Upgrade
+              </NuxtLink>
+              to generate API keys.
+            </p>
+          </div>
+
+          <!-- API keys management -->
+          <div
+            v-else
+            class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700"
+          >
+            <!-- Newly created key banner -->
+            <div
+              v-if="newlyCreatedKey"
+              class="p-4 bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-700 rounded-t-xl"
+            >
+              <p
+                class="text-sm font-medium text-amber-800 dark:text-amber-200 mb-2"
+              >
+                Save this key now — you won't see it again.
+              </p>
+              <div class="flex items-center gap-2">
+                <code
+                  class="flex-1 text-xs bg-white dark:bg-stone-900 px-3 py-2 rounded border border-amber-300 dark:border-amber-600 font-mono break-all text-stone-800 dark:text-stone-200"
+                >
+                  {{ newlyCreatedKey }}
+                </code>
+                <button
+                  class="shrink-0 px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-medium rounded-lg transition-colors"
+                  @click="copyToClipboard(newlyCreatedKey!)"
+                >
+                  Copy
+                </button>
+              </div>
+              <button
+                class="mt-2 text-xs text-amber-700 dark:text-amber-300 hover:underline"
+                @click="newlyCreatedKey = null"
+              >
+                Dismiss
+              </button>
+            </div>
+
+            <div class="p-4">
+              <div
+                class="flex items-center justify-between mb-3"
+              >
+                <p class="text-sm text-stone-500 dark:text-stone-400">
+                  API keys for external integrations.
+                </p>
+                <button
+                  v-if="!showCreateKeyForm"
+                  class="text-sm text-tada-600 dark:text-tada-400 hover:underline font-medium"
+                  @click="showCreateKeyForm = true"
+                >
+                  + New key
+                </button>
+              </div>
+
+              <!-- Create key form -->
+              <div
+                v-if="showCreateKeyForm"
+                class="mb-4 p-3 bg-stone-50 dark:bg-stone-700/50 rounded-lg"
+              >
+                <input
+                  v-model="newKeyName"
+                  type="text"
+                  placeholder="Key name (e.g. Import Script)"
+                  maxlength="100"
+                  class="w-full px-3 py-2 mb-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-700 text-stone-800 dark:text-stone-100 text-sm focus:outline-none focus:ring-2 focus:ring-tada-500"
+                  @keyup.enter="createApiKey"
+                />
+                <div class="flex gap-2">
+                  <button
+                    :disabled="isCreatingKey || !newKeyName.trim()"
+                    class="px-3 py-1.5 bg-tada-600 hover:bg-tada-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
+                    @click="createApiKey"
+                  >
+                    {{ isCreatingKey ? "Creating..." : "Create" }}
+                  </button>
+                  <button
+                    class="px-3 py-1.5 text-sm text-stone-600 dark:text-stone-400 hover:underline"
+                    @click="
+                      showCreateKeyForm = false;
+                      newKeyName = '';
+                    "
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+
+              <!-- Key list -->
+              <div
+                v-if="isLoadingApiKeys"
+                class="text-sm text-stone-400 dark:text-stone-500 py-2"
+              >
+                Loading...
+              </div>
+              <div v-else-if="apiKeys.length === 0" class="py-2">
+                <p class="text-sm text-stone-400 dark:text-stone-500">
+                  No API keys yet.
+                </p>
+              </div>
+              <ul v-else class="divide-y divide-stone-100 dark:divide-stone-700">
+                <li
+                  v-for="key in apiKeys"
+                  :key="key.id"
+                  class="py-3 flex items-center justify-between gap-3"
+                >
+                  <div class="min-w-0">
+                    <div
+                      class="text-sm font-medium text-stone-700 dark:text-stone-300 truncate"
+                    >
+                      {{ key.name }}
+                    </div>
+                    <div
+                      class="text-xs text-stone-400 dark:text-stone-500 font-mono"
+                    >
+                      {{ key.keyPrefix }}...
+                      <span class="font-sans ml-2"
+                        >Last used {{ formatKeyDate(key.lastUsedAt) }}</span
+                      >
+                    </div>
+                  </div>
+                  <button
+                    :disabled="isDeletingKeyId === key.id"
+                    class="shrink-0 text-xs text-red-500 hover:text-red-700 dark:hover:text-red-400 disabled:opacity-50"
+                    @click="revokeApiKey(key.id)"
+                  >
+                    Revoke
+                  </button>
+                </li>
+              </ul>
+            </div>
           </div>
         </section>
 

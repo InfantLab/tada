@@ -39,6 +39,9 @@ npm-debug.log*
 coverage/
 .nyc_output/
 
+# Old data (personal exports)
+old_data/
+
 # Misc
 *.tgz
 .eslintcache
