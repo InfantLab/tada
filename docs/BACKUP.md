@@ -52,11 +52,19 @@ find "$BACKUP_DIR" -name "db-*.sqlite.gz" -mtime +$KEEP_DAYS -delete
 echo "$(date): Backup completed - db-$DATE.sqlite.gz"
 ```
 
-### Backup Location
+### Backup Locations
 
-- **Local:** `/srv/backups/tada/`
+- **Local (Hetzner):** `/srv/backups/tada/`
+- **Off-site (Block):** `/srv/backups/hetzner/tada/`
 - **Retention:** 14 days
 - **Format:** `db-YYYY-MM-DD_HHMM.sqlite.gz`
+
+### Off-Site Sync
+
+Backups automatically sync to Block server via rsync over Tailscale:
+- SSH key: Hetzner root → Block caddy user
+- Sync happens after each local backup
+- Both locations have same 14-day retention
 
 ### Manual Backup
 
@@ -90,12 +98,20 @@ chown 1001:1001 /var/lib/docker/volumes/captain--tadata/_data/db.sqlite
 # Restart container (via CapRover)
 ```
 
+## Monitoring
+
+OpenClaw heartbeat runs `/home/caddy/admin/check-tada-backup.sh` on Block to verify:
+- Backup exists in off-site location
+- Most recent backup is <48h old
+- Alerts if stale or missing
+
 ## Future Improvements
 
-- [ ] Off-site backup sync (Block server or S3)
+- [x] ~~Off-site backup sync (Block server or S3)~~ ✅ Done
+- [x] ~~Alerting on backup failures~~ ✅ Done (heartbeat monitoring)
 - [ ] Pre-deploy backup hook in CapRover
 - [ ] Backup verification/integrity checks
-- [ ] Alerting on backup failures
+- [ ] Automated restore testing
 
 ## Related
 
