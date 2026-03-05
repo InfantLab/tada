@@ -43,7 +43,7 @@ class Logger {
   private ensureLogDirectory() {
     try {
       mkdirSync(this.logDir, { recursive: true });
-    } catch (err) {
+    } catch {
       // Directory exists or can't be created - fail silently for stderr fallback
       // This is intentional - we want logging to work even if file logging fails
     }
@@ -95,7 +95,7 @@ class Logger {
       const filePath = join(this.logDir, logFile);
       this.rotateLogIfNeeded(logFile);
       appendFileSync(filePath, content + "\n", "utf8");
-    } catch (writeError) {
+    } catch {
       // If file write fails, at least we have stderr
       // Silently fail - we don't want to spam the console with errors
       // The log entry is already written to stderr

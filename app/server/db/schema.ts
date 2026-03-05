@@ -738,11 +738,11 @@ export const insightCache = sqliteTable("insight_cache", {
   // Cache key components
   type: text("type").notNull(), // 'patterns' | 'correlations' | 'summary'
   params: text("params", { mode: "json" })
-    .$type<Record<string, any>>()
+    .$type<Record<string, unknown>>()
     .notNull(), // { lookback: 90, category: 'mindfulness', minConfidence: 'medium' }
 
   // Cached result
-  data: text("data", { mode: "json" }).$type<any>().notNull(), // Pattern detection results, summary stats, etc.
+  data: text("data", { mode: "json" }).$type<unknown>().notNull(), // Pattern detection results, summary stats, etc.
 
   // Metadata
   computeTimeMs: integer("compute_time_ms"), // How long it took to compute

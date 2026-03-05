@@ -5,7 +5,7 @@
  * Wraps existing rhythm calculation logic for API consumption.
  */
 
-import { eq, and, gte, lte, desc, sql } from "drizzle-orm";
+import { eq, and, gte, lte, desc } from "drizzle-orm";
 import { db } from "~/server/db";
 import { rhythms, entries } from "~/server/db/schema";
 import { withRetry } from "~/server/db/operations";
@@ -171,9 +171,9 @@ export async function getRhythmsWithStats(
 
     // If cached chain stats exist, use them
     if (rhythm.cachedChainStats) {
-      const cached = rhythm.cachedChainStats as any;
+      const cached = rhythm.cachedChainStats as { chains?: Array<{ current?: number; longest?: number }>; currentChain?: { lastCompleteDate?: string }; startedAt?: string; totals?: { firstEntryDate?: string } };
       if (cached.chains && cached.chains.length > 0) {
-        const primaryChain = cached.chains[0];
+        const primaryChain = cached.chains[0]!;
         currentStreak = primaryChain.current || 0;
         longestStreak = primaryChain.longest || 0;
       }

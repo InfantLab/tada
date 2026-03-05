@@ -32,7 +32,7 @@ const createKeySchema = z.object({
 });
 
 export default defineEventHandler(async (event) => {
-  const auth = event.context.auth;
+  const auth = event.context['auth']!;
 
   // This endpoint requires session authentication (not API key auth)
   if (!auth || auth.type !== "session") {
@@ -87,12 +87,12 @@ export default defineEventHandler(async (event) => {
       warning:
         "Save this API key now. You won't be able to see it again. If you lose it, you'll need to generate a new one.",
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error creating API key:", error);
 
     // Surface useful detail for common failures
     const message =
-      error?.message?.includes("no such table")
+      (error instanceof Error && error.message?.includes("no such table"))
         ? "API keys table not found — database migration required"
         : "Failed to create API key";
 

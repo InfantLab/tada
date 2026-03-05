@@ -36,7 +36,7 @@ export default defineEventHandler(async (event) => {
   // Require entries:write permission
   requirePermission(event, "entries:write");
 
-  const auth = event.context.auth;
+  const auth = event.context['auth']!;
   const userId = auth.userId;
 
   // Parse and validate request body

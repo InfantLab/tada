@@ -477,7 +477,7 @@ export function generateChainNudge(
 
 /** @deprecated Use generateChainNudge instead */
 export function generateNudgeMessage(
-  progress: WeeklyProgress,
+  _progress: WeeklyProgress,
   _targetTier: TierName,
 ): string | null {
   return null;

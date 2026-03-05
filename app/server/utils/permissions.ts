@@ -18,7 +18,7 @@ export function hasPermission(
   event: H3Event,
   requiredPermission: Permission,
 ): boolean {
-  const auth = event.context.auth as ApiAuthContext | undefined;
+  const auth = event.context['auth'] as ApiAuthContext | undefined;
 
   if (!auth) {
     return false;
@@ -48,7 +48,7 @@ export function hasAnyPermission(
   event: H3Event,
   requiredPermissions: Permission[],
 ): boolean {
-  const auth = event.context.auth as ApiAuthContext | undefined;
+  const auth = event.context['auth'] as ApiAuthContext | undefined;
 
   if (!auth) {
     return false;
@@ -78,7 +78,7 @@ export function hasAllPermissions(
   event: H3Event,
   requiredPermissions: Permission[],
 ): boolean {
-  const auth = event.context.auth as ApiAuthContext | undefined;
+  const auth = event.context['auth'] as ApiAuthContext | undefined;
 
   if (!auth) {
     return false;
@@ -106,7 +106,7 @@ export function hasAllPermissions(
 export function getAuthContext(
   event: H3Event,
 ): ApiAuthContext | undefined {
-  return event.context.auth as ApiAuthContext | undefined;
+  return event.context['auth'] as ApiAuthContext | undefined;
 }
 
 /**
@@ -117,7 +117,7 @@ export function getAuthContext(
  * @throws 401 Unauthorized if not authenticated
  */
 export function requireAuth(event: H3Event): ApiAuthContext {
-  const auth = event.context.auth as ApiAuthContext | undefined;
+  const auth = event.context['auth'] as ApiAuthContext | undefined;
 
   if (!auth) {
     throw createError({

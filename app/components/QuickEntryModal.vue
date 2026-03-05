@@ -133,7 +133,9 @@ watch(
         name.value = props.initialName;
         category.value = props.initialCategory;
         subcategory.value = "";
-        timestamp.value = props.initialTimestamp || new Date().toISOString();
+        timestamp.value = props.initialTimestamp
+          ? new Date(props.initialTimestamp).toISOString()
+          : new Date().toISOString();
         durationSeconds.value = null;
         count.value = null;
         notes.value = "";

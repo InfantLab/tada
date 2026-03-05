@@ -45,7 +45,7 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const username = session.username || "friend";
+  const username = (session as unknown as Record<string, unknown>)['username'] as string || "friend";
 
   // Generate email content based on template
   let emailContent: { subject: string; html: string; text: string };

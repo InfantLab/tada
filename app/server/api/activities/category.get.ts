@@ -72,7 +72,7 @@ export default defineEventHandler(async (event) => {
       return { category: null, count: 0 };
     }
 
-    const mostCommon = results[0];
+    const mostCommon = results[0]!;
 
     logger.debug("Most common category found", {
       userId,

@@ -43,7 +43,7 @@ describe("GET /api/v1/export/entries", () => {
         format: "json",
         date: "2026-01-31",
       },
-    });
+    }) as { data: Record<string, unknown>[] };
 
     expect(response.data).toBeDefined();
     expect(Array.isArray(response.data)).toBe(true);
@@ -69,7 +69,7 @@ describe("GET /api/v1/export/entries", () => {
         date: "2026-01-31",
       },
       responseType: "text",
-    });
+    }) as string;
 
     expect(typeof response).toBe("string");
     expect(response).toContain("id,type,name,category");

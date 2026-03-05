@@ -118,7 +118,7 @@ export default defineEventHandler(async (event) => {
     await logAuthEvent({
       event,
       userId,
-      eventType: "email_update",
+      eventType: "email_change",
       metadata: { oldEmail: user.email, newEmail: email },
     });
 

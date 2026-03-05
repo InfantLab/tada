@@ -193,7 +193,6 @@ async function removeCustomCategory(slug: string) {
 
 // Subcategory management
 const showAddSubcategoryModal = ref(false);
-const editingSubcategory = ref<{ catSlug: string; subSlug: string; label: string } | null>(null);
 const subcategoryFormData = ref({ name: "", emoji: "🏷️" });
 const activeCategory = ref<string | null>(null);
 
@@ -312,13 +311,13 @@ async function resetCategoryToDefault(catSlug: string) {
     key === catSlug || key.startsWith(`${catSlug}:`)
   );
 
-  keysToRemove.forEach(key => {
-    delete customEmojis[key];
-  });
+  for (const key of keysToRemove) {
+    Reflect.deleteProperty(customEmojis, key);
+  }
 
   // Remove custom subcategories
   const customSubs = { ...(preferences.value.customSubcategories || {}) };
-  delete customSubs[catSlug];
+  Reflect.deleteProperty(customSubs, catSlug);
 
   await savePreferences({
     customEmojis,

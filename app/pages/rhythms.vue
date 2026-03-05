@@ -14,7 +14,6 @@ import {
 } from "~/composables/useRhythms";
 import { useToast } from "~/composables/useToast";
 import {
-  CHAIN_CONFIGS,
   CHAIN_TYPE_ORDER,
   formatChainValue,
   type ChainType,
@@ -145,7 +144,7 @@ async function handleCreateRhythm(rhythmData: {
 }) {
   try {
     // Build the rhythm creation data based on type
-    const createData: any = {
+    const createData: Record<string, unknown> = {
       ...rhythmData,
       goalType: rhythmData.matchType === "timed" ? "duration" : "count",
       goalValue:

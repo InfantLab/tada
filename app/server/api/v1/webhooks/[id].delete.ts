@@ -10,7 +10,7 @@ import { success, apiError } from "~/server/utils/response";
 import { deleteWebhook } from "~/server/services/webhooks";
 
 export default defineEventHandler(async (event) => {
-  const auth = event.context.auth;
+  const auth = event.context['auth']!;
 
   // This endpoint requires session authentication
   if (!auth || auth.type !== "session") {

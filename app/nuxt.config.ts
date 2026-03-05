@@ -92,7 +92,7 @@ export default defineNuxtConfig({
       runtimeCaching: [
         {
           // Handle navigation requests with NetworkFirst
-          urlPattern: ({ request }) => request.mode === "navigate",
+          urlPattern: ({ request }: { request: Request }) => request.mode === "navigate",
           handler: "NetworkFirst",
           options: {
             cacheName: "pages-cache",

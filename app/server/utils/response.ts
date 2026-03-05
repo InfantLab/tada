@@ -4,13 +4,20 @@
  * Provides consistent response formatting for all API endpoints.
  */
 
-import type { H3Event } from "h3";
+import type { H3Event, H3Error } from "h3";
 import type {
   ApiResponse,
   PaginatedResponse,
-  ApiError,
   RateLimitInfo,
 } from "~/types/api";
+
+/**
+ * Input shape for createError() — compatible with Partial<H3Error>
+ */
+type H3ErrorInput = Partial<H3Error> & {
+  status?: number;
+  statusText?: string;
+};
 
 /**
  * Send a successful API response
@@ -23,7 +30,7 @@ import type {
 export function success<T>(
   event: H3Event,
   data: T,
-  meta?: Record<string, any>,
+  meta?: Record<string, unknown>,
 ): ApiResponse<T> {
   setResponseStatus(event, 200);
   return {
@@ -81,28 +88,31 @@ export function paginated<T>(
 }
 
 /**
- * Send an API error response
+ * Create an API error compatible with createError()
  *
  * @param event H3Event
  * @param code Error code
  * @param message Error message
  * @param statusCode HTTP status code
  * @param details Optional error details
- * @returns ApiError
+ * @returns H3ErrorInput — pass directly to createError()
  */
 export function apiError(
   event: H3Event,
   code: string,
   message: string,
   statusCode: number = 400,
-  details?: Record<string, any>,
-): ApiError {
-  setResponseStatus(event, statusCode);
+  details?: Record<string, unknown>,
+): H3ErrorInput {
   return {
-    error: {
-      code,
-      message,
-      ...(details && { details }),
+    statusCode,
+    message,
+    data: {
+      error: {
+        code,
+        message,
+        ...(details && { details }),
+      },
     },
   };
 }
@@ -124,7 +134,7 @@ export function setRateLimitHeaders(
   });
 
   if (info.retryAfter !== undefined) {
-    setResponseHeader(event, "Retry-After", String(info.retryAfter));
+    setResponseHeader(event, "Retry-After", info.retryAfter);
   }
 }
 
@@ -142,129 +152,147 @@ export function setApiVersionHeader(
 }
 
 /**
- * Send a rate limit exceeded (429) response
+ * Create a rate limit exceeded (429) error compatible with createError()
  *
  * @param event H3Event
  * @param info Rate limit information
- * @returns ApiError
+ * @returns H3ErrorInput
  */
 export function rateLimitExceeded(
   event: H3Event,
   info: RateLimitInfo,
-): ApiError {
+): H3ErrorInput {
   setRateLimitHeaders(event, info);
-  setResponseStatus(event, 429);
 
   return {
-    error: {
-      code: "RATE_LIMIT_EXCEEDED",
-      message: `Rate limit exceeded. Retry after ${info.retryAfter} seconds.`,
-      details: {
-        limit: info.limit,
-        reset: info.reset,
-        retryAfter: info.retryAfter,
+    statusCode: 429,
+    message: `Rate limit exceeded. Retry after ${info.retryAfter} seconds.`,
+    data: {
+      error: {
+        code: "RATE_LIMIT_EXCEEDED",
+        message: `Rate limit exceeded. Retry after ${info.retryAfter} seconds.`,
+        details: {
+          limit: info.limit,
+          reset: info.reset,
+          retryAfter: info.retryAfter,
+        },
       },
     },
   };
 }
 
 /**
- * Send an unauthorized (401) response
+ * Create an unauthorized (401) error compatible with createError()
  *
  * @param event H3Event
  * @param message Optional custom message
- * @returns ApiError
+ * @returns H3ErrorInput
  */
 export function unauthorized(
-  event: H3Event,
+  _event: H3Event,
   message: string = "Authentication required",
-): ApiError {
-  setResponseStatus(event, 401);
+): H3ErrorInput {
   return {
-    error: {
-      code: "UNAUTHORIZED",
-      message,
+    statusCode: 401,
+    message,
+    data: {
+      error: {
+        code: "UNAUTHORIZED",
+        message,
+      },
     },
   };
 }
 
 /**
- * Send a forbidden (403) response
+ * Create a forbidden (403) error compatible with createError()
  *
  * @param event H3Event
  * @param message Optional custom message
- * @returns ApiError
+ * @returns H3ErrorInput
  */
 export function forbidden(
-  event: H3Event,
+  _event: H3Event,
   message: string = "Permission denied",
-): ApiError {
-  setResponseStatus(event, 403);
+): H3ErrorInput {
   return {
-    error: {
-      code: "FORBIDDEN",
-      message,
+    statusCode: 403,
+    message,
+    data: {
+      error: {
+        code: "FORBIDDEN",
+        message,
+      },
     },
   };
 }
 
 /**
- * Send a not found (404) response
+ * Create a not found (404) error compatible with createError()
  *
  * @param event H3Event
  * @param resource Resource type that was not found
- * @returns ApiError
+ * @returns H3ErrorInput
  */
 export function notFound(
-  event: H3Event,
+  _event: H3Event,
   resource: string = "Resource",
-): ApiError {
-  setResponseStatus(event, 404);
+): H3ErrorInput {
   return {
-    error: {
-      code: "NOT_FOUND",
-      message: `${resource} not found`,
+    statusCode: 404,
+    message: `${resource} not found`,
+    data: {
+      error: {
+        code: "NOT_FOUND",
+        message: `${resource} not found`,
+      },
     },
   };
 }
 
 /**
- * Send a validation error (422) response
+ * Create a validation error (422) compatible with createError()
  *
  * @param event H3Event
  * @param errors Validation errors
- * @returns ApiError
+ * @returns H3ErrorInput
  */
 export function validationError(
-  event: H3Event,
+  _event: H3Event,
   errors: Record<string, string[]>,
-): ApiError {
-  setResponseStatus(event, 422);
+): H3ErrorInput {
   return {
-    error: {
-      code: "VALIDATION_ERROR",
-      message: "Validation failed",
-      details: { errors },
+    statusCode: 422,
+    message: "Validation failed",
+    data: {
+      error: {
+        code: "VALIDATION_ERROR",
+        message: "Validation failed",
+        details: { errors },
+      },
     },
   };
 }
 
 /**
- * Send an internal server error (500) response
+ * Create an internal server error (500) compatible with createError()
  *
  * @param event H3Event
  * @param message Optional custom message
- * @returns ApiError
+ * @returns H3ErrorInput
  */
 export function internalError(
-  event: H3Event,
+  _event: H3Event,
   message: string = "Internal server error",
-): ApiError {
-  setResponseStatus(event, 500);
+): H3ErrorInput {
   return {
-    error: {
-      code: "INTERNAL_ERROR",
-      message,
+    statusCode: 500,
+    message,
+    data: {
+      error: {
+        code: "INTERNAL_ERROR",
+        message,
+      },
     },
   };
 }

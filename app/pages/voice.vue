@@ -11,7 +11,6 @@ definePageMeta({
   layout: "default",
 });
 
-const { success } = useToast();
 const router = useRouter();
 
 // Voice state

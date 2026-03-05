@@ -2,9 +2,7 @@
 // Settings page
 import {
   CATEGORY_DEFAULTS,
-  getSubcategoriesForCategory,
   getCategoryEmoji,
-  getSubcategoryEmoji,
 } from "~/utils/categoryDefaults";
 import type { Entry } from "~/server/db/schema";
 
@@ -21,8 +19,6 @@ const isCloudMode = config.public.isCloudMode;
 // App version - fetched dynamically
 const appVersion = ref("0.4.0a");
 const gitHash = ref("");
-const appName = "Tada";
-
 // Fetch version info on mount
 onMounted(async () => {
   try {
@@ -186,9 +182,6 @@ const {
   showEntryType,
   addCustomEntryType,
   removeCustomEntryType,
-  isCategoryVisible,
-  hideCategory,
-  showCategory,
 } = usePreferences();
 
 // Emoji customization
@@ -198,17 +191,6 @@ const emojiPickerTarget = ref<{
   key: string;
   name: string;
 } | null>(null);
-
-// Category visibility toggle
-async function toggleCategoryVisibility(category: string) {
-  if (isCategoryVisible(category)) {
-    await hideCategory(category);
-    showSuccess(`Hidden "${category}" from pickers`);
-  } else {
-    await showCategory(category);
-    showSuccess(`Showing "${category}" in pickers`);
-  }
-}
 
 // Entry type management
 const builtInEntryTypes = [
@@ -298,30 +280,6 @@ function openCustomTypeEmojiPicker() {
 const allCategories = computed(() => {
   return Object.keys(CATEGORY_DEFAULTS);
 });
-
-const categoriesWithSubcategories = computed(() => {
-  return allCategories.value.map((cat) => ({
-    category: cat,
-    emoji: getCustomEmoji(cat) || getCategoryEmoji(cat),
-    subcategories: getSubcategoriesForCategory(cat).map((sub) => ({
-      key: `${cat}:${sub.slug}`,
-      name: sub.label,
-      emoji:
-        getCustomEmoji(`${cat}:${sub.slug}`) ||
-        getSubcategoryEmoji(cat, sub.slug),
-    })),
-  }));
-});
-
-// Open emoji picker for a category or subcategory
-function openEmojiPickerFor(
-  type: "category" | "subcategory",
-  key: string,
-  name: string,
-) {
-  emojiPickerTarget.value = { type, key, name };
-  showEmojiPicker.value = true;
-}
 
 // Handle emoji selection
 async function handleEmojiSelected(emoji: string) {
@@ -847,7 +805,7 @@ function saveByokKey() {
 }
 
 function removeByokKey(provider: string) {
-  delete savedByokKeys.value[provider];
+  Reflect.deleteProperty(savedByokKeys.value, provider);
   localStorage.setItem("tada-byok-keys", JSON.stringify(savedByokKeys.value));
   localStorage.removeItem(`tada-byok-key-${provider}`);
   const label = byokProviders.find((p) => p.value === provider)?.label || provider;
@@ -908,8 +866,9 @@ async function createApiKey() {
     showCreateKeyForm.value = false;
     await fetchApiKeys();
     showSuccess("API key created");
-  } catch (err: any) {
-    const msg = err?.data?.error?.message || "Failed to create API key";
+  } catch (err: unknown) {
+    const errObj = err as { data?: { error?: { message?: string } } };
+    const msg = errObj?.data?.error?.message || "Failed to create API key";
     showError(msg);
   } finally {
     isCreatingKey.value = false;
@@ -923,8 +882,9 @@ async function revokeApiKey(keyId: string) {
     await $fetch(`/api/v1/auth/keys/${keyId}`, { method: "DELETE" });
     apiKeys.value = apiKeys.value.filter((k) => k.id !== keyId);
     showSuccess("API key revoked");
-  } catch (err: any) {
-    const msg = err?.data?.error?.message || "Failed to revoke API key";
+  } catch (err: unknown) {
+    const errObj = err as { data?: { error?: { message?: string } } };
+    const msg = errObj?.data?.error?.message || "Failed to revoke API key";
     showError(msg);
   } finally {
     isDeletingKeyId.value = null;

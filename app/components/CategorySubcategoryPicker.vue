@@ -12,8 +12,7 @@ const props = withDefaults(
 );
 
 const emit = defineEmits<{
-  (e: "update:category", value: string): void;
-  (e: "update:subcategory", value: string): void;
+  (e: "update:category" | "update:subcategory", value: string): void;
 }>();
 
 // Load preferences for category visibility

@@ -211,13 +211,6 @@ watch(entryType, (newType) => {
   }
 });
 
-// Frequency options with friendly labels
-const frequencyOptions = [
-  { value: "daily", label: "Daily", description: "Every day" },
-  { value: "weekly", label: "Weekly", description: "Once a week" },
-  { value: "monthly", label: "Monthly", description: "Once a month" },
-];
-
 // Duration presets
 const durationPresets = [
   { value: 1, label: "1 min" },
@@ -299,7 +292,7 @@ async function save() {
       });
     } else {
       // Create mode - emit save with type-specific data
-      const rhythmData: any = {
+      const rhythmData: Record<string, unknown> = {
         name: name.value.trim(),
         matchCategory: category.value || null,
         matchType: entryType.value,

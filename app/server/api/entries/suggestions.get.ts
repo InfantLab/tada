@@ -10,7 +10,7 @@
  * - limit: Maximum suggestions to return (default: 10)
  */
 
-import { eq, desc, and, like, sql } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { db } from "~/server/db";
 import { entries } from "~/server/db/schema";
 import { createLogger } from "~/utils/logger";
@@ -122,28 +122,6 @@ export default defineEventHandler(async (event) => {
         });
       }
     }
-
-    // Convert to array with most common category for each name
-    const consolidatedResults = Array.from(nameGroups.entries()).map(
-      ([name, data]) => {
-        // Find most common category
-        let mostCommonCategory: string | undefined;
-        let maxCount = 0;
-        for (const [category, count] of data.categories.entries()) {
-          if (count > maxCount) {
-            maxCount = count;
-            mostCommonCategory = category || undefined;
-          }
-        }
-
-        return {
-          name,
-          category: mostCommonCategory,
-          count: data.totalCount,
-          lastUsed: data.lastUsed,
-        };
-      },
-    );
 
     // Apply fuzzy matching and scoring
     const scoredResults = dbResults

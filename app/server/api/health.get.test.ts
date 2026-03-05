@@ -1,10 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+// Import handler after mocks are set up
+import handler from "./health.get";
+
 // Use vi.hoisted to ensure globals are defined before module imports
 const mocks = vi.hoisted(() => {
   // Define Nuxt globals before any imports
-  (globalThis as Record<string, unknown>).defineEventHandler = (handler: Function) => handler;
-  (globalThis as Record<string, unknown>).useRuntimeConfig = () => ({
+  (globalThis as Record<string, unknown>)['defineEventHandler'] = (handler: (...args: unknown[]) => unknown) => handler;
+  (globalThis as Record<string, unknown>)['useRuntimeConfig'] = () => ({
     public: {
       appVersion: "0.4.0-test",
     },
@@ -28,9 +31,6 @@ vi.mock("~/server/utils/cloudMode", () => ({
   isCloudMode: mocks.isCloudMode,
   isBillingEnabled: mocks.isBillingEnabled,
 }));
-
-// Import handler after mocks are set up
-import handler from "./health.get";
 
 describe("GET /api/health", () => {
   beforeEach(() => {

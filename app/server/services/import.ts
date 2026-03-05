@@ -14,8 +14,11 @@ import { z } from "zod";
 import { db } from "~/server/db";
 import { entries } from "~/server/db/schema";
 import { eq, and, gte, lte, isNull } from "drizzle-orm";
-import { createEntry, bulkCreateEntries } from "~/server/services/entries";
+import { bulkCreateEntries } from "~/server/services/entries";
 import type { NewEntry } from "~/server/db/schema";
+
+/** A loosely-typed entry object coming from CSV/JSON import before full validation */
+type ImportEntry = Record<string, unknown>;
 
 interface FieldMapping {
   timestamp: string;
@@ -36,8 +39,8 @@ interface ValidationResult {
 }
 
 interface DuplicateDetectionResult {
-  duplicates: any[];
-  unique: any[];
+  duplicates: ImportEntry[];
+  unique: ImportEntry[];
 }
 
 interface ImportPreview {
@@ -45,7 +48,7 @@ interface ImportPreview {
   valid: number;
   invalid: number;
   duplicates: number;
-  sample: any[];
+  sample: ImportEntry[];
   errors: Array<{ row: number; errors: string[] }>;
 }
 
@@ -74,7 +77,7 @@ export type FuzzyResolution =
   | "review";
 
 export interface FuzzyMatch {
-  newEntry: any;
+  newEntry: ImportEntry;
   matchType: FuzzyMatchType;
   existingEntry?: {
     id: string;
@@ -88,7 +91,7 @@ export interface FuzzyMatch {
 }
 
 export interface FuzzyDetectionResult {
-  unique: any[];
+  unique: ImportEntry[];
   matches: FuzzyMatch[];
 }
 
@@ -110,23 +113,23 @@ const DEFAULT_SUSPICIOUS_RATIO = 2; // >2x duration difference
  */
 export async function detectDuplicatesFuzzy(
   userId: string,
-  newEntries: any[],
+  newEntries: ImportEntry[],
   options: FuzzyDetectionOptions = {},
 ): Promise<FuzzyDetectionResult> {
   const toleranceMs = options.toleranceMs ?? DEFAULT_TOLERANCE_MS;
   const suspiciousRatio = options.suspiciousRatio ?? DEFAULT_SUSPICIOUS_RATIO;
 
-  const unique: any[] = [];
+  const unique: ImportEntry[] = [];
   const matches: FuzzyMatch[] = [];
 
   for (const entry of newEntries) {
-    if (!entry.timestamp) {
+    if (!entry['timestamp']) {
       unique.push(entry);
       continue;
     }
 
-    const newStart = new Date(entry.timestamp);
-    const newDuration = entry.durationSeconds || 0;
+    const newStart = new Date(entry['timestamp'] as string);
+    const newDuration = (entry['durationSeconds'] as number) || 0;
     const newEnd = new Date(newStart.getTime() + newDuration * 1000);
 
     // Query candidates in a window around this entry
@@ -267,81 +270,82 @@ const entrySchema = z.object({
 export async function parseCSV(
   csvData: string,
   fieldMapping: FieldMapping,
-): Promise<any[]> {
+): Promise<ImportEntry[]> {
   return new Promise((resolve, reject) => {
     Papa.parse(csvData, {
       header: true,
       skipEmptyLines: true,
       complete: (results) => {
-        const mapped = results.data.map((row: any) => {
-          const entry: any = {};
+        const mapped = results.data.map((row: unknown) => {
+          const csvRow = row as Record<string, string>;
+          const entry: ImportEntry = {};
 
           // Map timestamp
           if (fieldMapping.timestamp) {
-            const timestamp = row[fieldMapping.timestamp];
+            const timestamp = csvRow[fieldMapping.timestamp] ?? "";
             // Try to parse as ISO or convert from various formats
             try {
               const date = new Date(timestamp);
-              entry.timestamp = date.toISOString();
+              entry['timestamp'] = date.toISOString();
             } catch {
-              entry.timestamp = timestamp;
+              entry['timestamp'] = timestamp;
             }
           }
 
           // Map name
           if (fieldMapping.name) {
-            entry.name = row[fieldMapping.name];
+            entry['name'] = csvRow[fieldMapping.name];
           }
 
           // Map type (or use default/static value)
           if (fieldMapping.type) {
             if (typeof fieldMapping.type === "string" && !fieldMapping.type.includes(" ")) {
               // Static value like "timed"
-              entry.type = fieldMapping.type;
+              entry['type'] = fieldMapping.type;
             } else {
               // Column mapping
-              entry.type = row[fieldMapping.type];
+              entry['type'] = csvRow[fieldMapping.type];
             }
           } else {
-            entry.type = "timed"; // Default type
+            entry['type'] = "timed"; // Default type
           }
 
           // Map category (can be static or column)
           if (fieldMapping.category) {
-            if (row[fieldMapping.category]) {
-              entry.category = row[fieldMapping.category];
+            if (csvRow[fieldMapping.category]) {
+              entry['category'] = csvRow[fieldMapping.category];
             } else {
               // Use as static value
-              entry.category = fieldMapping.category;
+              entry['category'] = fieldMapping.category;
             }
           }
 
           // Map subcategory (can be static or column)
           if (fieldMapping.subcategory) {
-            if (row[fieldMapping.subcategory]) {
-              entry.subcategory = row[fieldMapping.subcategory];
+            if (csvRow[fieldMapping.subcategory]) {
+              entry['subcategory'] = csvRow[fieldMapping.subcategory];
             } else {
               // Use as static value
-              entry.subcategory = fieldMapping.subcategory;
+              entry['subcategory'] = fieldMapping.subcategory;
             }
           }
 
           // Map duration (convert minutes to seconds if needed)
           if (fieldMapping.durationSeconds) {
-            const duration = parseFloat(row[fieldMapping.durationSeconds]);
+            const duration = parseFloat(csvRow[fieldMapping.durationSeconds] ?? "");
             if (!isNaN(duration)) {
-              entry.durationSeconds = Math.round(duration * 60); // Assume input is in minutes
+              entry['durationSeconds'] = Math.round(duration * 60); // Assume input is in minutes
             }
           }
 
           // Map notes
-          if (fieldMapping.notes && row[fieldMapping.notes]) {
-            entry.notes = row[fieldMapping.notes];
+          if (fieldMapping.notes && csvRow[fieldMapping.notes]) {
+            entry['notes'] = csvRow[fieldMapping.notes];
           }
 
           // Map tags (comma-separated string)
-          if (fieldMapping.tags && row[fieldMapping.tags]) {
-            entry.tags = row[fieldMapping.tags]
+          if (fieldMapping.tags && csvRow[fieldMapping.tags]) {
+            entry['tags'] = csvRow[fieldMapping.tags]!
               .split(",")
               .map((tag: string) => tag.trim())
               .filter(Boolean);
@@ -349,9 +353,9 @@ export async function parseCSV(
 
           // Map timezone
           if (fieldMapping.timezone) {
-            entry.timezone = row[fieldMapping.timezone] || "UTC";
+            entry['timezone'] = csvRow[fieldMapping.timezone] || "UTC";
           } else {
-            entry.timezone = "UTC";
+            entry['timezone'] = "UTC";
           }
 
           return entry;
@@ -359,7 +363,7 @@ export async function parseCSV(
 
         resolve(mapped);
       },
-      error: (error) => {
+      error: (error: Error) => {
         reject(new Error(`CSV parsing failed: ${error.message}`));
       },
     });
@@ -369,7 +373,7 @@ export async function parseCSV(
 /**
  * Validate entry data
  */
-export function validateEntry(entry: any, rowNumber: number): ValidationResult {
+export function validateEntry(entry: ImportEntry, rowNumber: number): ValidationResult {
   const result = entrySchema.safeParse(entry);
 
   if (result.success) {
@@ -409,18 +413,18 @@ export function validateEntry(entry: any, rowNumber: number): ValidationResult {
  */
 export async function detectDuplicates(
   userId: string,
-  newEntries: any[],
+  newEntries: ImportEntry[],
 ): Promise<DuplicateDetectionResult> {
-  const duplicates: any[] = [];
-  const unique: any[] = [];
+  const duplicates: ImportEntry[] = [];
+  const unique: ImportEntry[] = [];
 
   for (const entry of newEntries) {
     // Check if entry with same timestamp and category exists
     const existing = await db.query.entries.findFirst({
       where: and(
         eq(entries.userId, userId),
-        eq(entries.timestamp, entry.timestamp),
-        eq(entries.category, entry.category || null),
+        eq(entries.timestamp, String(entry['timestamp'])),
+        eq(entries.category, String(entry['category'] || "")),
         isNull(entries.deletedAt),
       ),
     });
@@ -440,12 +444,12 @@ export async function detectDuplicates(
  */
 export async function createPreview(
   userId: string,
-  entries: any[],
+  entries: ImportEntry[],
 ): Promise<ImportPreview> {
   let validCount = 0;
   let invalidCount = 0;
   const errorList: Array<{ row: number; errors: string[] }> = [];
-  const sample: any[] = [];
+  const sample: ImportEntry[] = [];
 
   // Validate each entry
   entries.forEach((entry, index) => {
@@ -468,7 +472,7 @@ export async function createPreview(
 
   // Detect duplicates (only for valid entries)
   const validEntries = entries.filter((_, index) => {
-    const validation = validateEntry(entries[index], index + 1);
+    const validation = validateEntry(entries[index]!, index + 1);
     return validation.valid;
   });
 
@@ -489,7 +493,7 @@ export async function createPreview(
  */
 export async function importEntries(
   userId: string,
-  entries: any[],
+  entries: ImportEntry[],
   options: ImportOptions = {},
 ): Promise<ImportResult> {
   const { skipDuplicates = false, updateExisting = false } = options;
@@ -507,13 +511,13 @@ export async function importEntries(
   );
 
   // Separate valid and invalid entries
-  const validEntries = entries.filter((_, index) => validations[index].valid);
-  const invalidEntries = entries.filter((_, index) => !validations[index].valid);
+  const validEntries = entries.filter((_, index) => validations[index]!.valid);
+  const invalidEntries = entries.filter((_, index) => !validations[index]!.valid);
 
   // Record errors for invalid entries
   invalidEntries.forEach((_, index) => {
-    const originalIndex = entries.indexOf(invalidEntries[index]);
-    const validation = validations[originalIndex];
+    const originalIndex = entries.indexOf(invalidEntries[index]!);
+    const validation = validations[originalIndex]!;
     errorList.push({
       row: validation.rowNumber,
       errors: validation.errors,
@@ -536,17 +540,17 @@ export async function importEntries(
   const entriesToCreate: NewEntry[] = duplicationResult.unique.map((entry) => ({
     id: crypto.randomUUID(),
     userId,
-    type: entry.type || "timed",
-    name: entry.name,
-    category: entry.category || null,
-    subcategory: entry.subcategory || null,
-    emoji: entry.emoji || null,
-    timestamp: entry.timestamp,
-    durationSeconds: entry.durationSeconds || null,
-    timezone: entry.timezone || "UTC",
-    data: entry.data || {},
-    tags: entry.tags || [],
-    notes: entry.notes || null,
+    type: (entry['type'] as string) || "timed",
+    name: entry['name'] as string,
+    category: (entry['category'] as string) || null,
+    subcategory: (entry['subcategory'] as string) || null,
+    emoji: (entry['emoji'] as string) || null,
+    timestamp: entry['timestamp'] as string,
+    durationSeconds: (entry['durationSeconds'] as number) || null,
+    timezone: (entry['timezone'] as string) || "UTC",
+    data: (entry['data'] as Record<string, unknown>) || {},
+    tags: (entry['tags'] as string[]) || [],
+    notes: (entry['notes'] as string) || null,
     source: "import", // Mark as imported
     externalId: null,
     createdAt: new Date().toISOString(),

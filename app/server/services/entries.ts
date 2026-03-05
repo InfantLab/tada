@@ -77,7 +77,7 @@ export async function getEntries(
     const tagConditions = tagArray.map((tag) =>
       sql`json_extract(${entries.tags}, '$') LIKE ${"%" + tag + "%"}`,
     );
-    conditions.push(or(...tagConditions));
+    conditions.push(or(...tagConditions)!);
   }
 
   // Search filter (searches in name and notes)
@@ -86,7 +86,7 @@ export async function getEntries(
       or(
         like(entries.name, `%${search}%`),
         like(entries.notes, `%${search}%`),
-      ),
+      )!,
     );
   }
 
@@ -184,7 +184,7 @@ export async function updateEntry(
   const now = new Date().toISOString();
 
   // Don't allow updating these fields
-  const { id, userId: _, createdAt, deletedAt, ...allowedUpdates } = updates as any;
+  const { id, userId: _, createdAt, deletedAt, ...allowedUpdates } = updates as Partial<NewEntry> & Record<string, unknown>;
 
   const updateData = {
     ...allowedUpdates,
@@ -270,8 +270,6 @@ export async function bulkUpdateEntries(
   userId: string,
   updates: Array<{ id: string; data: Partial<NewEntry> }>,
 ): Promise<{ updated: number; failed: number }> {
-  const now = new Date().toISOString();
-
   let updated = 0;
   let failed = 0;
 
@@ -283,7 +281,7 @@ export async function bulkUpdateEntries(
       } else {
         failed++;
       }
-    } catch (error) {
+    } catch {
       failed++;
     }
   }

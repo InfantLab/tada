@@ -33,10 +33,10 @@ describe("CSV Parsing", () => {
     const result = await parseCSV(csvData, fieldMapping);
 
     expect(result.length).toBe(2);
-    expect(result[0].name).toBe("Meditation");
-    expect(result[0].durationSeconds).toBe(45 * 60); // 45 minutes in seconds
-    expect(result[0].timestamp).toBeDefined();
-    expect(result[1].durationSeconds).toBe(30 * 60);
+    expect(result[0]!['name']).toBe("Meditation");
+    expect(result[0]!['durationSeconds']).toBe(45 * 60); // 45 minutes in seconds
+    expect(result[0]!['timestamp']).toBeDefined();
+    expect(result[1]!['durationSeconds']).toBe(30 * 60);
   });
 
   it("handles missing optional fields gracefully", async () => {
@@ -51,9 +51,9 @@ describe("CSV Parsing", () => {
     const result = await parseCSV(csvData, fieldMapping);
 
     expect(result.length).toBe(1);
-    expect(result[0].name).toBe("Meditation");
-    expect(result[0].durationSeconds).toBeUndefined();
-    expect(result[0].notes).toBeUndefined();
+    expect(result[0]!['name']).toBe("Meditation");
+    expect(result[0]!['durationSeconds']).toBeUndefined();
+    expect(result[0]!['notes']).toBeUndefined();
   });
 
   it("converts duration minutes to seconds", async () => {
@@ -68,7 +68,7 @@ describe("CSV Parsing", () => {
 
     const result = await parseCSV(csvData, fieldMapping);
 
-    expect(result[0].durationSeconds).toBe(3600); // 60 minutes = 3600 seconds
+    expect(result[0]!['durationSeconds']).toBe(3600); // 60 minutes = 3600 seconds
   });
 });
 
@@ -121,7 +121,6 @@ describe("Entry Validation", () => {
 
 describe("Duplicate Detection", () => {
   let userId: string;
-  let existingEntryId: string;
 
   beforeEach(async () => {
     const user = await createTestUser();
@@ -149,8 +148,7 @@ describe("Duplicate Detection", () => {
       deletedAt: null,
     };
 
-    const created = await createEntry(existingEntry);
-    existingEntryId = created.id;
+    await createEntry(existingEntry);
   });
 
   afterEach(async () => {
@@ -178,9 +176,9 @@ describe("Duplicate Detection", () => {
     const result = await detectDuplicates(userId, newEntries);
 
     expect(result.duplicates).toHaveLength(1);
-    expect(result.duplicates[0].timestamp).toBe("2026-01-31T10:00:00Z");
+    expect(result.duplicates[0]!['timestamp']).toBe("2026-01-31T10:00:00Z");
     expect(result.unique).toHaveLength(1);
-    expect(result.unique[0].timestamp).toBe("2026-01-31T15:00:00Z");
+    expect(result.unique[0]!['timestamp']).toBe("2026-01-31T15:00:00Z");
   });
 
   it("considers entries with different categories as unique", async () => {
@@ -297,11 +295,11 @@ describe("Insight Timer Import", () => {
     const parsed = await parseCSV(insightTimerCSV, insightTimerMapping);
 
     expect(parsed.length).toBe(2);
-    expect(parsed[0].name).toBe("Meditation");
-    expect(parsed[0].category).toBe("mindfulness");
-    expect(parsed[0].subcategory).toBe("meditation");
-    expect(parsed[0].durationSeconds).toBe(45 * 60);
-    expect(parsed[1].durationSeconds).toBe(20 * 60);
+    expect(parsed[0]!['name']).toBe("Meditation");
+    expect(parsed[0]!['category']).toBe("mindfulness");
+    expect(parsed[0]!['subcategory']).toBe("meditation");
+    expect(parsed[0]!['durationSeconds']).toBe(45 * 60);
+    expect(parsed[1]!['durationSeconds']).toBe(20 * 60);
   });
 });
 
@@ -333,7 +331,7 @@ describe("Import Execution", () => {
     expect(result.created).toBe(1);
     expect(result.failed).toBe(0);
     expect(result.skipped).toBe(0);
-    expect(result.entries[0].source).toBe("import");
+    expect(result.entries[0]!.source).toBe("import");
   });
 
   it("skips duplicates when skipDuplicates=true", async () => {
@@ -457,6 +455,6 @@ describe("JSON Import", () => {
     expect(result.created).toBe(0);
     expect(result.failed).toBe(1);
     expect(result.errors).toBeDefined();
-    expect(result.errors.length).toBeGreaterThan(0);
+    expect(result.errors!.length).toBeGreaterThan(0);
   });
 });

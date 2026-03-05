@@ -13,11 +13,8 @@ import type { Entry } from "~/server/db/schema";
 /**
  * Export to JSON format (clean, filter sensitive fields)
  */
-export function toJSON(entries: Entry[]): Entry[] {
-  return entries.map((entry) => ({
-    ...entry,
-    userId: undefined, // Remove sensitive field
-  })) as Entry[];
+export function toJSON(entries: Entry[]): Omit<Entry, 'userId'>[] {
+  return entries.map(({ userId: _, ...rest }) => rest);
 }
 
 /**
@@ -314,7 +311,7 @@ export function toObsidianMonthly(entries: Entry[], month: string): string {
   lines.push("");
 
   // Title
-  const [year, monthNum] = month.split("-");
+  const [_year, _monthNum] = month.split("-");
   const monthName = new Date(`${month}-01`).toLocaleDateString("en-US", {
     month: "long",
     year: "numeric",

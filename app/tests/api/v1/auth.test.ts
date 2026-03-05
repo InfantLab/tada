@@ -12,12 +12,10 @@ import type { Permission } from "~/types/api";
 
 describe("POST /api/v1/auth/keys", () => {
   let userId: string;
-  let username: string;
 
   beforeEach(async () => {
     const user = await createTestUser();
     userId = user.id;
-    username = user.username;
   });
 
   afterEach(async () => {
@@ -84,7 +82,7 @@ describe("GET /api/v1/auth/keys", () => {
 
     expect(keys.length).toBeGreaterThanOrEqual(2);
 
-    const key = keys[0];
+    const key = keys[0]!;
     expect(key.id).toBeDefined();
     expect(key.name).toBeDefined();
     expect(key.keyPrefix).toBeDefined();

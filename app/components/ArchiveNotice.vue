@@ -12,7 +12,7 @@ interface Props {
   period?: string; // e.g., "January 2025"
 }
 
-const props = defineProps<Props>();
+defineProps<Props>();
 
 const router = useRouter();
 

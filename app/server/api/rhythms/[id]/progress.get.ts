@@ -11,6 +11,11 @@ import { eq, and, desc } from "drizzle-orm";
 import { db } from "~/server/db";
 import { rhythms, entries } from "~/server/db/schema";
 import { createLogger } from "~/server/utils/logger";
+import type {
+  RhythmTotals,
+  CachedChainData,
+  JourneyThresholdType,
+} from "~/server/utils/rhythmCalculator";
 import {
   getMatchingEntries,
   entriesToDayStatuses,
@@ -20,8 +25,8 @@ import {
   getDefaultThresholdType,
   getJourneyMetric,
   selectEncouragement,
-  type JourneyThresholdType,
 } from "~/server/utils/rhythmCalculator";
+
 import {
   calculateWeeklyProgress,
   generateChainNudge,
@@ -31,10 +36,7 @@ import {
   type ChainType,
   type ChainStat,
 } from "~/utils/tierCalculator";
-import type {
-  RhythmTotals,
-  CachedChainData,
-} from "~/server/utils/rhythmCalculator";
+
 
 const logger = createLogger("api:rhythms:progress");
 

@@ -192,8 +192,8 @@ export default defineEventHandler(async (event) => {
   const userApiKey = getHeader(event, "x-user-api-key");
 
   // Check API key availability BEFORE rate limiting
-  const groqApiKey = process.env.GROQ_API_KEY || "";
-  const openaiApiKey = process.env.OPENAI_API_KEY || "";
+  const groqApiKey = process.env['GROQ_API_KEY'] || "";
+  const openaiApiKey = process.env['OPENAI_API_KEY'] || "";
   if (!userApiKey && !groqApiKey && !openaiApiKey) {
     throw createError({
       statusCode: 503,
@@ -266,7 +266,7 @@ export default defineEventHandler(async (event) => {
       audioData = audioFile.data.buffer.slice(
         audioFile.data.byteOffset,
         audioFile.data.byteOffset + audioFile.data.byteLength,
-      );
+      ) as ArrayBuffer;
 
       // Check for provider preference
       const providerPart = formData.find((part) => part.name === "provider");

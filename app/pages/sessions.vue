@@ -6,7 +6,6 @@ import {
   getSubcategoryEmoji,
   getTimedCategories,
 } from "~/utils/categoryDefaults";
-import { extractTimerNoteData } from "~/utils/tadaExtractor";
 import { isValidUrl, type LinkMetadata } from "~/utils/linkPreview";
 import type { ExtractedTada } from "~/types/extraction";
 import type { TimerPreset } from "~/server/db/schema";
@@ -207,8 +206,6 @@ const pendingIncludeOvertime = ref(true);
 const showVoiceRecorder = ref(false);
 const voiceTranscription = ref<string | null>(null);
 const isTranscribing = ref(false);
-const transcription = useTranscription();
-
 // Voice-extracted data for timer sessions
 const extractedQualityRating = ref<number | null>(null);
 const extractedBonusTadas = ref<ExtractedTada[]>([]);
@@ -218,51 +215,6 @@ const timerLiveTranscriptionText = ref("");
 // Handle live transcription during recording
 function handleVoiceLiveTranscription(text: string) {
   timerLiveTranscriptionText.value = text;
-}
-
-// Handle voice recording complete
-async function handleVoiceComplete(_blob: Blob, _duration: number) {
-  // Use the live transcription text that was collected during recording
-  const transcriptText =
-    timerLiveTranscriptionText.value || transcription.result.value?.text || "";
-  timerLiveTranscriptionText.value = ""; // Reset for next recording
-
-  if (!transcriptText.trim()) {
-    isTranscribing.value = false;
-    showVoiceRecorder.value = false;
-    return; // Silently skip if no speech detected
-  }
-
-  // Create a result object from the live transcription
-  const result = {
-    text: transcriptText,
-    provider: "web-speech" as const,
-    processingMethod: "web-speech" as const,
-    confidence: 0.8,
-  };
-
-  // Extract structured data from voice transcription
-  const extracted = extractTimerNoteData(result.text);
-
-  // Auto-fill quality rating if detected with high confidence
-  if (extracted.quality.quality && extracted.quality.confidence >= 0.7) {
-    extractedQualityRating.value = extracted.quality.quality;
-    sessionMood.value = extracted.quality.quality; // Also set mood
-  }
-
-  // Show bonus tadas panel if any detected
-  if (extracted.bonusTadas.length > 0) {
-    extractedBonusTadas.value = extracted.bonusTadas;
-    showBonusTadasPanel.value = true;
-  }
-
-  // Set main notes (without bonus portion)
-  const cleanNotes = extracted.mainNotes;
-  sessionReflection.value = sessionReflection.value
-    ? `${sessionReflection.value}\n\n🎤 ${cleanNotes}`
-    : `🎤 ${cleanNotes}`;
-  voiceTranscription.value = result.text;
-  showVoiceRecorder.value = false;
 }
 
 function handleVoiceError(message: string) {
@@ -855,7 +807,7 @@ function previewBellSound(soundValue: string) {
     audio.play().catch(() => {
       // Silently fail - user will see visual feedback
     });
-  } catch (error) {
+  } catch {
     // Silently fail
   }
 }

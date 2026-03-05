@@ -349,9 +349,9 @@ export default defineEventHandler(async (event) => {
   const userApiKey = getHeader(event, "x-user-api-key");
 
   // Check API key availability BEFORE rate limiting
-  const groqApiKey = process.env.GROQ_API_KEY || "";
-  const openaiApiKey = process.env.OPENAI_API_KEY || "";
-  const anthropicApiKey = process.env.ANTHROPIC_API_KEY || "";
+  const groqApiKey = process.env['GROQ_API_KEY'] || "";
+  const openaiApiKey = process.env['OPENAI_API_KEY'] || "";
+  const anthropicApiKey = process.env['ANTHROPIC_API_KEY'] || "";
   if (
     !userApiKey &&
     !groqApiKey &&

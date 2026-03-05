@@ -14,7 +14,6 @@ import {
   TIER_ORDER,
   CHAIN_CONFIGS,
   type DayStatus,
-  type WeeklyProgress,
 } from "./tierCalculator";
 
 describe("tierCalculator", () => {

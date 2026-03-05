@@ -32,7 +32,7 @@ const webhookSchema = z.object({
 });
 
 export default defineEventHandler(async (event) => {
-  const auth = event.context.auth;
+  const auth = event.context['auth']!;
 
   // This endpoint requires session authentication
   if (!auth || auth.type !== "session") {

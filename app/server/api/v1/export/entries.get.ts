@@ -35,7 +35,7 @@ export default defineEventHandler(async (event) => {
   // Require export:read permission
   requirePermission(event, "export:read");
 
-  const auth = event.context.auth;
+  const auth = event.context['auth']!;
   const userId = auth.userId;
 
   // Parse and validate query parameters

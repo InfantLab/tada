@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { EntryMode } from "./EntryTypeToggle.vue";
 
-const props = defineProps<{
+defineProps<{
   open: boolean;
 }>();
 

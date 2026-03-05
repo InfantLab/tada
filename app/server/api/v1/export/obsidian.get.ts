@@ -40,7 +40,7 @@ export default defineEventHandler(async (event) => {
   // Require export:read permission
   requirePermission(event, "export:read");
 
-  const auth = event.context.auth;
+  const auth = event.context['auth']!;
   const userId = auth.userId;
 
   // Parse and validate query parameters
@@ -115,7 +115,7 @@ export default defineEventHandler(async (event) => {
       };
 
       const result = await getEntries(userId, queryParams);
-      markdown = toObsidianWeekly(result.entries, start.split("T")[0], end.split("T")[0]);
+      markdown = toObsidianWeekly(result.entries, start.split("T")[0]!, end.split("T")[0]!);
     } else if (template === "monthly") {
       if (!month) {
         throw createError(

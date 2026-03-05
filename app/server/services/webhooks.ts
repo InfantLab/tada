@@ -11,7 +11,7 @@
 import crypto from "crypto";
 import { db } from "~/server/db";
 import { webhooks } from "~/server/db/schema";
-import { eq, and, isNull } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import type { WebhookEvent } from "~/types/api";
 
 // Retry delays in milliseconds: 1s, 5s, 25s
@@ -25,7 +25,7 @@ const MIN_DELIVERIES_FOR_AUTO_DISABLE = 20;
 interface WebhookPayload {
   event: string;
   timestamp: string;
-  data: Record<string, any>;
+  data: Record<string, unknown>;
 }
 
 interface DeliveryResult {
@@ -59,7 +59,7 @@ function validateWebhookURL(url: string): void {
 
   try {
     parsedURL = new URL(url);
-  } catch (error) {
+  } catch {
     throw new Error("Invalid URL format");
   }
 
@@ -138,7 +138,7 @@ export async function registerWebhook(
     .returning();
 
   // Don't return the secret
-  const { secret, ...webhookWithoutSecret } = webhook;
+  const { secret: _, ...webhookWithoutSecret } = webhook!;
 
   return webhookWithoutSecret;
 }
@@ -198,7 +198,7 @@ export async function updateWebhook(
     .where(eq(webhooks.id, webhookId))
     .returning();
 
-  const { secret, ...webhookWithoutSecret } = updated;
+  const { secret: _, ...webhookWithoutSecret } = updated!;
   return webhookWithoutSecret;
 }
 
@@ -292,7 +292,7 @@ export async function deliverWebhook(
 
     // Wait before retrying (except on last attempt)
     if (attempt < MAX_ATTEMPTS - 1) {
-      await sleep(RETRY_DELAYS[attempt]);
+      await sleep(RETRY_DELAYS[attempt]!);
     }
   }
 
@@ -339,7 +339,6 @@ async function updateDeliveryStats(
       totalDeliveries,
       failedDeliveries,
       consecutiveFailures,
-      lastDeliveredAt: new Date().toISOString(),
       active: shouldDisable ? false : webhook.active,
       updatedAt: new Date().toISOString(),
     })
@@ -411,7 +410,7 @@ export async function testWebhook(
 export async function triggerWebhooks(
   userId: string,
   event: WebhookEvent,
-  data: Record<string, any>,
+  data: Record<string, unknown>,
 ): Promise<void> {
   // Find all active webhooks subscribed to this event
   const activeWebhooks = await db.query.webhooks.findMany({

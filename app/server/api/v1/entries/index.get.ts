@@ -39,7 +39,7 @@ export default defineEventHandler(async (event) => {
   // Require entries:read permission
   requirePermission(event, "entries:read");
 
-  const auth = event.context.auth;
+  const auth = event.context['auth']!;
   const userId = auth.userId;
 
   // Parse and validate query parameters
@@ -71,8 +71,8 @@ export default defineEventHandler(async (event) => {
       event,
       result.entries,
       result.total,
-      queryParams.limit,
-      queryParams.offset,
+      queryParams.limit ?? 100,
+      queryParams.offset ?? 0,
     );
   } catch (error) {
     console.error("Error fetching entries:", error);

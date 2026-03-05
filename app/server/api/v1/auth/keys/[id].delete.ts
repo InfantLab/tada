@@ -10,7 +10,7 @@ import { success, apiError } from "~/server/utils/response";
 import { revokeApiKey } from "~/server/utils/api-key";
 
 export default defineEventHandler(async (event) => {
-  const auth = event.context.auth;
+  const auth = event.context['auth']!;
 
   // This endpoint requires session authentication (not API key auth)
   if (!auth || auth.type !== "session") {

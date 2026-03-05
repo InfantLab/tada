@@ -40,7 +40,7 @@ export default defineEventHandler(async (event) => {
   // Require entries:read permission (pattern analysis reads entries)
   requirePermission(event, "entries:read");
 
-  const auth = event.context.auth;
+  const auth = event.context['auth']!;
   const userId = auth.userId;
 
   // Parse and validate query parameters
@@ -74,24 +74,24 @@ export default defineEventHandler(async (event) => {
     const cached = await db.query.insightCache.findFirst({
       where: and(
         eq(insightCache.userId, userId),
-        eq(insightCache.cacheKey, cacheKey),
-        gte(insightCache.createdAt, cacheExpiry.toISOString()),
+        eq(insightCache.id, cacheKey),
+        gte(insightCache.computedAt, cacheExpiry.toISOString()),
       ),
     });
 
-    if (cached && cached.result) {
+    if (cached && cached.data) {
       // Return cached result
       return success(event, {
-        patterns: cached.result,
+        patterns: cached.data,
         cached: true,
         cacheAge: Math.floor(
-          (now.getTime() - new Date(cached.createdAt).getTime()) / 1000,
+          (now.getTime() - new Date(cached.computedAt).getTime()) / 1000,
         ),
       });
     }
 
     // No cache hit - calculate patterns
-    const patterns: any[] = [];
+    const patterns: Array<Record<string, unknown>> = [];
 
     // Run pattern detection based on type filter
     if (type === "all" || type === "correlation") {
@@ -103,7 +103,7 @@ export default defineEventHandler(async (event) => {
         ["food", "fitness"],
       ];
 
-      for (const [cat1, cat2] of commonPairs) {
+      for (const [cat1, cat2] of commonPairs as [string, string][]) {
         if (!category || category === cat1 || category === cat2) {
           const pattern = await analyzeCorrelation(userId, cat1, cat2, lookback);
           if (pattern.confidence !== "low" || minConfidence === "low") {
@@ -159,18 +159,21 @@ export default defineEventHandler(async (event) => {
     }
 
     // Sort by confidence (high > medium > low)
-    const confidenceOrder = { high: 3, medium: 2, low: 1 };
+    const confidenceOrder: Record<string, number> = { high: 3, medium: 2, low: 1 };
     patterns.sort(
-      (a, b) => confidenceOrder[b.confidence] - confidenceOrder[a.confidence],
+      (a, b) =>
+        (confidenceOrder[b['confidence'] as string] ?? 0) - (confidenceOrder[a['confidence'] as string] ?? 0),
     );
 
     // Cache the result
     await db.insert(insightCache).values({
-      id: crypto.randomUUID(),
+      id: cacheKey,
       userId,
-      cacheKey,
-      result: patterns,
-      createdAt: now.toISOString(),
+      type: type ?? "all",
+      params: { lookback, minConfidence, category },
+      data: patterns,
+      computedAt: now.toISOString(),
+      expiresAt: new Date(now.getTime() + CACHE_TTL_HOURS * 60 * 60 * 1000).toISOString(),
     });
 
     return success(event, {

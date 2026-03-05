@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
   // Require rhythms:read permission
   requirePermission(event, "rhythms:read");
 
-  const auth = event.context.auth;
+  const auth = event.context['auth']!;
   const userId = auth.userId;
 
   try {

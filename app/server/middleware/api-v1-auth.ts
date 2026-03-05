@@ -18,7 +18,7 @@ import {
   rateLimitExceeded,
   unauthorized,
 } from "~/server/utils/response";
-import type { ApiAuthContext } from "~/types/api";
+import type { ApiAuthContext, Permission } from "~/types/api";
 
 export default defineEventHandler(async (event: H3Event) => {
   const path = event.path;
@@ -39,7 +39,7 @@ export default defineEventHandler(async (event: H3Event) => {
   // Extract authentication credentials
   const authHeader = getHeader(event, "Authorization");
 
-  let authContext: ApiAuthContext | null = null;
+  let authContext: ApiAuthContext | undefined;
 
   // Try API key authentication (Bearer token)
   if (authHeader?.startsWith("Bearer ")) {
@@ -50,7 +50,7 @@ export default defineEventHandler(async (event: H3Event) => {
     if (apiKeyRecord) {
       authContext = {
         userId: apiKeyRecord.userId,
-        permissions: apiKeyRecord.permissions,
+        permissions: apiKeyRecord.permissions as Permission[],
         apiKeyId: apiKeyRecord.id,
         type: "api_key",
       };

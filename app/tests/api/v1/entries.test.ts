@@ -155,7 +155,7 @@ describe("GET /api/v1/entries", () => {
     const timestamps = response.data.map((e: any) => new Date(e.timestamp).getTime());
 
     for (let i = 1; i < timestamps.length; i++) {
-      expect(timestamps[i]).toBeLessThanOrEqual(timestamps[i - 1]);
+      expect(timestamps[i]!).toBeLessThanOrEqual(timestamps[i - 1]!);
     }
   });
 });
@@ -166,7 +166,7 @@ describe("GET /api/v1/entries/[id]", () => {
 
   beforeEach(async () => {
     env = await createTestEnvironment({ entryCount: 1 });
-    testEntryId = env.entryIds[0];
+    testEntryId = env.entryIds[0]!;
   });
 
   afterEach(async () => {
@@ -174,11 +174,13 @@ describe("GET /api/v1/entries/[id]", () => {
   });
 
   it("returns single entry by ID", async () => {
-    const response = await $fetch(`/api/v1/entries/${testEntryId}`, {
+    const entryUrl = `/api/v1/entries/${testEntryId}`;
+    // @ts-expect-error -- dynamic route causes excessive type recursion in Nuxt's $fetch
+    const response = (await $fetch(entryUrl, {
       headers: {
         Authorization: `Bearer ${env.apiKey.key}`,
       },
-    });
+    })) as { data: { id: string; userId: string } };
 
     expect(response.data).toBeDefined();
     expect(response.data.id).toBe(testEntryId);
@@ -246,7 +248,7 @@ describe("POST /api/v1/entries", () => {
     expect(response.data.type).toBe("timed");
     expect(response.data.name).toBe("Meditation");
     expect(response.data.source).toBe("api");
-    expect(response.meta.created).toBe(true);
+    expect((response.meta as { created: boolean }).created).toBe(true);
   });
 
   it("validates required fields for each entry type", async () => {
@@ -333,7 +335,7 @@ describe("PATCH /api/v1/entries/[id]", () => {
 
   beforeEach(async () => {
     env = await createTestEnvironment({ entryCount: 1 });
-    testEntryId = env.entryIds[0];
+    testEntryId = env.entryIds[0]!;
   });
 
   afterEach(async () => {
@@ -352,7 +354,7 @@ describe("PATCH /api/v1/entries/[id]", () => {
         Authorization: `Bearer ${env.apiKey.key}`,
       },
       body: updates,
-    });
+    }) as { data: { id: string; notes: string; tags: string[] } };
 
     expect(response.data).toBeDefined();
     expect(response.data.id).toBe(testEntryId);
@@ -397,7 +399,7 @@ describe("DELETE /api/v1/entries/[id]", () => {
 
   beforeEach(async () => {
     env = await createTestEnvironment({ entryCount: 1 });
-    testEntryId = env.entryIds[0];
+    testEntryId = env.entryIds[0]!;
   });
 
   afterEach(async () => {
@@ -410,7 +412,7 @@ describe("DELETE /api/v1/entries/[id]", () => {
       headers: {
         Authorization: `Bearer ${env.apiKey.key}`,
       },
-    });
+    }) as { meta: { deleted: boolean } };
 
     expect(response.meta.deleted).toBe(true);
 

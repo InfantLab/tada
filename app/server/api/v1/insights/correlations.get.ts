@@ -9,7 +9,7 @@
 import { z } from "zod";
 import { requirePermission } from "~/server/utils/permissions";
 import { success, apiError, validationError } from "~/server/utils/response";
-import { analyzeCorrelation, calculatePearson } from "~/server/services/insights";
+import { analyzeCorrelation } from "~/server/services/insights";
 
 // Query parameter validation
 const correlationQuerySchema = z.object({
@@ -26,7 +26,7 @@ export default defineEventHandler(async (event) => {
   // Require entries:read permission
   requirePermission(event, "entries:read");
 
-  const auth = event.context.auth;
+  const auth = event.context['auth']!;
   const userId = auth.userId;
 
   // Parse and validate query parameters
@@ -55,14 +55,15 @@ export default defineEventHandler(async (event) => {
 
     // Generate interpretation
     let interpretation: string;
-    const absR = Math.abs(pattern.correlation);
+    const r = pattern.evidence['coefficient'] as number ?? 0;
+    const absR = Math.abs(r);
 
     if (absR > 0.7) {
-      interpretation = pattern.correlation > 0 ? "strong positive" : "strong negative";
+      interpretation = r > 0 ? "strong positive" : "strong negative";
     } else if (absR > 0.5) {
-      interpretation = pattern.correlation > 0 ? "moderate positive" : "moderate negative";
+      interpretation = r > 0 ? "moderate positive" : "moderate negative";
     } else if (absR > 0.3) {
-      interpretation = pattern.correlation > 0 ? "weak positive" : "weak negative";
+      interpretation = r > 0 ? "weak positive" : "weak negative";
     } else {
       interpretation = "no significant";
     }
@@ -77,7 +78,7 @@ export default defineEventHandler(async (event) => {
     return success(event, {
       variable1,
       variable2,
-      correlation: pattern.correlation,
+      correlation: r,
       interpretation: `${interpretation} correlation`,
       confidence: pattern.confidence,
       evidence: pattern.evidence,

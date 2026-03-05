@@ -116,8 +116,8 @@ export async function getOrCreateCustomer(
 function getSubscriptionPeriodEnd(subscription: Stripe.Subscription): string {
   // Try new location first (items), then legacy top-level
   const periodEnd =
-    subscription.items?.data?.[0]?.current_period_end ??
-    (subscription as Record<string, unknown>)["current_period_end"];
+    (subscription.items?.data?.[0] as unknown as Record<string, unknown>)?.['current_period_end'] ??
+    (subscription as unknown as Record<string, unknown>)['current_period_end'];
 
   if (typeof periodEnd === "number" && periodEnd > 0) {
     return new Date(periodEnd * 1000).toISOString();

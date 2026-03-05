@@ -7,9 +7,9 @@ import { db } from "~/server/db";
 import { rhythms } from "~/server/db/schema";
 import { createLogger } from "~/server/utils/logger";
 
-const logger = createLogger("api:rhythms:create");
-
 import { getDefaultThresholdType } from "~/server/utils/rhythmCalculator";
+
+const logger = createLogger("api:rhythms:create");
 
 interface CreateRhythmBody {
   name: string;

@@ -10,7 +10,7 @@ import { success, apiError } from "~/server/utils/response";
 import { listApiKeys } from "~/server/utils/api-key";
 
 export default defineEventHandler(async (event) => {
-  const auth = event.context.auth;
+  const auth = event.context['auth']!;
 
   // This endpoint requires session authentication (not API key auth)
   // Users manage their API keys through the web interface

@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
   // Require entries:read permission
   requirePermission(event, "entries:read");
 
-  const auth = event.context.auth;
+  const auth = event.context['auth']!;
   const userId = auth.userId;
 
   // Get entry ID from route params

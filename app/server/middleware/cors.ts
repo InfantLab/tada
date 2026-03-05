@@ -10,8 +10,8 @@ export default defineEventHandler((event) => {
   const origin = getRequestHeader(event, "origin");
 
   // Get allowed origins from environment or use defaults
-  const allowedOrigins = process.env.CORS_ALLOWED_ORIGINS
-    ? process.env.CORS_ALLOWED_ORIGINS.split(",")
+  const allowedOrigins = process.env['CORS_ALLOWED_ORIGINS']
+    ? process.env['CORS_ALLOWED_ORIGINS'].split(",")
     : [
         "http://localhost:3000",
         "http://localhost:5173",
@@ -38,7 +38,7 @@ export default defineEventHandler((event) => {
     "Content-Type, Authorization, X-Requested-With",
   );
   setResponseHeader(event, "Access-Control-Allow-Credentials", "true");
-  setResponseHeader(event, "Access-Control-Max-Age", "86400"); // 24 hours
+  setResponseHeader(event, "Access-Control-Max-Age", 86400); // 24 hours
 
   // Handle preflight OPTIONS requests
   if (event.method === "OPTIONS") {

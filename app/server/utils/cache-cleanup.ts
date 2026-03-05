@@ -26,7 +26,7 @@ export async function cleanupExpiredCache(): Promise<{
 
     const result = await db
       .delete(insightCache)
-      .where(lt(insightCache.createdAt, expiryTime.toISOString()));
+      .where(lt(insightCache.computedAt, expiryTime.toISOString()));
 
     const deletedCount = result.rowsAffected || 0;
 
@@ -59,7 +59,7 @@ export async function cleanupOldCache(days: number): Promise<{
 
     const result = await db
       .delete(insightCache)
-      .where(lt(insightCache.createdAt, cutoffDate.toISOString()));
+      .where(lt(insightCache.computedAt, cutoffDate.toISOString()));
 
     const deletedCount = result.rowsAffected || 0;
 
@@ -94,7 +94,7 @@ export async function getCacheStats(): Promise<{
     db
       .select({ count: sql<number>`count(*)` })
       .from(insightCache)
-      .where(lt(insightCache.createdAt, expiryTime.toISOString())),
+      .where(lt(insightCache.computedAt, expiryTime.toISOString())),
   ]);
 
   const total = totalResult[0]?.count || 0;

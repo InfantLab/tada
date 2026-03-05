@@ -10,16 +10,16 @@
  */
 
 import { db } from "~/server/db";
-import { entries, insightCache } from "~/server/db/schema";
+import { entries } from "~/server/db/schema";
 import { eq, and, isNull, gte } from "drizzle-orm";
 
 interface Pattern {
   type: "correlation" | "temporal" | "trend" | "sequence";
   confidence: "low" | "medium" | "high";
   description: string;
-  evidence: Record<string, any>;
+  evidence: Record<string, unknown>;
   message?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 /**
@@ -47,8 +47,8 @@ export function calculatePearson(x: number[], y: number[]): number {
   let sumYDevSq = 0;
 
   for (let i = 0; i < n; i++) {
-    const xDev = x[i] - meanX;
-    const yDev = y[i] - meanY;
+    const xDev = x[i]! - meanX;
+    const yDev = y[i]! - meanY;
 
     numerator += xDev * yDev;
     sumXDevSq += xDev * xDev;
@@ -75,7 +75,7 @@ export function calculatePearson(x: number[], y: number[]): number {
 export async function groupByDay(
   userId: string,
   lookbackDays: number,
-): Promise<Record<string, any[]>> {
+): Promise<Record<string, Record<string, unknown>[]>> {
   const cutoffDate = new Date();
   cutoffDate.setDate(cutoffDate.getDate() - lookbackDays);
 
@@ -88,14 +88,14 @@ export async function groupByDay(
     orderBy: (entries, { asc }) => [asc(entries.timestamp)],
   });
 
-  const grouped: Record<string, any[]> = {};
+  const grouped: Record<string, Record<string, unknown>[]> = {};
 
   for (const entry of userEntries) {
-    const date = entry.timestamp.split("T")[0];
+    const date = entry.timestamp.split("T")[0]!;
     if (!grouped[date]) {
       grouped[date] = [];
     }
-    grouped[date].push(entry);
+    grouped[date]!.push(entry);
   }
 
   return grouped;
@@ -118,13 +118,13 @@ export async function analyzeCorrelation(
   const cat2Counts: number[] = [];
 
   for (const date of dates) {
-    const dayEntries = grouped[date];
+    const dayEntries = grouped[date]!;
 
     const cat1Count = dayEntries.filter(
-      (e) => e.category === category1,
+      (e: Record<string, unknown>) => e['category'] === category1,
     ).length;
     const cat2Count = dayEntries.filter(
-      (e) => e.category === category2,
+      (e: Record<string, unknown>) => e['category'] === category2,
     ).length;
 
     cat1Counts.push(cat1Count);
@@ -211,12 +211,13 @@ export async function analyzeWeekdayPattern(
   ];
 
   for (const date of dates) {
-    const dayEntries = grouped[date];
-    const categoryEntries = dayEntries.filter((e) => e.category === category);
+    const dayEntries = grouped[date]!;
+    const categoryEntries = dayEntries.filter((e: Record<string, unknown>) => e['category'] === category);
 
     if (categoryEntries.length > 0) {
       const dayOfWeek = new Date(date).getDay();
-      weekdayDistribution[weekdayNames[dayOfWeek]]++;
+      const dayName = weekdayNames[dayOfWeek]!;
+      weekdayDistribution[dayName] = (weekdayDistribution[dayName] ?? 0) + 1;
     }
   }
 
@@ -225,8 +226,8 @@ export async function analyzeWeekdayPattern(
     .sort(([, a], [, b]) => b - a)
     .map(([day]) => day);
 
-  const topDay = sortedDays[0];
-  const topCount = weekdayDistribution[topDay];
+  const topDay = sortedDays[0]!;
+  const topCount = weekdayDistribution[topDay]!;
 
   return {
     type: "temporal",
@@ -260,11 +261,11 @@ export async function analyzeTrend(
   const xValues: number[] = [];
 
   for (let i = 0; i < dates.length; i++) {
-    const dayEntries = grouped[dates[i]];
-    const categoryEntries = dayEntries.filter((e) => e.category === category);
+    const dayEntries = grouped[dates[i]!]!;
+    const categoryEntries = dayEntries.filter((e: Record<string, unknown>) => e['category'] === category);
 
     const totalDuration = categoryEntries.reduce(
-      (sum, e) => sum + (e.durationSeconds || 0),
+      (sum: number, e: Record<string, unknown>) => sum + (Number(e['durationSeconds']) || 0),
       0,
     );
 
@@ -295,8 +296,8 @@ export async function analyzeTrend(
   let denominator = 0;
 
   for (let i = 0; i < n; i++) {
-    numerator += (xValues[i] - meanX) * (durations[i] - meanY);
-    denominator += (xValues[i] - meanX) * (xValues[i] - meanX);
+    numerator += (xValues[i]! - meanX) * (durations[i]! - meanY);
+    denominator += (xValues[i]! - meanX) * (xValues[i]! - meanX);
   }
 
   const slope = denominator !== 0 ? numerator / denominator : 0;
@@ -351,25 +352,25 @@ export async function detectSequence(
   const sequences: Record<string, Record<string, number>> = {};
 
   for (const date of dates) {
-    const dayEntries = grouped[date].sort(
-      (a, b) =>
-        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
+    const dayEntries = grouped[date]!.sort(
+      (a: Record<string, unknown>, b: Record<string, unknown>) =>
+        new Date(a['timestamp'] as string).getTime() - new Date(b['timestamp'] as string).getTime(),
     );
 
     for (let i = 0; i < dayEntries.length - 1; i++) {
-      const current = dayEntries[i];
-      const next = dayEntries[i + 1];
+      const current = dayEntries[i]!;
+      const next = dayEntries[i + 1]!;
 
-      const key = `${current.name}`;
+      const key = `${current['name']}`;
       if (!sequences[key]) {
         sequences[key] = {};
       }
 
-      const consequent = next.category || next.name;
-      if (!sequences[key][consequent]) {
-        sequences[key][consequent] = 0;
+      const consequent = String(next['category'] || next['name']);
+      if (!sequences[key]![consequent]) {
+        sequences[key]![consequent] = 0;
       }
-      sequences[key][consequent]++;
+      sequences[key]![consequent]!++;
     }
   }
 

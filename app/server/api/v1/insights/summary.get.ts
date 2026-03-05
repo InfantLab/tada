@@ -24,7 +24,7 @@ export default defineEventHandler(async (event) => {
   // Require entries:read permission
   requirePermission(event, "entries:read");
 
-  const auth = event.context.auth;
+  const auth = event.context['auth']!;
   const userId = auth.userId;
 
   // Parse and validate query parameters
@@ -114,7 +114,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // Group by category
-    const byCategory: Record<string, any> = {};
+    const byCategory: Record<string, { count: number; totalDuration: number; entries: string[] }> = {};
     for (const entry of userEntries) {
       const cat = entry.category || "uncategorized";
       if (!byCategory[cat]) {

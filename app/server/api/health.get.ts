@@ -34,7 +34,7 @@ export default defineEventHandler(async (event) => {
   const response = {
     status,
     timestamp: new Date().toISOString(),
-    version: (config.public as { appVersion?: string }).appVersion || "unknown",
+    version: ((config as unknown as Record<string, Record<string, unknown>>)['public']!)['appVersion'] as string || "unknown",
     uptime: process.uptime(),
     checks: {
       database: {

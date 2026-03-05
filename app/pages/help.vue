@@ -526,8 +526,8 @@ function scrollToSection(id: string) {
     <div v-else class="space-y-10">
       <section
         v-for="section in sectionOrder"
-        :key="section"
         :id="sectionMeta[section]!.id"
+        :key="section"
         class="scroll-mt-20"
       >
         <template v-if="faqsByCategory[section]?.length">

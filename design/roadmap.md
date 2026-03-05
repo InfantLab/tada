@@ -2,7 +2,7 @@
 
 What's coming next. For what already shipped, see [CHANGELOG.md](../CHANGELOG.md) and the release notes.
 
-**Current Version:** v0.4.2-dev (March 2026)
+**Current Version:** v0.4.2 (March 2026)
 
 ---
 
@@ -50,8 +50,23 @@ _Target: March 2026_
 
 ### Code Quality
 
-- [ ] Fix 221 pre-existing TypeScript strict mode errors across codebase
+- [x] Fix 220 pre-existing TypeScript strict mode errors across 51 files (see recommendation below)
+- [x] Fix 74 ESLint errors (36 `no-explicit-any`, 28 `no-unused-vars`, misc)
 - [x] Fix 18 TypeScript errors in v1 API test files (rhythms, webhooks, insights)
+
+#### TypeScript Strict Mode Recommendation
+
+The 220 errors fall into a few dominant categories that are fixable without relaxing strictness:
+
+| Error Code | Count | Issue | Fix Approach |
+|------------|-------|-------|--------------|
+| TS2345 | 80 | Argument type mismatch (`ApiError` → `createError`) | Make `ApiError` extend `Error` or use `createError()` wrapper |
+| TS4111 | 45 | Index signature access (`.auth` → `['auth']`) | Use bracket notation or type event context properly |
+| TS2339 | 25 | Property doesn't exist on type | Add proper type assertions/narrowing |
+| TS2532/18048 | 37 | Possibly undefined/null | Add null checks or non-null assertions |
+| Other | 33 | Various (implicit any, type assertions) | Case-by-case fixes |
+
+**Recommendation:** Keep `strict: true` — these are real bugs or missing type annotations, not false positives. The top 2 categories (TS2345 + TS4111 = 125 errors, 57%) are systematic and can be batch-fixed. Relaxing strictness would hide real issues. Estimated effort: 2-3 focused sessions.
 
 ### Voice
 
@@ -98,11 +113,28 @@ The unified Entry model already supports open string types. Finish the job:
 - [ ] Refactor JSON/CSV/Markdown export to use plugin exporter interface
 - [ ] Obsidian export as a built-in export plugin
 
+### Test Coverage Expansion
+
+Current coverage: **14.1%** (35 of 249 source files). Utils are well-tested (79%), but critical layers are not:
+
+| Layer | Files | Tested | Coverage |
+|-------|-------|--------|----------|
+| Utils | 14 | 11 | 79% |
+| Composables | 18 | 3 | 17% |
+| Server Utils | 17 | 3 | 18% |
+| Server Services | 10 | 1 | 10% |
+| API Routes | 94 | 4 | 4% |
+| Components | 61 | 0 | 0% |
+| Pages | 28 | 0 | 0% |
+
+Priority targets: `server/services/entries.ts`, `server/utils/permissions.ts`, `server/utils/auth.ts`, `composables/useEntryEngine.ts`
+
 ### Carried Forward (from earlier versions)
 
 Items that fit naturally into this release:
 
 - [ ] Rewrite integration tests with @nuxt/test-utils/e2e
+- [ ] Expand server service and API route test coverage (see table above)
 - [ ] Timer-specific onboarding: "Keep this tab in the foreground" (first timer start)
 - [ ] New feature callouts for returning users (subtle badge/dot, not modal)
 
