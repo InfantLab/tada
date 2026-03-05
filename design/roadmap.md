@@ -44,6 +44,7 @@ _Target: March 2026_
 - [x] Ta-da save: navigate to timeline after celebration (was staying on entry screen)
 - [x] Rhythm chain cache: invalidate on historical entry inserts (was only checking latest timestamp)
 - [x] Rhythm gap discovery: tappable heatmap cells + gap hint text
+- [x] Rhythm heatmap popover: show entry list with links on active days, smart add-entry with correct type & date
 - [x] Clarify BYOK settings UI — unclear what keys are needed and where to get them
 - [x] Timeline search: free-text date parsing ("march 2024", "march 4, 2024", "yesterday")
 
