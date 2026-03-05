@@ -55,8 +55,8 @@ _Target: March 2026_
 
 ### Voice
 
-- [ ] Improve LLM extraction accuracy (smarter parsing of ambiguous input)
-- [ ] Voice entries should set `category: "moments"` for moment subtypes
+- [x] Improve LLM extraction accuracy (smarter parsing of ambiguous input)
+- [x] Voice entries should set `category: "moments"` for moment subtypes
 
 ---
 

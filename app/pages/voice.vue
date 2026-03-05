@@ -34,7 +34,6 @@ const isSubmitting = ref(false);
 const showCelebration = ref(false);
 
 // Composables
-// TODO: Migrate to useEntryEngine once createVoiceEntry/createBatchTadas are implemented
 const entrySave = useEntrySave();
 const transcription = useTranscription();
 const llmStructure = useLLMStructure();
@@ -162,13 +161,11 @@ async function handleTranscriptionConfirm(
         recordingDurationMs: recordingDuration.value,
         sttProvider: "web-speech",
         confidence: currentTranscription.value?.confidence || 0.8,
-        llmProvider: undefined,
       },
       {
         subcategory: subtype,
       },
     );
-    success("Journal entry saved!");
     showVoiceReviewModal.value = false;
     currentTranscription.value = null;
     router.push("/");

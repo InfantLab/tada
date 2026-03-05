@@ -24,60 +24,6 @@ interface ExtractedTadaRaw {
 }
 
 /**
- * System prompt for extracting tadas from transcribed speech
- */
-export const EXTRACTION_PROMPT = `You are a personal productivity assistant that helps users capture their accomplishments.
-
-Your task is to extract discrete accomplishments ("tadas") from natural speech transcriptions.
-
-RULES:
-1. Each tada should be a single, specific accomplishment
-2. Split compound sentences into separate tadas (e.g., "I fixed the sink and called my mom" → 2 tadas)
-3. Title should be SHORT (5-10 words max) - summarize the accomplishment concisely
-4. Put any additional context, details, or the original phrasing in the "notes" field
-5. Words like "finally", "at last", "after so long" indicate MAJOR significance
-6. Quick/routine tasks are MINOR significance
-7. Everything else is NORMAL significance
-8. Detect category from context (home, work, health, social, creative, learning, etc.)
-9. If no clear tadas are found, provide a journal_fallback summary
-10. Detect journal_type from content clues:
-   - "dream", "dreamed", "nightmare", "sleeping" → "dream"
-   - "grateful", "thankful", "appreciate" → "gratitude"
-   - "thinking about", "realized", "wondering" → "reflection"
-   - Otherwise → "note"
-
-OUTPUT FORMAT (JSON):
-{
-  "tadas": [
-    {
-      "title": "Fixed the kitchen sink",
-      "notes": "Finally got around to fixing that leaky kitchen sink that's been bothering me for weeks",
-      "category": "home",
-      "subcategory": "maintenance",
-      "significance": "major",
-      "confidence": 0.95,
-      "original_text": "finally fixed that kitchen sink"
-    }
-  ],
-  "journal_type": "note",
-  "journal_fallback": "Talked about various activities today"
-}
-
-Categories: home, work, health, fitness, social, creative, learning, finance, errands, personal
-Subcategories vary by category:
-- home: cleaning, cooking, maintenance, organizing, gardening
-- work: meeting, project, milestone, collaboration, admin
-- health: medical, dental, mental, wellness
-- fitness: workout, running, yoga, sports
-- social: family, friends, networking, community
-- creative: art, music, writing, craft, photography
-- learning: reading, course, skill, language, research
-- finance: banking, investing, budgeting, taxes
-- errands: shopping, appointments, admin, travel
-- personal: self-care, milestone, hobby, achievement
-Journal Types: dream, reflection, gratitude, note`;
-
-/**
  * Validate and normalize extracted tada from LLM response
  */
 export function validateExtractedTada(
@@ -104,27 +50,42 @@ export function validateExtractedTada(
   };
 }
 
+/** Known categories matching the app ontology (CATEGORY_DEFAULTS) */
+const KNOWN_CATEGORIES = [
+  "mindfulness",
+  "movement",
+  "creative",
+  "learning",
+  "health",
+  "work",
+  "social",
+  "life_admin",
+  "moments",
+  "events",
+];
+
+/** Map legacy category names to current ontology */
+const LEGACY_CATEGORY_MAP: Record<string, string> = {
+  home: "life_admin",
+  fitness: "movement",
+  finance: "life_admin",
+  errands: "life_admin",
+  personal: "work",
+  hobby: "creative",
+};
+
 /**
- * Normalize category to known values
+ * Normalize category to known values from the app ontology
  */
 function normalizeCategory(category?: string): string {
-  if (!category) return "personal";
+  if (!category) return "work";
 
   const normalized = category.toLowerCase().trim();
-  const knownCategories = [
-    "home",
-    "work",
-    "health",
-    "fitness",
-    "social",
-    "creative",
-    "learning",
-    "finance",
-    "errands",
-    "personal",
-  ];
 
-  return knownCategories.includes(normalized) ? normalized : "personal";
+  if (KNOWN_CATEGORIES.includes(normalized)) return normalized;
+  if (LEGACY_CATEGORY_MAP[normalized]) return LEGACY_CATEGORY_MAP[normalized];
+
+  return "work";
 }
 
 /**
@@ -300,11 +261,11 @@ function cleanTadaTitle(segment: string): string {
 }
 
 /**
- * Detect category from text keywords
+ * Detect category from text keywords (aligned with app ontology)
  */
 function detectCategoryFromText(text: string): string {
   const categoryKeywords: Record<string, string[]> = {
-    home: [
+    life_admin: [
       "house",
       "home",
       "kitchen",
@@ -314,6 +275,19 @@ function detectCategoryFromText(text: string): string {
       "clean",
       "cook",
       "garden",
+      "shop",
+      "store",
+      "buy",
+      "pickup",
+      "drop off",
+      "mail",
+      "post",
+      "bank",
+      "pay",
+      "bill",
+      "budget",
+      "tax",
+      "errand",
     ],
     work: [
       "work",
@@ -333,8 +307,10 @@ function detectCategoryFromText(text: string): string {
       "appointment",
       "therapy",
       "checkup",
+      "sleep",
+      "nutrition",
     ],
-    fitness: [
+    movement: [
       "gym",
       "workout",
       "run",
@@ -343,6 +319,8 @@ function detectCategoryFromText(text: string): string {
       "walk",
       "bike",
       "swim",
+      "hike",
+      "dance",
     ],
     social: [
       "friend",
@@ -364,10 +342,36 @@ function detectCategoryFromText(text: string): string {
       "craft",
       "photo",
       "design",
+      "code",
+      "coding",
     ],
     learning: ["read", "book", "learn", "study", "course", "class", "practice"],
-    finance: ["bank", "pay", "bill", "budget", "tax", "invest", "money"],
-    errands: ["shop", "store", "buy", "pickup", "drop off", "mail", "post"],
+    mindfulness: [
+      "meditat",
+      "breathing",
+      "mindful",
+      "prayer",
+      "contemplat",
+      "manifest",
+    ],
+    moments: [
+      "dream",
+      "journal",
+      "grateful",
+      "thankful",
+      "reflect",
+      "realize",
+    ],
+    events: [
+      "concert",
+      "movie",
+      "theatre",
+      "exhibit",
+      "festival",
+      "travel",
+      "dining",
+      "restaurant",
+    ],
   };
 
   const lowerText = text.toLowerCase();
@@ -380,7 +384,7 @@ function detectCategoryFromText(text: string): string {
     }
   }
 
-  return "personal";
+  return "work";
 }
 
 /**

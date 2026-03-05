@@ -70,7 +70,24 @@ export interface SaveOptions {
   subcategory?: string;
 }
 
+/**
+ * Voice metadata for createVoiceEntry
+ */
+export interface VoiceMetadata {
+  transcription: string;
+  recordingDurationMs: number;
+  sttProvider: string;
+  confidence?: number;
+  llmProvider?: string;
+}
+
 export interface UseEntrySaveReturn {
+  /** Create a voice journal entry (moment) */
+  createVoiceEntry: (
+    text: string,
+    voiceMeta: VoiceMetadata,
+    options?: SaveOptions,
+  ) => Promise<Entry | null>;
   /** Create multiple tadas from extraction */
   createBatchTadas: (
     tadas: BatchTadaInput[],
@@ -120,6 +137,68 @@ export const useEntrySave = (): UseEntrySaveReturn => {
     }
 
     return null;
+  };
+
+  /**
+   * Create a voice journal entry as a "moment"
+   */
+  const createVoiceEntry = async (
+    text: string,
+    voiceMeta: VoiceMetadata,
+    options: SaveOptions = {},
+  ): Promise<Entry | null> => {
+    error.value = null;
+    isLoading.value = true;
+
+    try {
+      // Map subcategory to valid moments subcategory
+      const subcategory = options.subcategory || "journal";
+
+      const entryData: EntryData = {
+        type: "moment",
+        name: text,
+        category: "moments",
+        subcategory,
+        source: "voice",
+        data: {
+          voice: {
+            transcription: voiceMeta.transcription,
+            recordingDurationMs: voiceMeta.recordingDurationMs,
+            sttProvider: voiceMeta.sttProvider,
+            confidence: voiceMeta.confidence,
+            llmProvider: voiceMeta.llmProvider,
+          },
+        },
+      };
+
+      const entry = await $fetch<Entry>("/api/entries", {
+        method: "POST",
+        body: {
+          ...entryData,
+          emoji: resolveEmoji("moments", subcategory, null),
+          timestamp: new Date().toISOString(),
+        },
+      });
+
+      if (options.showSuccessToast !== false) {
+        showSuccess(options.successMessage || "Journal entry saved!");
+      }
+
+      if (options.navigateTo) {
+        router.push(options.navigateTo);
+      }
+
+      return entry;
+    } catch (err) {
+      console.error("Failed to create voice entry:", err);
+      const message =
+        err instanceof Error ? err.message : "Failed to save journal entry";
+      error.value = message;
+      showError(message);
+      return null;
+    } finally {
+      isLoading.value = false;
+    }
   };
 
   /**
@@ -323,6 +402,7 @@ export const useEntrySave = (): UseEntrySaveReturn => {
   };
 
   return {
+    createVoiceEntry,
     createBatchTadas,
     updateEntry,
     deleteEntry,

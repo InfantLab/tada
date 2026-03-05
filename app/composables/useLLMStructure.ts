@@ -48,6 +48,7 @@ interface ServerStructureResponse {
   tadas: Array<{
     name: string;
     category?: string;
+    subcategory?: string;
     significance?: "minor" | "normal" | "major";
   }>;
   journalType?: string;
@@ -110,6 +111,20 @@ export function useLLMStructure(): UseLLMStructureReturn {
     return null;
   }
 
+  /** Map legacy category names to current ontology */
+  function mapLegacyCategory(cat?: string): string {
+    if (!cat) return "work";
+    const legacyMap: Record<string, string> = {
+      home: "life_admin",
+      hobby: "creative",
+      fitness: "movement",
+      finance: "life_admin",
+      errands: "life_admin",
+      personal: "work",
+    };
+    return legacyMap[cat] || cat;
+  }
+
   /**
    * Extract tadas from transcription using server API
    * Server uses Groq (managed), or user's BYOK if configured
@@ -158,23 +173,11 @@ export function useLLMStructure(): UseLLMStructureReturn {
         console.log("[useLLMStructure] Server response:", response);
 
         // Convert server response to ExtractedTada format
-        // LLM now returns actual category (mindfulness, work, health, etc.)
-        // Map legacy subcategory values for backwards compatibility
-        const mapLegacyCategory = (cat?: string): string | null => {
-          if (!cat) return null;
-          const legacyMap: Record<string, string> = {
-            home: "life_admin",
-            hobby: "creative",
-            personal: "work", // Best guess for "personal wins"
-          };
-          return legacyMap[cat] || cat;
-        };
-
         const tadas: ExtractedTada[] = response.tadas.map((t, i) => ({
           id: `extracted-${i}`,
           title: t.name,
-          category: mapLegacyCategory(t.category) || "work", // Default to work if unknown
-          subcategory: null, // Subcategory can be set by user if needed
+          category: mapLegacyCategory(t.category),
+          subcategory: t.subcategory || undefined,
           significance: t.significance || "normal",
           selected: true,
           confidence: 0.85,

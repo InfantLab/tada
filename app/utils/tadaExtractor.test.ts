@@ -7,7 +7,6 @@ import {
   validateExtractedTada,
   parseExtractionResponse,
   extractTadasRuleBased,
-  EXTRACTION_PROMPT,
 } from "./tadaExtractor";
 
 vi.stubGlobal("crypto", {
@@ -15,25 +14,11 @@ vi.stubGlobal("crypto", {
 });
 
 describe("tadaExtractor", () => {
-  describe("EXTRACTION_PROMPT", () => {
-    it("should contain key extraction rules", () => {
-      expect(EXTRACTION_PROMPT).toContain("productivity assistant");
-      expect(EXTRACTION_PROMPT).toContain("accomplishments");
-      expect(EXTRACTION_PROMPT).toContain("tadas");
-    });
-
-    it("should define significance levels", () => {
-      expect(EXTRACTION_PROMPT).toContain("MAJOR significance");
-      expect(EXTRACTION_PROMPT).toContain("MINOR significance");
-      expect(EXTRACTION_PROMPT).toContain("NORMAL significance");
-    });
-  });
-
   describe("validateExtractedTada", () => {
     it("should validate a complete tada object", () => {
       const raw = {
         title: "Fixed the kitchen sink",
-        category: "home",
+        category: "life_admin",
         significance: "major" as const,
         confidence: 0.95,
       };
@@ -41,8 +26,20 @@ describe("tadaExtractor", () => {
       const result = validateExtractedTada(raw);
       expect(result).not.toBeNull();
       expect(result?.title).toBe("Fixed the kitchen sink");
-      expect(result?.category).toBe("home");
+      expect(result?.category).toBe("life_admin");
       expect(result?.significance).toBe("major");
+    });
+
+    it("should map legacy category names to current ontology", () => {
+      const raw = {
+        title: "Cleaned the house",
+        category: "home",
+        significance: "normal" as const,
+      };
+
+      const result = validateExtractedTada(raw);
+      expect(result).not.toBeNull();
+      expect(result?.category).toBe("life_admin");
     });
 
     it("should return null for empty title", () => {
@@ -64,7 +61,7 @@ describe("tadaExtractor", () => {
     it("should parse valid JSON response", () => {
       const response = JSON.stringify({
         tadas: [
-          { title: "Fixed the sink", category: "home", significance: "major" },
+          { title: "Fixed the sink", category: "life_admin", significance: "major" },
         ],
       });
 

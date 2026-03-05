@@ -40,6 +40,7 @@ interface StructureRequestBody {
 interface ExtractedTada {
   name: string;
   category?: string;
+  subcategory?: string;
   significance?: "minor" | "normal" | "major";
 }
 
@@ -84,82 +85,85 @@ async function countVoiceEntriesThisMonth(userId: string): Promise<number> {
 }
 
 /**
- * Build the extraction prompt based on mode
+ * Build extraction messages (system + user) based on mode.
+ * Returns a { system, user } pair for cleaner LLM prompting.
  */
-function buildExtractionPrompt(
+function buildExtractionMessages(
   text: string,
   mode: string,
   context?: StructureRequestBody["context"],
-): string {
-  const basePrompt = `You are extracting structured data from voice input. Be concise and accurate.
-
-Text to analyze:
-"${text}"
-
-`;
-
+): { system: string; user: string } {
   if (mode === "tada") {
-    return (
-      basePrompt +
-      `Extract all accomplishments (tadas/celebrations) mentioned. For each:
-- name: Brief description (3-10 words)
-- category: life domain that best fits:
-  * mindfulness (meditation, breathing, contemplation)
-  * movement (exercise, sports, running, yoga)
-  * creative (art, music, writing, coding)
-  * learning (study, courses, reading)
-  * health (sleep, nutrition, medical, self-care)
-  * work (career, professional, meetings, projects)
-  * social (family, friends, community)
-  * life_admin (chores, cleaning, errands, cooking)
-  * moments (ideas, dreams, reflections)
-  * events (concerts, movies, travel, dining)
-- significance: minor (small wins), normal (regular accomplishments), major (big achievements)
+    const system = `You extract accomplishments from voice transcriptions into structured JSON.
 
-Respond ONLY with valid JSON in this format:
-{"tadas": [{"name": "...", "category": "...", "significance": "..."}]}`
-    );
+RULES:
+- Each tada is a single, specific accomplishment. Split compound sentences.
+- name: Short description (3-10 words)
+- category: One of: mindfulness, movement, creative, learning, health, work, social, life_admin, moments, events
+- subcategory: More specific label within the category (e.g., "cleaning" for life_admin, "yoga" for movement, "family" for social). Use lowercase_snake_case. Omit if unclear.
+- significance: "minor" (quick/routine), "normal" (regular), "major" (words like "finally", "first time", "at last")
+- If the text contains NO accomplishments (just thoughts, reflections, plans), return {"tadas": []}
+
+EXAMPLES:
+Input: "I finally fixed the kitchen sink and also did some laundry"
+Output: {"tadas": [{"name": "Fixed the kitchen sink", "category": "life_admin", "subcategory": "maintenance", "significance": "major"}, {"name": "Did the laundry", "category": "life_admin", "subcategory": "laundry", "significance": "normal"}]}
+
+Input: "Had a great yoga session this morning and then met up with Sarah for coffee"
+Output: {"tadas": [{"name": "Yoga session this morning", "category": "movement", "subcategory": "yoga", "significance": "normal"}, {"name": "Met up with Sarah for coffee", "category": "social", "subcategory": "friends", "significance": "normal"}]}
+
+Input: "Just thinking about what I should do this weekend"
+Output: {"tadas": []}
+
+Respond ONLY with valid JSON.`;
+
+    return { system, user: text };
   }
 
   if (mode === "journal") {
-    return (
-      basePrompt +
-      `Analyze this journal entry:
-1. Detect type: "dream" (mentions dreams, sleeping, night visions), "reflection" (thoughts, feelings, analysis), or "note" (factual, task-oriented)
-2. Suggest a title (3-7 words)
-3. Extract any tadas mentioned
+    const system = `You analyze journal entries from voice transcriptions.
+
+Detect the journal type:
+- "dream": mentions dreams, sleeping, nightmares, night visions
+- "gratitude": grateful, thankful, appreciate, blessed
+- "reflection": thinking about, realized, wondering, feeling
+- "note": factual content, daily observations
+
+Suggest a concise title (3-7 words). Extract any accomplishments (tadas) mentioned.
 
 Respond ONLY with valid JSON:
-{"journalType": "...", "title": "...", "tadas": [...]}`
-    );
+{"journalType": "dream|reflection|gratitude|note", "title": "...", "tadas": [{"name": "...", "category": "...", "subcategory": "...", "significance": "..."}]}`;
+
+    return { system, user: text };
   }
 
   if (mode === "timer-note") {
-    return (
-      basePrompt +
-      `This is a note after a ${context?.timerDuration || 0} second ${context?.timerCategory || "focus"} session.
+    const duration = context?.timerDuration || 0;
+    const category = context?.timerCategory || "focus";
+    const system = `You analyze post-session notes after a ${duration} second ${category} session.
+
 Extract:
-1. Quality rating 1-5 from phrases like "great" (5), "good" (4), "okay" (3), "hard" (2), "difficult" (1)
-2. Any bonus accomplishments mentioned ("also I fixed...", "plus I...", "and I also...")
+1. Quality rating 1-5: "great/amazing" (5), "good/nice" (4), "okay/fine" (3), "hard/struggled" (2), "terrible/couldn't" (1)
+2. Any bonus accomplishments ("also I...", "plus I...", "and I also...")
 3. Main session notes
 
 Respond ONLY with valid JSON:
-{"quality": 4, "notes": "...", "tadas": [...]}`
-    );
+{"quality": 4, "notes": "...", "tadas": [{"name": "...", "category": "...", "subcategory": "...", "significance": "..."}]}`;
+
+    return { system, user: text };
   }
 
-  return (
-    basePrompt +
-    `Extract key information.
-Respond ONLY with valid JSON: {"notes": "...", "tadas": []}`
-  );
+  return {
+    system:
+      "Extract key information from voice input. Respond ONLY with valid JSON: {\"notes\": \"...\", \"tadas\": []}",
+    user: text,
+  };
 }
 
 /**
  * Extract using Groq (Llama)
  */
 async function extractWithGroq(
-  prompt: string,
+  messages: { system: string; user: string },
   apiKey: string,
 ): Promise<StructureResponse> {
   const response = await fetch(
@@ -172,7 +176,10 @@ async function extractWithGroq(
       },
       body: JSON.stringify({
         model: "llama-3.3-70b-versatile",
-        messages: [{ role: "user", content: prompt }],
+        messages: [
+          { role: "system", content: messages.system },
+          { role: "user", content: messages.user },
+        ],
         temperature: 0.3,
         max_tokens: 1000,
         response_format: { type: "json_object" },
@@ -214,7 +221,7 @@ async function extractWithGroq(
  * Extract using OpenAI
  */
 async function extractWithOpenAI(
-  prompt: string,
+  messages: { system: string; user: string },
   apiKey: string,
 ): Promise<StructureResponse> {
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -225,7 +232,10 @@ async function extractWithOpenAI(
     },
     body: JSON.stringify({
       model: "gpt-4o-mini",
-      messages: [{ role: "user", content: prompt }],
+      messages: [
+        { role: "system", content: messages.system },
+        { role: "user", content: messages.user },
+      ],
       temperature: 0.3,
       max_tokens: 1000,
       response_format: { type: "json_object" },
@@ -266,7 +276,7 @@ async function extractWithOpenAI(
  * Extract using Anthropic
  */
 async function extractWithAnthropic(
-  prompt: string,
+  messages: { system: string; user: string },
   apiKey: string,
 ): Promise<StructureResponse> {
   const response = await fetch("https://api.anthropic.com/v1/messages", {
@@ -277,13 +287,13 @@ async function extractWithAnthropic(
       "anthropic-version": "2023-06-01",
     },
     body: JSON.stringify({
-      model: "claude-3-haiku-20240307",
+      model: "claude-haiku-4-5-20251001",
       max_tokens: 1000,
+      system: messages.system,
       messages: [
         {
           role: "user",
-          content:
-            prompt + "\n\nRespond with ONLY the JSON object, no other text.",
+          content: messages.user,
         },
       ],
     }),
@@ -455,20 +465,20 @@ export default defineEventHandler(async (event) => {
   );
 
   try {
-    const prompt = buildExtractionPrompt(text, mode, context);
+    const messages = buildExtractionMessages(text, mode, context);
 
     let result: StructureResponse;
 
     switch (provider) {
       case "openai":
-        result = await extractWithOpenAI(prompt, apiKey);
+        result = await extractWithOpenAI(messages, apiKey);
         break;
       case "anthropic":
-        result = await extractWithAnthropic(prompt, apiKey);
+        result = await extractWithAnthropic(messages, apiKey);
         break;
       case "groq":
       default:
-        result = await extractWithGroq(prompt, apiKey);
+        result = await extractWithGroq(messages, apiKey);
         break;
     }
 

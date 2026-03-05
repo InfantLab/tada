@@ -7,12 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Voice journal mode:** Saving a journal entry from voice input now works (was calling a missing `createVoiceEntry` method)
+- **Voice journal entries now set `category: "moments"`** with correct subcategory (dream/gratitude/journal/magic), fixing entries that previously had no category
+
 ### Improved
 
+- **Voice LLM extraction accuracy:**
+  - Switched from single user-message to proper system + user message separation for all LLM providers
+  - Added few-shot examples to guide the LLM on ambiguous input (including when to return empty tadas for non-accomplishment content)
+  - LLM now extracts subcategories (e.g., "yoga" for movement, "cleaning" for life_admin)
+  - Updated Anthropic provider to Claude Haiku 4.5 (from 3 Haiku)
+- **Category alignment:** Rule-based fallback extractor now uses the correct 10-category ontology (was using legacy categories like "home", "fitness", "errands" that don't exist in the app)
 - **Rhythm heatmap day popover:**
   - Clicking a day with entries now shows a list of all matching entries with emoji, name, duration, and links to edit each one (previously just showed "Activity logged")
   - "Add entry" button now opens the QuickEntryModal with the correct entry type for the rhythm (timed/tally/moment/tada) and date pre-filled (previously linked to generic /sessions page)
   - "Add entry" is now available on both empty and active days
+
+### Removed
+
+- Unused `EXTRACTION_PROMPT` constant from tadaExtractor (dead code; actual prompt lives in server endpoint)
 
 ## [0.4.0] - 2026-02-18
 
