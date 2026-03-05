@@ -15,21 +15,20 @@ What's coming next. For what already shipped, see [CHANGELOG.md](../CHANGELOG.md
 | **v0.3.0** | Magic & Voice               | ✅ Shipped Jan 2026 | [Release Notes](../RELEASE_NOTES_v0.3.0.md) |
 | **v0.3.1** | REST API                    | ✅ Shipped Jan 2026 | [CHANGELOG](../CHANGELOG.md) |
 | **v0.4.0** | Ontology & Cloud Service    | ✅ Shipped Feb 2026 | [Release Notes](../RELEASE_NOTES_v0.4.0.md) |
-| **v0.4.1** | Polish & Fixes              | ✅ Shipped Mar 2026 | [CHANGELOG](../CHANGELOG.md) |
+| **v0.4.2** | Backups, Polish & Code Quality | ✅ Shipped Mar 2026 | [CHANGELOG](../CHANGELOG.md) |
 
 ## Upcoming
 
 | Version    | Theme                       | Target   |
 | ---------- | --------------------------- | -------- |
-| **v0.4.2** | Backups & Small Fixes       | Mar 2026 |
 | **v0.5.0** | Modularity                  | Q2 2026  |
 | **v0.6.0** | Features & Integrations     | 2027+    |
 
 ---
 
-## v0.4.2: Backups & Small Fixes
+## v0.4.2: Backups, Polish & Code Quality
 
-_Target: March 2026_
+_Shipped: March 2026_
 
 **Theme:** Database safety, small UX fixes, voice polish.
 
@@ -53,20 +52,6 @@ _Target: March 2026_
 - [x] Fix 220 pre-existing TypeScript strict mode errors across 51 files (see recommendation below)
 - [x] Fix 74 ESLint errors (36 `no-explicit-any`, 28 `no-unused-vars`, misc)
 - [x] Fix 18 TypeScript errors in v1 API test files (rhythms, webhooks, insights)
-
-#### TypeScript Strict Mode Recommendation
-
-The 220 errors fall into a few dominant categories that are fixable without relaxing strictness:
-
-| Error Code | Count | Issue | Fix Approach |
-|------------|-------|-------|--------------|
-| TS2345 | 80 | Argument type mismatch (`ApiError` → `createError`) | Make `ApiError` extend `Error` or use `createError()` wrapper |
-| TS4111 | 45 | Index signature access (`.auth` → `['auth']`) | Use bracket notation or type event context properly |
-| TS2339 | 25 | Property doesn't exist on type | Add proper type assertions/narrowing |
-| TS2532/18048 | 37 | Possibly undefined/null | Add null checks or non-null assertions |
-| Other | 33 | Various (implicit any, type assertions) | Case-by-case fixes |
-
-**Recommendation:** Keep `strict: true` — these are real bugs or missing type annotations, not false positives. The top 2 categories (TS2345 + TS4111 = 125 errors, 57%) are systematic and can be batch-fixed. Relaxing strictness would hide real issues. Estimated effort: 2-3 focused sessions.
 
 ### Voice
 

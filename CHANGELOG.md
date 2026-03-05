@@ -7,10 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-03-05
+
+### Added
+
+- **Automated backup scripts** for CapRover (scheduled + on-demand)
+- **Live-import script:** pull/push via `docker cp` (container-aware)
+- **Fuzzy import deduplication** and API key management UI
+- **Session recovery** for interrupted timed entries
+- **Timeline search:** free-text date parsing ("march 2024", "march 4, 2024", "yesterday")
+- **H3 event context type augmentation** (`types/h3.d.ts`) for typed `event.context.auth`
+
 ### Fixed
 
+- **294 TypeScript and ESLint errors resolved** across 73 files while keeping `strict: true`:
+  - Refactored API error helpers to return H3-compatible types (fixed 80 TS2345 errors)
+  - Added proper type declarations for event context auth (fixed 45 TS4111 errors)
+  - Fixed schema field mismatches in insight cache queries (actual bugs: `createdAt` → `computedAt`, `cacheKey` → `id`)
+  - Fixed wrong `AuthEventType` value (`email_update` → `email_change`)
+  - Removed reference to non-existent webhook `lastDeliveredAt` field
+  - Replaced all `no-explicit-any` with proper types, removed unused vars
 - **Voice journal mode:** Saving a journal entry from voice input now works (was calling a missing `createVoiceEntry` method)
 - **Voice journal entries now set `category: "moments"`** with correct subcategory (dream/gratitude/journal/magic), fixing entries that previously had no category
+- **Health endpoint:** `db.execute` → `db.run` fix
+- **Ta-da save:** navigate to timeline after celebration (was staying on entry screen)
+- **Rhythm chain cache:** invalidate on historical entry inserts (was only checking latest timestamp)
+- **Production crash** from readonly runtimeConfig assignment
+- **Server-side transcription** with hallucination filter and diagnostics
+- **DevBanner** checks `window.location` instead of runtimeConfig
 
 ### Improved
 
@@ -24,6 +48,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Clicking a day with entries now shows a list of all matching entries with emoji, name, duration, and links to edit each one (previously just showed "Activity logged")
   - "Add entry" button now opens the QuickEntryModal with the correct entry type for the rhythm (timed/tally/moment/tada) and date pre-filled (previously linked to generic /sessions page)
   - "Add entry" is now available on both empty and active days
+- **BYOK settings UI** clarified — clearer what keys are needed and where to get them
+- **Rhythm gap discovery:** tappable heatmap cells + gap hint text
 
 ### Removed
 
