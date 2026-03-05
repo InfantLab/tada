@@ -195,10 +195,10 @@ function celebrate() {
   showSuccess("Ta-Da! ⚡ Great job!");
 }
 
-// Handle celebration completion - refresh recent list
-async function onCelebrationComplete() {
+// Handle celebration completion - navigate to timeline
+function onCelebrationComplete() {
   showCelebration.value = false;
-  await fetchRecentTadas();
+  navigateTo("/");
 }
 
 // Handle clicking on a recent entry
@@ -330,7 +330,6 @@ async function submitEntry() {
 
     if (result && result.length > 0) {
       exitMultiMode();
-      await fetchRecentTadas();
       celebrate();
     }
     return;
@@ -357,7 +356,9 @@ async function submitEntry() {
 
   // Only celebrate if save succeeded
   if (result) {
-    await fetchRecentTadas();
+    title.value = "";
+    notes.value = "";
+    customEmoji.value = "⚡";
     celebrate();
   }
 }
@@ -565,7 +566,6 @@ async function handleTadaSave(tadas: ExtractedTada[]) {
     showTadaChecklist.value = false;
     extractedTadas.value = [];
     currentTranscription.value = null;
-    await fetchRecentTadas();
     celebrate();
   }
 }

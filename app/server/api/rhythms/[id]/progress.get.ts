@@ -126,10 +126,13 @@ export default defineEventHandler(async (event) => {
     );
 
     // Check if we can use cached chain/totals data
+    // Compare both latest timestamp AND entry count to catch historical inserts
     const cached = rhythm.cachedChainStats as CachedChainData | null;
+    const entryCount = allMatchingEntries.length;
     const cacheValid =
       cached &&
       cached.lastEntryTimestamp === latestEntryTimestamp &&
+      cached.entryCount === entryCount &&
       cached.chains &&
       cached.chains.length === CHAIN_TYPE_ORDER.length &&
       cached.totals;
@@ -178,6 +181,7 @@ export default defineEventHandler(async (event) => {
         totals,
         lastCalculatedAt: new Date().toISOString(),
         lastEntryTimestamp: latestEntryTimestamp,
+        entryCount,
       };
 
       // Update cache in background
@@ -254,6 +258,7 @@ export default defineEventHandler(async (event) => {
           unit: chain.unit,
           label: config.label,
           description: config.description,
+          gaps: chain.gaps,
         };
       }),
       days: allDayStatuses,

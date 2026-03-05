@@ -12,7 +12,8 @@
       "Read(//etc/**)",
       "Bash(ssh -o ConnectTimeout=3 caspar-ghost echo \"connected\")",
       "Bash(chmod +x /workspaces/tada/scripts/live-import.sh)",
-      "Bash(bash /workspaces/tada/scripts/live-import.sh help)"
+      "Bash(bash /workspaces/tada/scripts/live-import.sh help)",
+      "Bash(python -c \"import json,sys; d=json.load\\(sys.stdin\\); res={e.get\\(''resolution'',''unresolved''\\) or ''unresolved'' for e in d}; print\\(f''Total: {len\\(d\\)}''\\); [print\\(f''  {r}: {sum\\(1 for e in d if \\(e.get\\(\"\"resolution\"\"\\) or \"\"unresolved\"\"\\)==r\\)}''\\) for r in sorted\\(res\\)]\")"
     ],
     "additionalDirectories": [
       "/tmp"

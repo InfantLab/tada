@@ -69,7 +69,7 @@
           v-for="(month, idx) in monthLabels"
           :key="`${month.name}-${idx}`"
           class="month-label"
-          :style="{ gridColumn: `span ${month.weeks}` }"
+          :style="{ width: `calc(${month.weeks} * (0.625rem + 2px))` }"
         >
           {{ month.name }}
         </span>
@@ -101,6 +101,7 @@
               class="day-cell"
               :class="getDayCellClass(day)"
               :title="getDayTooltip(day)"
+              @click="handleDayClick(day)"
             />
           </div>
         </div>
@@ -111,13 +112,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-
-interface DayStatus {
-  date: string;
-  totalSeconds: number;
-  isComplete: boolean;
-  entryCount: number;
-}
+import type { DayStatus } from "~/utils/tierCalculator";
 
 interface DayData {
   date: Date;
@@ -132,6 +127,17 @@ const props = defineProps<{
   thresholdSeconds?: number;
   thresholdCount?: number | null;
 }>();
+
+const emit = defineEmits<{
+  (e: "dayClick", date: string, hasActivity: boolean): void;
+}>();
+
+function handleDayClick(day: DayData) {
+  if (day.isEmpty || day.isFuture) return;
+  const dateStr = formatDateKey(day.date);
+  const hasActivity = !!day.status && (day.status.isComplete || day.status.entryCount > 0);
+  emit("dayClick", dateStr, hasActivity);
+}
 
 const intensityLevels = [0, 1, 2, 3, 4];
 
@@ -420,8 +426,9 @@ function getDayTooltip(day: DayData): string {
 }
 
 .month-label {
+  flex: none;
   text-align: left;
-  padding-left: 0.25rem;
+  overflow: hidden;
 }
 
 .day-grid {

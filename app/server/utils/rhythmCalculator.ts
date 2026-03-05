@@ -58,6 +58,7 @@ export interface CachedChainData {
   totals: RhythmTotals;
   lastCalculatedAt: string;
   lastEntryTimestamp: string | null;
+  entryCount?: number; // Total matching entries — detects historical inserts
 }
 
 export type JourneyStage = "beginning" | "building" | "becoming" | "being";
@@ -260,8 +261,9 @@ function calculateDailyChain(
   let longest = 0;
   let currentChain = 0;
   let prevDate: Date | null = null;
+  const gaps: string[] = []; // Dates where chains broke
 
-  // Walk forward to calculate longest
+  // Walk forward to calculate longest and find gaps
   for (const day of sorted) {
     const date = new Date(day.date);
 
@@ -273,7 +275,13 @@ function calculateDailyChain(
         // Consecutive day
         currentChain++;
       } else {
-        // Gap - chain broken
+        // Gap - record the missing dates (up to 5 per gap for sanity)
+        const gapDays = Math.min(diffDays - 1, 5);
+        for (let i = 1; i <= gapDays; i++) {
+          const gapDate = new Date(prevDate);
+          gapDate.setDate(gapDate.getDate() + i);
+          gaps.push(formatDate(gapDate));
+        }
         currentChain = 1;
       }
     } else {
@@ -321,7 +329,14 @@ function calculateDailyChain(
 
   current = currentChain;
 
-  return { type: "daily", current, longest, unit };
+  // Return gaps sorted most recent first, limited to 10
+  return {
+    type: "daily",
+    current,
+    longest,
+    unit,
+    gaps: gaps.length > 0 ? gaps.reverse().slice(0, 10) : undefined,
+  };
 }
 
 /**

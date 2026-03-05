@@ -57,6 +57,7 @@ export interface TypedChain {
   unit: ChainUnit;
   label: string;
   description: string;
+  gaps?: string[]; // Dates (YYYY-MM-DD) where chains broke (daily only)
 }
 
 export interface RhythmProgress {

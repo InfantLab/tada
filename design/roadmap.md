@@ -2,7 +2,7 @@
 
 What's coming next. For what already shipped, see [CHANGELOG.md](../CHANGELOG.md) and the release notes.
 
-**Current Version:** v0.4.1 (March 2026)
+**Current Version:** v0.4.2-dev (March 2026)
 
 ---
 
@@ -15,240 +15,181 @@ What's coming next. For what already shipped, see [CHANGELOG.md](../CHANGELOG.md
 | **v0.3.0** | Magic & Voice               | ✅ Shipped Jan 2026 | [Release Notes](../RELEASE_NOTES_v0.3.0.md) |
 | **v0.3.1** | REST API                    | ✅ Shipped Jan 2026 | [CHANGELOG](../CHANGELOG.md) |
 | **v0.4.0** | Ontology & Cloud Service    | ✅ Shipped Feb 2026 | [Release Notes](../RELEASE_NOTES_v0.4.0.md) |
+| **v0.4.1** | Polish & Fixes              | ✅ Shipped Mar 2026 | [CHANGELOG](../CHANGELOG.md) |
 
 ## Upcoming
 
 | Version    | Theme                       | Target   |
 | ---------- | --------------------------- | -------- |
-| **v0.4.1** | Polish & Fixes              | Mar 2026 |
-| **v0.5.0** | Rituals, Celestial & AI     | Q4 2026  |
-| **v0.6.0** | Integrations                | 2027+    |
+| **v0.4.2** | Backups & Small Fixes       | Mar 2026 |
+| **v0.5.0** | Modularity                  | Q2 2026  |
+| **v0.6.0** | Features & Integrations     | 2027+    |
 
 ---
 
-## Carried Forward
+## v0.4.2: Backups & Small Fixes
 
-Incomplete items from shipped versions that are still worth doing:
+_Target: March 2026_
 
-### From v0.4.0
+**Theme:** Database safety, small UX fixes, voice polish.
+
+### Database & Operations
+
+- [x] Automated backup scripts for CapRover (scheduled + on-demand)
+- [x] Live-import script: pull/push via `docker cp` (container-aware)
+- [x] Health endpoint: `db.execute` → `db.run` fix
+
+### UX Fixes
+
+- [x] Ta-da save: navigate to timeline after celebration (was staying on entry screen)
+- [x] Rhythm chain cache: invalidate on historical entry inserts (was only checking latest timestamp)
+- [x] Rhythm gap discovery: tappable heatmap cells + gap hint text
+- [x] Clarify BYOK settings UI — unclear what keys are needed and where to get them
+- [x] Timeline search: free-text date parsing ("march 2024", "march 4, 2024", "yesterday")
+
+### Code Quality
+
+- [ ] Fix 221 pre-existing TypeScript strict mode errors across codebase
+- [x] Fix 18 TypeScript errors in v1 API test files (rhythms, webhooks, insights)
+
+### Voice
+
+- [ ] Improve LLM extraction accuracy (smarter parsing of ambiguous input)
+- [ ] Voice entries should set `category: "moments"` for moment subtypes
+
+---
+
+## v0.5.0: Modularity
+
+_Target: Q2 2026_
+
+**Theme:** Make the architecture modular before adding more features. New entry types, importers, exporters, and views should be addable without touching core code. See [modularity.md](modularity.md) for the full design and trade-offs, and [SDR.md Section 5](SDR.md#5-plugin-architecture) for the original plugin interface spec.
+
+### Why Now
+
+The codebase has grown through four releases. Before adding celestial calendars, AI insights, routines, or integrations, we need clean extension points. Otherwise every new feature tangles deeper into the core. Modularity pays for itself by making everything after it cheaper to build and maintain.
+
+### Plugin System Foundation
+
+Implement the `TadaPlugin` interface from the SDR:
+
+- [ ] Plugin loader: discover and register plugins from `/plugins` directory
+- [ ] Plugin lifecycle: `onLoad()` / `onUnload()` hooks
+- [ ] `registerEntryTypes()` — define new entry types with data schemas
+- [ ] `registerImporters()` — pluggable data import (CSV recipes become plugins)
+- [ ] `registerExporters()` — pluggable export (JSON, CSV, Markdown, Obsidian)
+- [ ] `registerViews()` — custom UI pages registered by plugins
+- [ ] Plugin settings UI — per-plugin configuration in Settings page
+
+### Entry Type Modularity
+
+The unified Entry model already supports open string types. Finish the job:
+
+- [ ] Entry type registry: central place that defines available types and their UI
+- [ ] Type-specific input components (currently hardcoded per page)
+- [ ] Type-specific display components (currently hardcoded in timeline)
+- [ ] Move core types (timed, tada, moment, tally) into built-in plugins as reference implementations
+
+### Importer / Exporter Refactor
+
+- [ ] Refactor CSV import wizard to use plugin importer interface
+- [ ] Move Insight Timer recipe to a built-in import plugin
+- [ ] Refactor JSON/CSV/Markdown export to use plugin exporter interface
+- [ ] Obsidian export as a built-in export plugin
+
+### Carried Forward (from earlier versions)
+
+Items that fit naturally into this release:
 
 - [ ] Rewrite integration tests with @nuxt/test-utils/e2e
 - [ ] Timer-specific onboarding: "Keep this tab in the foreground" (first timer start)
 - [ ] New feature callouts for returning users (subtle badge/dot, not modal)
-- [ ] Bug reporter: attach screenshot or screen recording
-- [ ] Bug reporter: automatic context (user ID, version, recent actions — with consent)
-- [ ] Bug reporter: status tracking UI for submitted reports
-- [ ] Automated backup scripts for CapRover
-- [ ] Blog posts: "The Four Seasons of Practice", "Your Data, Your Practice", "Moments, Not Metrics"
-- [ ] Set up dedicated support@tada.living email
 
 ---
 
-## v0.4.1: Polish & Fixes
+## v0.6.0: Features & Integrations
 
-_Target: March 2026_
+_Target: 2027+_
 
-**Theme:** Fix rough edges from v0.4.0 launch, session resilience, analytics, and mobile experience.
+Everything below benefits from the modular architecture built in v0.5.0 — new features ship as plugins rather than core changes.
 
-### ✅ Done
+### Celestial Calendar (Plugin)
 
-- [x] Session recovery for interrupted timed entries (localStorage draft, recovery modal, stale draft cleanup)
-- [x] Umami analytics runtime plugin (privacy-friendly, opt-in via env vars)
-- [x] Voice privacy disclosure singleton fix (was reappearing after dismissal)
-- [x] Server-side transcription: ArrayBuffer fix, Whisper hallucination filter, language/prompt hints
-- [x] Simplified env var config (server-only values use plain names, removed broken env-compat plugin)
-- [x] Dockerfile optimization (copy only native bindings, not all node_modules)
-- [x] DevBanner uses window.location instead of runtimeConfig
-- [x] Fix double toast notifications on entry creation
-- [x] Version bump to 0.4.1
-
-### 🎙️ Voice
-
-- [ ] Improve LLM extraction accuracy (smarter parsing of ambiguous input)
-- [ ] Clarify BYOK settings UI — unclear what keys are needed and where to get them
-- [ ] Voice entries should set `category: "moments"` for moment subtypes
-
-### 🧹 Bug Fixes
-- [ ] Review and fix "Starting" label appearing in rhythm UI (should use journey stage names: Beginning, Building, Becoming, Being)
-
----
-
-## v0.5.0: Rituals, Celestial & AI
-
-_Target: Q4 2026_
-
-### 🌙 Celestial Calendar Module
-
-Optional "magic" layer for those who want it, completely invisible to those who don't.
+Optional "magic" layer, completely invisible to those who don't want it.
 
 - [ ] Moon phase display and tracking
 - [ ] Lunar calendar integration (new moon, full moon, quarters)
-- [ ] Optional: planetary hours, astrological transits
-- [ ] Ritual timing suggestions (opt-in)
 - [ ] Celestial data in entry metadata (moon phase when entry was created)
+- [ ] Ritual timing suggestions (opt-in)
 
-### 🔔 Supportive Push Notifications
-
-Gentle, celebratory nudges — never pushy, never guilt-tripping.
-
-**Philosophy:**
-
-- Notifications celebrate, never nag
-- "You meditated 5 days this week!" not "You haven't meditated today"
-- User controls frequency and types completely
-- Off by default — opt-in only
-
-**Features:**
-
-- [ ] Web Push API integration (PWA)
-- [ ] Notification types: milestone celebrations, rhythm encouragement, weekly reflections
-- [ ] Quiet hours and frequency controls
-- [ ] Tone: warm, supportive, never pressuring
-
-### 📧 Automated Email (Consider Carefully)
-
-Celebration-driven emails — never spam, never guilt. Same philosophy as push notifications: off by default, celebrate what you did, not what you missed.
-
-**Implemented in v0.4.0:**
-
-- [x] Email verification, password reset, welcome, password changed
-- [x] Supporter welcome (checkout complete)
-- [x] Subscription renewed, cancelled, payment failed, payment recovered
-
-**Consider for v0.5.0 (opt-in only):**
-
-- [ ] Journey milestone: "You've reached 🌿 Building stage in Meditation!" (on stage transition)
-- [ ] Anniversary: "You've been with Ta-Da! for 1 year!" (annual celebration)
-- [ ] Weekly/monthly digest: summary of sessions, ta-das, rhythm streaks (user must opt in)
-
-**Explicitly NOT doing:**
-
-- No "we miss you" re-engagement emails — if someone stops, respect that
-- No "you haven't practiced" guilt nudges
-- No marketing emails to existing users
-- No digest emails unless the user explicitly turns them on
-
-### 🔧 Smarter Conflict Resolution
-
-Current "Replace" wipes all overlapping entries. Need more intelligent approach:
-
-- [ ] Multi-select: Choose which specific entries to replace (checkbox list)
-- [ ] Category-aware: Only replace entries of the same category/activity
-- [ ] Preview: Show what will be deleted before confirming
-- [ ] Undo support: Allow recovery of replaced entries
-- [ ] Import integration: Same UI for CSV import duplicate handling
-- [ ] Merge option: Combine durations/counts instead of replacing
-
-### 🌅 Routines & Rituals
+### Routines & Rituals (Plugin)
 
 - [ ] Morning/evening routine builder
 - [ ] Flexible ritual sequences (not rigid schedules)
 - [ ] "Ritual mode" — guided flow through routine items
-- [ ] Routine templates (shareable)
 - [ ] Time-of-day awareness (morning routine vs evening wind-down)
 
-### 🔗 Practice Links Enhancement
+### AI Insights (Plugin, with Guardrails)
 
-Build on v0.3.0 practice links with history and suggestions.
+Private, opt-in AI analysis. All features off by default.
 
-- [ ] Recent Practices: "Return to this practice" quick-launch dropdown
-- [ ] Suggested practices based on category/subcategory
-- [ ] Practice frequency stats ("Used 5 times", "Last: 2 days ago")
-
-### 🏠 Configurable Home Screen
-
-Personalizable dashboard for the landing page.
-
-- [ ] Home screen design (see docs/plans/landingpage.md)
-- [ ] Widget-based layout (rhythms, recent entries, quick actions)
-- [ ] User-configurable widget order and visibility
-
-### ✨ Magic Moments Enhancement
-
-- [ ] Pattern view over time (see your magic moments together)
-- [ ] Magic moments timeline/calendar visualization
-
-### 🤖 AI Insights (with Guardrails)
-
-Private, opt-in AI analysis with strong privacy protections.
-
-**Philosophy:**
-
-- All AI features are opt-in, off by default
-- Data never leaves device without explicit consent
-- No training on user data
-- Insights suggest, never prescribe
-
-**Features:**
-
-- [ ] Auto-extract category, mood, and key details from voice input
 - [ ] Pattern recognition (weekly/monthly rhythms)
 - [ ] Gentle observations: "You tend to meditate more on weekends"
 - [ ] Correlation hints: "Sleep quality seems better after evening meditation"
 - [ ] Identity reinforcement: "You've been consistent as a meditator this month"
-- [ ] Anomaly awareness: "This week looks different — everything okay?"
-
-**Privacy Controls:**
-
 - [ ] Granular opt-in per insight type
-- [ ] On-device processing option
-- [ ] Data retention controls
-- [ ] Easy disable/delete
 
----
+### Supportive Push Notifications
 
-## v0.6.0: Integrations
+Gentle, celebratory nudges — never pushy, never guilt-tripping. Off by default.
 
-_Target: 2027+_
+- [ ] Web Push API integration (PWA)
+- [ ] Notification types: milestone celebrations, rhythm encouragement
+- [ ] Quiet hours and frequency controls
 
-### 🔌 External Integrations
+### Automated Email (opt-in only)
 
-- [ ] Obsidian integration (dream journal sync, markdown export)
-- [ ] Notion sync (two-way database sync)
+- [ ] Journey milestone: "You've reached Building stage in Meditation!"
+- [ ] Anniversary: "You've been with Ta-Da! for 1 year!"
+- [ ] Weekly/monthly digest (user must opt in)
+- [ ] Set up dedicated support@tada.living email
+
+### External Integrations (Plugins)
+
+- [ ] Obsidian integration (dream journal sync)
 - [ ] Apple Health / Google Fit (meditation minutes)
 - [ ] IFTTT / Zapier webhooks
-- [ ] Public API for custom integrations
 - [ ] Calendar integration (schedule ritual times)
 
-### 📱 Platform Expansion
+### Bug Reporter Enhancements
 
-- [ ] **Decouple frontend from SSR** — prerequisite for everything below. Rebuild as static SPA talking to REST API. See [decisions.md](decisions.md#native-mobile-not-yet-but-know-the-path) for full analysis.
+- [ ] Attach screenshot or screen recording
+- [ ] Automatic context (user ID, version, recent actions — with consent)
+- [ ] Status tracking UI for submitted reports
+
+### Platform Expansion
+
+- [ ] **Decouple frontend from SSR** — prerequisite for native apps. Rebuild as static SPA talking to REST API. See [decisions.md](decisions.md#native-mobile-not-yet-but-know-the-path) for full analysis.
 - [ ] iOS/Android native apps via Capacitor (requires SPA decoupling first)
 - [ ] Apple Watch quick entry
 - [ ] Home screen widgets (streak, quick capture)
-- [ ] Shortcuts/Tasker automation
 
 ---
 
 ## Entry Type Ideas
 
-The unified Entry model supports any `type` value. Current types:
+The unified Entry model supports any `type` value. With the plugin system (v0.5.0), adding new types becomes trivial.
 
-- `timed` — Timer session (meditation, focus, etc.)
-- `tada` — Celebration (accomplishments, gratitude, wins)
-- `moment` — Reflective entry (dream, journal, reflection)
-- `tally` — Count-based entry (reps, glasses of water)
-- `rhythm` — Rhythm completion (auto-created by rhythm rules)
+**Current core types:** `timed`, `tada`, `moment`, `tally`, `rhythm`
 
-### Future Candidates
-
-#### 🧘 Contemplative
+**Future candidates (as plugins):**
 
 - `sync` — Synchronicity, meaningful coincidence
 - `insight` — Sudden understanding, aha moment
-- `gratitude` — Appreciation practice
-
-#### 🏃 Physical
-
 - `exercise` — Workout, run, yoga
 - `sleep` — Sleep log with quality rating
-
-#### 🎨 Creative
-
 - `practice` — Music, art, skill practice
 - `create` — Made something (art, code, writing)
-
-Adding a new type requires no schema changes — just use it!
 
 ---
 
@@ -256,26 +197,11 @@ Adding a new type requires no schema changes — just use it!
 
 - **Gamification** — Achievements, levels (careful: might conflict with philosophy)
 - **Focus mode** — Block distractions during timer
-- **Pomodoro** — Work/break intervals (conflicts with count-up philosophy?)
-- **Spaced repetition** — Review past entries
-- **Social sharing** — Optional, never required
-
-### 📊 Timeline Stats & Breakdown (Parked)
-
-_Parked: Conflicts with philosophy — we're not productivity hackers._
-
-- **Category breakdown in journey stats:**
-  - Show counts per entry type (timed, tada, moment, tally)
-  - Show hours per category (mindfulness, accomplishment, etc.)
-  - Show subcategory distribution within categories
-- **Interactive stats dashboard:**
-  - Tap category to filter timeline
-  - Visual bar charts for distribution
-  - Trends over time (week-over-week, month-over-month)
-  - Browse past imports with success/skip/error counts
-  - Re-run or delete previous imports
-  - View detailed error logs per import
-  - Filter by recipe/source/date
+- **Configurable Home Screen** — Widget-based dashboard layout
+- **Practice Links** — "Return to this practice" quick-launch, frequency stats
+- **Magic Moments** — Pattern view over time, timeline visualization
+- **Smarter Conflict Resolution** — Multi-select, category-aware, preview, merge
+- **Blog posts** — "The Four Seasons of Practice", "Your Data, Your Practice", "Moments, Not Metrics"
 
 ---
 
@@ -283,13 +209,13 @@ _Parked: Conflicts with philosophy — we're not productivity hackers._
 
 Things we're explicitly _not_ building:
 
-- ❌ **Social network** — This is personal, not social
-- ❌ **Rhythm prescriptions** — We don't tell you what to do
-- ❌ **Countdown timers** — We count up, celebrating what you did
-- ❌ **Streaks as punishment** — Missing a day isn't failure
-- ❌ **Notifications spam** — Minimal, user-controlled only
-- ❌ **Monetization dark patterns** — No ads, no selling data
-- ❌ **Feature bloat** — Simple > comprehensive
+- **Social network** — This is personal, not social
+- **Rhythm prescriptions** — We don't tell you what to do
+- **Countdown timers** — We count up, celebrating what you did
+- **Streaks as punishment** — Missing a day isn't failure
+- **Notifications spam** — Minimal, user-controlled only
+- **Monetization dark patterns** — No ads, no selling data
+- **Feature bloat** — Simple > comprehensive
 
 ---
 

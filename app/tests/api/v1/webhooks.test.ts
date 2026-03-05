@@ -145,7 +145,7 @@ describe("Webhook Delivery", () => {
     expect(mockFetch).toHaveBeenCalled();
 
     // Verify HMAC signature was sent
-    const [url, options] = mockFetch.mock.calls[0];
+    const [url, options] = mockFetch.mock.calls[0]!;
     expect(url).toBe("https://example.com/webhook");
     expect(options.headers).toHaveProperty("X-Webhook-Signature");
 
@@ -174,7 +174,7 @@ describe("Webhook Delivery", () => {
 
     await deliverWebhook(webhookId, payload);
 
-    const [, options] = mockFetch.mock.calls[0];
+    const [, options] = mockFetch.mock.calls[0]!;
     expect(options.headers["Content-Type"]).toBe("application/json");
     expect(options.headers["User-Agent"]).toContain("TaDa-Webhook");
     expect(options.headers["X-Webhook-Event"]).toBe(payload.event);
@@ -355,7 +355,7 @@ describe("GET /api/v1/webhooks", () => {
 
     expect(webhooks.length).toBeGreaterThanOrEqual(2);
 
-    const webhook = webhooks[0];
+    const webhook = webhooks[0]!;
     expect(webhook.id).toBeDefined();
     expect(webhook.url).toBeDefined();
     expect(webhook.events).toBeDefined();
@@ -503,7 +503,7 @@ describe("POST /api/v1/webhooks/[id]/test", () => {
     expect(mockFetch).toHaveBeenCalled();
 
     // Verify test payload was sent
-    const [, options] = mockFetch.mock.calls[0];
+    const [, options] = mockFetch.mock.calls[0]!;
     const payload = JSON.parse(options.body);
     expect(payload.event).toBe("test");
     expect(payload.data.message).toContain("test");

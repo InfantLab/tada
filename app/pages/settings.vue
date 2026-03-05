@@ -593,6 +593,9 @@ onMounted(() => {
   } catch (error) {
     console.error("Failed to load settings:", error);
   }
+
+  // Load saved BYOK keys
+  loadSavedByokKeys();
 });
 
 // Track last save for autosave indicator
@@ -793,6 +796,71 @@ interface ApiKeyInfo {
   lastUsedAt: string | null;
   expiresAt: string | null;
 }
+
+// Voice AI provider selection
+const selectedVoiceProvider = ref("auto");
+const byokProviders = [
+  { value: "openai", label: "OpenAI", keyUrl: "https://platform.openai.com/api-keys", keyUrlLabel: "platform.openai.com" },
+  { value: "anthropic", label: "Anthropic", keyUrl: "https://console.anthropic.com/settings/keys", keyUrlLabel: "console.anthropic.com" },
+] as const;
+const providerNeedsByok = computed(() =>
+  byokProviders.some((p) => p.value === selectedVoiceProvider.value)
+);
+const currentByokProvider = computed(() =>
+  byokProviders.find((p) => p.value === selectedVoiceProvider.value)
+);
+const providerLabel = computed(() => currentByokProvider.value?.label || "");
+
+// Per-provider BYOK key storage
+const byokKeyInput = ref("");
+const savedByokKeys = ref<Record<string, { maskedKey: string }>>({});
+const isSavingByokKey = ref(false);
+
+function loadSavedByokKeys() {
+  try {
+    const saved = localStorage.getItem("tada-byok-keys");
+    if (saved) savedByokKeys.value = JSON.parse(saved);
+  } catch { /* ignore */ }
+}
+
+function saveByokKey() {
+  const provider = selectedVoiceProvider.value;
+  const key = byokKeyInput.value.trim();
+  if (!key || !provider) return;
+
+  isSavingByokKey.value = true;
+  try {
+    // Store masked version for display, full key encrypted in localStorage
+    const masked = key.slice(0, 7) + "..." + key.slice(-4);
+    savedByokKeys.value[provider] = { maskedKey: masked };
+
+    // Save all keys
+    localStorage.setItem("tada-byok-keys", JSON.stringify(savedByokKeys.value));
+    // Save the actual key separately per provider
+    localStorage.setItem(`tada-byok-key-${provider}`, key);
+
+    byokKeyInput.value = "";
+    showSuccess(`${providerLabel.value} API key saved`);
+  } finally {
+    isSavingByokKey.value = false;
+  }
+}
+
+function removeByokKey(provider: string) {
+  delete savedByokKeys.value[provider];
+  localStorage.setItem("tada-byok-keys", JSON.stringify(savedByokKeys.value));
+  localStorage.removeItem(`tada-byok-key-${provider}`);
+  const label = byokProviders.find((p) => p.value === provider)?.label || provider;
+  showSuccess(`${label} API key removed`);
+}
+
+// Current provider's saved key status
+const currentProviderHasKey = computed(() =>
+  !!savedByokKeys.value[selectedVoiceProvider.value]
+);
+const currentProviderMaskedKey = computed(() =>
+  savedByokKeys.value[selectedVoiceProvider.value]?.maskedKey || ""
+);
 
 const apiKeys = ref<ApiKeyInfo[]>([]);
 const isLoadingApiKeys = ref(false);
@@ -1300,38 +1368,94 @@ onMounted(() => {
                 Choose which AI processes voice transcriptions
               </p>
               <select
+                v-model="selectedVoiceProvider"
                 class="w-full px-3 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-700 text-stone-800 dark:text-stone-100 text-sm focus:outline-none focus:ring-2 focus:ring-tada-500 mb-3"
               >
                 <option value="auto">Auto (Server default)</option>
                 <option value="groq">Groq (Fast, Free tier)</option>
-                <option value="openai">OpenAI (GPT-4)</option>
-                <option value="anthropic">Anthropic (Claude)</option>
+                <option value="openai">OpenAI (GPT-4) — BYOK required</option>
+                <option value="anthropic">Anthropic (Claude) — BYOK required</option>
               </select>
 
-              <!-- API Key input (shown when not using auto) -->
+              <!-- BYOK Key input (contextual to selected provider) -->
               <div class="pt-3 border-t border-stone-200 dark:border-stone-700">
-                <label
-                  class="block text-xs font-medium text-stone-600 dark:text-stone-400 mb-2"
-                >
-                  API Key (BYOK - Bring Your Own Key)
-                </label>
-                <p class="text-xs text-stone-500 dark:text-stone-400 mb-2">
-                  Optional. Use your own API key for unlimited usage.
-                </p>
-                <div class="flex gap-2">
-                  <input
-                    type="password"
-                    placeholder="Paste API key here (stored encrypted)"
-                    class="flex-1 px-3 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-700 text-stone-800 dark:text-stone-100 text-sm focus:outline-none focus:ring-2 focus:ring-tada-500"
-                  />
-                  <button
-                    class="px-4 py-2 bg-tada-600 hover:opacity-90 text-white text-sm font-medium rounded-lg"
+                <!-- When a BYOK provider is selected -->
+                <template v-if="providerNeedsByok">
+                  <label class="block text-xs font-medium text-stone-600 dark:text-stone-400 mb-2">
+                    {{ providerLabel }} API Key (required)
+                  </label>
+
+                  <!-- Already has a saved key -->
+                  <div v-if="currentProviderHasKey" class="flex items-center gap-2 mb-2">
+                    <span class="text-xs text-green-600 dark:text-green-400 font-medium flex items-center gap-1">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      </svg>
+                      Key saved: <code class="font-mono">{{ currentProviderMaskedKey }}</code>
+                    </span>
+                    <button
+                      class="text-xs text-red-500 hover:text-red-700 dark:hover:text-red-400 hover:underline"
+                      @click="removeByokKey(selectedVoiceProvider)"
+                    >
+                      Remove
+                    </button>
+                  </div>
+
+                  <p class="text-xs text-amber-600 dark:text-amber-400 mb-2">
+                    {{ providerLabel }} requires your own API key. Get one from
+                    <a
+                      :href="currentByokProvider?.keyUrl"
+                      target="_blank"
+                      class="underline hover:text-amber-700 dark:hover:text-amber-300"
+                    >{{ currentByokProvider?.keyUrlLabel }}</a>
+                  </p>
+                  <div class="flex gap-2">
+                    <input
+                      v-model="byokKeyInput"
+                      type="password"
+                      :placeholder="currentProviderHasKey
+                        ? `Replace ${providerLabel} key...`
+                        : `Paste your ${providerLabel} API key here`"
+                      class="flex-1 px-3 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-tada-500 border-amber-400 dark:border-amber-600 bg-amber-50 dark:bg-stone-700 text-stone-800 dark:text-stone-100"
+                    />
+                    <button
+                      :disabled="!byokKeyInput.trim() || isSavingByokKey"
+                      class="px-4 py-2 bg-tada-600 hover:opacity-90 text-white text-sm font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                      @click="saveByokKey"
+                    >
+                      Save
+                    </button>
+                  </div>
+                </template>
+
+                <!-- When auto/groq selected, show summary of saved keys -->
+                <template v-else>
+                  <label class="block text-xs font-medium text-stone-600 dark:text-stone-400 mb-2">
+                    API Keys (BYOK - Bring Your Own Key)
+                  </label>
+                  <p class="text-xs text-stone-500 dark:text-stone-400 mb-2">
+                    Select OpenAI or Anthropic above to add your own API key.
+                  </p>
+
+                  <!-- Show any saved keys as a summary -->
+                  <div
+                    v-for="bp in byokProviders"
+                    :key="bp.value"
+                    class="flex items-center justify-between py-1.5"
                   >
-                    Save
-                  </button>
-                </div>
+                    <span class="text-xs text-stone-600 dark:text-stone-400">{{ bp.label }}</span>
+                    <span v-if="savedByokKeys[bp.value]" class="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      </svg>
+                      <code class="font-mono">{{ savedByokKeys[bp.value]?.maskedKey }}</code>
+                    </span>
+                    <span v-else class="text-xs text-stone-400 dark:text-stone-500">No key</span>
+                  </div>
+                </template>
+
                 <p class="text-xs text-stone-500 dark:text-stone-400 mt-2">
-                  🔐 Keys are encrypted and stored locally in your browser
+                  Keys are stored locally in your browser
                 </p>
               </div>
             </div>

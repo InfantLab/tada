@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
 
   try {
     // Check database connection
-    await db.execute(sql`SELECT 1`);
+    await db.run(sql`SELECT 1`);
 
     // Get cache statistics
     const cacheStats = await db

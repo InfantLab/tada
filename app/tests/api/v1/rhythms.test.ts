@@ -68,7 +68,7 @@ describe("GET /api/v1/rhythms", () => {
     expect(response.data).toBeDefined();
     expect(response.data.length).toBeGreaterThan(0);
 
-    const rhythm = response.data[0];
+    const rhythm = response.data[0]!;
     expect(rhythm.id).toBeDefined();
     expect(rhythm.name).toBeDefined();
     expect(rhythm.streak).toBeDefined();
@@ -84,7 +84,7 @@ describe("GET /api/v1/rhythms", () => {
       },
     });
 
-    const rhythm = response.data[0];
+    const rhythm = response.data[0]!;
     expect(rhythm.stats).toBeDefined();
     expect(rhythm.stats.today).toBeDefined();
     expect(rhythm.stats.thisWeek).toBeDefined();
@@ -126,7 +126,7 @@ describe("GET /api/v1/rhythms", () => {
       },
     });
 
-    const rhythm = response.data[0];
+    const rhythm = response.data[0]!;
     expect(rhythm.streak.current).toBeGreaterThanOrEqual(2);
   });
 

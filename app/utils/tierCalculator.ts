@@ -64,6 +64,7 @@ export interface ChainStat {
   current: number; // Current chain length in the chain's unit
   longest: number; // All-time best in the chain's unit
   unit: ChainUnit;
+  gaps?: string[]; // Dates (YYYY-MM-DD) where chains broke (daily only, most recent first)
 }
 
 export interface FrequencyTier {

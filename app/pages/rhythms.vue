@@ -274,6 +274,46 @@ function journeyStageBadgeClass(stage: string): string {
     "bg-stone-100/40 text-stone-600 dark:bg-stone-600/20 dark:text-stone-400"
   );
 }
+
+// Day popover state (for tapping heatmap cells)
+const dayPopover = ref<{
+  date: string;
+  hasActivity: boolean;
+  rhythmId: string;
+} | null>(null);
+
+function handleDayClick(date: string, hasActivity: boolean, rhythmId: string) {
+  // Toggle popover: if tapping the same date, close it
+  if (dayPopover.value?.date === date && dayPopover.value?.rhythmId === rhythmId) {
+    dayPopover.value = null;
+    return;
+  }
+  dayPopover.value = { date, hasActivity, rhythmId };
+}
+
+function closeDayPopover() {
+  dayPopover.value = null;
+}
+
+function formatPopoverDate(dateStr: string): string {
+  const d = new Date(dateStr + "T12:00:00"); // Avoid timezone issues
+  return d.toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+/**
+ * Get gap dates for the daily chain of a rhythm
+ */
+function getDailyGaps(rhythmId: string): string[] {
+  const progress = getProgress(rhythmId);
+  if (!progress) return [];
+  const dailyChain = progress.chains.find((c) => c.type === "daily");
+  return dailyChain?.gaps ?? [];
+}
 </script>
 
 <template>
@@ -486,13 +526,67 @@ function journeyStageBadgeClass(stage: string): string {
         >
           <template v-if="getProgress(rhythm.id)">
             <!-- Year Tracker at top -->
-            <div class="mb-6">
+            <div class="mb-6 relative">
               <RhythmYearTracker
                 :days="getProgress(rhythm.id)!.days"
                 :goal-type="rhythm.matchType === 'timed' ? 'duration' : 'count'"
                 :threshold-seconds="rhythm.durationThresholdSeconds"
                 :threshold-count="rhythm.countThreshold"
+                @day-click="(date: string, hasActivity: boolean) => handleDayClick(date, hasActivity, rhythm.id)"
               />
+
+              <!-- Day popover (shown when tapping a heatmap cell) -->
+              <Transition name="fade">
+                <div
+                  v-if="dayPopover && dayPopover.rhythmId === rhythm.id"
+                  class="mt-2 flex items-center justify-between gap-3 rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm shadow-sm dark:border-stone-600 dark:bg-stone-800"
+                >
+                  <div class="flex items-center gap-2">
+                    <span
+                      class="inline-block h-2.5 w-2.5 rounded-sm"
+                      :class="dayPopover.hasActivity ? 'bg-green-500' : 'bg-stone-300 dark:bg-stone-600'"
+                    />
+                    <span class="text-stone-700 dark:text-stone-200">
+                      {{ formatPopoverDate(dayPopover.date) }}
+                    </span>
+                    <span class="text-stone-400 dark:text-stone-500">
+                      {{ dayPopover.hasActivity ? 'Activity logged' : 'No activity' }}
+                    </span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <NuxtLink
+                      v-if="!dayPopover.hasActivity"
+                      to="/sessions"
+                      class="rounded px-2 py-1 text-xs font-medium text-tada-600 hover:bg-tada-50 dark:text-tada-400 dark:hover:bg-tada-900/30"
+                      @click="closeDayPopover"
+                    >
+                      + Add entry
+                    </NuxtLink>
+                    <button
+                      class="rounded p-1 text-stone-400 hover:text-stone-600 dark:hover:text-stone-300"
+                      @click="closeDayPopover"
+                    >
+                      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </Transition>
+
+              <!-- Gap hints (subtle, shown only when daily chain has gaps) -->
+              <div
+                v-if="getDailyGaps(rhythm.id).length > 0"
+                class="mt-2 text-xs text-stone-400 dark:text-stone-500"
+              >
+                <button
+                  class="hover:text-stone-600 dark:hover:text-stone-300 transition-colors"
+                  @click="handleDayClick(getDailyGaps(rhythm.id)[0]!, false, rhythm.id)"
+                >
+                  {{ getDailyGaps(rhythm.id).length === 1 ? '1 gap' : `${getDailyGaps(rhythm.id).length} gaps` }}
+                  in your daily chain — tap to see
+                </button>
+              </div>
             </div>
 
             <!-- Chain Tabs (with calendar/histogram views and stats) -->
@@ -599,3 +693,14 @@ function journeyStageBadgeClass(stage: string): string {
     </Teleport>
   </div>
 </template>
+
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.15s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>

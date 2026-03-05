@@ -146,9 +146,9 @@ describe("Pattern Detection", () => {
 
     expect(pattern).toBeDefined();
     expect(pattern.type).toBe("correlation");
-    expect(pattern.correlation).toBeGreaterThan(0.5); // Positive correlation
-    expect(pattern.activity1).toBe("mindfulness");
-    expect(pattern.activity2).toBe("productivity");
+    expect(pattern["correlation"]).toBeGreaterThan(0.5); // Positive correlation
+    expect(pattern["activity1"]).toBe("mindfulness");
+    expect(pattern["activity2"]).toBe("productivity");
   });
 
   it("assigns confidence levels based on statistical significance", async () => {
@@ -176,9 +176,9 @@ describe("Pattern Detection", () => {
     );
 
     expect(pattern.evidence).toBeDefined();
-    expect(pattern.evidence.sampleSize).toBeGreaterThan(0);
-    expect(pattern.evidence.correlation).toBeDefined();
-    expect(pattern.evidence.description).toBeDefined();
+    expect(pattern["evidence"]["sampleSize"]).toBeGreaterThan(0);
+    expect(pattern["evidence"]["correlation"]).toBeDefined();
+    expect(pattern["evidence"]["description"]).toBeDefined();
   });
 });
 
@@ -232,17 +232,18 @@ describe("Weekday Pattern Analysis", () => {
 
     expect(pattern).toBeDefined();
     expect(pattern.type).toBe("temporal");
-    expect(pattern.weekdayDistribution).toBeDefined();
+    expect(pattern["weekdayDistribution"]).toBeDefined();
 
     // Should show higher counts on weekdays
+    const dist = pattern["weekdayDistribution"] as Record<string, number>;
     const weekdayCount =
-      (pattern.weekdayDistribution.Monday || 0) +
-      (pattern.weekdayDistribution.Tuesday || 0) +
-      (pattern.weekdayDistribution.Wednesday || 0);
+      (dist["Monday"] || 0) +
+      (dist["Tuesday"] || 0) +
+      (dist["Wednesday"] || 0);
 
     const weekendCount =
-      (pattern.weekdayDistribution.Saturday || 0) +
-      (pattern.weekdayDistribution.Sunday || 0);
+      (dist["Saturday"] || 0) +
+      (dist["Sunday"] || 0);
 
     expect(weekdayCount).toBeGreaterThan(weekendCount);
   });
@@ -299,8 +300,8 @@ describe("Trend Analysis", () => {
 
     expect(pattern).toBeDefined();
     expect(pattern.type).toBe("trend");
-    expect(pattern.direction).toBe("increasing");
-    expect(pattern.slope).toBeGreaterThan(0);
+    expect(pattern["direction"]).toBe("increasing");
+    expect(pattern["slope"]).toBeGreaterThan(0);
   });
 });
 
@@ -372,12 +373,12 @@ describe("Sequence Detection", () => {
 
     expect(pattern).toBeDefined();
     expect(pattern.type).toBe("sequence");
-    expect(pattern.antecedent).toBeDefined();
-    expect(pattern.consequent).toBeDefined();
+    expect(pattern["antecedent"]).toBeDefined();
+    expect(pattern["consequent"]).toBeDefined();
 
     // Should detect coffee → productivity
-    expect(pattern.antecedent).toContain("Coffee");
-    expect(pattern.consequent).toContain("productivity");
+    expect(pattern["antecedent"]).toContain("Coffee");
+    expect(pattern["consequent"]).toContain("productivity");
   });
 });
 
@@ -438,9 +439,9 @@ describe("Helper Functions", () => {
 
     expect(Object.keys(grouped).length).toBeGreaterThanOrEqual(2);
     expect(grouped["2026-01-01"]).toBeDefined();
-    expect(grouped["2026-01-01"].length).toBe(2);
+    expect(grouped["2026-01-01"]!.length).toBe(2);
     expect(grouped["2026-01-02"]).toBeDefined();
-    expect(grouped["2026-01-02"].length).toBe(1);
+    expect(grouped["2026-01-02"]!.length).toBe(1);
   });
 });
 

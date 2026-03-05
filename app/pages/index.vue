@@ -47,6 +47,36 @@ watch(searchQuery, (value) => {
   }, 300);
 });
 
+// Parse search query for date expressions (e.g. "march 2024", "march 4, 2024")
+const searchDateRange = computed(() => parseDateSearch(debouncedSearch.value));
+const isDateSearch = computed(() => !!searchDateRange.value);
+// Only pass text to the API when search is NOT a date expression
+const textSearch = computed(() => (isDateSearch.value ? "" : debouncedSearch.value));
+
+// Human-readable label for detected date range
+const dateSearchLabel = computed(() => {
+  const r = searchDateRange.value;
+  if (!r) return "";
+  const fromDate = new Date(r.from + "T12:00:00");
+  const toDate = new Date(r.to + "T12:00:00");
+  // Single day
+  if (r.from === r.to) {
+    return fromDate.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+  }
+  // Full month (1st to last day, same month)
+  if (r.from.endsWith("-01") && fromDate.getMonth() === toDate.getMonth() && fromDate.getFullYear() === toDate.getFullYear()) {
+    return fromDate.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+  }
+  // Full year (Jan 1 to Dec 31)
+  if (r.from.endsWith("-01-01") && r.to.endsWith("-12-31")) {
+    return String(fromDate.getFullYear());
+  }
+  // Fallback: explicit range
+  return fromDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+    + " \u2013 "
+    + toDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+});
+
 // Zoom navigation handlers
 function handleZoomToYear(year: string) {
   selectedYear.value = year;
@@ -199,9 +229,20 @@ watch(zoomLevel, (newLevel) => {
         v-model:time-range="selectedTimeRange"
       />
 
+      <!-- Date search indicator -->
+      <div
+        v-if="isDateSearch"
+        class="mt-3 flex items-center gap-2 text-sm"
+      >
+        <span class="text-stone-500 dark:text-stone-400">Showing entries for:</span>
+        <span class="font-medium text-stone-700 dark:text-stone-200">
+          {{ dateSearchLabel }}
+        </span>
+      </div>
+
       <!-- Active filter breadcrumb if coming from month/week zoom -->
       <div
-        v-if="activeFilterLabel"
+        v-if="!isDateSearch && activeFilterLabel"
         class="mt-3 flex items-center gap-2 text-sm"
       >
         <span class="text-stone-500 dark:text-stone-400">Viewing:</span>
@@ -260,11 +301,15 @@ watch(zoomLevel, (newLevel) => {
         :key="'day-' + selectedMonth + '-' + selectedWeek"
         :category="selectedCategory"
         :time-range="
-          selectedMonth || selectedWeek ? 'custom' : selectedTimeRange
+          isDateSearch
+            ? 'custom'
+            : selectedMonth || selectedWeek
+              ? 'custom'
+              : selectedTimeRange
         "
-        :search="debouncedSearch"
-        :from-date="customDateRange.from"
-        :to-date="customDateRange.to"
+        :search="textSearch"
+        :from-date="isDateSearch ? searchDateRange?.from : customDateRange.from"
+        :to-date="isDateSearch ? searchDateRange?.to : customDateRange.to"
       />
     </Transition>
   </div>
