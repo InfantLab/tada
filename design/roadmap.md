@@ -15,7 +15,7 @@ What's coming next. For what already shipped, see [CHANGELOG.md](../CHANGELOG.md
 | **v0.3.0** | Magic & Voice               | ✅ Shipped Jan 2026 | [Release Notes](../RELEASE_NOTES_v0.3.0.md) |
 | **v0.3.1** | REST API                    | ✅ Shipped Jan 2026 | [CHANGELOG](../CHANGELOG.md) |
 | **v0.4.0** | Ontology & Cloud Service    | ✅ Shipped Feb 2026 | [Release Notes](../RELEASE_NOTES_v0.4.0.md) |
-| **v0.4.2** | Backups, Polish & Code Quality | ✅ Shipped Mar 2026 | [CHANGELOG](../CHANGELOG.md) |
+| **v0.4.2** | Backups, Polish & Code Quality | ✅ Shipped Mar 2026 | [Release Notes](../RELEASE_NOTES_v0.4.2.md) |
 
 ## Upcoming
 
