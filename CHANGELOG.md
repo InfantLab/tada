@@ -7,7 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-_No unreleased changes_
+### Improved
+
+- **Rhythm heatmap day popover:**
+  - Clicking a day with entries now shows a list of all matching entries with emoji, name, duration, and links to edit each one (previously just showed "Activity logged")
+  - "Add entry" button now opens the QuickEntryModal with the correct entry type for the rhythm (timed/tally/moment/tada) and date pre-filled (previously linked to generic /sessions page)
+  - "Add entry" is now available on both empty and active days
 
 ## [0.4.0] - 2026-02-18
 

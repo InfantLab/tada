@@ -5,6 +5,7 @@
  * Displays rhythm panels with tier-based progress, visualizations,
  * and identity-based encouragement messaging.
  */
+import type { EntryMode } from "~/components/EntryTypeToggle.vue";
 import {
   useRhythms,
   type RhythmSummary,
@@ -276,23 +277,91 @@ function journeyStageBadgeClass(stage: string): string {
 }
 
 // Day popover state (for tapping heatmap cells)
+interface PopoverEntry {
+  id: string;
+  name: string;
+  type: string;
+  durationSeconds: number | null;
+  emoji: string | null;
+}
+
 const dayPopover = ref<{
   date: string;
   hasActivity: boolean;
   rhythmId: string;
+  entries: PopoverEntry[];
+  loadingEntries: boolean;
 } | null>(null);
 
-function handleDayClick(date: string, hasActivity: boolean, rhythmId: string) {
+async function handleDayClick(date: string, hasActivity: boolean, rhythmId: string) {
   // Toggle popover: if tapping the same date, close it
   if (dayPopover.value?.date === date && dayPopover.value?.rhythmId === rhythmId) {
     dayPopover.value = null;
     return;
   }
-  dayPopover.value = { date, hasActivity, rhythmId };
+  dayPopover.value = { date, hasActivity, rhythmId, entries: [], loadingEntries: hasActivity };
+
+  // If there's activity, fetch the actual entries for this day
+  if (hasActivity) {
+    try {
+      const rhythm = rhythms.value.find((r) => r.id === rhythmId);
+      const params: Record<string, string> = { date };
+      if (rhythm?.matchType) params.type = rhythm.matchType;
+      if (rhythm?.matchCategory) params.category = rhythm.matchCategory;
+
+      const result = await $fetch<{ data: PopoverEntry[] }>("/api/v1/entries", { params });
+      if (dayPopover.value?.date === date && dayPopover.value?.rhythmId === rhythmId) {
+        dayPopover.value.entries = result.data;
+        dayPopover.value.loadingEntries = false;
+      }
+    } catch {
+      if (dayPopover.value?.date === date && dayPopover.value?.rhythmId === rhythmId) {
+        dayPopover.value.loadingEntries = false;
+      }
+    }
+  }
 }
 
 function closeDayPopover() {
   dayPopover.value = null;
+}
+
+// Quick entry modal state (for adding entries from heatmap)
+const showQuickEntry = ref(false);
+const quickEntryMode = ref<EntryMode>("timed");
+const quickEntryTimestamp = ref("");
+
+function openAddEntry(rhythmId: string, date: string) {
+  const rhythm = rhythms.value.find((r) => r.id === rhythmId);
+  const modeMap: Record<string, EntryMode> = {
+    timed: "timed",
+    tally: "tally",
+    moment: "moment",
+    tada: "tada",
+  };
+  quickEntryMode.value = modeMap[rhythm?.matchType || ""] || "timed";
+  // Set timestamp to noon on the selected date to avoid timezone issues
+  quickEntryTimestamp.value = `${date}T12:00:00`;
+  closeDayPopover();
+  showQuickEntry.value = true;
+}
+
+function handleQuickEntrySaved() {
+  showQuickEntry.value = false;
+  // Refresh progress data for all expanded panels
+  for (const rhythmId of expandedPanels.value) {
+    fetchProgress(rhythmId)
+      .then((progress) => {
+        progressData.value.set(rhythmId, progress);
+      })
+      .catch(() => {});
+  }
+}
+
+function formatEntryDuration(seconds: number | null): string {
+  if (!seconds) return "";
+  const mins = Math.round(seconds / 60);
+  return `${mins} min`;
 }
 
 function formatPopoverDate(dateStr: string): string {
@@ -539,37 +608,67 @@ function getDailyGaps(rhythmId: string): string[] {
               <Transition name="fade">
                 <div
                   v-if="dayPopover && dayPopover.rhythmId === rhythm.id"
-                  class="mt-2 flex items-center justify-between gap-3 rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm shadow-sm dark:border-stone-600 dark:bg-stone-800"
+                  class="mt-2 rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm shadow-sm dark:border-stone-600 dark:bg-stone-800"
                 >
-                  <div class="flex items-center gap-2">
-                    <span
-                      class="inline-block h-2.5 w-2.5 rounded-sm"
-                      :class="dayPopover.hasActivity ? 'bg-green-500' : 'bg-stone-300 dark:bg-stone-600'"
-                    />
-                    <span class="text-stone-700 dark:text-stone-200">
-                      {{ formatPopoverDate(dayPopover.date) }}
-                    </span>
-                    <span class="text-stone-400 dark:text-stone-500">
-                      {{ dayPopover.hasActivity ? 'Activity logged' : 'No activity' }}
-                    </span>
+                  <!-- Header row -->
+                  <div class="flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-2">
+                      <span
+                        class="inline-block h-2.5 w-2.5 rounded-sm"
+                        :class="dayPopover.hasActivity ? 'bg-green-500' : 'bg-stone-300 dark:bg-stone-600'"
+                      />
+                      <span class="text-stone-700 dark:text-stone-200">
+                        {{ formatPopoverDate(dayPopover.date) }}
+                      </span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <button
+                        class="rounded px-2 py-1 text-xs font-medium text-tada-600 hover:bg-tada-50 dark:text-tada-400 dark:hover:bg-tada-900/30"
+                        @click="openAddEntry(rhythm.id, dayPopover.date)"
+                      >
+                        + Add entry
+                      </button>
+                      <button
+                        class="rounded p-1 text-stone-400 hover:text-stone-600 dark:hover:text-stone-300"
+                        @click="closeDayPopover"
+                      >
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
-                  <div class="flex items-center gap-2">
-                    <NuxtLink
-                      v-if="!dayPopover.hasActivity"
-                      to="/sessions"
-                      class="rounded px-2 py-1 text-xs font-medium text-tada-600 hover:bg-tada-50 dark:text-tada-400 dark:hover:bg-tada-900/30"
-                      @click="closeDayPopover"
-                    >
-                      + Add entry
-                    </NuxtLink>
-                    <button
-                      class="rounded p-1 text-stone-400 hover:text-stone-600 dark:hover:text-stone-300"
-                      @click="closeDayPopover"
-                    >
-                      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
+
+                  <!-- Entries list (for days with activity) -->
+                  <div v-if="dayPopover.hasActivity" class="mt-2 border-t border-stone-100 pt-2 dark:border-stone-700">
+                    <div v-if="dayPopover.loadingEntries" class="flex items-center gap-2 py-1 text-xs text-stone-400">
+                      <div class="h-3 w-3 animate-spin rounded-full border border-stone-300 border-t-transparent" />
+                      Loading entries...
+                    </div>
+                    <div v-else-if="dayPopover.entries.length === 0" class="py-1 text-xs text-stone-400">
+                      No matching entries found
+                    </div>
+                    <div v-else class="space-y-1">
+                      <NuxtLink
+                        v-for="entry in dayPopover.entries"
+                        :key="entry.id"
+                        :to="`/entry/${entry.id}`"
+                        class="flex items-center gap-2 rounded px-1.5 py-1 text-xs hover:bg-stone-50 dark:hover:bg-stone-700/50"
+                        @click="closeDayPopover"
+                      >
+                        <span v-if="entry.emoji" class="flex-shrink-0">{{ entry.emoji }}</span>
+                        <span class="min-w-0 flex-1 truncate text-stone-700 dark:text-stone-200">
+                          {{ entry.name }}
+                        </span>
+                        <span v-if="entry.durationSeconds" class="flex-shrink-0 text-stone-400">
+                          {{ formatEntryDuration(entry.durationSeconds) }}
+                        </span>
+                      </NuxtLink>
+                    </div>
+                  </div>
+                  <!-- No activity message -->
+                  <div v-else class="mt-1 text-xs text-stone-400 dark:text-stone-500">
+                    No activity
                   </div>
                 </div>
               </Transition>
@@ -691,6 +790,14 @@ function getDailyGaps(rhythmId: string): string[] {
         </div>
       </div>
     </Teleport>
+
+    <!-- Quick Entry Modal (for adding entries from heatmap) -->
+    <QuickEntryModal
+      v-model:open="showQuickEntry"
+      :initial-mode="quickEntryMode"
+      :initial-timestamp="quickEntryTimestamp"
+      @saved="handleQuickEntrySaved"
+    />
   </div>
 </template>
 

@@ -25,6 +25,8 @@ const props = withDefaults(
     initialName?: string;
     /** Pre-fill category */
     initialCategory?: string;
+    /** Pre-fill timestamp (ISO string) */
+    initialTimestamp?: string;
     /** Context for duration presets */
     durationContext?: DurationContext;
     /** Draft to resume (from DraftIndicator) */
@@ -38,6 +40,7 @@ const props = withDefaults(
     initialMode: "timed",
     initialName: "",
     initialCategory: "",
+    initialTimestamp: "",
     durationContext: "general",
     resumeDraft: null,
   },
@@ -130,7 +133,7 @@ watch(
         name.value = props.initialName;
         category.value = props.initialCategory;
         subcategory.value = "";
-        timestamp.value = new Date().toISOString();
+        timestamp.value = props.initialTimestamp || new Date().toISOString();
         durationSeconds.value = null;
         count.value = null;
         notes.value = "";
