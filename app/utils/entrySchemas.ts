@@ -8,6 +8,10 @@
  */
 
 import { z } from "zod";
+import {
+  REGISTERED_ENTRY_TYPES,
+  isKnownEntryType,
+} from "~/shared/registeredTypes";
 
 // =============================================================================
 // Entry Types
@@ -16,9 +20,15 @@ import { z } from "zod";
 /**
  * Supported entry types
  * v0.3.0: Renamed journal → moment, reps → tally
+ * v0.5.0: Driven by shared/registeredTypes.ts — add new types there
  */
-export const EntryTypeSchema = z.enum(["timed", "tally", "moment", "tada"]);
+export const EntryTypeSchema = z.enum(REGISTERED_ENTRY_TYPES);
 export type EntryType = z.infer<typeof EntryTypeSchema>;
+
+/**
+ * Check if a string is a valid entry type (works at runtime without Zod parsing)
+ */
+export { isKnownEntryType };
 
 /**
  * Entry source tracking

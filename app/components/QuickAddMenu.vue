@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { EntryMode } from "./EntryTypeToggle.vue";
+import { getQuickAddTypes } from "~/registry/entryTypes";
 
 defineProps<{
   open: boolean;
@@ -19,43 +20,27 @@ interface MenuOption {
   color: string;
 }
 
-const options: MenuOption[] = [
-  {
-    route: "/tada",
-    label: "Ta-Da!",
-    icon: "⚡",
-    description: "Celebrate an accomplishment",
-    color: "bg-amber-500 hover:bg-amber-600",
-  },
-  {
-    route: "/moments",
-    label: "Moment",
-    icon: "✨",
-    description: "Quick note or reflection",
-    color: "bg-purple-500 hover:bg-purple-600",
-  },
-  {
-    route: "/sessions",
-    label: "Session",
-    icon: "⏱️",
-    description: "Start a timer",
-    color: "bg-blue-500 hover:bg-blue-600",
-  },
-  {
-    route: "/tally",
-    label: "Tally",
-    icon: "📊",
-    description: "Track reps or counts",
-    color: "bg-green-500 hover:bg-green-600",
-  },
-  {
+// Build menu options from the entry type registry
+const options = computed<MenuOption[]>(() => {
+  const registryOptions: MenuOption[] = getQuickAddTypes().map((def) => ({
+    route: def.navigation?.href || `/create/${def.type}`,
+    label: def.label,
+    icon: def.emoji,
+    description: def.description,
+    color: def.quickAdd!.color + " hover:opacity-90",
+  }));
+
+  // Append the "Past Entry" modal option (not an entry type)
+  registryOptions.push({
     mode: "timed",
     label: "Past Entry",
     icon: "🕐",
     description: "Log a past activity",
     color: "bg-stone-500 hover:bg-stone-600",
-  },
-];
+  });
+
+  return registryOptions;
+});
 
 function selectOption(option: MenuOption) {
   if (option.route) {

@@ -15,14 +15,43 @@
       </div>
 
       <!-- Import wizard or recipe selector -->
-      <div v-if="!selectedRecipe && !showCustomImport" class="space-y-6">
-        <!-- Built-in recipes -->
-        <div>
+      <div v-if="!selectedRecipe && !showCustomImport && !selectedImporterId" class="space-y-6">
+        <!-- Registry-driven importers -->
+        <div v-if="registeredImporters.length > 0">
           <h2
             class="text-xl font-medium text-text-light dark:text-text-dark mb-4"
           >
             Built-in Imports
           </h2>
+          <div class="grid gap-4 md:grid-cols-2">
+            <button
+              v-for="importer in registeredImporters"
+              :key="importer.id"
+              class="text-left p-6 bg-white dark:bg-cosmic-indigo rounded-lg border border-pearl-mist dark:border-cosmic-indigo-light hover:border-tada-300 dark:hover:border-tada-600 transition-colors"
+              @click="selectImporter(importer.id)"
+            >
+              <div class="flex items-start justify-between mb-2">
+                <h3
+                  class="text-lg font-medium text-text-light dark:text-text-dark"
+                >
+                  {{ importer.name }}
+                </h3>
+                <span
+                  class="text-xs px-2 py-1 rounded bg-tada-100/20 text-tada-700 dark:bg-tada-600/20 dark:text-tada-300"
+                  >Built-in</span
+                >
+              </div>
+              <p
+                class="text-sm text-text-light-secondary dark:text-text-dark-secondary"
+              >
+                {{ importer.description }}
+              </p>
+            </button>
+          </div>
+        </div>
+
+        <!-- Legacy built-in recipes (from API) -->
+        <div v-if="builtInRecipes.length > 0">
           <div class="grid gap-4 md:grid-cols-2">
             <button
               v-for="recipe in builtInRecipes"
@@ -181,6 +210,7 @@
 
 <script setup lang="ts">
 import type { ImportRecipe } from "~/server/db/schema";
+import { getRegisteredImporters } from "~/registry/importers";
 
 // Auth is handled by global middleware
 
@@ -188,6 +218,11 @@ const selectedRecipe = ref<ImportRecipe | null>(null);
 const showCustomImport = ref(false);
 const showInsightTimerInstructions = ref(false);
 const recipes = ref<ImportRecipe[]>([]);
+
+// Registry-driven built-in importers
+const registeredImporters = computed(() =>
+  Array.from(getRegisteredImporters().values()),
+);
 
 const builtInRecipes = computed(() => recipes.value.filter((r) => r.isBuiltIn));
 
@@ -205,21 +240,28 @@ onMounted(async () => {
   }
 });
 
+const selectedImporterId = ref<string | null>(null);
+
+function selectImporter(id: string) {
+  selectedImporterId.value = id;
+  // For now, delegate to the existing ImportWizard with the importer ID context
+  showCustomImport.value = true;
+}
+
 function selectRecipe(recipe: ImportRecipe) {
   selectedRecipe.value = recipe;
 }
 
 function handleImportComplete() {
-  // Reset state
   selectedRecipe.value = null;
+  selectedImporterId.value = null;
   showCustomImport.value = false;
-
-  // Navigate to history or entries
   navigateTo("/");
 }
 
 function handleCancel() {
   selectedRecipe.value = null;
+  selectedImporterId.value = null;
   showCustomImport.value = false;
 }
 

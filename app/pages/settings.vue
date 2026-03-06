@@ -5,6 +5,7 @@ import {
   getCategoryEmoji,
 } from "~/utils/categoryDefaults";
 import type { Entry } from "~/server/db/schema";
+import { getExporter } from "~/registry/exporters";
 
 const { success: showSuccess, error: showError } = useToast();
 
@@ -586,23 +587,20 @@ async function exportData() {
       params: { limit: 10000 },
     });
 
-    // Create JSON export
-    const exportData = {
-      version: appVersion.value,
-      exportedAt: new Date().toISOString(),
-      entries: response.entries,
-    };
-
-    // Download as JSON file
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], {
-      type: "application/json",
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `tada-export-${new Date().toISOString().split("T")[0]}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+    // Use the JSON exporter from registry
+    const jsonExporter = getExporter("json");
+    if (jsonExporter) {
+      const blob = await jsonExporter.export(
+        response.entries as unknown as Record<string, unknown>[],
+        { version: appVersion.value },
+      );
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `tada-export-${new Date().toISOString().split("T")[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
   } catch (error: unknown) {
     console.error("Export failed:", error);
     const message = error instanceof Error ? error.message : "Unknown error";

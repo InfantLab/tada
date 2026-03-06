@@ -229,6 +229,17 @@ export default defineNuxtConfig({
     },
   },
 
+  // Auto-import components from module directories
+  components: [
+    { path: "~/components" },
+    { path: "~/modules/entry-types", pathPrefix: false, pattern: "**/*.vue" },
+  ],
+
+  // Auto-import composables/utils from module directories
+  imports: {
+    dirs: ["~/registry"],
+  },
+
   // Experimental features for performance
   experimental: {
     // Payload extraction for smaller client bundle
