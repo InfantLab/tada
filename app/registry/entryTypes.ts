@@ -13,7 +13,7 @@ const registry = new Map<string, EntryTypeDefinition>();
 
 /**
  * Register an entry type definition.
- * Throws if a type with the same key is already registered.
+ * Warns and overwrites if a type with the same key is already registered.
  */
 export function registerEntryType(definition: EntryTypeDefinition): void {
   if (registry.has(definition.type)) {

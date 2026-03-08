@@ -14,6 +14,7 @@ import {
   getSubcategoriesForCategory,
   CATEGORY_DEFAULTS,
 } from "~/utils/categoryDefaults";
+import type { Entry } from "~/server/db/schema";
 import type { TranscriptionResult, VoiceRecordingStatus } from "~/types/voice";
 import type { ExtractedTada } from "~/types/extraction";
 import type { EntryInput } from "~/utils/entrySchemas";

@@ -15,11 +15,15 @@ definePageMeta({
 const route = useRoute();
 const typeName = computed(() => route.params.type as string);
 const definition = computed(() => getEntryTypeDefinition(typeName.value));
+const inputComponent = computed(() => {
+  if (!definition.value) return null;
+  return resolveComponent(definition.value.inputComponent);
+});
 </script>
 
 <template>
-  <div v-if="definition">
-    <component :is="definition.inputComponent" />
+  <div v-if="definition && inputComponent">
+    <component :is="inputComponent" />
   </div>
   <div v-else class="text-center py-20">
     <div class="text-6xl mb-4">🤔</div>
