@@ -13,7 +13,25 @@
       "Bash(ssh -o ConnectTimeout=3 caspar-ghost echo \"connected\")",
       "Bash(chmod +x /workspaces/tada/scripts/live-import.sh)",
       "Bash(bash /workspaces/tada/scripts/live-import.sh help)",
-      "Bash(python -c \"import json,sys; d=json.load\\(sys.stdin\\); res={e.get\\(''resolution'',''unresolved''\\) or ''unresolved'' for e in d}; print\\(f''Total: {len\\(d\\)}''\\); [print\\(f''  {r}: {sum\\(1 for e in d if \\(e.get\\(\"\"resolution\"\"\\) or \"\"unresolved\"\"\\)==r\\)}''\\) for r in sorted\\(res\\)]\")"
+      "Bash(python -c \"import json,sys; d=json.load\\(sys.stdin\\); res={e.get\\(''resolution'',''unresolved''\\) or ''unresolved'' for e in d}; print\\(f''Total: {len\\(d\\)}''\\); [print\\(f''  {r}: {sum\\(1 for e in d if \\(e.get\\(\"\"resolution\"\"\\) or \"\"unresolved\"\"\\)==r\\)}''\\) for r in sorted\\(res\\)]\")",
+      "Bash(npx vitest run --reporter=verbose)",
+      "Read(//home/bun/.claude/projects/-workspaces-tada/5ad4e803-d1db-4429-9cc8-17e2dee9e4b3/subagents/**)",
+      "Read(//workspaces/tada/app/**)",
+      "Read(//workspaces/tada/**)",
+      "Bash(bunx vitest run utils/tallyExtractor.test.ts)",
+      "Bash(apt list --installed)",
+      "Bash(sudo tee /etc/apt/sources.list.d/github-cli.list)",
+      "Bash(sudo apt update -qq)",
+      "Bash(sudo apt install gh -y -qq)",
+      "Bash(apt-get update -qq)",
+      "Bash(apt-get install -y -qq gh)",
+      "Bash(git tag v0.4.2)",
+      "Bash(# Check what credential method is being used cat ~/.git-credentials)",
+      "Bash(git credential fill)",
+      "Bash(xargs basename -a)",
+      "Bash(npx vitest run registry/)",
+      "Bash(npx vitest run utils/entrySchemas.test.ts)",
+      "Bash(npx vitest run app/registry/ app/shared/registeredTypes.test.ts app/modules/entry-types/modules.test.ts)"
     ],
     "additionalDirectories": [
       "/tmp"

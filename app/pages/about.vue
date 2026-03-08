@@ -280,7 +280,7 @@ const blogPosts = [
             <a href="https://multiordinal.co.uk/mhp.html" target="_blank" class="text-tada-600 dark:text-tada-400 hover:underline">Meditator Helper Plus</a>,
             the <a href="https://medium.com/@bre/the-cult-of-done-manifesto-724ca1c2ff13" target="_blank" class="text-tada-600 dark:text-tada-400 hover:underline">Cult of Done</a>,
             <a href="https://jamesclear.com/atomic-habits" target="_blank" class="text-tada-600 dark:text-tada-400 hover:underline">Atomic Habits</a> by James Clear,
-            and two and a half millenia of Buddhist wisdom.
+            and two and a half millennia of Buddhist wisdom.
           </p>
         </div>
 

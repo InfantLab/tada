@@ -26,102 +26,21 @@ What's coming next. For what already shipped, see [CHANGELOG.md](../CHANGELOG.md
 
 ---
 
-## v0.4.2: Backups, Polish & Code Quality
-
-_Shipped: March 2026_
-
-**Theme:** Database safety, small UX fixes, voice polish.
-
-### Database & Operations
-
-- [x] Automated backup scripts for CapRover (scheduled + on-demand)
-- [x] Live-import script: pull/push via `docker cp` (container-aware)
-- [x] Health endpoint: `db.execute` → `db.run` fix
-
-### UX Fixes
-
-- [x] Ta-da save: navigate to timeline after celebration (was staying on entry screen)
-- [x] Rhythm chain cache: invalidate on historical entry inserts (was only checking latest timestamp)
-- [x] Rhythm gap discovery: tappable heatmap cells + gap hint text
-- [x] Rhythm heatmap popover: show entry list with links on active days, smart add-entry with correct type & date
-- [x] Clarify BYOK settings UI — unclear what keys are needed and where to get them
-- [x] Timeline search: free-text date parsing ("march 2024", "march 4, 2024", "yesterday")
-
-### Code Quality
-
-- [x] Fix 220 pre-existing TypeScript strict mode errors across 51 files (see recommendation below)
-- [x] Fix 74 ESLint errors (36 `no-explicit-any`, 28 `no-unused-vars`, misc)
-- [x] Fix 18 TypeScript errors in v1 API test files (rhythms, webhooks, insights)
-
-### Voice
-
-- [x] Improve LLM extraction accuracy (smarter parsing of ambiguous input)
-- [x] Voice entries should set `category: "moments"` for moment subtypes
-
----
-
 ## v0.5.0: Modularity
 
 _Target: Q2 2026_
 
-**Theme:** Make the architecture modular before adding more features. New entry types, importers, exporters, and views should be addable without touching core code. See [modularity.md](modularity.md) for the full design and trade-offs, and [SDR.md Section 5](SDR.md#5-plugin-architecture) for the original plugin interface spec.
+**Theme:** Reorganize the codebase into self-contained modules before adding more features. Each entry type (tada, tally, timed, moment) becomes a module with its own components, composables, and metadata. Importers and exporters become pluggable. New entry types become addable without touching core code.
 
-### Why Now
+**Approach:** Internal module registry (Option B from [modularity.md](modularity.md)) — no external plugin loading, just clean internal boundaries. Full design details in [spec](../specs/006-modularity/spec.md) and [implementation plan](../specs/006-modularity/plan.md).
 
-The codebase has grown through four releases. Before adding celestial calendars, AI insights, routines, or integrations, we need clean extension points. Otherwise every new feature tangles deeper into the core. Modularity pays for itself by making everything after it cheaper to build and maintain.
-
-### Plugin System Foundation
-
-Implement the `TadaPlugin` interface from the SDR:
-
-- [ ] Plugin loader: discover and register plugins from `/plugins` directory
-- [ ] Plugin lifecycle: `onLoad()` / `onUnload()` hooks
-- [ ] `registerEntryTypes()` — define new entry types with data schemas
-- [ ] `registerImporters()` — pluggable data import (CSV recipes become plugins)
-- [ ] `registerExporters()` — pluggable export (JSON, CSV, Markdown, Obsidian)
-- [ ] `registerViews()` — custom UI pages registered by plugins
-- [ ] Plugin settings UI — per-plugin configuration in Settings page
-
-### Entry Type Modularity
-
-The unified Entry model already supports open string types. Finish the job:
-
-- [ ] Entry type registry: central place that defines available types and their UI
-- [ ] Type-specific input components (currently hardcoded per page)
-- [ ] Type-specific display components (currently hardcoded in timeline)
-- [ ] Move core types (timed, tada, moment, tally) into built-in plugins as reference implementations
-
-### Importer / Exporter Refactor
-
-- [ ] Refactor CSV import wizard to use plugin importer interface
-- [ ] Move Insight Timer recipe to a built-in import plugin
-- [ ] Refactor JSON/CSV/Markdown export to use plugin exporter interface
-- [ ] Obsidian export as a built-in export plugin
-
-### Test Coverage Expansion
-
-Current coverage: **14.1%** (35 of 249 source files). Utils are well-tested (79%), but critical layers are not:
-
-| Layer | Files | Tested | Coverage |
-|-------|-------|--------|----------|
-| Utils | 14 | 11 | 79% |
-| Composables | 18 | 3 | 17% |
-| Server Utils | 17 | 3 | 18% |
-| Server Services | 10 | 1 | 10% |
-| API Routes | 94 | 4 | 4% |
-| Components | 61 | 0 | 0% |
-| Pages | 28 | 0 | 0% |
-
-Priority targets: `server/services/entries.ts`, `server/utils/permissions.ts`, `server/utils/auth.ts`, `composables/useEntryEngine.ts`
-
-### Carried Forward (from earlier versions)
-
-Items that fit naturally into this release:
-
-- [ ] Rewrite integration tests with @nuxt/test-utils/e2e
-- [ ] Expand server service and API route test coverage (see table above)
-- [ ] Timer-specific onboarding: "Keep this tab in the foreground" (first timer start)
-- [ ] New feature callouts for returning users (subtle badge/dot, not modal)
+**Key deliverables:**
+- Module registry with `EntryTypeDefinition`, `DataImporter`, `DataExporter` interfaces
+- Core types (tada, tally, timed, moment) extracted into modules as reference implementations
+- Generic `/create/[type]` page powered by registry
+- Importer/exporter refactor to pluggable interfaces
+- Test coverage expansion for services and composables
+- Validation with one new entry type built as a pure module
 
 ---
 

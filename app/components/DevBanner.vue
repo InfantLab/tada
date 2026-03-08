@@ -5,26 +5,17 @@
  * Links to production (tada.living)
  */
 
-const isDev = computed(() => {
-  // If we're running on tada.living, this is production — don't show banner
-  if (import.meta.server) return false;
-  return !window.location.hostname.includes('tada.living');
-});
-
+const isDev = ref(false);
 const dismissed = ref(false);
 
 function dismiss() {
   dismissed.value = true;
-  // Remember dismissal for this session only
-  if (typeof sessionStorage !== 'undefined') {
-    sessionStorage.setItem('devBannerDismissed', 'true');
-  }
+  sessionStorage.setItem('devBannerDismissed', 'true');
 }
 
 onMounted(() => {
-  if (typeof sessionStorage !== 'undefined') {
-    dismissed.value = sessionStorage.getItem('devBannerDismissed') === 'true';
-  }
+  isDev.value = !window.location.hostname.includes('tada.living');
+  dismissed.value = sessionStorage.getItem('devBannerDismissed') === 'true';
 });
 </script>
 
