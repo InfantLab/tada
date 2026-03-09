@@ -34,7 +34,7 @@ See [docs/modules/](docs/modules/README.md) for in-depth documentation of each m
 
 ---
 
-### Timeline
+### [Timeline](docs/modules/timeline.md)
 
 <img src="design/screens/tada-screen-timeline.png" alt="Timeline view" width="280" align="right" />
 
@@ -48,7 +48,7 @@ Search with natural date parsing, see your journey badge celebrating accumulated
 
 ---
 
-### Ta-Da! Wins
+### [Ta-Da! Wins](docs/modules/tada.md)
 
 <img src="design/screens/Tada-screen-tada.png" alt="Ta-Da! wins" width="280" align="right" />
 
@@ -62,7 +62,7 @@ Capture wins by typing or speaking naturally. Voice input uses AI to extract and
 
 ---
 
-### Moments
+### [Moments](docs/modules/moments.md)
 
 <img src="design/screens/tada-screen-moments.png" alt="Moments journal" width="280" align="right" />
 
@@ -76,7 +76,7 @@ Rich markdown content with mood tracking (1-5), freeform themes and tags, and vo
 
 ---
 
-### Sessions
+### [Sessions](docs/modules/sessions.md)
 
 <img src="design/screens/tada-screen-timer.png" alt="Sessions timer" width="280" align="right" />
 
@@ -90,7 +90,7 @@ Supports unlimited and fixed duration modes, interval bells, warm-up countdown, 
 
 ---
 
-### Tally
+### [Tally](docs/modules/tally.md)
 
 <img src="design/screens/tada-screen-tally.png" alt="Tally counter" width="280" align="right" />
 
@@ -104,7 +104,7 @@ Simple tap-to-increment interface with custom units, voice input for batch entri
 
 ---
 
-### Rhythms
+### [Rhythms](docs/modules/rhythms.md)
 
 <img src="design/screens/tada-screen-rhythm.png" alt="Rhythms tracker" width="280" align="right" />
 
