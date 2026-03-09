@@ -65,6 +65,13 @@ const philosophyPoints = [
       </div>
     </section>
 
+    <!-- App Screenshots Carousel -->
+    <section class="py-12 md:py-16">
+      <div class="max-w-4xl mx-auto px-4">
+        <ScreenCarousel />
+      </div>
+    </section>
+
     <!-- Features Grid -->
     <section class="py-16 bg-white/50 dark:bg-stone-900/50">
       <div class="max-w-4xl mx-auto px-4">

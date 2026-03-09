@@ -37,6 +37,13 @@ Documentation for the REST API v1 (released in v0.3.1):
 - **[PROJECT_STRUCTURE.md](./PROJECT_STRUCTURE.md)** - Codebase organization
 - **[testing/TESTING.md](./testing/TESTING.md)** - Testing guide and best practices
 
+### Features & Modules
+
+- **[modules/](./modules/README.md)** - Module index and architecture overview
+  - [Timeline](./modules/timeline.md), [Ta-Da!](./modules/tada.md), [Moments](./modules/moments.md), [Sessions](./modules/sessions.md), [Tally](./modules/tally.md), [Rhythms](./modules/rhythms.md)
+  - [Importers, Exporters & Sync](./modules/data-flow.md)
+- **[../MODULES.md](../MODULES.md)** - Developer guide for creating new modules
+
 ### Architecture & Implementation
 
 - **[VOICE_AI_ARCHITECTURE.md](./VOICE_AI_ARCHITECTURE.md)** - Voice AI implementation details
