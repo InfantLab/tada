@@ -81,10 +81,12 @@ export default defineEventHandler(async (event: H3Event) => {
   }
 
   // Determine rate limit type based on endpoint
-  let rateLimitType: "standard" | "export" | "pattern" | "webhook" =
+  let rateLimitType: "standard" | "export" | "pattern" | "webhook" | "admin" =
     "standard";
 
-  if (path.includes("/export")) {
+  if (path.startsWith("/api/v1/admin/")) {
+    rateLimitType = "admin";
+  } else if (path.includes("/export")) {
     rateLimitType = "export";
   } else if (path.includes("/insights")) {
     rateLimitType = "pattern";

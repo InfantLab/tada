@@ -20,7 +20,13 @@ export type AuthEventType =
   | "password_reset_request"
   | "password_reset_complete"
   | "email_verification"
-  | "email_change";
+  | "email_change"
+  | "admin:user_viewed"
+  | "admin:user_updated"
+  | "admin:password_reset_triggered"
+  | "admin:sessions_invalidated"
+  | "admin:feedback_updated"
+  | "admin:stats_accessed";
 
 interface LogAuthEventOptions {
   event: H3Event;

@@ -19,6 +19,7 @@ const RATE_LIMITS = {
   export: 10, // Export endpoints (more expensive)
   pattern: 5, // Pattern detection (very expensive)
   webhook: 20, // Webhook endpoints
+  admin: 100, // Admin endpoints
 } as const;
 
 type RateLimitType = keyof typeof RATE_LIMITS;

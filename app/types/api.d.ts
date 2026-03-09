@@ -13,7 +13,13 @@ export type Permission =
   | 'export:read'
   | 'webhooks:manage'
   | 'sync:manage'
-  | 'user:read';
+  | 'user:read'
+  | 'admin:stats'
+  | 'admin:users'
+  | 'admin:users:write'
+  | 'admin:activity'
+  | 'admin:health'
+  | 'admin:feedback';
 
 // ============================================================================
 // Webhook Events

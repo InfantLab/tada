@@ -1,10 +1,10 @@
 /**
  * Admin endpoint to send a test email
  *
- * POST /api/admin/test-email
+ * POST /api/v1/admin/test-email
  * Body: { to: string, template: "verify" | "welcome" | "reset" | "changed" | "supporter" | "cancelled" | "payment-failed" | "payment-recovered" | "renewed" }
  *
- * Requires authenticated admin user (for now: any authenticated user in dev).
+ * Requires admin access.
  */
 
 import { sendEmail, isEmailConfigured } from "~/server/utils/email";
@@ -19,13 +19,11 @@ import {
   paymentFailedEmail,
   paymentRecoveredEmail,
 } from "~/server/templates/email";
+import { requireAdmin } from "~/server/utils/admin";
+import { success } from "~/server/utils/response";
 
 export default defineEventHandler(async (event) => {
-  // Require authentication
-  const session = event.context.session;
-  if (!session?.userId) {
-    throw createError({ statusCode: 401, statusMessage: "Not authenticated" });
-  }
+  requireAdmin(event, "admin:health");
 
   const body = await readBody(event);
   const to = body?.to as string;
@@ -34,18 +32,19 @@ export default defineEventHandler(async (event) => {
   if (!to || !to.includes("@")) {
     throw createError({
       statusCode: 400,
-      statusMessage: "Valid email address required",
+      message: "Valid email address required",
     });
   }
 
   if (!isEmailConfigured()) {
     throw createError({
       statusCode: 503,
-      statusMessage: "SMTP not configured",
+      message: "SMTP not configured",
     });
   }
 
-  const username = (session as unknown as Record<string, unknown>)['username'] as string || "friend";
+  const auth = event.context.auth;
+  const username = "friend";
 
   // Generate email content based on template
   let emailContent: { subject: string; html: string; text: string };
@@ -81,7 +80,7 @@ export default defineEventHandler(async (event) => {
     default:
       throw createError({
         statusCode: 400,
-        statusMessage: `Unknown template: ${template}`,
+        message: `Unknown template: ${template}`,
       });
   }
 
@@ -95,9 +94,11 @@ export default defineEventHandler(async (event) => {
   if (!sent) {
     throw createError({
       statusCode: 500,
-      statusMessage: "Failed to send email",
+      message: "Failed to send email",
     });
   }
 
-  return { success: true, message: `Test "${template}" email sent to ${to}` };
+  return success(event, {
+    message: `Test "${template}" email sent to ${to}`,
+  });
 });

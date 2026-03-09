@@ -31,10 +31,33 @@
       "Bash(xargs basename -a)",
       "Bash(npx vitest run registry/)",
       "Bash(npx vitest run utils/entrySchemas.test.ts)",
-      "Bash(npx vitest run app/registry/ app/shared/registeredTypes.test.ts app/modules/entry-types/modules.test.ts)"
+      "Bash(npx vitest run app/registry/ app/shared/registeredTypes.test.ts app/modules/entry-types/modules.test.ts)",
+      "WebSearch",
+      "Bash(chmod +x /workspaces/tada/app/scripts/sync-obsidian.mjs)",
+      "Bash(mkdir -p /workspaces/tada/app/public/screens)",
+      "Bash(cp /workspaces/tada/design/screens/tada-screen-timeline.png /workspaces/tada/design/screens/Tada-screen-tada.png /workspaces/tada/design/screens/tada-screen-moments.png /workspaces/tada/design/screens/tada-screen-timer.png /workspaces/tada/design/screens/tada-screen-tally.png /workspaces/tada/design/screens/tada-screen-rhythm.png /workspaces/tada/app/public/screens/)",
+      "Bash(wc -l /workspaces/tada/docs/*.md /workspaces/tada/design/*.md)",
+      "Bash(xxd)",
+      "Bash(printf 'feat: add screenshot carousel to landing page and visual module docs\\\\n\\\\n- Add ScreenCarousel component with auto-rotation, swipe, phone frame\\\\n- Copy screen PNGs to app/public/screens/ for PWA landing page\\\\n- Add design/screens/ to repo for GitHub README image references\\\\n- Overhaul README with hero image, per-module screenshots, and module architecture\\\\n- Create docs/modules/ with individual pages per feature \\(timeline, tada, moments, sessions, tally, rhythms, data-flow\\)\\\\n- Add docs/FEATURES.md as lightweight index to module pages\\\\n- Update docs/README.md with modules section\\\\n\\\\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>')",
+      "Bash(sed -i 's/^### Timeline$/### [Timeline]\\(docs\\\\/modules\\\\/timeline.md\\)/' README.md)",
+      "Bash(sed -i 's/^### Ta-Da! Wins$/### [Ta-Da! Wins]\\(docs\\\\/modules\\\\/tada.md\\)/' README.md)",
+      "Bash(sed -i 's/^### Moments$/### [Moments]\\(docs\\\\/modules\\\\/moments.md\\)/' README.md)",
+      "Bash(sed -i 's/^### Sessions$/### [Sessions]\\(docs\\\\/modules\\\\/sessions.md\\)/' README.md)",
+      "Bash(sed -i 's/^### Tally$/### [Tally]\\(docs\\\\/modules\\\\/tally.md\\)/' README.md)",
+      "Bash(sed -i 's/^### Rhythms$/### [Rhythms]\\(docs\\\\/modules\\\\/rhythms.md\\)/' README.md)",
+      "Bash(gh issue list --search \"admin api\" --limit 5)",
+      "WebFetch(domain:github.com)",
+      "Bash(sed -i \"s/^### Timeline\\\\r$/### [Timeline]\\(docs\\\\/modules\\\\/timeline.md\\)\\\\r/\" README.md)",
+      "Bash(sed -i \"s/^### Ta-Da! Wins\\\\r$/### [Ta-Da! Wins]\\(docs\\\\/modules\\\\/tada.md\\)\\\\r/\" README.md)",
+      "Bash(sed -i \"s/^### Moments\\\\r$/### [Moments]\\(docs\\\\/modules\\\\/moments.md\\)\\\\r/\" README.md)",
+      "Bash(sed -i \"s/^### Sessions\\\\r$/### [Sessions]\\(docs\\\\/modules\\\\/sessions.md\\)\\\\r/\" README.md)",
+      "Bash(sed -i \"s/^### Tally\\\\r$/### [Tally]\\(docs\\\\/modules\\\\/tally.md\\)\\\\r/\" README.md)",
+      "Bash(sed -i \"s/^### Rhythms\\\\r$/### [Rhythms]\\(docs\\\\/modules\\\\/rhythms.md\\)\\\\r/\" README.md)",
+      "Read(//c/Users/caspar/AppData/Roaming/Code/logs/20260309T124719/window1/exthost/ms-vscode-remote.remote-containers/**)"
     ],
     "additionalDirectories": [
-      "/tmp"
+      "/tmp",
+      "/workspaces/tada/specs"
     ]
   }
 }
