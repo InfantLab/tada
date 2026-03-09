@@ -908,3 +908,39 @@ export const newsletterSubscribers = sqliteTable("newsletter_subscribers", {
 
 export type NewsletterSubscriber = typeof newsletterSubscribers.$inferSelect;
 export type NewNewsletterSubscriber = typeof newsletterSubscribers.$inferInsert;
+
+// ============================================================================
+// Sync Mappings - Per-provider external ID tracking for sync (v0.5.0+)
+// ============================================================================
+
+export const syncMappings = sqliteTable("sync_mappings", {
+  id: text("id").primaryKey(), // UUID
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  entryId: text("entry_id")
+    .notNull()
+    .references(() => entries.id, { onDelete: "cascade" }),
+
+  provider: text("provider").notNull(), // 'obsidian', 'strava', etc.
+  externalId: text("external_id").notNull(), // Path, URI, or ID in external system
+  externalHash: text("external_hash"), // Hash of external content at last sync
+  internalHash: text("internal_hash"), // Hash of Ta-Da! entry content at last sync
+
+  lastSyncedAt: text("last_synced_at").notNull(), // ISO 8601
+  lastSyncDirection: text("last_sync_direction"), // 'pull' | 'push'
+
+  metadata: text("metadata", { mode: "json" }).$type<
+    Record<string, unknown>
+  >(), // Provider-specific extras
+
+  createdAt: text("created_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
+});
+
+export type SyncMapping = typeof syncMappings.$inferSelect;
+export type NewSyncMapping = typeof syncMappings.$inferInsert;

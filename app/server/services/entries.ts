@@ -5,7 +5,7 @@
  * Used by API v1 endpoints for entry management.
  */
 
-import { eq, and, gte, lte, desc, asc, isNull, or, like, sql } from "drizzle-orm";
+import { eq, and, gte, lte, gt, desc, asc, isNull, isNotNull, or, like, sql } from "drizzle-orm";
 import { db } from "~/server/db";
 import { entries } from "~/server/db/schema";
 import { withRetry } from "~/server/db/operations";
@@ -28,17 +28,37 @@ export async function getEntries(
     subcategory,
     tags,
     search,
+    updated_since,
+    include_deleted,
     limit = 100,
     offset = 0,
-    sort = "timestamp",
-    order = "desc",
+    sort = updated_since ? "updatedAt" : "timestamp",
+    order = updated_since ? "asc" : "desc",
   } = params;
+
+  // Determine whether to include soft-deleted entries
+  // When updated_since is set, include_deleted defaults to true (sync needs to see deletes)
+  const showDeleted = include_deleted ?? !!updated_since;
 
   // Build where conditions
   const conditions = [
     eq(entries.userId, userId),
-    isNull(entries.deletedAt), // Exclude soft-deleted entries
   ];
+
+  // Exclude soft-deleted entries unless explicitly included
+  if (!showDeleted) {
+    conditions.push(isNull(entries.deletedAt));
+  }
+
+  // Sync filter: entries changed (updated or deleted) since timestamp
+  if (updated_since) {
+    conditions.push(
+      or(
+        gt(entries.updatedAt, updated_since),
+        and(isNotNull(entries.deletedAt), gt(entries.deletedAt, updated_since)),
+      )!,
+    );
+  }
 
   // Date filter (specific day)
   if (date) {
@@ -104,9 +124,11 @@ export async function getEntries(
   const sortColumn =
     sort === "createdAt"
       ? entries.createdAt
-      : sort === "durationSeconds"
-        ? entries.durationSeconds
-        : entries.timestamp;
+      : sort === "updatedAt"
+        ? entries.updatedAt
+        : sort === "durationSeconds"
+          ? entries.durationSeconds
+          : entries.timestamp;
 
   const orderFn = order === "asc" ? asc : desc;
 

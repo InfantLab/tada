@@ -2,7 +2,7 @@
 
 What's coming next. For what already shipped, see [CHANGELOG.md](../CHANGELOG.md) and the release notes.
 
-**Current Version:** v0.4.2 (March 2026)
+**Current Version:** v0.4.2 (March 2026) | **Next:** v0.5.0 (Q2 2026)
 
 ---
 
@@ -26,21 +26,29 @@ What's coming next. For what already shipped, see [CHANGELOG.md](../CHANGELOG.md
 
 ---
 
-## v0.5.0: Modularity
+## v0.5.0: Modularity & Sync
 
 _Target: Q2 2026_
 
-**Theme:** Reorganize the codebase into self-contained modules before adding more features. Each entry type (tada, tally, timed, moment) becomes a module with its own components, composables, and metadata. Importers and exporters become pluggable. New entry types become addable without touching core code.
+**Theme:** Reorganize the codebase into self-contained modules, then build an extensible sync framework on top. Each entry type (tada, tally, timed, moment) becomes a module with its own components, composables, and metadata. Importers, exporters, and **sync providers** become pluggable. New entry types and integrations become addable without touching core code.
 
 **Approach:** Internal module registry (Option B from [modularity.md](modularity.md)) — no external plugin loading, just clean internal boundaries. Full design details in [spec](../specs/006-modularity/spec.md) and [implementation plan](../specs/006-modularity/plan.md).
 
-**Key deliverables:**
+**Key deliverables — Modularity (done):**
 - Module registry with `EntryTypeDefinition`, `DataImporter`, `DataExporter` interfaces
 - Core types (tada, tally, timed, moment) extracted into modules as reference implementations
 - Generic `/create/[type]` page powered by registry
 - Importer/exporter refactor to pluggable interfaces
 - Test coverage expansion for services and composables
 - Validation with one new entry type built as a pure module
+
+**Key deliverables — Sync API & Provider Framework ([spec](../specs/007-sync-api/spec.md)):**
+- `SyncProvider` interface — fourth module type alongside entry types, importers, exporters
+- `sync_mappings` table for per-provider external ID tracking (separate from entries)
+- Sync engine with pull/push orchestration, last-write-wins conflict resolution
+- API extensions: `updated_since` filter, `contentHash` field, `/sync/status`, `/sync/trigger`
+- **Obsidian sync provider** — bidirectional sync of entries with Obsidian vault markdown files
+- `sync-obsidian` CLI script for cron-based or manual sync
 
 ---
 
@@ -93,8 +101,12 @@ Gentle, celebratory nudges — never pushy, never guilt-tripping. Off by default
 
 ### External Integrations (Plugins)
 
-- [ ] Obsidian integration (dream journal sync)
+Built on the sync provider framework from v0.5.0:
+
+- [x] Obsidian integration (dream journal sync) — shipped in v0.5.0
+- [ ] Strava sync provider (one-way ingest of runs/rides)
 - [ ] Apple Health / Google Fit (meditation minutes)
+- [ ] Day One / journaling app sync
 - [ ] IFTTT / Zapier webhooks
 - [ ] Calendar integration (schedule ritual times)
 

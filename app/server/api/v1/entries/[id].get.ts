@@ -9,6 +9,7 @@
 import { requirePermission } from "~/server/utils/permissions";
 import { success, apiError, notFound } from "~/server/utils/response";
 import { getEntryById } from "~/server/services/entries";
+import { computeContentHash } from "~/server/utils/contentHash";
 
 export default defineEventHandler(async (event) => {
   // Require entries:read permission
@@ -34,8 +35,11 @@ export default defineEventHandler(async (event) => {
       throw createError(notFound(event, "Entry"));
     }
 
-    // Return success response
-    return success(event, entry);
+    // Return success response with contentHash for sync
+    return success(event, {
+      ...entry,
+      contentHash: computeContentHash(entry),
+    });
   } catch (error) {
     // Re-throw if already a createError
     if (error && typeof error === "object" && "statusCode" in error) {

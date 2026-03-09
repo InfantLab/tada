@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - Unreleased
+
+### Added
+
+- **Sync API & Provider Framework** ([Spec 007](specs/007-sync-api/spec.md)):
+  - `SyncProvider` interface — fourth module type for extensible integrations
+  - `sync_mappings` table for tracking per-provider external IDs and sync state
+  - Sync provider registry (`registerSyncProvider` / `getSyncProvider`)
+  - Sync engine with pull/push orchestration and last-write-wins conflict resolution
+  - `updated_since` and `include_deleted` query parameters on `GET /api/v1/entries`
+  - `contentHash` computed field on entry API responses for cheap change detection
+  - `GET /api/v1/sync/status` endpoint — server time, entry counts, per-provider stats
+  - `POST /api/v1/sync/trigger` endpoint — trigger sync for a specific provider
+  - `GET /api/v1/sync/mappings` endpoint — list/manage sync mappings
+  - `sync:manage` API permission for sync operations
+  - **Obsidian sync provider** — bidirectional sync of entries with Obsidian vault markdown files
+  - `scripts/sync-obsidian.ts` CLI script for cron-based or manual vault sync
+  - `.tada-sync.json` config file support for Obsidian sync
+
 ## [0.4.2] - 2026-03-05
 
 ### Added

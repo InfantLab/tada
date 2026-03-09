@@ -12,6 +12,7 @@ export type Permission =
   | 'insights:read'
   | 'export:read'
   | 'webhooks:manage'
+  | 'sync:manage'
   | 'user:read';
 
 // ============================================================================
@@ -185,12 +186,16 @@ export interface EntryQueryParams {
   tags?: string; // comma-separated
   search?: string;
 
+  // Sync filters
+  updated_since?: string; // ISO 8601 - return entries changed after this timestamp
+  include_deleted?: boolean; // Include soft-deleted entries (default: false, true when updated_since is set)
+
   // Pagination
   limit?: number; // 1-1000, default 100
   offset?: number;
 
   // Sorting
-  sort?: 'timestamp' | 'createdAt' | 'durationSeconds';
+  sort?: 'timestamp' | 'createdAt' | 'updatedAt' | 'durationSeconds';
   order?: 'asc' | 'desc';
 }
 

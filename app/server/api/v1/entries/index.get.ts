@@ -10,6 +10,7 @@ import { z } from "zod";
 import { requirePermission } from "~/server/utils/permissions";
 import { paginated, apiError, validationError } from "~/server/utils/response";
 import { getEntries } from "~/server/services/entries";
+import { computeContentHash } from "~/server/utils/contentHash";
 import type { EntryQueryParams } from "~/types/api";
 
 // Query parameter validation schema
@@ -26,12 +27,19 @@ const querySchema = z.object({
   tags: z.string().optional(), // comma-separated
   search: z.string().optional(),
 
+  // Sync filters
+  updated_since: z.string().datetime().optional(), // ISO 8601 - entries changed after this
+  include_deleted: z.preprocess(
+    (v) => v === "true" || v === "1" || v === true,
+    z.boolean().optional(),
+  ),
+
   // Pagination
   limit: z.coerce.number().int().min(1).max(1000).default(100),
   offset: z.coerce.number().int().min(0).default(0),
 
   // Sorting
-  sort: z.enum(["timestamp", "createdAt", "durationSeconds"]).default("timestamp"),
+  sort: z.enum(["timestamp", "createdAt", "updatedAt", "durationSeconds"]).default("timestamp"),
   order: z.enum(["asc", "desc"]).default("desc"),
 });
 
@@ -66,10 +74,16 @@ export default defineEventHandler(async (event) => {
     // Get entries from service
     const result = await getEntries(userId, queryParams);
 
+    // Add contentHash to each entry for sync change detection
+    const entriesWithHash = result.entries.map((entry) => ({
+      ...entry,
+      contentHash: computeContentHash(entry),
+    }));
+
     // Return paginated response
     return paginated(
       event,
-      result.entries,
+      entriesWithHash,
       result.total,
       queryParams.limit ?? 100,
       queryParams.offset ?? 0,
