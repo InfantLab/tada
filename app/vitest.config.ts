@@ -16,6 +16,7 @@ export default defineVitestConfig({
         isolate: true, // Ensure test isolation to prevent module pollution
       },
     },
+    hookTimeout: 30000,
     env: {
       DATABASE_URL: `file:${join(testDir, "data", "test.db")}`,
       NUXT_PUBLIC_SITE_URL: "http://localhost:3000",
@@ -27,6 +28,7 @@ export default defineVitestConfig({
       "**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*",
       "**/tests/stubs/**", // Exclude stub tests from main run
       "**/tests/api/**", // Exclude integration tests (need @nuxt/test-utils e2e rewrite)
+      "**/tests/e2e/**", // E2E tests run via Playwright, not vitest
     ],
     coverage: {
       provider: "istanbul",

@@ -944,3 +944,17 @@ export const syncMappings = sqliteTable("sync_mappings", {
 
 export type SyncMapping = typeof syncMappings.$inferSelect;
 export type NewSyncMapping = typeof syncMappings.$inferInsert;
+
+// ============================================================================
+// Rate Limits - Persistent rate limiting state (replaces in-memory Map)
+// ============================================================================
+
+export const rateLimits = sqliteTable("rate_limits", {
+  key: text("key").primaryKey(), // "{identifier}:{type}"
+  count: integer("count").notNull().default(0),
+  windowStart: integer("window_start").notNull(), // Unix timestamp in ms
+  windowEnd: integer("window_end").notNull(), // Unix timestamp in ms
+});
+
+export type RateLimit = typeof rateLimits.$inferSelect;
+export type NewRateLimit = typeof rateLimits.$inferInsert;

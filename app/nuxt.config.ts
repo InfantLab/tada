@@ -246,6 +246,8 @@ export default defineNuxtConfig({
     payloadExtraction: true,
     // Component islands for partial hydration (optional)
     componentIslands: true,
+    // Use serial builds until Vite Environment API manifest issue is resolved
+    viteEnvironmentApi: false,
   },
 
   compatibilityDate: "2026-01-10",

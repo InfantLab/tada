@@ -1,17 +1,15 @@
 /**
  * Rate Limiting Service
  *
- * Implements in-memory rate limiting with LRU cache for API requests.
- * Uses sliding window algorithm for accurate rate limiting.
+ * Implements SQLite-backed persistent rate limiting.
+ * Uses fixed-window algorithm stored in the database so limits
+ * survive server restarts.
  */
 
 import type { RateLimitInfo } from "~/types/api";
-
-interface RateLimitEntry {
-  count: number;
-  windowStart: number; // Unix timestamp in milliseconds
-  requests: number[]; // Array of request timestamps for sliding window
-}
+import { db } from "~/server/db";
+import { rateLimits } from "~/server/db/schema";
+import { eq, lt } from "drizzle-orm";
 
 // Rate limit configurations (requests per minute)
 const RATE_LIMITS = {
@@ -27,56 +25,18 @@ type RateLimitType = keyof typeof RATE_LIMITS;
 // Window duration in milliseconds
 const WINDOW_DURATION = 60 * 1000; // 1 minute
 
-// LRU Cache implementation
-class LRUCache<K, V> {
-  private cache: Map<K, V>;
-  private maxSize: number;
+// Cleanup expired entries periodically (not every call)
+let lastCleanup = 0;
+const CLEANUP_INTERVAL = 60 * 1000; // Run cleanup at most once per minute
 
-  constructor(maxSize: number = 10000) {
-    this.cache = new Map();
-    this.maxSize = maxSize;
-  }
+function maybeCleanup(): void {
+  const now = Date.now();
+  if (now - lastCleanup < CLEANUP_INTERVAL) return;
+  lastCleanup = now;
 
-  get(key: K): V | undefined {
-    const value = this.cache.get(key);
-    if (value !== undefined) {
-      // Move to end (most recently used)
-      this.cache.delete(key);
-      this.cache.set(key, value);
-    }
-    return value;
-  }
-
-  set(key: K, value: V): void {
-    // Remove if exists (to re-add at end)
-    if (this.cache.has(key)) {
-      this.cache.delete(key);
-    }
-
-    // If at capacity, remove least recently used (first item)
-    if (this.cache.size >= this.maxSize) {
-      const firstKey = this.cache.keys().next().value!;
-      this.cache.delete(firstKey);
-    }
-
-    this.cache.set(key, value);
-  }
-
-  delete(key: K): void {
-    this.cache.delete(key);
-  }
-
-  clear(): void {
-    this.cache.clear();
-  }
-
-  get size(): number {
-    return this.cache.size;
-  }
+  // Fire and forget — don't block the request
+  db.delete(rateLimits).where(lt(rateLimits.windowEnd, now)).run();
 }
-
-// Global rate limit cache
-const rateLimitCache = new LRUCache<string, RateLimitEntry>();
 
 /**
  * Check if a request should be rate limited
@@ -91,54 +51,55 @@ export function checkRateLimit(
 ): { allowed: boolean; info: RateLimitInfo } {
   const limit = RATE_LIMITS[type];
   const now = Date.now();
-  const windowStart = now - WINDOW_DURATION;
-
   const cacheKey = `${identifier}:${type}`;
-  let entry = rateLimitCache.get(cacheKey);
 
-  if (!entry) {
-    // First request in window
-    entry = {
-      count: 1,
-      windowStart: now,
-      requests: [now],
-    };
-    rateLimitCache.set(cacheKey, entry);
+  // Periodically clean up expired entries
+  maybeCleanup();
+
+  // Look up current window
+  const existing = db
+    .select()
+    .from(rateLimits)
+    .where(eq(rateLimits.key, cacheKey))
+    .get();
+
+  if (!existing || existing.windowEnd <= now) {
+    // No entry or window has expired — start a new window
+    const windowEnd = now + WINDOW_DURATION;
+
+    db.insert(rateLimits)
+      .values({ key: cacheKey, count: 1, windowStart: now, windowEnd })
+      .onConflictDoUpdate({
+        target: rateLimits.key,
+        set: { count: 1, windowStart: now, windowEnd },
+      })
+      .run();
 
     return {
       allowed: true,
       info: {
         limit,
         remaining: limit - 1,
-        reset: Math.floor((now + WINDOW_DURATION) / 1000),
+        reset: Math.floor(windowEnd / 1000),
       },
     };
   }
 
-  // Remove requests outside the sliding window
-  entry.requests = entry.requests.filter((timestamp) => timestamp > windowStart);
+  // Window is still active — increment count
+  const newCount = existing.count + 1;
 
-  // Add current request
-  entry.requests.push(now);
-  entry.count = entry.requests.length;
+  db.update(rateLimits)
+    .set({ count: newCount })
+    .where(eq(rateLimits.key, cacheKey))
+    .run();
 
-  // Update window start
-  entry.windowStart = now;
+  const allowed = newCount <= limit;
+  const remaining = Math.max(0, limit - newCount);
+  const resetTime = Math.floor(existing.windowEnd / 1000);
 
-  // Save updated entry
-  rateLimitCache.set(cacheKey, entry);
-
-  const allowed = entry.count <= limit;
-  const remaining = Math.max(0, limit - entry.count);
-
-  // Calculate reset time (when oldest request in window will expire)
-  const oldestRequest = entry.requests[0] || now;
-  const resetTime = Math.floor((oldestRequest + WINDOW_DURATION) / 1000);
-
-  // Calculate retry after (seconds until a request slot frees up)
   const retryAfter = allowed
     ? undefined
-    : Math.ceil((oldestRequest + WINDOW_DURATION - now) / 1000);
+    : Math.ceil((existing.windowEnd - now) / 1000);
 
   return {
     allowed,
@@ -164,12 +125,11 @@ export function resetRateLimit(
 ): void {
   if (type) {
     const cacheKey = `${identifier}:${type}`;
-    rateLimitCache.delete(cacheKey);
+    db.delete(rateLimits).where(eq(rateLimits.key, cacheKey)).run();
   } else {
-    // Reset all rate limits for this identifier
     for (const limitType of Object.keys(RATE_LIMITS)) {
       const cacheKey = `${identifier}:${limitType}`;
-      rateLimitCache.delete(cacheKey);
+      db.delete(rateLimits).where(eq(rateLimits.key, cacheKey)).run();
     }
   }
 }
@@ -187,12 +147,15 @@ export function getRateLimitStatus(
 ): RateLimitInfo {
   const limit = RATE_LIMITS[type];
   const now = Date.now();
-  const windowStart = now - WINDOW_DURATION;
-
   const cacheKey = `${identifier}:${type}`;
-  const entry = rateLimitCache.get(cacheKey);
 
-  if (!entry) {
+  const existing = db
+    .select()
+    .from(rateLimits)
+    .where(eq(rateLimits.key, cacheKey))
+    .get();
+
+  if (!existing || existing.windowEnd <= now) {
     return {
       limit,
       remaining: limit,
@@ -200,15 +163,8 @@ export function getRateLimitStatus(
     };
   }
 
-  // Count requests within window
-  const activeRequests = entry.requests.filter(
-    (timestamp) => timestamp > windowStart,
-  ).length;
-  const remaining = Math.max(0, limit - activeRequests);
-
-  // Calculate reset time
-  const oldestRequest = entry.requests[0] || now;
-  const resetTime = Math.floor((oldestRequest + WINDOW_DURATION) / 1000);
+  const remaining = Math.max(0, limit - existing.count);
+  const resetTime = Math.floor(existing.windowEnd / 1000);
 
   return {
     limit,
@@ -222,16 +178,15 @@ export function getRateLimitStatus(
  * Useful for testing or maintenance
  */
 export function clearAllRateLimits(): void {
-  rateLimitCache.clear();
+  db.delete(rateLimits).run();
 }
 
 /**
- * Get cache statistics
+ * Get rate limit statistics
  * Useful for monitoring
  */
 export function getRateLimitStats() {
   return {
-    cacheSize: rateLimitCache.size,
     limits: RATE_LIMITS,
     windowDuration: WINDOW_DURATION,
   };

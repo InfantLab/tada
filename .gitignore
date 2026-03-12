@@ -38,6 +38,9 @@ npm-debug.log*
 # Testing
 coverage/
 .nyc_output/
+test-results/
+playwright-report/
+blob-report/
 
 # Old data (personal exports)
 old_data/

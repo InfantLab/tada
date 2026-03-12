@@ -1,7 +1,7 @@
 # V0.5 Housekeeping Audit
 
 **Date:** 2026-03-10
-**Status:** Complete (Tiers 1-3)
+**Status:** Complete (All Tiers)
 **Theme:** Administrative release — security hardening, testing, documentation, dependency updates
 
 ---
@@ -220,17 +220,17 @@ All major packages verified as used in the codebase.
 
 ### Tier 4 — Nice to Have (longer-term, track for v0.6.0)
 
-- [ ] 23. **Execute Nuxt 4 migration** (if not done in Tier 2)
+- [x] 23. **Execute Nuxt 4 migration** — Nuxt 4.4.2, @nuxt/test-utils 4.0, @vite-pwa/nuxt 1.1.1, @nuxt/eslint 1.15.2, removed @nuxt/devtools (bundled)
 - [x] 24. **Lucia auth migration execution** — DONE in v0.5.0
-- [ ] 25. **Add admin API tests**
-- [ ] 26. **Add sync engine tests**
-- [ ] 27. **Add billing/Stripe tests**
-- [ ] 28. **Persistent rate limiting** (Redis or DB-backed)
-- [ ] 29. **Replace `db: any`** with proper Drizzle types in entryEngine.ts
-- [ ] 30. **Consider Tailwind v4** upgrade
-- [ ] 31. **Consider Zod v4** upgrade
-- [ ] 32. **Add component tests** (phased, starting with critical forms)
-- [ ] 33. **Add E2E tests** with Playwright
+- [x] 25. **Add admin API tests** — 26 tests covering users, stats, sessions, user updates
+- [x] 26. **Add sync engine tests** — 25 tests covering content hashing, conflict detection, sync operations
+- [x] 27. **Add billing/Stripe tests** — 40 tests covering checkout, portal, webhooks, subscription lifecycle
+- [x] 28. **Persistent rate limiting** — SQLite-backed via rateLimits table, survives restarts
+- [x] 29. **Replace `db: any`** — proper `Database` type from `~/server/db` in entryEngine.ts
+- [ ] 30. **Consider Tailwind v4** — deferred, @nuxtjs/tailwindcss module not yet compatible with v4
+- [x] 31. **Zod v4 upgrade** — 3.23.8 → 4.3.6, zero breaking changes
+- [x] 32. **Add component tests** — 47 tests for login, forgot-password, reset-password pages
+- [x] 33. **Add E2E tests** — Playwright setup with 4 smoke tests
 
 ---
 

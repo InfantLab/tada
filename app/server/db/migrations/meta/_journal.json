@@ -120,6 +120,13 @@
       "when": 1771340400000,
       "tag": "0020_journey_thresholds",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "6",
+      "when": 1773504000000,
+      "tag": "0021_rate_limits",
+      "breakpoints": true
     }
   ]
 }

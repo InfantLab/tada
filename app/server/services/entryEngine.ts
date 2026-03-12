@@ -10,6 +10,7 @@
 import { eq, and, isNull } from "drizzle-orm";
 import type { Entry } from "../db/schema";
 import { entries, activityHistory } from "../db/schema";
+import type { Database } from "../db";
 import { createLogger } from "../utils/logger";
 import {
   validateEntryInput,
@@ -67,13 +68,7 @@ export function validate(input: unknown): { valid: boolean; errors: string[] } {
  * @param options - Creation options
  */
 export async function createEntry(
-  db: Parameters<
-    typeof entries._.columns.id.mapFromDriverValue
-  >[0] extends never
-    ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      any
-    : // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      any,
+  db: Database,
   userId: string,
   input: EntryInput,
   options: CreateEntryOptions = {},
@@ -214,8 +209,7 @@ export async function createEntry(
  * Update activity history for autocomplete suggestions
  */
 async function updateActivityHistory(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  db: any,
+  db: Database,
   userId: string,
   input: EntryInput,
 ): Promise<void> {
@@ -264,8 +258,7 @@ async function updateActivityHistory(
  * Get activity suggestions for autocomplete
  */
 export async function getSuggestions(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  db: any,
+  db: Database,
   userId: string,
   query: string,
   entryType?: string,
@@ -340,8 +333,7 @@ export async function getSuggestions(
  * Get user's recently used durations (for DurationPicker)
  */
 export async function getRecentDurations(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  db: any,
+  db: Database,
   userId: string,
   limit = 5,
 ): Promise<number[]> {
@@ -375,8 +367,7 @@ export async function getRecentDurations(
  * Get user's recently used counts (for CountPicker)
  */
 export async function getRecentCounts(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  db: any,
+  db: Database,
   userId: string,
   limit = 5,
 ): Promise<number[]> {
