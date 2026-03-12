@@ -1,7 +1,7 @@
 # V0.5 Housekeeping Audit
 
 **Date:** 2026-03-10
-**Status:** Planning
+**Status:** Complete (Tiers 1-3)
 **Theme:** Administrative release — security hardening, testing, documentation, dependency updates
 
 ---
@@ -198,30 +198,30 @@ All major packages verified as used in the codebase.
 
 ### Tier 2 — Should Do (testing, upgrades & Nuxt migration planning)
 
-- [ ] 7. **Plan Nuxt 4 migration** — Nuxt 3 EOL July 2026, start compatibility testing now
-- [ ] 8. **Add auth endpoint tests** — login, register, password reset (highest-risk untested area)
-- [ ] 9. **Add entry CRUD tests** — core user workflow
-- [ ] 10. **Fix 7 failing logger tests**
-- [ ] 11. **Update Stripe SDK** 17 → 20
-- [ ] 12. **Update TypeScript** 5.7 → 5.9
-- [ ] 13. **Update @libsql/client** 0.14 → 0.17
-- [ ] 14. **Block private IPs in link-preview** (SSRF fix)
-- [ ] 15. **Add CSV import size limits**
+- [x] 7. **Plan Nuxt 4 migration** — see [nuxt4-migration-plan.md](nuxt4-migration-plan.md). Low-medium risk, 1-2 days effort.
+- [x] 8. **Add auth endpoint tests** — 38 tests covering login, register, logout, password change, session management
+- [x] 9. **Add entry CRUD tests** — 33 tests covering create, read, update, delete operations
+- [x] 10. **Fix 7 failing logger tests** — verified all 14 tests pass
+- [x] 11. **Update Stripe SDK** 17.5.0 → 20.4.1
+- [x] 12. **Update TypeScript** 5.7.2 → 5.9.3
+- [x] 13. **Update @libsql/client** 0.14.0 → 0.17.0
+- [x] 14. **Block private IPs in link-preview** (SSRF fix)
+- [x] 15. **Add CSV import size limits**
 
 ### Tier 3 — Should Do (docs & quality)
 
-- [ ] 16. **Document Admin API** in API-SPECIFICATION.md
-- [ ] 17. **Update version references** across all docs (AGENTS.md, DEVELOPER_GUIDE, etc.)
-- [ ] 18. **Mark completed specs** (001-005) as "Completed"
-- [ ] 19. **Bump package.json** to 0.5.0
-- [ ] 20. **Clean up console.log** in useTranscription.ts
-- [ ] 21. **Create CONTRIBUTING.md**
-- [ ] 22. **Update CHANGELOG** unreleased section for v0.5.0
+- [x] 16. **Document Admin API** in API-SPECIFICATION.md
+- [x] 17. **Update version references** across all docs (AGENTS.md, DEVELOPER_GUIDE, etc.)
+- [x] 18. **Mark completed specs** (001-005) as "Completed"
+- [x] 19. **Bump package.json** to 0.5.0
+- [x] 20. **Clean up console.log** in useTranscription.ts
+- [x] 21. **Create CONTRIBUTING.md** — practical guide with setup, workflow, conventions, testing
+- [x] 22. **Update CHANGELOG** unreleased section for v0.5.0
 
 ### Tier 4 — Nice to Have (longer-term, track for v0.6.0)
 
 - [ ] 23. **Execute Nuxt 4 migration** (if not done in Tier 2)
-- [ ] 24. **Lucia auth migration execution**
+- [x] 24. **Lucia auth migration execution** — DONE in v0.5.0
 - [ ] 25. **Add admin API tests**
 - [ ] 26. **Add sync engine tests**
 - [ ] 27. **Add billing/Stripe tests**

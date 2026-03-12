@@ -64,7 +64,9 @@
       "WebFetch(domain:lucia-auth.com)",
       "WebFetch(domain:nuxt.com)",
       "WebFetch(domain:www.better-auth.com)",
-      "WebFetch(domain:arcticjs.dev)"
+      "WebFetch(domain:arcticjs.dev)",
+      "Bash(grep -E '\"\"stripe\"\"|\"\"typescript\"\"|\"\"@libsql/client\"\"' package.json)",
+      "Bash(bunx vitest:*)"
     ],
     "additionalDirectories": [
       "/tmp",

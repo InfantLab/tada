@@ -23,14 +23,14 @@
     "db:studio": "DATABASE_URL=file:../data/db.sqlite drizzle-kit studio"
   },
   "dependencies": {
-    "@libsql/client": "^0.14.0",
+    "@libsql/client": "^0.17.0",
     "bcryptjs": "^3.0.3",
     "drizzle-orm": "^0.38.3",
     "emoji-picker-element": "^1.26.0",
     "nanoid": "^5.1.6",
     "nodemailer": "^7.0.12",
     "papaparse": "^5.5.2",
-    "stripe": "^17.5.0",
+    "stripe": "^20.4.1",
     "vue-virtual-scroller": "^1.1.2",
     "zod": "3.23.8"
   },
@@ -53,7 +53,7 @@
     "happy-dom": "^16.0.0",
     "nuxt": "^3.15.1",
     "tailwindcss": "^3.4.17",
-    "typescript": "^5.7.2",
+    "typescript": "^5.9.3",
     "vitest": "^3.0.0",
     "vue-tsc": "^3.2.2"
   }
