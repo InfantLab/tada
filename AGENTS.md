@@ -54,7 +54,7 @@ Types and categories are **open strings** — just use them, no enum changes nee
 | [design/ontology.md](design/ontology.md)     | Entry types, categories, emojis             |
 | [design/roadmap.md](design/roadmap.md)       | Feature roadmap by version                  |
 
-### Current Version: v0.3.0
+### Current Version: v0.5.0
 
 See [design/roadmap.md](design/roadmap.md) for full details. Key features:
 

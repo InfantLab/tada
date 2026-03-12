@@ -235,7 +235,7 @@ chore: upgrade emoji-picker-element to v1.28
 
 ### Testing Strategy
 
-**Current State (v0.2.0):**
+**Current State (v0.5.0):**
 
 - ✅ **80 tests** passing
 - ✅ **Co-located tests** - next to source files

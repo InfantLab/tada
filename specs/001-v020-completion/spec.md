@@ -2,7 +2,7 @@
 
 **Feature Branch**: `001-v020-completion`  
 **Created**: 2026-01-14  
-**Status**: Draft  
+**Status**: Completed  
 **Input**: Complete v0.2.0 Core Experience - all remaining roadmap items including user customisation, Ta-Da celebration page, entry improvements, graceful rhythms, practice links, photo attachments, and polish
 
 ## User Scenarios & Testing _(mandatory)_

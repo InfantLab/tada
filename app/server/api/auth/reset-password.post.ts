@@ -35,10 +35,10 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    if (body.password.length < 6) {
+    if (body.password.length < 8) {
       throw createError({
         statusCode: 400,
-        statusMessage: "Password must be at least 6 characters",
+        statusMessage: "Password must be at least 8 characters",
       });
     }
 

@@ -41,7 +41,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       appName: "Tada",
-      appVersion: "0.4.1",
+      appVersion: "0.5.0",
       appUrl: process.env["APP_URL"] || "http://localhost:3000",
       isCloudMode:
         process.env["TADA_CLOUD_MODE"] === "true" ||

@@ -55,8 +55,8 @@ async function handleSubmit() {
       return;
     }
 
-    if (password.value.length < 6) {
-      error.value = "Password must be at least 6 characters";
+    if (password.value.length < 8) {
+      error.value = "Password must be at least 8 characters";
       return;
     }
   }
@@ -155,7 +155,7 @@ async function handleSubmit() {
               class="w-full px-4 py-3 rounded-lg border border-text-light-muted/30 dark:border-text-dark-muted/30 bg-pearl-base dark:bg-cosmic-void text-text-light-primary dark:text-text-dark-primary focus:outline-none focus:ring-2 focus:ring-tada-500 dark:focus:ring-tada-500 focus:border-transparent"
               :placeholder="
                 mode === 'register'
-                  ? 'Choose a password (min 6 characters)'
+                  ? 'Choose a password (min 8 characters)'
                   : 'Enter your password'
               "
             />

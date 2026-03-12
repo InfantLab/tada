@@ -24,6 +24,10 @@ const fieldMappingSchema = z.object({
   timezone: z.string().optional(),
 });
 
+// Limits
+const MAX_CSV_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
+const MAX_ROW_COUNT = 50_000;
+
 // Import request schema
 const importRequestSchema = z.object({
   csvData: z.string().min(1),
@@ -59,9 +63,34 @@ export default defineEventHandler(async (event) => {
 
   const { csvData, fieldMapping, dryRun, skipDuplicates } = parseResult.data;
 
+  // Enforce maximum file size (5MB)
+  const csvSizeBytes = new TextEncoder().encode(csvData).byteLength;
+  if (csvSizeBytes > MAX_CSV_SIZE_BYTES) {
+    throw createError(
+      apiError(
+        event,
+        "CSV_TOO_LARGE",
+        "CSV file exceeds maximum size of 5MB",
+        413,
+      ),
+    );
+  }
+
   try {
     // Parse CSV
     const parsedEntries = await parseCSV(csvData, fieldMapping);
+
+    // Enforce maximum row count
+    if (parsedEntries.length > MAX_ROW_COUNT) {
+      throw createError(
+        apiError(
+          event,
+          "CSV_TOO_MANY_ROWS",
+          "CSV exceeds maximum of 50,000 rows",
+          400,
+        ),
+      );
+    }
 
     if (parsedEntries.length === 0) {
       throw createError(

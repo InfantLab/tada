@@ -421,8 +421,8 @@ async function changePassword() {
     return;
   }
 
-  if (passwordForm.value.newPassword.length < 6) {
-    passwordError.value = "New password must be at least 6 characters";
+  if (passwordForm.value.newPassword.length < 8) {
+    passwordError.value = "New password must be at least 8 characters";
     return;
   }
 
@@ -1250,7 +1250,7 @@ onMounted(() => {
                 <input
                   v-model="passwordForm.newPassword"
                   type="password"
-                  placeholder="New password (min 6 characters)"
+                  placeholder="New password (min 8 characters)"
                   class="w-full px-3 py-2 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-700 text-stone-800 dark:text-stone-100 text-sm focus:outline-none focus:ring-2 focus:ring-tada-500"
                 />
                 <input

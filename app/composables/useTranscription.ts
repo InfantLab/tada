@@ -223,8 +223,6 @@ export function useTranscription(): UseTranscriptionReturn {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Transcription failed";
-      // Log to console for debugging
-      console.error("[useTranscription] Error:", err);
       error.value = message;
       status.value = "error";
       result.value = {
@@ -507,13 +505,6 @@ export function useTranscription(): UseTranscriptionReturn {
   function cleanupRecognitionInstance(): void {
     const instance = recognitionInstance.value;
     if (instance) {
-      console.log(
-        `[useTranscription] Cleaning up existing recognition instance`,
-        {
-          timestamp: new Date().toISOString(),
-        },
-      );
-
       // Remove all event handlers to prevent callbacks during cleanup
       instance.onresult = null;
       instance.onerror = null;
@@ -545,12 +536,6 @@ export function useTranscription(): UseTranscriptionReturn {
   async function startLiveTranscription(
     options: TranscriptionOptions = {},
   ): Promise<boolean> {
-    console.log(`[useTranscription] startLiveTranscription called`, {
-      timestamp: new Date().toISOString(),
-      hasExistingInstance: !!recognitionInstance.value,
-      currentStatus: status.value,
-    });
-
     // CRITICAL: Always cleanup any existing instance first
     // This prevents stale session errors when navigating between pages
     cleanupRecognitionInstance();
@@ -578,7 +563,6 @@ export function useTranscription(): UseTranscriptionReturn {
 
       // Track if this instance is still active (for async callbacks)
       // This prevents race conditions if a new instance is created
-      const instanceId = crypto.randomUUID();
       let isActive = true;
 
       // Simple transcript accumulation following MDN pattern
@@ -605,17 +589,6 @@ export function useTranscription(): UseTranscriptionReturn {
         // Full text = all finals + current interim
         const fullText = (finalTranscript + interimTranscript).trim();
 
-        console.log(`[useTranscription] onresult`, {
-          timestamp: new Date().toISOString(),
-          instanceId: instanceId.slice(0, 8),
-          resultIndex: speechEvent.resultIndex,
-          resultsLength: speechEvent.results.length,
-          finalTranscriptLength: finalTranscript.length,
-          interimTranscriptLength: interimTranscript.length,
-          fullTextPreview:
-            fullText.slice(0, 80) + (fullText.length > 80 ? "..." : ""),
-        });
-
         // Update our refs
         liveTranscript.value = fullText;
         result.value = {
@@ -639,39 +612,17 @@ export function useTranscription(): UseTranscriptionReturn {
         // Guard 2: Check if we've already been stopped (e.g., user clicked stop)
         // This prevents race conditions where the error fires after stopLiveTranscription
         if (status.value !== "transcribing") {
-          console.log(
-            `[useTranscription] Ignoring error - already stopped (status: ${status.value})`,
-          );
           return;
         }
 
         const errorEvent = event as SpeechRecognitionErrorEvent;
-        const timestamp = new Date().toISOString();
-
-        console.log(`[useTranscription] onerror fired`, {
-          timestamp,
-          instanceId: instanceId.slice(0, 8),
-          errorCode: errorEvent.error,
-          errorMessage: errorEvent.message,
-          currentStatus: status.value,
-          hasLiveTranscript: !!liveTranscript.value,
-          liveTranscriptLength: liveTranscript.value?.length || 0,
-          liveTranscriptPreview:
-            liveTranscript.value?.slice(0, 50) || "(empty)",
-        });
 
         // Ignore non-fatal errors - these happen normally during speech recognition
         if (errorEvent.error === "no-speech") {
-          console.log(
-            `[useTranscription] No speech detected, continuing to listen...`,
-          );
           return;
         }
 
         if (errorEvent.error === "aborted") {
-          console.log(
-            `[useTranscription] Recognition aborted (expected during cleanup)`,
-          );
           return;
         }
 
@@ -680,9 +631,6 @@ export function useTranscription(): UseTranscriptionReturn {
           // Check both liveTranscript and result.value for captured text
           const hasTranscript = liveTranscript.value || result.value?.text;
           if (hasTranscript) {
-            console.log(
-              `[useTranscription] Network error but have transcript - treating as success`,
-            );
             // Don't set error state, the transcript is valid
             // Gracefully stop recognition
             isActive = false;
@@ -691,12 +639,6 @@ export function useTranscription(): UseTranscriptionReturn {
           }
           // Network error with no transcript - try to recover gracefully
           isActive = false;
-          console.warn(
-            `[useTranscription] Network error with no transcript - will allow user to retry`,
-            {
-              errorCode: errorEvent.error,
-            },
-          );
           // Don't show a scary error - Web Speech API network errors are common
           // and usually mean the service stopped listening (normal browser behavior)
           // Only show error if user hasn't spoken yet
@@ -706,10 +648,6 @@ export function useTranscription(): UseTranscriptionReturn {
           return;
         }
 
-        console.error(`[useTranscription] Fatal error, setting error state`, {
-          errorCode: errorEvent.error,
-          mappedMessage: getSpeechErrorMessage(errorEvent.error),
-        });
         error.value = getSpeechErrorMessage(errorEvent.error);
         status.value = "error";
         isActive = false;
@@ -717,39 +655,22 @@ export function useTranscription(): UseTranscriptionReturn {
       };
 
       recognition.onend = () => {
-        console.log(`[useTranscription] onend fired`, {
-          timestamp: new Date().toISOString(),
-          instanceId: instanceId.slice(0, 8),
-          isActive,
-          status: status.value,
-          hasRecognitionInstance: !!recognitionInstance.value,
-          liveTranscriptLength: liveTranscript.value?.length || 0,
-        });
-
         // Only auto-restart if this instance is still active and we're still transcribing
         if (
           isActive &&
           status.value === "transcribing" &&
           recognitionInstance.value === recognition
         ) {
-          console.log(`[useTranscription] Auto-restarting recognition`);
           // Add a small delay before restarting to avoid race conditions
           setTimeout(() => {
             // Double-check we're still active after the delay
             if (!isActive || status.value !== "transcribing") {
-              console.log(
-                `[useTranscription] Status changed during restart delay, aborting restart`,
-              );
               return;
             }
 
             try {
               recognition.start();
-            } catch (err) {
-              console.error(
-                `[useTranscription] Failed to restart recognition`,
-                err,
-              );
+            } catch {
               // Don't treat restart failures as fatal errors
               // The user can just click the mic button again
               // Only set error if we haven't captured any transcript yet
@@ -761,33 +682,17 @@ export function useTranscription(): UseTranscriptionReturn {
                 cleanupRecognitionInstance();
               } else {
                 // We have transcript, just silently stop auto-restart
-                console.log(
-                  `[useTranscription] Have transcript, stopping auto-restart silently`,
-                );
                 isActive = false;
               }
             }
           }, 100);
-        } else {
-          console.log(
-            `[useTranscription] Not restarting - session ended normally`,
-          );
         }
       };
-
-      console.log(`[useTranscription] Starting recognition`, {
-        timestamp: new Date().toISOString(),
-        instanceId: instanceId.slice(0, 8),
-        language: recognition.lang,
-        continuous: recognition.continuous,
-        interimResults: recognition.interimResults,
-      });
 
       recognition.start();
       recognitionInstance.value = recognition as SpeechRecognitionInstance;
       return true;
     } catch (err) {
-      console.error(`[useTranscription] Failed to start recognition`, err);
       error.value =
         err instanceof Error ? err.message : "Failed to start transcription";
       status.value = "error";
@@ -801,13 +706,6 @@ export function useTranscription(): UseTranscriptionReturn {
    * Properly cleans up the recognition instance to prevent stale session issues
    */
   function stopLiveTranscription(): void {
-    console.log(`[useTranscription] stopLiveTranscription called`, {
-      timestamp: new Date().toISOString(),
-      hasInstance: !!recognitionInstance.value,
-      currentStatus: status.value,
-      liveTranscriptLength: liveTranscript.value?.length || 0,
-    });
-
     // Set status to idle FIRST to prevent auto-restart in onend handler
     status.value = "idle";
 
@@ -819,9 +717,6 @@ export function useTranscription(): UseTranscriptionReturn {
    * Reset all state
    */
   function reset(): void {
-    console.log(`[useTranscription] reset called`, {
-      timestamp: new Date().toISOString(),
-    });
     status.value = "idle";
     cleanupRecognitionInstance();
     result.value = null;
@@ -833,10 +728,6 @@ export function useTranscription(): UseTranscriptionReturn {
 
   // Cleanup on unmount - critical for preventing stale instances after navigation
   onUnmounted(() => {
-    console.log(`[useTranscription] Component unmounting, cleaning up`, {
-      timestamp: new Date().toISOString(),
-      hasInstance: !!recognitionInstance.value,
-    });
     status.value = "idle";
     cleanupRecognitionInstance();
   });

@@ -1256,6 +1256,412 @@ Content-Type: application/json
 
 ---
 
+### Admin
+
+Administrative endpoints for user management, system monitoring, and support operations. All admin endpoints require the requesting user to be listed in the `ADMIN_USER_IDS` environment variable. For API key authentication, the key must also have the corresponding `admin:*` permission scope.
+
+**Permission Model:**
+- Admin status is determined by the `ADMIN_USER_IDS` env var (comma-separated user IDs)
+- Session-based auth: only checks admin status (sessions have all permissions)
+- API key auth: checks admin status AND that the key has the required permission
+
+**Admin Permissions:**
+```typescript
+type AdminPermission =
+  | 'admin:stats'        // View site-wide statistics
+  | 'admin:health'       // View system health and send test emails
+  | 'admin:activity'     // View site-wide activity feed
+  | 'admin:users'        // View user details
+  | 'admin:users:write'  // Modify users, reset passwords, invalidate sessions
+  | 'admin:feedback'     // View and manage feedback submissions
+```
+
+**Rate Limit:** All admin endpoints share the admin rate limit tier of 100 requests per minute.
+
+#### Get Site Statistics
+
+```http
+GET /api/v1/admin/stats
+Authorization: Bearer API_KEY
+```
+
+**Required Permission:** `admin:stats`
+
+**Query Parameters:**
+
+| Parameter | Type | Description | Default |
+|-----------|------|-------------|---------|
+| `period` | string | Time period: `24h`, `7d`, `30d`, `90d`, `all` | `7d` |
+
+**Response:**
+```json
+{
+  "data": {
+    "users": { "total": 142, "new": 12 },
+    "entries": { "total": 15234, "new": 842 },
+    "rhythms": { "total": 320, "new": 18 },
+    "period": "7d"
+  }
+}
+```
+
+#### Get System Health
+
+```http
+GET /api/v1/admin/health
+Authorization: Bearer API_KEY
+```
+
+**Required Permission:** `admin:health`
+
+Returns detailed system health including database connectivity, table row counts, uptime, and environment info. Unlike the public `/api/v1/health` endpoint, this returns operational data.
+
+**Response:**
+```json
+{
+  "data": {
+    "status": "healthy",
+    "uptime": 86400,
+    "database": {
+      "status": "connected",
+      "tables": {
+        "users": 142,
+        "entries": 15234,
+        "rhythms": 320,
+        "sessions": 45,
+        "apiKeys": 12,
+        "feedback": 8,
+        "newsletterSubscribers": 230
+      }
+    },
+    "cloudMode": true,
+    "environment": "production"
+  }
+}
+```
+
+#### Get Activity Feed
+
+```http
+GET /api/v1/admin/activity
+Authorization: Bearer API_KEY
+```
+
+**Required Permission:** `admin:activity`
+
+Site-wide activity feed showing recent signups, logins, subscription changes, and password resets.
+
+**Query Parameters:**
+
+| Parameter | Type | Description | Default |
+|-----------|------|-------------|---------|
+| `type` | string | Filter: `signup`, `subscription`, `login`, `password_reset` | all types |
+| `limit` | number | Max results (1-200) | `50` |
+| `offset` | number | Pagination offset | `0` |
+
+**Response:**
+```json
+{
+  "data": [
+    {
+      "type": "signup",
+      "timestamp": "2026-01-31T12:00:00Z",
+      "user": { "id": "user_abc123", "username": "caspar" },
+      "details": {}
+    },
+    {
+      "type": "subscription",
+      "timestamp": "2026-01-31T11:00:00Z",
+      "user": { "id": "user_xyz789", "username": "alice" },
+      "details": { "event": "subscription_created" }
+    }
+  ],
+  "meta": {
+    "total": 256,
+    "limit": 50,
+    "offset": 0,
+    "hasMore": true
+  }
+}
+```
+
+#### List Users
+
+```http
+GET /api/v1/admin/users
+Authorization: Bearer API_KEY
+```
+
+**Required Permission:** `admin:users`
+
+**Query Parameters:**
+
+| Parameter | Type | Description | Default |
+|-----------|------|-------------|---------|
+| `tier` | string | Filter: `free`, `premium` | all |
+| `status` | string | Filter: `active`, `cancelled`, `expired`, `past_due`, `suspended` | all |
+| `search` | string | Search by username or email | |
+| `sort` | string | Sort field: `createdAt`, `username`, `lastActiveAt` | `createdAt` |
+| `order` | asc/desc | Sort order | `desc` |
+| `limit` | number | Max results (1-200) | `50` |
+| `offset` | number | Pagination offset | `0` |
+
+**Response:**
+```json
+{
+  "data": [
+    {
+      "id": "user_abc123",
+      "username": "caspar",
+      "email": "caspar@example.com",
+      "emailVerified": true,
+      "subscriptionTier": "premium",
+      "subscriptionStatus": "active",
+      "createdAt": "2015-02-15T00:00:00Z",
+      "lastActiveAt": "2026-01-31T07:30:00Z",
+      "stats": {
+        "entryCount": 15234,
+        "rhythmCount": 5
+      }
+    }
+  ],
+  "meta": {
+    "total": 142,
+    "limit": 50,
+    "offset": 0,
+    "hasMore": true
+  }
+}
+```
+
+#### Get User Detail
+
+```http
+GET /api/v1/admin/users/:id
+Authorization: Bearer API_KEY
+```
+
+**Required Permission:** `admin:users`
+
+Detailed view of a single user for support purposes. Includes subscription info, usage stats, and recent activity. Access is logged for audit purposes.
+
+**Response:**
+```json
+{
+  "data": {
+    "id": "user_abc123",
+    "username": "caspar",
+    "email": "caspar@example.com",
+    "emailVerified": true,
+    "timezone": "Europe/London",
+    "subscriptionTier": "premium",
+    "subscriptionStatus": "active",
+    "stripeCustomerId": "cus_xxx",
+    "subscriptionExpiresAt": "2027-01-01T00:00:00Z",
+    "createdAt": "2015-02-15T00:00:00Z",
+    "updatedAt": "2026-01-31T07:30:00Z",
+    "stats": {
+      "entryCount": 15234,
+      "rhythmCount": 5,
+      "lastEntryAt": "2026-01-31T07:30:00Z",
+      "firstEntryAt": "2015-02-15T08:00:00Z",
+      "apiKeyCount": 2,
+      "activeSessions": 3
+    },
+    "recentActivity": {
+      "lastLogin": "2026-01-31T06:45:00Z",
+      "loginsLast30d": 28,
+      "entriesLast7d": 42
+    }
+  }
+}
+```
+
+#### Update User
+
+```http
+PATCH /api/v1/admin/users/:id
+Authorization: Bearer API_KEY
+Content-Type: application/json
+
+{
+  "subscriptionTier": "premium",
+  "subscriptionStatus": "active",
+  "subscriptionExpiresAt": "2027-01-01T00:00:00Z",
+  "emailVerified": true
+}
+```
+
+**Required Permission:** `admin:users:write`
+
+**Updatable Fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `subscriptionTier` | string | `free` or `premium` |
+| `subscriptionStatus` | string | `active`, `cancelled`, `expired`, `past_due`, `suspended` |
+| `subscriptionExpiresAt` | string/null | ISO 8601 datetime or null |
+| `emailVerified` | boolean | Email verification status |
+
+**Response:** Updated user object. Previous values are recorded in the audit log.
+
+#### Trigger Password Reset
+
+```http
+POST /api/v1/admin/users/:id/reset-password
+Authorization: Bearer API_KEY
+```
+
+**Required Permission:** `admin:users:write`
+
+Triggers the standard password reset flow by sending a reset email to the user. Does not set the password directly.
+
+**Response:**
+```json
+{
+  "data": {
+    "message": "Password reset email sent",
+    "email": "caspar@example.com",
+    "expiresAt": "2026-01-31T18:00:00Z"
+  }
+}
+```
+
+#### Invalidate User Sessions
+
+```http
+DELETE /api/v1/admin/users/:id/sessions
+Authorization: Bearer API_KEY
+```
+
+**Required Permission:** `admin:users:write`
+
+Invalidates all active sessions for a user. Useful when an account may be compromised or after a password reset.
+
+**Response:**
+```json
+{
+  "data": {
+    "message": "All sessions invalidated",
+    "sessionsRevoked": 3
+  }
+}
+```
+
+#### List Feedback
+
+```http
+GET /api/v1/admin/feedback
+Authorization: Bearer API_KEY
+```
+
+**Required Permission:** `admin:feedback`
+
+**Query Parameters:**
+
+| Parameter | Type | Description | Default |
+|-----------|------|-------------|---------|
+| `status` | string | Filter: `new`, `reviewed`, `in_progress`, `resolved`, `closed` | all |
+| `type` | string | Filter: `bug`, `feedback`, `question` | all |
+| `limit` | number | Max results (1-200) | `50` |
+| `offset` | number | Pagination offset | `0` |
+
+**Response:**
+```json
+{
+  "data": [
+    {
+      "id": "fb_abc123",
+      "type": "bug",
+      "description": "Timer does not stop when app is backgrounded",
+      "expectedBehavior": "Timer should continue running",
+      "email": "user@example.com",
+      "status": "new",
+      "userId": "user_abc123",
+      "username": "caspar",
+      "systemInfo": { "browser": "Firefox 125", "os": "macOS" },
+      "internalNotes": null,
+      "resolvedAt": null,
+      "createdAt": "2026-01-30T14:00:00Z",
+      "updatedAt": "2026-01-30T14:00:00Z"
+    }
+  ],
+  "meta": {
+    "total": 8,
+    "limit": 50,
+    "offset": 0,
+    "hasMore": false
+  }
+}
+```
+
+#### Update Feedback
+
+```http
+PATCH /api/v1/admin/feedback/:id
+Authorization: Bearer API_KEY
+Content-Type: application/json
+
+{
+  "status": "in_progress",
+  "internalNotes": "Confirmed bug on Firefox. Working on fix.",
+  "replyEmail": "Thanks for reporting this! We've confirmed the issue and are working on a fix."
+}
+```
+
+**Required Permission:** `admin:feedback`
+
+**Body Fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `status` | string | `new`, `reviewed`, `in_progress`, `resolved`, `closed` |
+| `internalNotes` | string | Internal notes (not visible to user) |
+| `replyEmail` | string | If provided, sends a reply email to the feedback submitter |
+
+Setting status to `resolved` automatically sets `resolvedAt`. If `replyEmail` is provided and the feedback has an associated email, a reply is sent and recorded in internal notes.
+
+**Response:** Updated feedback object. Includes `meta.emailSent: true` if a reply email was sent.
+
+#### Send Test Email
+
+```http
+POST /api/v1/admin/test-email
+Authorization: Bearer API_KEY
+Content-Type: application/json
+
+{
+  "to": "test@example.com",
+  "template": "welcome"
+}
+```
+
+**Required Permission:** `admin:health`
+
+Sends a test email using one of the application's email templates. Useful for verifying SMTP configuration.
+
+**Body Fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `to` | string | Recipient email address (required) |
+| `template` | string | Template name (default: `verify`) |
+
+**Available Templates:** `verify`, `welcome`, `reset`, `changed`, `supporter`, `cancelled`, `payment-failed`, `payment-recovered`, `renewed`
+
+**Response:**
+```json
+{
+  "data": {
+    "message": "Test \"welcome\" email sent to test@example.com"
+  }
+}
+```
+
+Returns 503 if SMTP is not configured.
+
+---
+
 ## Error Handling
 
 ### Error Response Format
@@ -1307,6 +1713,7 @@ Content-Type: application/json
 | Export | 50 | 1 hour |
 | Pattern detection | 10 | 1 hour |
 | Bulk operations | 20 | 1 hour |
+| Admin | 100 | 1 minute |
 
 **Headers:**
 
@@ -1410,5 +1817,5 @@ API version in URL path: `/api/v1/`
 ---
 
 *API Specification v1.0*
-*Last Updated: 2026-01-31*
+*Last Updated: 2026-03-10*
 *Maintainer: Caspar Addyman*

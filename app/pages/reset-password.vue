@@ -60,8 +60,8 @@ async function handleSubmit() {
     return;
   }
 
-  if (password.value.length < 6) {
-    error.value = "Password must be at least 6 characters";
+  if (password.value.length < 8) {
+    error.value = "Password must be at least 8 characters";
     return;
   }
 
@@ -202,7 +202,7 @@ async function handleSubmit() {
             :disabled="isLoading"
           />
           <p class="mt-1 text-xs text-cosmic-violet/50 dark:text-pearl-base/50">
-            Must be at least 6 characters
+            Must be at least 8 characters
           </p>
         </div>
 

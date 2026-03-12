@@ -7,9 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.5.0] - Unreleased
+## [0.5.0] - 2026-03-10
 
 ### Added
+
+- **Admin API** ([Spec 008](specs/008-admin-api/spec.md)):
+  - `GET /api/v1/admin/users` — list and search users with pagination
+  - `GET /api/v1/admin/users/:id` — user detail with entry counts and last activity
+  - `PATCH /api/v1/admin/users/:id` — update user roles and status
+  - `GET /api/v1/admin/stats` — instance-wide statistics (users, entries, storage)
+  - `GET /api/v1/admin/health` — detailed health check (DB, memory, uptime)
+  - `GET /api/v1/admin/activity` — recent activity feed across all users
+  - `GET /api/v1/admin/feedback` — view and manage user-submitted feedback
+  - Role-based access control with `admin` role requirement
 
 - **Sync API & Provider Framework** ([Spec 007](specs/007-sync-api/spec.md)):
   - `SyncProvider` interface — fourth module type for extensible integrations
@@ -25,6 +35,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Obsidian sync provider** — bidirectional sync of entries with Obsidian vault markdown files
   - `scripts/sync-obsidian.ts` CLI script for cron-based or manual vault sync
   - `.tada-sync.json` config file support for Obsidian sync
+
+- **Screenshot carousel** on landing page with visual module documentation
+
+### Security
+
+- Session cookie `sameSite` set to `lax` (CSRF mitigation)
+- **Security headers middleware**: CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy
+- **SSRF protection** in link-preview endpoint (private IP blocking)
+- **Error response sanitization** — no internal details leaked in production
+- Increased password minimum from 6 to 8 characters
+- CSV import size limits (5 MB / 50,000 rows)
+
+### Improved
+
+- Cleaned up 22+ debug `console.log` statements from `useTranscription.ts`
+- Updated all version references to v0.5.0
+- Marked specs 001–005 as Completed
+- Documentation updates across AGENTS.md, DEVELOPER_GUIDE, and docs/README
 
 ## [0.4.2] - 2026-03-05
 

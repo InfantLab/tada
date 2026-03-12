@@ -46,10 +46,10 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    if (body.newPassword.length < 6) {
+    if (body.newPassword.length < 8) {
       throw createError({
         statusCode: 400,
-        statusMessage: "New password must be at least 6 characters",
+        statusMessage: "New password must be at least 8 characters",
       });
     }
 

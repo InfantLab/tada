@@ -33,6 +33,13 @@ export default defineEventHandler(async (event): Promise<LinkMetadata> => {
     });
   }
 
+  if (isPrivateUrl(url)) {
+    throw createError({
+      statusCode: 400,
+      message: "URL not allowed",
+    });
+  }
+
   log.info("Fetching link preview", { url });
 
   const linkInfo = detectLinkType(url);
@@ -242,4 +249,69 @@ function decodeHtmlEntities(text: string): string {
     .replace(/&#039;/g, "'")
     .replace(/&#x27;/g, "'")
     .replace(/&#39;/g, "'");
+}
+
+/**
+ * SSRF protection: block requests to private/internal IP ranges and hostnames
+ */
+function isPrivateUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    const hostname = parsed.hostname.toLowerCase();
+
+    // Block known internal hostnames
+    if (
+      hostname === "localhost" ||
+      hostname === "metadata.google.internal" ||
+      hostname.endsWith(".internal") ||
+      hostname.endsWith(".local")
+    ) {
+      return true;
+    }
+
+    // Block IPv6 loopback
+    if (hostname === "::1" || hostname === "[::1]") {
+      return true;
+    }
+
+    // Block 0.0.0.0
+    if (hostname === "0.0.0.0") {
+      return true;
+    }
+
+    // Check IPv6 private ranges (fc00::/7, fe80::/10)
+    if (hostname.startsWith("[")) {
+      const ipv6 = hostname.slice(1, -1).toLowerCase();
+      if (
+        ipv6.startsWith("fc") ||
+        ipv6.startsWith("fd") ||
+        ipv6.startsWith("fe8") ||
+        ipv6.startsWith("fe9") ||
+        ipv6.startsWith("fea") ||
+        ipv6.startsWith("feb")
+      ) {
+        return true;
+      }
+    }
+
+    // Check IPv4 private ranges
+    const ipv4Match = hostname.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+    if (ipv4Match) {
+      const [, a, b] = ipv4Match.map(Number);
+      // 127.0.0.0/8
+      if (a === 127) return true;
+      // 10.0.0.0/8
+      if (a === 10) return true;
+      // 172.16.0.0/12
+      if (a === 172 && b >= 16 && b <= 31) return true;
+      // 192.168.0.0/16
+      if (a === 192 && b === 168) return true;
+      // 169.254.0.0/16 (link-local)
+      if (a === 169 && b === 254) return true;
+    }
+
+    return false;
+  } catch {
+    return true;
+  }
 }

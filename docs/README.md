@@ -78,9 +78,9 @@ Documentation for the REST API v1 (released in v0.3.1):
 
 ## 📦 Version Information
 
-- **App Version:** v0.4.0
+- **App Version:** v0.5.0
 - **REST API Version:** v1.0.0
-- **Last Updated:** 2026-02-04
+- **Last Updated:** 2026-03-10
 
 ## 🔗 Related Resources
 
