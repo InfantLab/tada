@@ -15,7 +15,11 @@ import { defineEventHandler, createError, readBody } from "h3";
 import { eq } from "drizzle-orm";
 import { db } from "~/server/db";
 import { users } from "~/server/db/schema";
-import { lucia, validateSessionRequest } from "~/server/utils/auth";
+import {
+  validateSessionRequest,
+  invalidateUserSessions,
+  clearSessionCookie,
+} from "~/server/utils/auth";
 import { getStripe, logSubscriptionEvent } from "~/server/services/stripe";
 import { isCloudMode } from "~/server/utils/cloudMode";
 import { createLogger } from "~/server/utils/logger";
@@ -92,7 +96,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // Step 2: Invalidate all user sessions
-    await lucia.invalidateUserSessions(userId);
+    await invalidateUserSessions(userId);
     logger.info("Invalidated all user sessions", { userId });
 
     // Step 3: Delete the user (cascade handles all related data)
@@ -100,13 +104,7 @@ export default defineEventHandler(async (event) => {
     logger.info("User account deleted", { userId, username: user.username });
 
     // Step 4: Clear session cookie
-    const blankCookie = lucia.createBlankSessionCookie();
-    setCookie(
-      event,
-      blankCookie.name,
-      blankCookie.value,
-      blankCookie.attributes
-    );
+    clearSessionCookie(event);
 
     return {
       success: true,

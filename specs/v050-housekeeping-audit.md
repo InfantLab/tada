@@ -189,12 +189,12 @@ All major packages verified as used in the codebase.
 
 ### Tier 1 — Must Do (security & critical debt)
 
-- [ ] 1. **Rotate exposed secrets** — remove from `.env`, rotate Stripe keys, Groq key on their platforms
-- [ ] 2. **Fix session cookie security** — add `sameSite: "lax"`, `httpOnly: true` to `auth.ts`
-- [ ] 3. **Add security headers** — CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy via Nitro config
-- [ ] 4. **Sanitize error responses** — generic messages in production, detailed logs server-side only
-- [ ] 5. **Plan Lucia auth migration** — research alternatives, document migration strategy (deprecated since March 2025)
-- [ ] 6. **Increase password minimum** to 8-12 characters
+- [x] 1. **Rotate exposed secrets** — Stripe & Groq keys rotated, separate keys for local dev and production
+- [x] 2. **Fix session cookie security** — add `sameSite: "lax"`, `httpOnly: true` to `auth.ts`
+- [x] 3. **Add security headers** — CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy via Nitro config
+- [x] 4. **Sanitize error responses** — generic messages in production, detailed logs server-side only
+- [x] 5. **Lucia auth migration** — DONE. Removed `lucia`, `@lucia-auth/adapter-drizzle`, `oslo`. Replaced with ~160 lines of direct session management in `auth.ts`. See [lucia-migration-plan.md](lucia-migration-plan.md).
+- [x] 6. **Increase password minimum** to 8-12 characters
 
 ### Tier 2 — Should Do (testing, upgrades & Nuxt migration planning)
 

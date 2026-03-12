@@ -28,7 +28,7 @@ export const users = sqliteTable("users", {
 });
 
 // ============================================================================
-// Sessions (for Lucia Auth)
+// Sessions
 // ============================================================================
 
 export const sessions = sqliteTable("sessions", {

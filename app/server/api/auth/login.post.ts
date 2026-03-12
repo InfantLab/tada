@@ -1,5 +1,5 @@
 import { defineEventHandler, readBody, createError } from "h3";
-import { lucia } from "~/server/utils/auth";
+import { createSession, setSessionCookie } from "~/server/utils/auth";
 import { db } from "~/server/db";
 import { users } from "~/server/db/schema";
 import { eq } from "drizzle-orm";
@@ -63,15 +63,8 @@ export default defineEventHandler(async (event) => {
     }
 
     // Create session
-    const session = await lucia.createSession(user.id, {});
-    const sessionCookie = lucia.createSessionCookie(session.id);
-
-    setCookie(
-      event,
-      sessionCookie.name,
-      sessionCookie.value,
-      sessionCookie.attributes
-    );
+    const session = await createSession(user.id);
+    setSessionCookie(event, session.id);
 
     // Log successful login
     await logAuthEvent({

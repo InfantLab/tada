@@ -1,29 +1,23 @@
 import { defineEventHandler, createError } from "h3";
-import { lucia } from "~/server/utils/auth";
+import { invalidateSession, clearSessionCookie } from "~/server/utils/auth";
 import { createLogger } from "~/server/utils/logger";
 
+const SESSION_COOKIE_NAME = "auth_session";
 const logger = createLogger("api:auth:logout");
 
 export default defineEventHandler(async (event) => {
   try {
-    const sessionCookie = getCookie(event, lucia.sessionCookieName);
+    const sessionId = getCookie(event, SESSION_COOKIE_NAME);
 
-    if (!sessionCookie) {
+    if (!sessionId) {
       throw createError({
         statusCode: 401,
         statusMessage: "No session found",
       });
     }
 
-    await lucia.invalidateSession(sessionCookie);
-
-    const blankCookie = lucia.createBlankSessionCookie();
-    setCookie(
-      event,
-      blankCookie.name,
-      blankCookie.value,
-      blankCookie.attributes
-    );
+    await invalidateSession(sessionId);
+    clearSessionCookie(event);
 
     logger.info("User logged out successfully");
 

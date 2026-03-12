@@ -1,8 +1,14 @@
 import { defineEventHandler } from "h3";
-import { lucia } from "~/server/utils/auth";
+import {
+  validateSession,
+  setSessionCookie,
+  clearSessionCookie,
+} from "~/server/utils/auth";
+
+const SESSION_COOKIE_NAME = "auth_session";
 
 export default defineEventHandler(async (event) => {
-  const sessionId = getCookie(event, lucia.sessionCookieName) ?? null;
+  const sessionId = getCookie(event, SESSION_COOKIE_NAME) ?? null;
 
   if (!sessionId) {
     event.context.user = null;
@@ -10,26 +16,14 @@ export default defineEventHandler(async (event) => {
     return;
   }
 
-  const { session, user } = await lucia.validateSession(sessionId);
+  const { session, user } = await validateSession(sessionId);
 
   if (session && session.fresh) {
-    const sessionCookie = lucia.createSessionCookie(session.id);
-    setCookie(
-      event,
-      sessionCookie.name,
-      sessionCookie.value,
-      sessionCookie.attributes
-    );
+    setSessionCookie(event, session.id);
   }
 
   if (!session) {
-    const blankCookie = lucia.createBlankSessionCookie();
-    setCookie(
-      event,
-      blankCookie.name,
-      blankCookie.value,
-      blankCookie.attributes
-    );
+    clearSessionCookie(event);
   }
 
   event.context.user = user;

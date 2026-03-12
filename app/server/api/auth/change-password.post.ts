@@ -7,7 +7,7 @@ import { hashPassword, verifyPassword } from "~/server/utils/password";
 import { sendEmail, isEmailConfigured } from "~/server/utils/email";
 import { passwordChangedEmail } from "~/server/templates/email";
 import { logAuthEvent } from "~/server/utils/authEvents";
-import { lucia } from "~/server/utils/auth";
+import { createSession, setSessionCookie } from "~/server/utils/auth";
 
 const logger = createLogger("api:auth:change-password");
 
@@ -123,15 +123,8 @@ export default defineEventHandler(async (event) => {
     await db.delete(sessions).where(eq(sessions.userId, user.id));
 
     // Create a new session for the current user
-    const newSession = await lucia.createSession(user.id, {});
-    const sessionCookie = lucia.createSessionCookie(newSession.id);
-
-    setCookie(
-      event,
-      sessionCookie.name,
-      sessionCookie.value,
-      sessionCookie.attributes
-    );
+    const newSession = await createSession(user.id);
+    setSessionCookie(event, newSession.id);
 
     // Send notification email if configured
     if (isEmailConfigured() && dbUser.email) {
