@@ -3,12 +3,17 @@
  * Outputs JSON logs to both stderr and rotating log files
  *
  * Log level controlled by LOG_LEVEL env var (default: "info" in production, "debug" in development)
+ *
+ * File writes are async and buffered — logs are queued in memory and flushed
+ * periodically (every 1s) or when the buffer reaches 50 entries, avoiding
+ * blocking the event loop on every log call.
  */
 
 import {
+  appendFile,
   appendFileSync,
   mkdirSync,
-  readFileSync,
+  renameSync,
   statSync,
   unlinkSync,
 } from "node:fs";
@@ -33,6 +38,41 @@ interface LogContext {
   [key: string]: unknown;
 }
 
+// Async write buffer — collects log lines and flushes periodically
+const writeBuffers: Map<string, string[]> = new Map();
+let flushTimer: ReturnType<typeof setInterval> | null = null;
+const FLUSH_INTERVAL_MS = 1000;
+const FLUSH_THRESHOLD = 50;
+
+function getBuffer(logFile: string): string[] {
+  let buf = writeBuffers.get(logFile);
+  if (!buf) {
+    buf = [];
+    writeBuffers.set(logFile, buf);
+  }
+  return buf;
+}
+
+function startFlushTimer(logDir: string) {
+  if (flushTimer) return;
+  flushTimer = setInterval(() => flushAllBuffers(logDir), FLUSH_INTERVAL_MS);
+  // Don't let the timer prevent process exit
+  if (flushTimer && typeof flushTimer === "object" && "unref" in flushTimer) {
+    flushTimer.unref();
+  }
+}
+
+function flushAllBuffers(logDir: string) {
+  for (const [logFile, lines] of writeBuffers.entries()) {
+    if (lines.length === 0) continue;
+    const batch = lines.splice(0, lines.length);
+    const content = batch.join("\n") + "\n";
+    appendFile(join(logDir, logFile), content, "utf8", () => {
+      // Fire-and-forget — errors are silently ignored (console output is the primary sink)
+    });
+  }
+}
+
 class Logger {
   private prefix: string;
   private logDir: string;
@@ -53,6 +93,7 @@ class Logger {
       this.logDir = join(process.cwd(), "data", "logs");
     }
     this.ensureLogDirectory();
+    startFlushTimer(this.logDir);
   }
 
   private ensureLogDirectory() {
@@ -80,11 +121,8 @@ class Logger {
               if (i === this.maxLogFiles - 1) {
                 unlinkSync(oldPath); // Delete oldest
               } else {
-                unlinkSync(newPath); // Remove target if exists
-                appendFileSync(newPath, ""); // Create empty target
-                const content = readFileSync(oldPath);
-                appendFileSync(newPath, content);
-                unlinkSync(oldPath);
+                try { unlinkSync(newPath); } catch { /* target doesn't exist */ }
+                renameSync(oldPath, newPath);
               }
             }
           } catch {
@@ -94,26 +132,27 @@ class Logger {
 
         // Rotate current file to .1
         const rotatePath = join(this.logDir, `${logFile}.1`);
-        const content = readFileSync(filePath);
-        appendFileSync(rotatePath, content);
-        unlinkSync(filePath);
+        renameSync(filePath, rotatePath);
       }
     } catch {
       // File doesn't exist yet or rotation failed - will be created on next write
     }
   }
 
-  private writeToFile(logFile: string, content: string) {
+  private queueWrite(logFile: string, content: string) {
     try {
-      // Ensure directory exists before writing (in case it was deleted)
       this.ensureLogDirectory();
-      const filePath = join(this.logDir, logFile);
+      // Check rotation periodically (only on buffer flush would be ideal,
+      // but checking here keeps existing behavior)
       this.rotateLogIfNeeded(logFile);
-      appendFileSync(filePath, content + "\n", "utf8");
+      const buf = getBuffer(logFile);
+      buf.push(content);
+      // Flush immediately if buffer is large
+      if (buf.length >= FLUSH_THRESHOLD) {
+        flushAllBuffers(this.logDir);
+      }
     } catch {
-      // If file write fails, at least we have stderr
-      // Silently fail - we don't want to spam the console with errors
-      // The log entry is already written to stderr
+      // If queueing fails, at least we have stderr
     }
   }
 
@@ -141,12 +180,12 @@ class Logger {
       console.log(logLine);
     }
 
-    // Write to rotating log files
-    this.writeToFile("combined.log", logLine);
+    // Queue for async write to rotating log files
+    this.queueWrite("combined.log", logLine);
 
     // Also write errors to dedicated error log
     if (level === "error") {
-      this.writeToFile("error.log", logLine);
+      this.queueWrite("error.log", logLine);
     }
   }
 
@@ -189,3 +228,22 @@ export const logger = new Logger("tada");
 export function createLogger(prefix: string): Logger {
   return logger.child(prefix);
 }
+
+// Flush on process exit to avoid losing buffered logs
+process.on("beforeExit", () => {
+  // Synchronous flush for process exit
+  for (const [logFile, lines] of writeBuffers.entries()) {
+    if (lines.length === 0) continue;
+    const batch = lines.splice(0, lines.length);
+    const content = batch.join("\n") + "\n";
+    try {
+      const dbUrl = process.env["DATABASE_URL"] || "";
+      const logDir = dbUrl.includes("/data/")
+        ? "/data/logs"
+        : join(process.cwd(), "data", "logs");
+      appendFileSync(join(logDir, logFile), content, "utf8");
+    } catch {
+      // Best effort
+    }
+  }
+});

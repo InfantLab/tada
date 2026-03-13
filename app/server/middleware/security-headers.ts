@@ -31,5 +31,6 @@ export default defineEventHandler((event) => {
     "Permissions-Policy":
       "camera=(), microphone=(self), geolocation=(), payment=()",
     "Content-Security-Policy": CSP,
+    "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
   });
 });
