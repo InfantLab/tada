@@ -9,8 +9,11 @@ import { eq, and, gte, lte, gt, desc, asc, isNull, isNotNull, or, like, sql } fr
 import { db } from "~/server/db";
 import { entries } from "~/server/db/schema";
 import { withRetry } from "~/server/db/operations";
+import { createLogger } from "~/server/utils/logger";
 import type { Entry, NewEntry } from "~/server/db/schema";
 import type { EntryQueryParams } from "~/types/api";
+
+const logger = createLogger("entries");
 
 /**
  * Get entries for a user with filtering, sorting, and pagination
@@ -277,7 +280,7 @@ export async function bulkCreateEntries(
       failed: 0,
     };
   } catch (error) {
-    console.error("Bulk create entries failed:", error);
+    logger.error("Bulk create entries failed", error, { count: entriesWithIds.length });
     return {
       created: 0,
       failed: entriesWithIds.length,
@@ -339,7 +342,7 @@ export async function bulkDeleteEntries(
       failed: 0,
     };
   } catch (error) {
-    console.error("Bulk delete entries failed:", error);
+    logger.error("Bulk delete entries failed", error, { userId, count: entryIds.length });
     return {
       deleted: 0,
       failed: entryIds.length,

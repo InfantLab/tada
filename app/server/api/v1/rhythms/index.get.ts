@@ -9,6 +9,9 @@
 import { requirePermission } from "~/server/utils/permissions";
 import { success, apiError } from "~/server/utils/response";
 import { getRhythmsWithStats } from "~/server/services/rhythms";
+import { createLogger } from "~/server/utils/logger";
+
+const logger = createLogger("api:v1:rhythms:list");
 
 export default defineEventHandler(async (event) => {
   // Require rhythms:read permission
@@ -24,7 +27,7 @@ export default defineEventHandler(async (event) => {
     // Return success response
     return success(event, rhythms);
   } catch (error) {
-    console.error("Error fetching rhythms:", error);
+    logger.error("Error fetching rhythms", error instanceof Error ? error : new Error(String(error)), { userId: event.context.user?.id, requestId: event.context.requestId });
     throw createError(
       apiError(
         event,

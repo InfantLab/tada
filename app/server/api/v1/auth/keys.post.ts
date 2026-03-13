@@ -9,7 +9,10 @@
 import { z } from "zod";
 import { created, apiError, validationError } from "~/server/utils/response";
 import { createApiKey } from "~/server/utils/api-key";
+import { createLogger } from "~/server/utils/logger";
 import type { Permission } from "~/types/api";
+
+const logger = createLogger("api:v1:auth:keys:create");
 
 // Validation schema for API key creation
 const createKeySchema = z.object({
@@ -88,7 +91,7 @@ export default defineEventHandler(async (event) => {
         "Save this API key now. You won't be able to see it again. If you lose it, you'll need to generate a new one.",
     });
   } catch (error: unknown) {
-    console.error("Error creating API key:", error);
+    logger.error("Error creating API key", error instanceof Error ? error : new Error(String(error)), { userId: event.context.user?.id, requestId: event.context.requestId });
 
     // Surface useful detail for common failures
     const message =

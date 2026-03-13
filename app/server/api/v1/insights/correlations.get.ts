@@ -10,6 +10,9 @@ import { z } from "zod";
 import { requirePermission } from "~/server/utils/permissions";
 import { success, apiError, validationError } from "~/server/utils/response";
 import { analyzeCorrelation } from "~/server/services/insights";
+import { createLogger } from "~/server/utils/logger";
+
+const logger = createLogger("api:v1:insights:correlations");
 
 // Query parameter validation
 const correlationQuerySchema = z.object({
@@ -89,7 +92,7 @@ export default defineEventHandler(async (event) => {
           : `Continue tracking both activities to discover potential connections.`,
     });
   } catch (error) {
-    console.error("Error analyzing correlation:", error);
+    logger.error("Error analyzing correlation", error instanceof Error ? error : new Error(String(error)), { userId: event.context.user?.id, requestId: event.context.requestId });
     throw createError(
       apiError(
         event,

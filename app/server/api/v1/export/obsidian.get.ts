@@ -15,7 +15,10 @@ import {
   toObsidianWeekly,
   toObsidianMonthly,
 } from "~/server/services/export";
+import { createLogger } from "~/server/utils/logger";
 import type { EntryQueryParams } from "~/types/api";
+
+const logger = createLogger("api:v1:export:obsidian");
 
 // Query parameter validation
 const obsidianQuerySchema = z.object({
@@ -159,7 +162,7 @@ export default defineEventHandler(async (event) => {
       throw error;
     }
 
-    console.error("Error exporting to Obsidian:", error);
+    logger.error("Error exporting to Obsidian", error instanceof Error ? error : new Error(String(error)), { userId: event.context.user?.id, requestId: event.context.requestId });
     throw createError(
       apiError(
         event,

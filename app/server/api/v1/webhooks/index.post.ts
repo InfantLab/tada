@@ -9,6 +9,9 @@
 import { z } from "zod";
 import { created, apiError, validationError } from "~/server/utils/response";
 import { registerWebhook } from "~/server/services/webhooks";
+import { createLogger } from "~/server/utils/logger";
+
+const logger = createLogger("api:v1:webhooks:create");
 
 // Validation schema for webhook registration
 const webhookSchema = z.object({
@@ -83,7 +86,7 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    console.error("Error registering webhook:", error);
+    logger.error("Error registering webhook", error instanceof Error ? error : new Error(String(error)), { userId: event.context.user?.id, requestId: event.context.requestId });
     throw createError(
       apiError(
         event,

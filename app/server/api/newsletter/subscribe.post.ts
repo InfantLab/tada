@@ -1,6 +1,9 @@
 import { eq } from "drizzle-orm";
 import { db } from "~/server/db";
 import { newsletterSubscribers } from "~/server/db/schema";
+import { createLogger } from "~/server/utils/logger";
+
+const logger = createLogger("api:newsletter");
 
 /**
  * POST /api/newsletter/subscribe
@@ -84,7 +87,7 @@ export default defineEventHandler(async (event) => {
       message: "Thanks for subscribing!",
     };
   } catch (error) {
-    console.error("Newsletter subscription error:", error);
+    logger.error("Newsletter subscription error", error, { email });
     throw createError({
       statusCode: 500,
       message: "Something went wrong. Please try again.",

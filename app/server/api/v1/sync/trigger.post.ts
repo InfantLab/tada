@@ -10,6 +10,9 @@ import { requirePermission } from "~/server/utils/permissions";
 import { success, apiError, validationError } from "~/server/utils/response";
 import { getSyncProvider } from "~/registry/syncProviders";
 import { runSync } from "~/server/services/syncEngine";
+import { createLogger } from "~/server/utils/logger";
+
+const logger = createLogger("api:v1:sync:trigger");
 
 const bodySchema = z.object({
   provider: z.string().min(1),
@@ -50,7 +53,7 @@ export default defineEventHandler(async (event) => {
     const summary = await runSync(userId, providerId, { direction, dryRun });
     return success(event, summary);
   } catch (error) {
-    console.error("Sync trigger failed:", error);
+    logger.error("Sync trigger failed", error instanceof Error ? error : new Error(String(error)), { userId: event.context.user?.id, requestId: event.context.requestId });
     throw createError(
       apiError(event, "SYNC_FAILED", "Sync operation failed", 500),
     );

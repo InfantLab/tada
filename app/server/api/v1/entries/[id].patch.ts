@@ -11,6 +11,9 @@ import { requirePermission } from "~/server/utils/permissions";
 import { success, apiError, notFound, validationError } from "~/server/utils/response";
 import { updateEntry } from "~/server/services/entries";
 import { triggerWebhooks } from "~/server/services/webhooks";
+import { createLogger } from "~/server/utils/logger";
+
+const logger = createLogger("api:v1:entries:update");
 
 // Schema for partial updates (all fields optional except what's not updatable)
 const updateSchema = z.object({
@@ -79,7 +82,7 @@ export default defineEventHandler(async (event) => {
       timestamp: entry.timestamp,
       updates,
     }).catch((error) => {
-      console.error("Error triggering webhooks:", error);
+      logger.error("Error triggering webhooks", error instanceof Error ? error : new Error(String(error)), { userId: event.context.user?.id, requestId: event.context.requestId });
     });
 
     // Return success response
@@ -90,7 +93,7 @@ export default defineEventHandler(async (event) => {
       throw error;
     }
 
-    console.error("Error updating entry:", error);
+    logger.error("Error updating entry", error instanceof Error ? error : new Error(String(error)), { userId: event.context.user?.id, requestId: event.context.requestId });
     throw createError(
       apiError(
         event,

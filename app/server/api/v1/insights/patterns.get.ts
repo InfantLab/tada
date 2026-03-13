@@ -19,6 +19,9 @@ import {
 import { db } from "~/server/db";
 import { insightCache } from "~/server/db/schema";
 import { eq, and, gte } from "drizzle-orm";
+import { createLogger } from "~/server/utils/logger";
+
+const logger = createLogger("api:v1:insights:patterns");
 
 // Query parameter validation
 const patternsQuerySchema = z.object({
@@ -183,7 +186,7 @@ export default defineEventHandler(async (event) => {
       totalPatterns: patterns.length,
     });
   } catch (error) {
-    console.error("Error detecting patterns:", error);
+    logger.error("Error detecting patterns", error instanceof Error ? error : new Error(String(error)), { userId: event.context.user?.id, requestId: event.context.requestId });
     throw createError(
       apiError(
         event,

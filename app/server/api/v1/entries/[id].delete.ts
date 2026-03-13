@@ -10,6 +10,9 @@ import { requirePermission } from "~/server/utils/permissions";
 import { success, apiError } from "~/server/utils/response";
 import { deleteEntry } from "~/server/services/entries";
 import { triggerWebhooks } from "~/server/services/webhooks";
+import { createLogger } from "~/server/utils/logger";
+
+const logger = createLogger("api:v1:entries:delete");
 
 export default defineEventHandler(async (event) => {
   // Require entries:write permission
@@ -41,7 +44,7 @@ export default defineEventHandler(async (event) => {
     triggerWebhooks(userId, "entry.deleted", {
       id: entryId,
     }).catch((error) => {
-      console.error("Error triggering webhooks:", error);
+      logger.error("Error triggering webhooks", error instanceof Error ? error : new Error(String(error)), { userId: event.context.user?.id, requestId: event.context.requestId });
     });
 
     // Return success response
@@ -52,7 +55,7 @@ export default defineEventHandler(async (event) => {
       throw error;
     }
 
-    console.error("Error deleting entry:", error);
+    logger.error("Error deleting entry", error instanceof Error ? error : new Error(String(error)), { userId: event.context.user?.id, requestId: event.context.requestId });
     throw createError(
       apiError(
         event,

@@ -9,6 +9,9 @@
 import { db } from "~/server/db";
 import { insightCache } from "~/server/db/schema";
 import { lt, sql } from "drizzle-orm";
+import { createLogger } from "~/server/utils/logger";
+
+const logger = createLogger("cache-cleanup");
 
 const CACHE_TTL_HOURS = 1;
 
@@ -30,14 +33,14 @@ export async function cleanupExpiredCache(): Promise<{
 
     const deletedCount = result.rowsAffected || 0;
 
-    console.log(`[Cache Cleanup] Deleted ${deletedCount} expired cache entries`);
+    logger.info("Deleted expired cache entries", { deleted: deletedCount });
 
     return {
       deleted: deletedCount,
       success: true,
     };
   } catch (error) {
-    console.error("[Cache Cleanup] Failed to clean up expired cache:", error);
+    logger.error("Failed to clean up expired cache", error);
     return {
       deleted: 0,
       success: false,
@@ -63,14 +66,14 @@ export async function cleanupOldCache(days: number): Promise<{
 
     const deletedCount = result.rowsAffected || 0;
 
-    console.log(`[Cache Cleanup] Deleted ${deletedCount} cache entries older than ${days} days`);
+    logger.info("Deleted old cache entries", { deleted: deletedCount, olderThanDays: days });
 
     return {
       deleted: deletedCount,
       success: true,
     };
   } catch (error) {
-    console.error("[Cache Cleanup] Failed to clean up old cache:", error);
+    logger.error("Failed to clean up old cache", error, { olderThanDays: days });
     return {
       deleted: 0,
       success: false,

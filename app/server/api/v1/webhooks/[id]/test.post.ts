@@ -8,6 +8,9 @@
 
 import { success, apiError } from "~/server/utils/response";
 import { testWebhook } from "~/server/services/webhooks";
+import { createLogger } from "~/server/utils/logger";
+
+const logger = createLogger("api:v1:webhooks:test");
 
 export default defineEventHandler(async (event) => {
   const auth = event.context['auth']!;
@@ -47,7 +50,7 @@ export default defineEventHandler(async (event) => {
       );
     }
 
-    console.error("Error testing webhook:", error);
+    logger.error("Error testing webhook", error instanceof Error ? error : new Error(String(error)), { userId: event.context.user?.id, requestId: event.context.requestId });
     throw createError(
       apiError(event, "TEST_WEBHOOK_FAILED", "Failed to test webhook", 500),
     );

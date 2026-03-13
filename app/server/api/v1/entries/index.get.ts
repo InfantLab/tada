@@ -11,7 +11,10 @@ import { requirePermission } from "~/server/utils/permissions";
 import { paginated, apiError, validationError } from "~/server/utils/response";
 import { getEntries } from "~/server/services/entries";
 import { computeContentHash } from "~/server/utils/contentHash";
+import { createLogger } from "~/server/utils/logger";
 import type { EntryQueryParams } from "~/types/api";
+
+const logger = createLogger("api:v1:entries:list");
 
 // Query parameter validation schema
 const querySchema = z.object({
@@ -89,7 +92,7 @@ export default defineEventHandler(async (event) => {
       queryParams.offset ?? 0,
     );
   } catch (error) {
-    console.error("Error fetching entries:", error);
+    logger.error("Error fetching entries", error instanceof Error ? error : new Error(String(error)), { userId: event.context.user?.id, requestId: event.context.requestId });
     throw createError(
       apiError(
         event,

@@ -9,7 +9,10 @@ import bcrypt from "bcryptjs";
 import { eq, and, isNull } from "drizzle-orm";
 import { db } from "~/server/db";
 import { apiKeys } from "~/server/db/schema";
+import { createLogger } from "~/server/utils/logger";
 import type { Permission } from "~/types/api";
+
+const logger = createLogger("api-key");
 
 const BCRYPT_COST = 12; // Cost factor for bcrypt hashing
 const KEY_PREFIX = "tada_key_";
@@ -91,7 +94,7 @@ export async function validateApiKey(key: string) {
 
     return apiKeyRecord;
   } catch (error) {
-    console.error("API key validation error:", error);
+    logger.error("API key validation error", error);
     return null;
   }
 }

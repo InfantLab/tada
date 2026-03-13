@@ -3,6 +3,9 @@
 
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
+import { createLogger } from "~/server/utils/logger";
+
+const logger = createLogger("password");
 
 const _scryptAsync = promisify(scrypt);
 
@@ -73,7 +76,7 @@ export async function verifyPassword(
     // Use timing-safe comparison to prevent timing attacks
     return timingSafeEqual(storedKey, derivedKey);
   } catch (error) {
-    console.error("Password verification error:", error);
+    logger.error("Password verification error", error);
     return false;
   }
 }

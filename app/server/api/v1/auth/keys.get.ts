@@ -8,6 +8,9 @@
 
 import { success, apiError } from "~/server/utils/response";
 import { listApiKeys } from "~/server/utils/api-key";
+import { createLogger } from "~/server/utils/logger";
+
+const logger = createLogger("api:v1:auth:keys:list");
 
 export default defineEventHandler(async (event) => {
   const auth = event.context['auth']!;
@@ -34,7 +37,7 @@ export default defineEventHandler(async (event) => {
     // Return success response
     return success(event, keys);
   } catch (error) {
-    console.error("Error listing API keys:", error);
+    logger.error("Error listing API keys", error instanceof Error ? error : new Error(String(error)), { userId: event.context.user?.id, requestId: event.context.requestId });
     throw createError(
       apiError(
         event,

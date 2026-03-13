@@ -8,6 +8,9 @@
 
 import { success, apiError } from "~/server/utils/response";
 import { deleteWebhook } from "~/server/services/webhooks";
+import { createLogger } from "~/server/utils/logger";
+
+const logger = createLogger("api:v1:webhooks:delete");
 
 export default defineEventHandler(async (event) => {
   const auth = event.context['auth']!;
@@ -47,7 +50,7 @@ export default defineEventHandler(async (event) => {
       );
     }
 
-    console.error("Error deleting webhook:", error);
+    logger.error("Error deleting webhook", error instanceof Error ? error : new Error(String(error)), { userId: event.context.user?.id, requestId: event.context.requestId });
     throw createError(
       apiError(
         event,

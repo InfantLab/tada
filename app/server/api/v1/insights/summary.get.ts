@@ -12,6 +12,9 @@ import { success, apiError, validationError } from "~/server/utils/response";
 import { db } from "~/server/db";
 import { entries } from "~/server/db/schema";
 import { eq, and, isNull, gte, lte } from "drizzle-orm";
+import { createLogger } from "~/server/utils/logger";
+
+const logger = createLogger("api:v1:insights:summary");
 
 // Query parameter validation
 const summaryQuerySchema = z.object({
@@ -171,7 +174,7 @@ export default defineEventHandler(async (event) => {
       throw error;
     }
 
-    console.error("Error generating summary:", error);
+    logger.error("Error generating summary", error instanceof Error ? error : new Error(String(error)), { userId: event.context.user?.id, requestId: event.context.requestId });
     throw createError(
       apiError(
         event,

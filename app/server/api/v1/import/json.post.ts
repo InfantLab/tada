@@ -10,6 +10,9 @@ import { z } from "zod";
 import { requirePermission } from "~/server/utils/permissions";
 import { success, apiError, validationError } from "~/server/utils/response";
 import { createPreview, importEntries } from "~/server/services/import";
+import { createLogger } from "~/server/utils/logger";
+
+const logger = createLogger("api:v1:import:json");
 
 // JSON import request schema
 const jsonImportRequestSchema = z.object({
@@ -79,7 +82,7 @@ export default defineEventHandler(async (event) => {
       throw error;
     }
 
-    console.error("Error importing JSON:", error);
+    logger.error("Error importing JSON", error instanceof Error ? error : new Error(String(error)), { userId: event.context.user?.id, requestId: event.context.requestId });
     throw createError(
       apiError(
         event,

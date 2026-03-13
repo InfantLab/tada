@@ -2,6 +2,9 @@ import { defineEventHandler, getRouterParam, createError } from "h3";
 import { db } from "~/server/db";
 import { entries } from "~/server/db/schema";
 import { eq, and } from "drizzle-orm";
+import { createLogger } from "~/server/utils/logger";
+
+const logger = createLogger("api:entries:delete");
 
 export default defineEventHandler(async (event) => {
   try {
@@ -49,7 +52,7 @@ export default defineEventHandler(async (event) => {
 
     return { success: true, id };
   } catch (error: unknown) {
-    console.error("Failed to delete entry:", error);
+    logger.error("Failed to delete entry", error, { entryId: id });
 
     if (error && typeof error === "object" && "statusCode" in error) {
       throw error;

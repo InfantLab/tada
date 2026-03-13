@@ -8,6 +8,9 @@
 
 import { success, apiError } from "~/server/utils/response";
 import { revokeApiKey } from "~/server/utils/api-key";
+import { createLogger } from "~/server/utils/logger";
+
+const logger = createLogger("api:v1:auth:keys:delete");
 
 export default defineEventHandler(async (event) => {
   const auth = event.context['auth']!;
@@ -42,7 +45,7 @@ export default defineEventHandler(async (event) => {
     // Return success response
     return success(event, { id: keyId }, { revoked: true });
   } catch (error) {
-    console.error("Error revoking API key:", error);
+    logger.error("Error revoking API key", error instanceof Error ? error : new Error(String(error)), { userId: event.context.user?.id, requestId: event.context.requestId });
     throw createError(
       apiError(
         event,

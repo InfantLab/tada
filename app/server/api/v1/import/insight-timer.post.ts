@@ -16,6 +16,9 @@ import {
   importEntries,
   INSIGHT_TIMER_MAPPING,
 } from "~/server/services/import";
+import { createLogger } from "~/server/utils/logger";
+
+const logger = createLogger("api:v1:import:insight-timer");
 
 // Import request schema for Insight Timer
 const insightTimerRequestSchema = z.object({
@@ -95,7 +98,7 @@ export default defineEventHandler(async (event) => {
       throw error;
     }
 
-    console.error("Error importing Insight Timer data:", error);
+    logger.error("Error importing Insight Timer data", error instanceof Error ? error : new Error(String(error)), { userId: event.context.user?.id, requestId: event.context.requestId });
     throw createError(
       apiError(
         event,

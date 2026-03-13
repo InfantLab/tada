@@ -8,6 +8,9 @@
 
 import { success, apiError } from "~/server/utils/response";
 import { listWebhooks } from "~/server/services/webhooks";
+import { createLogger } from "~/server/utils/logger";
+
+const logger = createLogger("api:v1:webhooks:list");
 
 export default defineEventHandler(async (event) => {
   const auth = event.context['auth']!;
@@ -32,7 +35,7 @@ export default defineEventHandler(async (event) => {
 
     return success(event, webhooks);
   } catch (error) {
-    console.error("Error listing webhooks:", error);
+    logger.error("Error listing webhooks", error instanceof Error ? error : new Error(String(error)), { userId: event.context.user?.id, requestId: event.context.requestId });
     throw createError(
       apiError(
         event,

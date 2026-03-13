@@ -11,7 +11,10 @@ import { requirePermission } from "~/server/utils/permissions";
 import { apiError, validationError } from "~/server/utils/response";
 import { getEntries } from "~/server/services/entries";
 import { toJSON, toCSV, toMarkdown } from "~/server/services/export";
+import { createLogger } from "~/server/utils/logger";
 import type { EntryQueryParams } from "~/types/api";
+
+const logger = createLogger("api:v1:export:entries");
 
 // Query parameter validation
 const exportQuerySchema = z.object({
@@ -99,7 +102,7 @@ export default defineEventHandler(async (event) => {
       throw error;
     }
 
-    console.error("Error exporting entries:", error);
+    logger.error("Error exporting entries", error instanceof Error ? error : new Error(String(error)), { userId: event.context.user?.id, requestId: event.context.requestId });
     throw createError(
       apiError(
         event,

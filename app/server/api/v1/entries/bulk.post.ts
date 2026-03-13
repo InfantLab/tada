@@ -14,7 +14,10 @@ import {
   bulkUpdateEntries,
   bulkDeleteEntries,
 } from "~/server/services/entries";
+import { createLogger } from "~/server/utils/logger";
 import type { NewEntry } from "~/server/db/schema";
+
+const logger = createLogger("api:v1:entries:bulk");
 
 // Schema for entry data (same as POST /entries)
 const entryDataSchema = z.object({
@@ -210,7 +213,7 @@ export default defineEventHandler(async (event) => {
       results,
     });
   } catch (error) {
-    console.error("Error performing bulk operations:", error);
+    logger.error("Error performing bulk operations", error instanceof Error ? error : new Error(String(error)), { userId: event.context.user?.id, requestId: event.context.requestId });
     throw createError(
       apiError(
         event,

@@ -1,6 +1,8 @@
 /**
  * Server-side structured logger
  * Outputs JSON logs to both stderr and rotating log files
+ *
+ * Log level controlled by LOG_LEVEL env var (default: "info" in production, "debug" in development)
  */
 
 import {
@@ -13,6 +15,19 @@ import {
 import { join } from "node:path";
 
 type LogLevel = "debug" | "info" | "warn" | "error";
+
+const LOG_LEVEL_PRIORITY: Record<LogLevel, number> = {
+  debug: 0,
+  info: 1,
+  warn: 2,
+  error: 3,
+};
+
+function getMinLogLevel(): LogLevel {
+  const env = process.env["LOG_LEVEL"]?.toLowerCase();
+  if (env && env in LOG_LEVEL_PRIORITY) return env as LogLevel;
+  return process.env["NODE_ENV"] === "production" ? "info" : "debug";
+}
 
 interface LogContext {
   [key: string]: unknown;
@@ -103,6 +118,11 @@ class Logger {
   }
 
   private log(level: LogLevel, message: string, context?: LogContext) {
+    // Skip log entries below the configured minimum level
+    if (LOG_LEVEL_PRIORITY[level] < LOG_LEVEL_PRIORITY[getMinLogLevel()]) {
+      return;
+    }
+
     const timestamp = new Date().toISOString();
     const logEntry = {
       timestamp,

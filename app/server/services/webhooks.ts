@@ -12,7 +12,10 @@ import crypto from "crypto";
 import { db } from "~/server/db";
 import { webhooks } from "~/server/db/schema";
 import { eq, and } from "drizzle-orm";
+import { createLogger } from "~/server/utils/logger";
 import type { WebhookEvent } from "~/types/api";
+
+const logger = createLogger("webhooks");
 
 // Retry delays in milliseconds: 1s, 5s, 25s
 const RETRY_DELAYS = [1000, 5000, 25000];
@@ -435,7 +438,7 @@ export async function triggerWebhooks(
   // In production, this should use a proper queue (Bull, etc.)
   for (const webhook of subscribedWebhooks) {
     deliverWebhook(webhook.id, payload).catch((error) => {
-      console.error(`Webhook delivery failed for ${webhook.id}:`, error);
+      logger.error("Webhook delivery failed", error, { webhookId: webhook.id, event });
     });
   }
 }

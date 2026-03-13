@@ -10,6 +10,9 @@ import { requirePermission } from "~/server/utils/permissions";
 import { success, apiError, notFound } from "~/server/utils/response";
 import { getEntryById } from "~/server/services/entries";
 import { computeContentHash } from "~/server/utils/contentHash";
+import { createLogger } from "~/server/utils/logger";
+
+const logger = createLogger("api:v1:entries:get");
 
 export default defineEventHandler(async (event) => {
   // Require entries:read permission
@@ -46,7 +49,7 @@ export default defineEventHandler(async (event) => {
       throw error;
     }
 
-    console.error("Error fetching entry:", error);
+    logger.error("Error fetching entry", error instanceof Error ? error : new Error(String(error)), { userId: event.context.user?.id, requestId: event.context.requestId });
     throw createError(
       apiError(
         event,

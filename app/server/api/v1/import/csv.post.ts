@@ -10,6 +10,9 @@ import { z } from "zod";
 import { requirePermission } from "~/server/utils/permissions";
 import { success, apiError, validationError } from "~/server/utils/response";
 import { parseCSV, createPreview, importEntries } from "~/server/services/import";
+import { createLogger } from "~/server/utils/logger";
+
+const logger = createLogger("api:v1:import:csv");
 
 // Field mapping schema
 const fieldMappingSchema = z.object({
@@ -134,7 +137,7 @@ export default defineEventHandler(async (event) => {
       throw error;
     }
 
-    console.error("Error importing CSV:", error);
+    logger.error("Error importing CSV", error instanceof Error ? error : new Error(String(error)), { userId: event.context.user?.id, requestId: event.context.requestId });
     throw createError(
       apiError(
         event,

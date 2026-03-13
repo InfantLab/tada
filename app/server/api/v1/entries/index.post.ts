@@ -11,7 +11,10 @@ import { requirePermission } from "~/server/utils/permissions";
 import { created, apiError, validationError } from "~/server/utils/response";
 import { createEntry } from "~/server/services/entries";
 import { triggerWebhooks } from "~/server/services/webhooks";
+import { createLogger } from "~/server/utils/logger";
 import type { NewEntry } from "~/server/db/schema";
+
+const logger = createLogger("api:v1:entries:create");
 
 // Base entry schema
 const baseEntrySchema = z.object({
@@ -119,14 +122,14 @@ export default defineEventHandler(async (event) => {
       timestamp: entry.timestamp,
       durationSeconds: entry.durationSeconds,
     }).catch((error) => {
-      console.error("Error triggering webhooks:", error);
+      logger.error("Error triggering webhooks", error instanceof Error ? error : new Error(String(error)), { userId: event.context.user?.id, requestId: event.context.requestId });
       // Don't fail the request if webhook delivery fails
     });
 
     // Return created response
     return created(event, entry);
   } catch (error) {
-    console.error("Error creating entry:", error);
+    logger.error("Error creating entry", error instanceof Error ? error : new Error(String(error)), { userId: event.context.user?.id, requestId: event.context.requestId });
     throw createError(
       apiError(
         event,
