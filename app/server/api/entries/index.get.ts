@@ -13,10 +13,7 @@ export default defineEventHandler(async (event) => {
     // Get authenticated user from context
     const user = event.context.user;
     if (!user) {
-      throw createError({
-        statusCode: 401,
-        statusMessage: "Unauthorized",
-      });
+      throw createError(unauthorized(event));
     }
 
     const query = getQuery(event);
@@ -126,11 +123,6 @@ export default defineEventHandler(async (event) => {
     };
   } catch (error: unknown) {
     logger.error("Failed to fetch entries", error);
-    const message = error instanceof Error ? error.message : "Unknown error";
-    throw createError({
-      statusCode: 500,
-      statusMessage: "Failed to fetch entries",
-      data: { error: message },
-    });
+    throw createError(internalError(event));
   }
 });

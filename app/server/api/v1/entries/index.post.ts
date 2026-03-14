@@ -27,7 +27,7 @@ const baseEntrySchema = z.object({
   timezone: z.string().default("UTC"),
   tags: z.array(z.string()).optional().default([]),
   notes: z.string().optional(),
-  data: z.record(z.any()).optional().default({}),
+  data: z.record(z.string(), z.any()).optional().default({}),
 });
 
 // Type-specific validation

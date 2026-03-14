@@ -67,7 +67,7 @@ const DEMO_RHYTHMS = [
 export default defineEventHandler(async (event) => {
   const session = event.context.session;
   if (!session?.userId) {
-    throw createError({ statusCode: 401, message: "Unauthorized" });
+    throw createError(unauthorized(event));
   }
 
   const userId = session.userId;

@@ -50,10 +50,7 @@ export default defineEventHandler(async (event) => {
   const { status, internalNotes, replyEmail } = parseResult.data;
 
   if (!status && !internalNotes && !replyEmail) {
-    throw createError({
-      statusCode: 400,
-      message: "No fields to update",
-    });
+    throw createError(apiError(event, "NO_FIELDS", "No fields to update"));
   }
 
   // Fetch existing feedback
@@ -74,10 +71,7 @@ export default defineEventHandler(async (event) => {
   if (replyEmail) {
     const recipientEmail = feedbackItem.email;
     if (!recipientEmail) {
-      throw createError({
-        statusCode: 400,
-        message: "Feedback has no associated email address",
-      });
+      throw createError(apiError(event, "NO_EMAIL", "Feedback has no associated email address"));
     }
 
     if (isEmailConfigured()) {

@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-03-10
 
+### Theme: Housekeeping — Security, Testing, Infrastructure
+
+A comprehensive housekeeping release. No new user-facing features — instead, a full security audit, dependency modernization, test coverage expansion, and infrastructure hardening across 33 audit items.
+
 ### Added
 
 - **Admin API** ([Spec 008](specs/008-admin-api/spec.md)):
@@ -37,19 +41,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `.tada-sync.json` config file support for Obsidian sync
 
 - **Screenshot carousel** on landing page with visual module documentation
+- **CONTRIBUTING.md** — setup, workflow, conventions, and testing guide
+- **Admin API documentation** added to API-SPECIFICATION.md
+- **Playwright E2E tests** — 4 smoke tests with Playwright setup
+- **Component tests** — 47 tests for login, forgot-password, reset-password pages
 
 ### Security
 
-- Session cookie `sameSite` set to `lax` (CSRF mitigation)
-- **Security headers middleware**: CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy
-- **SSRF protection** in link-preview endpoint (private IP blocking)
-- **Error response sanitization** — no internal details leaked in production
+- **Lucia auth removed** — deprecated library replaced with ~160 lines of direct session management (removed `lucia`, `@lucia-auth/adapter-drizzle`, `oslo`)
+- Session cookie `sameSite` set to `lax` and `httpOnly: true` (CSRF + XSS mitigation)
+- **Security headers middleware**: CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy, HSTS
+- **SSRF protection** in link-preview endpoint (private IPv4/IPv6 blocking, metadata endpoint blocking)
+- **Error response sanitization** — generic messages in production, detailed logs server-side only
 - Increased password minimum from 6 to 8 characters
 - CSV import size limits (5 MB / 50,000 rows)
+- **Persistent rate limiting** — SQLite-backed via `rateLimits` table (survives restarts)
+
+### Changed (Dependencies)
+
+- **Nuxt** 3.15.1 → 4.4.2 (full Nuxt 4 migration)
+- **Stripe** 17.5.0 → 20.4.1
+- **TypeScript** 5.7.2 → 5.9.3
+- **@libsql/client** 0.14.0 → 0.17.0
+- **Zod** 3.23.8 → 4.3.6
+- **@nuxt/test-utils** upgraded to 4.0
+- **@vite-pwa/nuxt** upgraded to 1.1.1
+- **@nuxt/eslint** upgraded to 1.15.2
+- Removed `@nuxt/devtools` (bundled in Nuxt 4)
 
 ### Improved
 
-- Cleaned up 22+ debug `console.log` statements from `useTranscription.ts`
+- **Unified error response format** — all 73+ API endpoints now return structured `{ error: { code, message, details? } }` responses via shared helpers (`apiError`, `unauthorized`, `notFound`, `validationError`, etc.)
+- **Structured logging** — request IDs on every request, `console.error` migrated to logger in server code
+- **Test coverage** — 209 new tests: auth (38), entries (33), admin (26), sync engine (25), billing/Stripe (40), components (47)
+- Fixed 7 previously failing logger tests
+- Fixed Zod v4 `z.record()` calls across 7 files (now requires key schema argument)
+- Replaced `db: any` with proper `Database` type in entryEngine.ts
+- Cleaned up debug `console.log` statements from `useTranscription.ts` and `VoiceRecorder.vue`
 - Updated all version references to v0.5.0
 - Marked specs 001–005 as Completed
 - Documentation updates across AGENTS.md, DEVELOPER_GUIDE, and docs/README
@@ -468,22 +496,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased]
-
-### Planned for v0.2.0
-
-- Category and emoji customization UI
-- Rhythm tracking implementation with streak calculations
-- Calendar heatmap visualization
-- Data import (Insight Timer CSV, Meditation Helper SQLite)
-- CSV export
-- Timer profiles (save/load configurations)
-- Toast notification system
-- Offline sync with IndexedDB
-- Push notifications for rhythm reminders
-
 See [design/roadmap.md](design/roadmap.md) for full roadmap.
-
----
-
-**Note:** v0.1.0 is the MVP release. All core infrastructure and entry management features are complete and functional.

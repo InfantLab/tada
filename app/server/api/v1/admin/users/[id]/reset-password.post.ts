@@ -45,10 +45,7 @@ export default defineEventHandler(async (event) => {
   const targetUser = user[0]!;
 
   if (!targetUser.email) {
-    throw createError({
-      statusCode: 400,
-      message: "User has no email address",
-    });
+    throw createError(apiError(event, "NO_EMAIL", "User has no email address"));
   }
 
   // Generate reset token (reuses existing logic from forgot-password)
@@ -77,10 +74,7 @@ export default defineEventHandler(async (event) => {
       logger.error("Failed to send admin-triggered password reset email", {
         userId: targetUser.id,
       });
-      throw createError({
-        statusCode: 500,
-        message: "Failed to send password reset email",
-      });
+      throw createError(internalError(event, "Failed to send password reset email"));
     }
   } else {
     const resetUrl = `${getAppUrl()}/reset-password?token=${encodeURIComponent(token)}`;

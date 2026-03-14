@@ -182,10 +182,7 @@ async function transcribeWithOpenAI(
 export default defineEventHandler(async (event) => {
   // Require authentication
   if (!event.context.user) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: "Unauthorized",
-    });
+    throw createError(unauthorized(event));
   }
 
   const userId = event.context.user.id;
@@ -195,11 +192,9 @@ export default defineEventHandler(async (event) => {
   const groqApiKey = process.env['GROQ_API_KEY'] || "";
   const openaiApiKey = process.env['OPENAI_API_KEY'] || "";
   if (!userApiKey && !groqApiKey && !openaiApiKey) {
-    throw createError({
-      statusCode: 503,
-      statusMessage:
-        "Voice transcription is not available. Please configure your own API key in settings or contact the administrator.",
-    });
+    throw createError(
+      apiError(event, "SERVICE_UNAVAILABLE", "Voice transcription is not available. Please configure your own API key in settings or contact the administrator.", 503)
+    );
   }
 
   // Rate limiting (checked after service availability)
@@ -209,10 +204,9 @@ export default defineEventHandler(async (event) => {
     const waitSeconds = Math.ceil(
       (RATE_LIMIT_WINDOW_MS - (now - lastRequest)) / 1000,
     );
-    throw createError({
-      statusCode: 429,
-      statusMessage: `Rate limited. Please wait ${waitSeconds} seconds before making another request.`,
-    });
+    throw createError(
+      apiError(event, "RATE_LIMITED", `Rate limited. Please wait ${waitSeconds} seconds before making another request.`, 429)
+    );
   }
 
   // Check free tier limit
@@ -220,10 +214,9 @@ export default defineEventHandler(async (event) => {
 
   // Only enforce limit if user doesn't have their own key
   if (!userApiKey && usageThisMonth >= FREE_TIER_LIMIT) {
-    throw createError({
-      statusCode: 402,
-      statusMessage: `Free tier limit reached (${FREE_TIER_LIMIT}/month). Add your own API key in settings to continue.`,
-    });
+    throw createError(
+      apiError(event, "FREE_TIER_LIMIT_REACHED", `Free tier limit reached (${FREE_TIER_LIMIT}/month). Add your own API key in settings to continue.`, 402)
+    );
   }
 
   // Read multipart form data
@@ -245,10 +238,9 @@ export default defineEventHandler(async (event) => {
 
       const audioFile = formData.find((part) => part.name === "audio");
       if (!audioFile?.data) {
-        throw createError({
-          statusCode: 400,
-          statusMessage: "Missing audio file in request",
-        });
+        throw createError(
+          apiError(event, "MISSING_AUDIO", "Missing audio file in request", 400)
+        );
       }
 
       // Capture diagnostic metadata before processing
@@ -286,20 +278,18 @@ export default defineEventHandler(async (event) => {
         ) || 0;
       }
     } else {
-      throw createError({
-        statusCode: 400,
-        statusMessage: "Expected multipart/form-data content type",
-      });
+      throw createError(
+        apiError(event, "INVALID_CONTENT_TYPE", "Expected multipart/form-data content type", 400)
+      );
     }
   } catch (err) {
     if ((err as { statusCode?: number }).statusCode) {
       throw err;
     }
     logger.error("Error reading request:", err);
-    throw createError({
-      statusCode: 400,
-      statusMessage: "Failed to read audio data",
-    });
+    throw createError(
+      apiError(event, "AUDIO_READ_FAILED", "Failed to read audio data", 400)
+    );
   }
 
   // Determine which API key to use
@@ -369,9 +359,6 @@ export default defineEventHandler(async (event) => {
     return result;
   } catch (err) {
     logger.error("Transcription failed:", err);
-    throw createError({
-      statusCode: 500,
-      statusMessage: "Transcription failed. Please try again.",
-    });
+    throw createError(internalError(event, "Transcription failed. Please try again."));
   }
 });

@@ -339,10 +339,7 @@ async function extractWithAnthropic(
 export default defineEventHandler(async (event) => {
   // Require authentication
   if (!event.context.user) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: "Unauthorized",
-    });
+    throw createError(unauthorized(event));
   }
 
   const userId = event.context.user.id;
@@ -358,11 +355,9 @@ export default defineEventHandler(async (event) => {
     !openaiApiKey &&
     !anthropicApiKey
   ) {
-    throw createError({
-      statusCode: 503,
-      statusMessage:
-        "Voice extraction is not available. Please configure your own API key in settings or contact the administrator.",
-    });
+    throw createError(
+      apiError(event, "SERVICE_UNAVAILABLE", "Voice extraction is not available. Please configure your own API key in settings or contact the administrator.", 503)
+    );
   }
 
   // Rate limiting (checked after service availability)
@@ -372,10 +367,9 @@ export default defineEventHandler(async (event) => {
     const waitSeconds = Math.ceil(
       (RATE_LIMIT_WINDOW_MS - (now - lastRequest)) / 1000,
     );
-    throw createError({
-      statusCode: 429,
-      statusMessage: `Rate limited. Please wait ${waitSeconds} seconds before making another request.`,
-    });
+    throw createError(
+      apiError(event, "RATE_LIMITED", `Rate limited. Please wait ${waitSeconds} seconds before making another request.`, 429)
+    );
   }
 
   // Check free tier limit
@@ -383,10 +377,9 @@ export default defineEventHandler(async (event) => {
 
   // Only enforce limit if user doesn't have their own key
   if (!userApiKey && usageThisMonth >= FREE_TIER_LIMIT) {
-    throw createError({
-      statusCode: 402,
-      statusMessage: `Free tier limit reached (${FREE_TIER_LIMIT}/month). Add your own API key in settings to continue.`,
-    });
+    throw createError(
+      apiError(event, "FREE_TIER_LIMIT_REACHED", `Free tier limit reached (${FREE_TIER_LIMIT}/month). Add your own API key in settings to continue.`, 402)
+    );
   }
 
   // Read request body
@@ -394,17 +387,15 @@ export default defineEventHandler(async (event) => {
   try {
     body = await readBody(event);
   } catch {
-    throw createError({
-      statusCode: 400,
-      statusMessage: "Invalid request body",
-    });
+    throw createError(
+      apiError(event, "INVALID_REQUEST_BODY", "Invalid request body", 400)
+    );
   }
 
   if (!body || typeof body !== "object") {
-    throw createError({
-      statusCode: 400,
-      statusMessage: "Invalid request body",
-    });
+    throw createError(
+      apiError(event, "INVALID_REQUEST_BODY", "Invalid request body", 400)
+    );
   }
 
   const {
@@ -415,17 +406,15 @@ export default defineEventHandler(async (event) => {
   } = body as Partial<StructureRequestBody>;
 
   if (!text || typeof text !== "string" || text.length < 2) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: "Missing or invalid text field",
-    });
+    throw createError(
+      apiError(event, "INVALID_TEXT", "Missing or invalid text field", 400)
+    );
   }
 
   if (!mode || !["journal", "tada", "timer-note"].includes(mode)) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: "Invalid mode. Must be one of: journal, tada, timer-note",
-    });
+    throw createError(
+      apiError(event, "INVALID_MODE", "Invalid mode. Must be one of: journal, tada, timer-note", 400)
+    );
   }
 
   // Determine provider (default: groq)
@@ -491,9 +480,6 @@ export default defineEventHandler(async (event) => {
     return result;
   } catch (err) {
     logger.error("Extraction failed:", err);
-    throw createError({
-      statusCode: 500,
-      statusMessage: "Extraction failed. Please try again.",
-    });
+    throw createError(internalError(event, "Extraction failed. Please try again."));
   }
 });

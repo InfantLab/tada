@@ -31,20 +31,16 @@ export default defineEventHandler(async (event) => {
 
     // Require authentication
     if (!event.context.user) {
-      throw createError({
-        statusCode: 401,
-        statusMessage: "Unauthorized",
-      });
+      throw createError(unauthorized(event));
     }
 
     const userId = event.context.user.id;
 
     // Type guard: ensure body is an object
     if (!body || typeof body !== "object") {
-      throw createError({
-        statusCode: 400,
-        statusMessage: "Invalid request body",
-      });
+      throw createError(
+        apiError(event, "INVALID_ENTRY_DATA", "Invalid request body", 400)
+      );
     }
 
     const typedBody = body as Partial<CreateEntryBody>;
@@ -53,10 +49,9 @@ export default defineEventHandler(async (event) => {
 
     // Validate required fields
     if (!typedBody.type || !typedBody.name) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: "Missing required fields: type and name are required",
-      });
+      throw createError(
+        apiError(event, "INVALID_ENTRY_DATA", "Missing required fields: type and name are required", 400)
+      );
     }
 
     // Prepare entry data
@@ -183,11 +178,6 @@ export default defineEventHandler(async (event) => {
       throw error;
     }
 
-    const message = error instanceof Error ? error.message : "Unknown error";
-    throw createError({
-      statusCode: 500,
-      statusMessage: `Failed to create entry: ${message}`,
-      data: { error: message, type: bodyType, name: bodyName },
-    });
+    throw createError(internalError(event));
   }
 });

@@ -25,19 +25,15 @@ export default defineEventHandler(async (event) => {
   try {
     // Require authentication
     if (!event.context.user) {
-      throw createError({
-        statusCode: 401,
-        statusMessage: "Unauthorized",
-      });
+      throw createError(unauthorized(event));
     }
 
     const userId = event.context.user.id;
 
     if (!id) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: "Entry ID is required",
-      });
+      throw createError(
+        apiError(event, "INVALID_ID", "Entry ID is required", 400)
+      );
     }
 
     const body = (await readBody(event)) as UpdateEntryBody;
@@ -50,10 +46,7 @@ export default defineEventHandler(async (event) => {
       .limit(1);
 
     if (!existing) {
-      throw createError({
-        statusCode: 404,
-        statusMessage: "Entry not found",
-      });
+      throw createError(notFound(event, "Entry"));
     }
 
     // Prepare update data
@@ -100,11 +93,6 @@ export default defineEventHandler(async (event) => {
       throw error;
     }
 
-    const message = error instanceof Error ? error.message : "Unknown error";
-    throw createError({
-      statusCode: 500,
-      statusMessage: "Failed to update entry",
-      data: { error: message },
-    });
+    throw createError(internalError(event));
   }
 });

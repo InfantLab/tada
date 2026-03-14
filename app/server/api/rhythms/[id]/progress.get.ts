@@ -44,20 +44,16 @@ export default defineEventHandler(async (event) => {
   // Require authentication
   const session = event.context.session;
   if (!session?.userId) {
-    throw createError({
-      statusCode: 401,
-      message: "Unauthorized",
-    });
+    throw createError(unauthorized(event));
   }
 
   const userId = session.userId;
   const rhythmId = getRouterParam(event, "id");
 
   if (!rhythmId) {
-    throw createError({
-      statusCode: 400,
-      message: "Rhythm ID is required",
-    });
+    throw createError(
+      apiError(event, "RHYTHM_ID_REQUIRED", "Rhythm ID is required", 400)
+    );
   }
 
   try {
@@ -68,10 +64,7 @@ export default defineEventHandler(async (event) => {
       .where(and(eq(rhythms.id, rhythmId), eq(rhythms.userId, userId)));
 
     if (!rhythm) {
-      throw createError({
-        statusCode: 404,
-        message: "Rhythm not found",
-      });
+      throw createError(notFound(event, "Rhythm"));
     }
 
     // Build conditions to find latest matching entry
@@ -285,9 +278,6 @@ export default defineEventHandler(async (event) => {
       rhythmId,
       userId,
     });
-    throw createError({
-      statusCode: 500,
-      message: "Failed to calculate rhythm progress",
-    });
+    throw createError(internalError(event, "Failed to calculate rhythm progress"));
   }
 });

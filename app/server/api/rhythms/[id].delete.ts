@@ -15,19 +15,15 @@ export default defineEventHandler(async (event) => {
   const user = event.context.user;
   if (!user) {
     logger.warn("Unauthenticated rhythm delete attempt");
-    throw createError({
-      statusCode: 401,
-      statusMessage: "Authentication required",
-    });
+    throw createError(unauthorized(event));
   }
 
   const id = getRouterParam(event, "id");
 
   if (!id) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: "Rhythm ID is required",
-    });
+    throw createError(
+      apiError(event, "RHYTHM_ID_REQUIRED", "Rhythm ID is required", 400)
+    );
   }
 
   logger.info("Deleting rhythm", { userId: user.id, rhythmId: id });
@@ -43,10 +39,7 @@ export default defineEventHandler(async (event) => {
       userId: user.id,
       rhythmId: id,
     });
-    throw createError({
-      statusCode: 404,
-      statusMessage: "Rhythm not found",
-    });
+    throw createError(notFound(event, "Rhythm"));
   }
 
   logger.info("Rhythm deleted successfully", { userId: user.id, rhythmId: id });

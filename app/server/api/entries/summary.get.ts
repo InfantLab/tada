@@ -30,10 +30,7 @@ export default defineEventHandler(async (event): Promise<SummaryResponse> => {
     // Get authenticated user from context
     const user = event.context.user;
     if (!user) {
-      throw createError({
-        statusCode: 401,
-        statusMessage: "Unauthorized",
-      });
+      throw createError(unauthorized(event));
     }
 
     const query = getQuery(event);
@@ -157,11 +154,6 @@ export default defineEventHandler(async (event): Promise<SummaryResponse> => {
     return response;
   } catch (error: unknown) {
     logger.error("Failed to fetch entry summary", error);
-    const message = error instanceof Error ? error.message : "Unknown error";
-    throw createError({
-      statusCode: 500,
-      statusMessage: "Failed to fetch entry summary",
-      data: { error: message },
-    });
+    throw createError(internalError(event));
   }
 });

@@ -89,7 +89,7 @@ export const EntryInputBaseSchema = z.object({
   externalId: z.string().optional(), // For import deduplication
 
   // Additional data (type-specific payload)
-  data: z.record(z.unknown()).optional(),
+  data: z.record(z.string(), z.unknown()).optional(),
 });
 
 /**
@@ -216,7 +216,7 @@ export function validateEntryInput(input: unknown): {
   }
   return {
     valid: false,
-    errors: result.error.errors.map((e) => `${e.path.join(".")}: ${e.message}`),
+    errors: result.error.issues.map((e) => `${e.path.join(".")}: ${e.message}`),
   };
 }
 

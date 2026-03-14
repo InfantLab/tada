@@ -26,7 +26,7 @@ const logger = createLogger("api:entries:drafts:post");
 // Request body validation
 const createDraftSchema = z.object({
   input: z
-    .record(z.unknown())
+    .record(z.string(), z.unknown())
     .refine((obj) => Object.keys(obj).length > 0, {
       message: "Input must not be empty",
     }),
@@ -39,10 +39,7 @@ export default defineEventHandler(async (event) => {
   // Get authenticated user
   const user = event.context.user;
   if (!user?.id) {
-    throw createError({
-      statusCode: 401,
-      message: "Authentication required",
-    });
+    throw createError(unauthorized(event, "Authentication required"));
   }
 
   const userId = user.id;
@@ -52,10 +49,9 @@ export default defineEventHandler(async (event) => {
   const validation = createDraftSchema.safeParse(body);
 
   if (!validation.success) {
-    throw createError({
-      statusCode: 400,
-      message: `Invalid request: ${validation.error.issues[0]?.message}`,
-    });
+    throw createError(
+      apiError(event, "INVALID_ENTRY_DATA", `Invalid request: ${validation.error.issues[0]?.message}`, 400)
+    );
   }
 
   const { input, parsedFrom, confidence, expiresInHours } = validation.data;
@@ -93,9 +89,6 @@ export default defineEventHandler(async (event) => {
     };
   } catch (error) {
     logger.error("Failed to create draft", { userId, error });
-    throw createError({
-      statusCode: 500,
-      message: "Failed to create draft",
-    });
+    throw createError(internalError(event));
   }
 });

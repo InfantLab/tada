@@ -31,10 +31,7 @@ export default defineEventHandler(async (event) => {
   // Require authentication
   const session = event.context.session;
   if (!session?.userId) {
-    throw createError({
-      statusCode: 401,
-      message: "Unauthorized",
-    });
+    throw createError(unauthorized(event));
   }
 
   const userId = session.userId;
@@ -42,11 +39,9 @@ export default defineEventHandler(async (event) => {
 
   // Validate required fields
   if (!body.name || typeof body.name !== "string" || body.name.trim() === "") {
-    throw createError({
-      statusCode: 400,
-      message: "Name is required",
-      data: { details: { name: "Name is required" } },
-    });
+    throw createError(
+      apiError(event, "NAME_REQUIRED", "Name is required", 400, { details: { name: "Name is required" } })
+    );
   }
 
   // Get the entry type early (needed for validation)
@@ -54,29 +49,23 @@ export default defineEventHandler(async (event) => {
 
   // matchCategory is required for timed/tally but optional for moment/tada
   if (!body.matchCategory && matchType !== "moment" && matchType !== "tada") {
-    throw createError({
-      statusCode: 400,
-      message: "Category is required",
-      data: { details: { matchCategory: "Category is required" } },
-    });
+    throw createError(
+      apiError(event, "CATEGORY_REQUIRED", "Category is required", 400, { details: { matchCategory: "Category is required" } })
+    );
   }
 
   if (!body.frequency) {
-    throw createError({
-      statusCode: 400,
-      message: "Frequency is required",
-      data: { details: { frequency: "Frequency is required" } },
-    });
+    throw createError(
+      apiError(event, "FREQUENCY_REQUIRED", "Frequency is required", 400, { details: { frequency: "Frequency is required" } })
+    );
   }
 
   // Validate frequency value
   const validFrequencies = ["daily", "weekly", "monthly"];
   if (!validFrequencies.includes(body.frequency)) {
-    throw createError({
-      statusCode: 400,
-      message: "Invalid frequency",
-      data: { details: { frequency: "Invalid frequency" } },
-    });
+    throw createError(
+      apiError(event, "INVALID_FREQUENCY", "Invalid frequency", 400, { details: { frequency: "Invalid frequency" } })
+    );
   }
 
   // matchType already determined above
@@ -102,28 +91,20 @@ export default defineEventHandler(async (event) => {
   } else if (matchType === "timed") {
     durationThreshold = body.durationThresholdSeconds ?? 360;
     if (durationThreshold < 0 || durationThreshold > 86400) {
-      throw createError({
-        statusCode: 400,
-        message: "Duration must be between 0 and 24 hours",
-        data: {
-          details: {
-            durationThresholdSeconds: "Duration must be between 0 and 24 hours",
-          },
-        },
-      });
+      throw createError(
+        apiError(event, "INVALID_DURATION", "Duration must be between 0 and 24 hours", 400, {
+          details: { durationThresholdSeconds: "Duration must be between 0 and 24 hours" },
+        })
+      );
     }
   } else if (matchType === "tally") {
     countThreshold = body.countThreshold;
     if (!countThreshold || countThreshold < 1 || countThreshold > 10000) {
-      throw createError({
-        statusCode: 400,
-        message: "Count threshold must be between 1 and 10000",
-        data: {
-          details: {
-            countThreshold: "Count threshold must be between 1 and 10000",
-          },
-        },
-      });
+      throw createError(
+        apiError(event, "INVALID_COUNT_THRESHOLD", "Count threshold must be between 1 and 10000", 400, {
+          details: { countThreshold: "Count threshold must be between 1 and 10000" },
+        })
+      );
     }
     // For tally rhythms, set a minimal duration threshold (1 second)
     durationThreshold = 1;
@@ -196,9 +177,6 @@ export default defineEventHandler(async (event) => {
     };
   } catch (error) {
     logger.error("Failed to create rhythm", { error, userId });
-    throw createError({
-      statusCode: 500,
-      message: "Failed to create rhythm",
-    });
+    throw createError(internalError(event, "Failed to create rhythm"));
   }
 });

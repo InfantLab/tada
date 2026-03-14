@@ -23,29 +23,26 @@ const logger = createLogger("api:billing:webhook");
 export default defineEventHandler(async (event) => {
   // Check if billing is enabled
   if (!isBillingEnabled()) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: "Billing is not enabled",
-    });
+    throw createError(
+      apiError(event, "BILLING_NOT_CONFIGURED", "Billing is not enabled", 400)
+    );
   }
 
   // Get the raw body for signature verification
   const body = await readRawBody(event);
   if (!body) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: "Missing request body",
-    });
+    throw createError(
+      apiError(event, "WEBHOOK_ERROR", "Missing request body", 400)
+    );
   }
 
   // Get the Stripe signature header
   const signature = getHeader(event, "stripe-signature");
   if (!signature) {
     logger.warn("Webhook received without signature");
-    throw createError({
-      statusCode: 400,
-      statusMessage: "Missing Stripe signature",
-    });
+    throw createError(
+      apiError(event, "WEBHOOK_ERROR", "Missing Stripe signature", 400)
+    );
   }
 
   // Process the webhook
@@ -53,10 +50,9 @@ export default defineEventHandler(async (event) => {
 
   if (!result.success) {
     logger.error("Webhook processing failed", { message: result.message });
-    throw createError({
-      statusCode: 400,
-      statusMessage: result.message,
-    });
+    throw createError(
+      apiError(event, "WEBHOOK_ERROR", result.message, 400)
+    );
   }
 
   // Return 200 to acknowledge receipt

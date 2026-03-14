@@ -34,10 +34,7 @@ export default defineEventHandler(async (event) => {
   // Require authentication
   const session = event.context.session;
   if (!session?.userId) {
-    throw createError({
-      statusCode: 401,
-      message: "Unauthorized",
-    });
+    throw createError(unauthorized(event));
   }
 
   const userId = session.userId;
@@ -150,9 +147,6 @@ export default defineEventHandler(async (event) => {
       stack: errorStack,
       userId,
     });
-    throw createError({
-      statusCode: 500,
-      message: "Failed to fetch rhythms",
-    });
+    throw createError(internalError(event, "Failed to fetch rhythms"));
   }
 });

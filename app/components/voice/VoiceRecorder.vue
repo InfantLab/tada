@@ -176,31 +176,8 @@ watch(
       const transcriptText = transcription.liveTranscript.value || "";
       let finalText = resultText || liveText.value || transcriptText || "";
 
-      console.log(
-        `[VoiceRecorder] Recording complete, evaluating transcription`,
-        {
-          timestamp: new Date().toISOString(),
-          blobSize: blob.size,
-          blobType: blob.type,
-          duration: voiceCapture.duration.value,
-          resultText: resultText ? resultText.slice(0, 50) + "..." : "(empty)",
-          liveTextValue: liveText.value
-            ? liveText.value.slice(0, 50) + "..."
-            : "(empty)",
-          transcriptText: transcriptText
-            ? transcriptText.slice(0, 50) + "..."
-            : "(empty)",
-          finalText: finalText ? finalText.slice(0, 50) + "..." : "(empty)",
-          transcriptionStatus: transcription.status.value,
-          transcriptionError: transcription.error.value,
-        },
-      );
-
       // If we have text, emit and return
       if (finalText.trim()) {
-        console.log(
-          `[VoiceRecorder] Success - emitting transcription: "${finalText.slice(0, 80)}..."`,
-        );
         emit("transcription", finalText.trim());
         emit("complete", blob, voiceCapture.duration.value, finalText.trim());
         liveText.value = "";
@@ -209,27 +186,11 @@ watch(
 
       // No text captured - try Whisper fallback via server endpoint
       // Server uses GROQ_API_KEY from environment, so always available
-      console.log(
-        `[VoiceRecorder] No text captured, attempting Whisper fallback via server`,
-        {
-          timestamp: new Date().toISOString(),
-          blobSize: blob.size,
-          duration: voiceCapture.duration.value,
-        },
-      );
-
-      // Show feedback that we're trying Whisper
       liveText.value = "Transcribing with Whisper...";
       try {
         const whisperResult = await transcription.transcribe(blob, {
           forceProvider: "whisper-cloud",
           recordingDuration: voiceCapture.duration.value,
-        });
-        console.log(`[VoiceRecorder] Whisper fallback result`, {
-          timestamp: new Date().toISOString(),
-          hasText: !!whisperResult?.text,
-          textLength: whisperResult?.text?.length || 0,
-          textPreview: whisperResult?.text?.slice(0, 50) || "(empty)",
         });
         if (whisperResult?.text) {
           finalText = whisperResult.text;
@@ -238,14 +199,7 @@ watch(
           liveText.value = "";
           return;
         }
-      } catch (whisperErr) {
-        console.error(`[VoiceRecorder] Whisper fallback failed`, {
-          timestamp: new Date().toISOString(),
-          error:
-            whisperErr instanceof Error
-              ? whisperErr.message
-              : String(whisperErr),
-        });
+      } catch {
         // Whisper fallback failed, continue to error handling
       }
       liveText.value = "";

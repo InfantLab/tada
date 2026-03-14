@@ -8,6 +8,7 @@ import { sendEmail, isEmailConfigured } from "~/server/utils/email";
 import { passwordChangedEmail } from "~/server/templates/email";
 import { logAuthEvent } from "~/server/utils/authEvents";
 import { createSession, setSessionCookie } from "~/server/utils/auth";
+import { unauthorized, apiError, internalError } from "~/server/utils/response";
 
 const logger = createLogger("api:auth:change-password");
 
@@ -23,41 +24,34 @@ export default defineEventHandler(async (event) => {
     const user = event.context.user;
 
     if (!session || !user) {
-      throw createError({
-        statusCode: 401,
-        statusMessage: "You must be logged in to change your password",
-      });
+      throw createError(unauthorized(event, "You must be logged in to change your password"));
     }
 
     const body = (await readBody(event)) as ChangePasswordBody;
 
     // Validate input
     if (!body.currentPassword || typeof body.currentPassword !== "string") {
-      throw createError({
-        statusCode: 400,
-        statusMessage: "Current password is required",
-      });
+      throw createError(
+        apiError(event, "CURRENT_PASSWORD_REQUIRED", "Current password is required", 400)
+      );
     }
 
     if (!body.newPassword || typeof body.newPassword !== "string") {
-      throw createError({
-        statusCode: 400,
-        statusMessage: "New password is required",
-      });
+      throw createError(
+        apiError(event, "NEW_PASSWORD_REQUIRED", "New password is required", 400)
+      );
     }
 
     if (body.newPassword.length < 8) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: "New password must be at least 8 characters",
-      });
+      throw createError(
+        apiError(event, "PASSWORD_TOO_SHORT", "New password must be at least 8 characters", 400)
+      );
     }
 
     if (body.currentPassword === body.newPassword) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: "New password must be different from current password",
-      });
+      throw createError(
+        apiError(event, "PASSWORD_UNCHANGED", "New password must be different from current password", 400)
+      );
     }
 
     // Get user from database to verify current password
@@ -68,10 +62,9 @@ export default defineEventHandler(async (event) => {
       .limit(1);
 
     if (existingUser.length === 0 || !existingUser[0]?.passwordHash) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: "Unable to verify current password",
-      });
+      throw createError(
+        apiError(event, "PASSWORD_VERIFICATION_FAILED", "Unable to verify current password", 400)
+      );
     }
 
     const dbUser = existingUser[0];
@@ -90,10 +83,9 @@ export default defineEventHandler(async (event) => {
         metadata: { success: false, reason: "invalid_current_password" },
       });
 
-      throw createError({
-        statusCode: 400,
-        statusMessage: "Current password is incorrect",
-      });
+      throw createError(
+        apiError(event, "INVALID_CURRENT_PASSWORD", "Current password is incorrect", 400)
+      );
     }
 
     // Hash the new password
@@ -150,9 +142,6 @@ export default defineEventHandler(async (event) => {
       error: error instanceof Error ? error.message : "Unknown error",
     });
 
-    throw createError({
-      statusCode: 500,
-      statusMessage: "An error occurred. Please try again.",
-    });
+    throw createError(internalError(event, "An error occurred. Please try again."));
   }
 });

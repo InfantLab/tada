@@ -14,6 +14,7 @@ import { users, emailVerificationTokens } from "~/server/db/schema";
 import { createLogger } from "~/server/utils/logger";
 import { hashToken, isTokenExpired } from "~/server/utils/tokens";
 import { logAuthEvent } from "~/server/utils/authEvents";
+import { apiError, internalError } from "~/server/utils/response";
 
 const logger = createLogger("api:auth:verify-email");
 
@@ -27,10 +28,9 @@ export default defineEventHandler(async (event) => {
 
     // Validate input
     if (!body.token || typeof body.token !== "string") {
-      throw createError({
-        statusCode: 400,
-        statusMessage: "Verification token is required",
-      });
+      throw createError(
+        apiError(event, "TOKEN_REQUIRED", "Verification token is required", 400)
+      );
     }
 
     // Hash the token to compare with stored hash
@@ -53,22 +53,18 @@ export default defineEventHandler(async (event) => {
       .limit(1);
 
     if (tokenRecords.length === 0) {
-      throw createError({
-        statusCode: 400,
-        statusMessage:
-          "Invalid or expired verification link. Please request a new one.",
-      });
+      throw createError(
+        apiError(event, "INVALID_TOKEN", "Invalid or expired verification link. Please request a new one.", 400)
+      );
     }
 
     const { token: tokenRecord, user } = tokenRecords[0]!;
 
     // Check expiry
     if (isTokenExpired(tokenRecord.expiresAt)) {
-      throw createError({
-        statusCode: 400,
-        statusMessage:
-          "This verification link has expired. Please request a new one.",
-      });
+      throw createError(
+        apiError(event, "TOKEN_EXPIRED", "This verification link has expired. Please request a new one.", 400)
+      );
     }
 
     // Check if already verified
@@ -125,9 +121,6 @@ export default defineEventHandler(async (event) => {
       error: error instanceof Error ? error.message : "Unknown error",
     });
 
-    throw createError({
-      statusCode: 500,
-      statusMessage: "An error occurred. Please try again.",
-    });
+    throw createError(internalError(event, "An error occurred. Please try again."));
   }
 });

@@ -31,7 +31,7 @@ const entryDataSchema = z.object({
   timezone: z.string().default("UTC"),
   tags: z.array(z.string()).optional().default([]),
   notes: z.string().optional(),
-  data: z.record(z.any()).optional().default({}),
+  data: z.record(z.string(), z.any()).optional().default({}),
 });
 
 // Schema for update data
@@ -45,7 +45,7 @@ const updateDataSchema = z.object({
   timezone: z.string().optional(),
   tags: z.array(z.string()).optional(),
   notes: z.string().optional(),
-  data: z.record(z.any()).optional(),
+  data: z.record(z.string(), z.any()).optional(),
 });
 
 // Schema for individual operations

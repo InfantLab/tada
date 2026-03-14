@@ -25,6 +25,7 @@ import {
 import { sendEmail, isEmailConfigured, getAppUrl } from "~/server/utils/email";
 import { emailVerificationEmail } from "~/server/templates/email";
 import { logAuthEvent } from "~/server/utils/authEvents";
+import { unauthorized, notFound, apiError, internalError } from "~/server/utils/response";
 
 const logger = createLogger("api:auth:update-email");
 
@@ -35,10 +36,7 @@ interface UpdateEmailBody {
 export default defineEventHandler(async (event) => {
   // Require authentication
   if (!event.context.user) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: "Unauthorized",
-    });
+    throw createError(unauthorized(event));
   }
 
   const userId = event.context.user.id;
@@ -49,19 +47,17 @@ export default defineEventHandler(async (event) => {
     // Validate email
     const email = body.email?.trim()?.toLowerCase();
     if (!email) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: "Email is required",
-      });
+      throw createError(
+        apiError(event, "EMAIL_REQUIRED", "Email is required", 400)
+      );
     }
 
     // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: "Please enter a valid email address",
-      });
+      throw createError(
+        apiError(event, "INVALID_EMAIL_FORMAT", "Please enter a valid email address", 400)
+      );
     }
 
     // Get current user
@@ -72,10 +68,7 @@ export default defineEventHandler(async (event) => {
       .limit(1);
 
     if (!user) {
-      throw createError({
-        statusCode: 404,
-        statusMessage: "User not found",
-      });
+      throw createError(notFound(event, "User"));
     }
 
     // Check if email is already in use by another user
@@ -86,10 +79,9 @@ export default defineEventHandler(async (event) => {
       .limit(1);
 
     if (existingUser && existingUser.id !== userId) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: "This email is already in use",
-      });
+      throw createError(
+        apiError(event, "EMAIL_TAKEN", "This email is already in use", 400)
+      );
     }
 
     // If email hasn't changed, just return success
@@ -189,9 +181,6 @@ export default defineEventHandler(async (event) => {
       userId,
     });
 
-    throw createError({
-      statusCode: 500,
-      statusMessage: "Failed to update email. Please try again.",
-    });
+    throw createError(internalError(event, "Failed to update email. Please try again."));
   }
 });

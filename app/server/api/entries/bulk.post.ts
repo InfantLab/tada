@@ -12,10 +12,7 @@ const logger = createLogger("api:entries:bulk:restore");
 export default defineEventHandler(async (event) => {
   // Require authentication
   if (!event.context.user) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: "Unauthorized",
-    });
+    throw createError(unauthorized(event));
   }
 
   const userId = event.context.user.id;
@@ -24,10 +21,9 @@ export default defineEventHandler(async (event) => {
   const { ids } = body as { ids: string[] };
 
   if (!ids || ids.length === 0) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: "Entry IDs are required",
-    });
+    throw createError(
+      apiError(event, "INVALID_ENTRY_DATA", "Entry IDs are required", 400)
+    );
   }
 
   logger.info("Bulk restore request", {
@@ -63,9 +59,6 @@ export default defineEventHandler(async (event) => {
     };
   } catch (error) {
     logger.error("Bulk restore failed", { userId, error });
-    throw createError({
-      statusCode: 500,
-      statusMessage: "Failed to restore entries",
-    });
+    throw createError(internalError(event));
   }
 });

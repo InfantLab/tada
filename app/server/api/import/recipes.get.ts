@@ -28,10 +28,7 @@ const BUILTIN_RECIPES = [
 export default defineEventHandler(async (event) => {
   const user = event.context.user;
   if (!user) {
-    throw createError({
-      statusCode: 401,
-      message: "Unauthorized",
-    });
+    throw createError(unauthorized(event));
   }
 
   try {
@@ -107,9 +104,6 @@ export default defineEventHandler(async (event) => {
       error: error instanceof Error ? error.message : String(error),
     });
 
-    throw createError({
-      statusCode: 500,
-      message: "Failed to retrieve recipes",
-    });
+    throw createError(internalError(event, "Failed to retrieve recipes"));
   }
 });

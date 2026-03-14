@@ -35,11 +35,11 @@ export default defineEventHandler(async (event) => {
   // Validate input
   const parseResult = feedbackSchema.safeParse(body);
   if (!parseResult.success) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: "Invalid feedback data",
-      data: parseResult.error.issues,
-    });
+    throw createError(
+      apiError(event, "INVALID_FEEDBACK_DATA", "Invalid feedback data", 400, {
+        issues: parseResult.error.issues,
+      })
+    );
   }
 
   const feedbackData = parseResult.data;

@@ -13,10 +13,7 @@ const logger = createLogger("api:entries:bulk:delete");
 export default defineEventHandler(async (event) => {
   // Require authentication
   if (!event.context.user) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: "Unauthorized",
-    });
+    throw createError(unauthorized(event));
   }
 
   const userId = event.context.user.id;
@@ -30,10 +27,9 @@ export default defineEventHandler(async (event) => {
 
   // Validate input - at least one filter required
   if (!category && !type && (!ids || ids.length === 0)) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: "At least one of category, type, or ids is required",
-    });
+    throw createError(
+      apiError(event, "INVALID_ENTRY_DATA", "At least one of category, type, or ids is required", 400)
+    );
   }
 
   logger.info("Bulk delete request", {
@@ -102,9 +98,6 @@ export default defineEventHandler(async (event) => {
     };
   } catch (error) {
     logger.error("Bulk delete failed", { userId, error });
-    throw createError({
-      statusCode: 500,
-      statusMessage: "Failed to delete entries",
-    });
+    throw createError(internalError(event));
   }
 });

@@ -28,10 +28,7 @@ export default defineEventHandler(async (event) => {
   // Get authenticated user
   const user = event.context.user;
   if (!user?.id) {
-    throw createError({
-      statusCode: 401,
-      message: "Authentication required",
-    });
+    throw createError(unauthorized(event, "Authentication required"));
   }
 
   const userId = user.id;
@@ -41,10 +38,9 @@ export default defineEventHandler(async (event) => {
   const validation = paramsSchema.safeParse(params);
 
   if (!validation.success) {
-    throw createError({
-      statusCode: 400,
-      message: "Invalid draft ID",
-    });
+    throw createError(
+      apiError(event, "INVALID_ID", "Invalid draft ID", 400)
+    );
   }
 
   const { id: draftId } = validation.data;
@@ -60,10 +56,7 @@ export default defineEventHandler(async (event) => {
 
     // Check if draft was found
     if (result.length === 0) {
-      throw createError({
-        statusCode: 404,
-        message: "Draft not found",
-      });
+      throw createError(notFound(event, "Draft"));
     }
 
     logger.debug("Draft deleted", { userId, draftId });
@@ -78,9 +71,6 @@ export default defineEventHandler(async (event) => {
     }
 
     logger.error("Failed to delete draft", { userId, draftId, error });
-    throw createError({
-      statusCode: 500,
-      message: "Failed to delete draft",
-    });
+    throw createError(internalError(event));
   }
 });

@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { createLogger } from "~/server/utils/logger";
 import { hashPassword } from "~/server/utils/password";
+import { apiError, internalError } from "~/server/utils/response";
 
 const logger = createLogger("api:auth:register");
 
@@ -21,24 +22,21 @@ export default defineEventHandler(async (event) => {
 
     // Validate input
     if (!body.username || !body.password) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: "Username and password are required",
-      });
+      throw createError(
+        apiError(event, "MISSING_CREDENTIALS", "Username and password are required", 400)
+      );
     }
 
     if (body.username.length < 3 || body.username.length > 31) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: "Username must be between 3 and 31 characters",
-      });
+      throw createError(
+        apiError(event, "INVALID_USERNAME_LENGTH", "Username must be between 3 and 31 characters", 400)
+      );
     }
 
     if (body.password.length < 8) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: "Password must be at least 8 characters",
-      });
+      throw createError(
+        apiError(event, "PASSWORD_TOO_SHORT", "Password must be at least 8 characters", 400)
+      );
     }
 
     // Check if username already exists
@@ -49,10 +47,9 @@ export default defineEventHandler(async (event) => {
       .limit(1);
 
     if (existingUser.length > 0) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: "Username already taken",
-      });
+      throw createError(
+        apiError(event, "USERNAME_TAKEN", "Username already taken", 400)
+      );
     }
 
     // Hash password
@@ -87,9 +84,6 @@ export default defineEventHandler(async (event) => {
       throw error;
     }
 
-    throw createError({
-      statusCode: 500,
-      statusMessage: "Registration failed",
-    });
+    throw createError(internalError(event, "Registration failed"));
   }
 });

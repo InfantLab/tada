@@ -34,29 +34,24 @@ export default defineEventHandler(async (event) => {
   // Require authentication
   const session = event.context.session;
   if (!session?.userId) {
-    throw createError({
-      statusCode: 401,
-      message: "Unauthorized",
-    });
+    throw createError(unauthorized(event));
   }
 
   const userId = session.userId;
   const rhythmId = getRouterParam(event, "id");
 
   if (!rhythmId) {
-    throw createError({
-      statusCode: 400,
-      message: "Rhythm ID is required",
-    });
+    throw createError(
+      apiError(event, "RHYTHM_ID_REQUIRED", "Rhythm ID is required", 400)
+    );
   }
 
   const body = await readBody<UpdateRhythmBody>(event);
 
   if (!body || Object.keys(body).length === 0) {
-    throw createError({
-      statusCode: 400,
-      message: "Request body is required",
-    });
+    throw createError(
+      apiError(event, "BODY_REQUIRED", "Request body is required", 400)
+    );
   }
 
   try {
@@ -67,10 +62,7 @@ export default defineEventHandler(async (event) => {
       .where(and(eq(rhythms.id, rhythmId), eq(rhythms.userId, userId)));
 
     if (!existing) {
-      throw createError({
-        statusCode: 404,
-        message: "Rhythm not found",
-      });
+      throw createError(notFound(event, "Rhythm"));
     }
 
     // Build update object
@@ -80,10 +72,9 @@ export default defineEventHandler(async (event) => {
 
     if (body.name !== undefined) {
       if (!body.name.trim()) {
-        throw createError({
-          statusCode: 400,
-          message: "Name cannot be empty",
-        });
+        throw createError(
+          apiError(event, "NAME_EMPTY", "Name cannot be empty", 400)
+        );
       }
       updateData["name"] = body.name.trim();
     }
@@ -94,10 +85,9 @@ export default defineEventHandler(async (event) => {
 
     if (body.durationThresholdSeconds !== undefined) {
       if (body.durationThresholdSeconds < 0) {
-        throw createError({
-          statusCode: 400,
-          message: "Duration threshold must be non-negative",
-        });
+        throw createError(
+          apiError(event, "INVALID_DURATION", "Duration threshold must be non-negative", 400)
+        );
       }
       updateData["durationThresholdSeconds"] = body.durationThresholdSeconds;
     }
@@ -105,20 +95,18 @@ export default defineEventHandler(async (event) => {
     if (body.frequency !== undefined) {
       const validFrequencies = ["daily", "weekly", "flexible"];
       if (!validFrequencies.includes(body.frequency)) {
-        throw createError({
-          statusCode: 400,
-          message: `Invalid frequency. Must be one of: ${validFrequencies.join(", ")}`,
-        });
+        throw createError(
+          apiError(event, "INVALID_FREQUENCY", `Invalid frequency. Must be one of: ${validFrequencies.join(", ")}`, 400)
+        );
       }
       updateData["frequency"] = body.frequency;
     }
 
     if (body.countThreshold !== undefined) {
       if (body.countThreshold !== null && (body.countThreshold < 1 || body.countThreshold > 10000)) {
-        throw createError({
-          statusCode: 400,
-          message: "Count threshold must be between 1 and 10000",
-        });
+        throw createError(
+          apiError(event, "INVALID_COUNT_THRESHOLD", "Count threshold must be between 1 and 10000", 400)
+        );
       }
       updateData["countThreshold"] = body.countThreshold;
     }
@@ -126,10 +114,9 @@ export default defineEventHandler(async (event) => {
     if (body.completionMode !== undefined) {
       const validModes = ["threshold", "session"];
       if (!validModes.includes(body.completionMode)) {
-        throw createError({
-          statusCode: 400,
-          message: "Invalid completion mode",
-        });
+        throw createError(
+          apiError(event, "INVALID_COMPLETION_MODE", "Invalid completion mode", 400)
+        );
       }
       updateData["completionMode"] = body.completionMode;
     }
@@ -143,10 +130,9 @@ export default defineEventHandler(async (event) => {
         "monthly_target",
       ];
       if (!validChainTypes.includes(body.chainType)) {
-        throw createError({
-          statusCode: 400,
-          message: "Invalid chain type",
-        });
+        throw createError(
+          apiError(event, "INVALID_CHAIN_TYPE", "Invalid chain type", 400)
+        );
       }
       updateData["chainType"] = body.chainType;
       // Invalidate cached chain stats when chain type changes
@@ -160,10 +146,9 @@ export default defineEventHandler(async (event) => {
     if (body.journeyThresholdType !== undefined) {
       const validTypes = ["hours", "sessions", "count"];
       if (!validTypes.includes(body.journeyThresholdType)) {
-        throw createError({
-          statusCode: 400,
-          message: "Invalid journey threshold type",
-        });
+        throw createError(
+          apiError(event, "INVALID_JOURNEY_THRESHOLD_TYPE", "Invalid journey threshold type", 400)
+        );
       }
       updateData["journeyThresholdType"] = body.journeyThresholdType;
     }
@@ -172,10 +157,9 @@ export default defineEventHandler(async (event) => {
       if (body.journeyThresholds !== null) {
         const { building, becoming, being } = body.journeyThresholds;
         if (building >= becoming || becoming >= being) {
-          throw createError({
-            statusCode: 400,
-            message: "Thresholds must be in ascending order",
-          });
+          throw createError(
+            apiError(event, "INVALID_THRESHOLDS", "Thresholds must be in ascending order", 400)
+          );
         }
       }
       updateData["journeyThresholds"] = body.journeyThresholds;
@@ -201,10 +185,7 @@ export default defineEventHandler(async (event) => {
       .returning();
 
     if (!updated) {
-      throw createError({
-        statusCode: 404,
-        message: "Rhythm not found or not updated",
-      });
+      throw createError(notFound(event, "Rhythm"));
     }
 
     logger.info("Rhythm updated", {
@@ -227,9 +208,6 @@ export default defineEventHandler(async (event) => {
       throw error;
     }
     logger.error("Failed to update rhythm", { error, rhythmId, userId });
-    throw createError({
-      statusCode: 500,
-      message: "Failed to update rhythm",
-    });
+    throw createError(internalError(event, "Failed to update rhythm"));
   }
 });

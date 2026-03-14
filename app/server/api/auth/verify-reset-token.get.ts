@@ -4,6 +4,7 @@ import { passwordResetTokens, users } from "~/server/db/schema";
 import { eq, and, isNull } from "drizzle-orm";
 import { createLogger } from "~/server/utils/logger";
 import { hashToken, isTokenExpired } from "~/server/utils/tokens";
+import { apiError, internalError } from "~/server/utils/response";
 
 const logger = createLogger("api:auth:verify-reset-token");
 
@@ -14,10 +15,9 @@ export default defineEventHandler(async (event) => {
 
     // Validate input
     if (!token || typeof token !== "string") {
-      throw createError({
-        statusCode: 400,
-        statusMessage: "Token is required",
-      });
+      throw createError(
+        apiError(event, "TOKEN_REQUIRED", "Token is required", 400)
+      );
     }
 
     // Hash the token to compare with stored hash
@@ -73,9 +73,6 @@ export default defineEventHandler(async (event) => {
       error: error instanceof Error ? error.message : "Unknown error",
     });
 
-    throw createError({
-      statusCode: 500,
-      statusMessage: "An error occurred. Please try again.",
-    });
+    throw createError(internalError(event, "An error occurred. Please try again."));
   }
 });

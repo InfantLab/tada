@@ -32,7 +32,7 @@ const paramsSchema = z.object({
 // Request body validation
 const commitBodySchema = z
   .object({
-    overrides: z.record(z.unknown()).optional(),
+    overrides: z.record(z.string(), z.unknown()).optional(),
   })
   .optional();
 
@@ -40,10 +40,7 @@ export default defineEventHandler(async (event) => {
   // Get authenticated user
   const user = event.context.user;
   if (!user?.id) {
-    throw createError({
-      statusCode: 401,
-      message: "Authentication required",
-    });
+    throw createError(unauthorized(event, "Authentication required"));
   }
 
   const userId = user.id;
@@ -53,10 +50,9 @@ export default defineEventHandler(async (event) => {
   const paramsValidation = paramsSchema.safeParse(params);
 
   if (!paramsValidation.success) {
-    throw createError({
-      statusCode: 400,
-      message: "Invalid draft ID",
-    });
+    throw createError(
+      apiError(event, "INVALID_ID", "Invalid draft ID", 400)
+    );
   }
 
   const { id: draftId } = paramsValidation.data;
@@ -83,10 +79,7 @@ export default defineEventHandler(async (event) => {
       .limit(1);
 
     if (!draft) {
-      throw createError({
-        statusCode: 404,
-        message: "Draft not found",
-      });
+      throw createError(notFound(event, "Draft"));
     }
 
     // Merge draft input with overrides
@@ -98,10 +91,9 @@ export default defineEventHandler(async (event) => {
     // Validate required fields for entry creation
     const name = mergedInput["name"] as string | undefined;
     if (!name) {
-      throw createError({
-        statusCode: 400,
-        message: "Draft is missing required 'name' field",
-      });
+      throw createError(
+        apiError(event, "INVALID_ENTRY_DATA", "Draft is missing required 'name' field", 400)
+      );
     }
 
     // Extract fields using bracket notation (required for index signatures)
@@ -149,9 +141,6 @@ export default defineEventHandler(async (event) => {
     }
 
     logger.error("Failed to commit draft", { userId, draftId, error });
-    throw createError({
-      statusCode: 500,
-      message: "Failed to commit draft",
-    });
+    throw createError(internalError(event));
   }
 });

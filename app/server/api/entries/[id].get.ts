@@ -10,18 +10,14 @@ export default defineEventHandler(async (event) => {
 
   if (!id) {
     logger.warn("Missing entry ID");
-    throw createError({
-      statusCode: 400,
-      statusMessage: "Entry ID is required",
-    });
+    throw createError(
+      apiError(event, "INVALID_ID", "Entry ID is required", 400)
+    );
   }
 
   // Require authentication
   if (!event.context.user) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: "Unauthorized",
-    });
+    throw createError(unauthorized(event));
   }
 
   try {
@@ -33,10 +29,7 @@ export default defineEventHandler(async (event) => {
 
     if (result.length === 0) {
       logger.warn("Entry not found", { id });
-      throw createError({
-        statusCode: 404,
-        statusMessage: "Entry not found",
-      });
+      throw createError(notFound(event, "Entry"));
     }
 
     const entry = result[0];
@@ -44,10 +37,7 @@ export default defineEventHandler(async (event) => {
     // Ensure entry exists
     if (!entry) {
       logger.error("Entry unexpectedly undefined after query", { id });
-      throw createError({
-        statusCode: 404,
-        statusMessage: "Entry not found",
-      });
+      throw createError(notFound(event, "Entry"));
     }
 
     // Check ownership
@@ -56,10 +46,7 @@ export default defineEventHandler(async (event) => {
         id,
         userId: event.context.user.id,
       });
-      throw createError({
-        statusCode: 403,
-        statusMessage: "Forbidden",
-      });
+      throw createError(forbidden(event));
     }
 
     logger.info("Entry fetched", { id });
@@ -69,9 +56,6 @@ export default defineEventHandler(async (event) => {
       throw error;
     }
     logger.error("Failed to fetch entry", { id, error });
-    throw createError({
-      statusCode: 500,
-      statusMessage: "Failed to fetch entry",
-    });
+    throw createError(internalError(event));
   }
 });

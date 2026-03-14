@@ -26,10 +26,7 @@ export default defineEventHandler(async (event): Promise<EntryStats> => {
     // Get authenticated user from context
     const user = event.context.user;
     if (!user) {
-      throw createError({
-        statusCode: 401,
-        statusMessage: "Unauthorized",
-      });
+      throw createError(unauthorized(event));
     }
 
     const userId = user.id;
@@ -152,11 +149,6 @@ export default defineEventHandler(async (event): Promise<EntryStats> => {
     return stats;
   } catch (error: unknown) {
     logger.error("Failed to fetch entry stats", error);
-    const message = error instanceof Error ? error.message : "Unknown error";
-    throw createError({
-      statusCode: 500,
-      statusMessage: "Failed to fetch entry stats",
-      data: { error: message },
-    });
+    throw createError(internalError(event));
   }
 });

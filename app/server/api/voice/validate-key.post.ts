@@ -166,44 +166,36 @@ async function validateGroq(apiKey: string): Promise<ValidationResult> {
 export default defineEventHandler(async (event) => {
   // Require authentication
   if (!event.context.user) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: "Unauthorized",
-    });
+    throw createError(unauthorized(event));
   }
 
   let body: unknown;
   try {
     body = await readBody(event);
   } catch {
-    throw createError({
-      statusCode: 400,
-      statusMessage: "Invalid request body",
-    });
+    throw createError(
+      apiError(event, "INVALID_REQUEST_BODY", "Invalid request body", 400)
+    );
   }
 
   if (!body || typeof body !== "object") {
-    throw createError({
-      statusCode: 400,
-      statusMessage: "Invalid request body",
-    });
+    throw createError(
+      apiError(event, "INVALID_REQUEST_BODY", "Invalid request body", 400)
+    );
   }
 
   const { provider, apiKey } = body as Partial<ValidateKeyBody>;
 
   if (!provider || !["openai", "anthropic", "groq"].includes(provider)) {
-    throw createError({
-      statusCode: 400,
-      statusMessage:
-        "Invalid provider. Must be one of: openai, anthropic, groq",
-    });
+    throw createError(
+      apiError(event, "INVALID_PROVIDER", "Invalid provider. Must be one of: openai, anthropic, groq", 400)
+    );
   }
 
   if (!apiKey || typeof apiKey !== "string" || apiKey.length < 10) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: "Invalid API key format",
-    });
+    throw createError(
+      apiError(event, "INVALID_API_KEY_FORMAT", "Invalid API key format", 400)
+    );
   }
 
   logger.info(
@@ -223,10 +215,9 @@ export default defineEventHandler(async (event) => {
       result = await validateGroq(apiKey);
       break;
     default:
-      throw createError({
-        statusCode: 400,
-        statusMessage: "Invalid provider",
-      });
+      throw createError(
+        apiError(event, "INVALID_PROVIDER", "Invalid provider", 400)
+      );
   }
 
   logger.info(

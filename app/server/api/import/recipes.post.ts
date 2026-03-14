@@ -11,20 +11,16 @@ const MAX_VERSION_HISTORY = 3;
 export default defineEventHandler(async (event) => {
   const user = event.context.user;
   if (!user) {
-    throw createError({
-      statusCode: 401,
-      message: "Unauthorized",
-    });
+    throw createError(unauthorized(event));
   }
 
   const body = await readBody(event);
 
   // Validate request body
   if (!body || !body.name || !body.columnMapping) {
-    throw createError({
-      statusCode: 400,
-      message: "Recipe must include name and columnMapping",
-    });
+    throw createError(
+      apiError(event, "INVALID_RECIPE", "Recipe must include name and columnMapping", 400)
+    );
   }
 
   const { id, name, description, columnMapping, transforms } = body;
@@ -39,36 +35,24 @@ export default defineEventHandler(async (event) => {
         .limit(1);
 
       if (existing.length === 0) {
-        throw createError({
-          statusCode: 404,
-          message: "Recipe not found",
-        });
+        throw createError(notFound(event, "Recipe"));
       }
 
       const recipe = existing[0];
 
       // Check ownership
       if (!recipe || recipe.userId !== user.id) {
-        throw createError({
-          statusCode: 403,
-          message: "Forbidden",
-        });
+        throw createError(forbidden(event));
       }
 
       // Check if built-in (can't be modified)
       if (!recipe || recipe.isBuiltIn) {
-        throw createError({
-          statusCode: 403,
-          message: "Built-in recipes cannot be modified",
-        });
+        throw createError(forbidden(event, "Built-in recipes cannot be modified"));
       }
 
       // Store current version in history (recipe is guaranteed non-null here)
       if (!recipe) {
-        throw createError({
-          statusCode: 404,
-          message: "Recipe not found",
-        });
+        throw createError(notFound(event, "Recipe"));
       }
       const previousVersions = recipe.previousVersions || [];
       previousVersions.unshift({
@@ -152,9 +136,6 @@ export default defineEventHandler(async (event) => {
       throw error;
     }
 
-    throw createError({
-      statusCode: 500,
-      message: "Failed to save recipe",
-    });
+    throw createError(internalError(event, "Failed to save recipe"));
   }
 });

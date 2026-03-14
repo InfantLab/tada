@@ -30,17 +30,11 @@ export default defineEventHandler(async (event) => {
   const template = (body?.template as string) || "verify";
 
   if (!to || !to.includes("@")) {
-    throw createError({
-      statusCode: 400,
-      message: "Valid email address required",
-    });
+    throw createError(apiError(event, "INVALID_EMAIL", "Valid email address required"));
   }
 
   if (!isEmailConfigured()) {
-    throw createError({
-      statusCode: 503,
-      message: "SMTP not configured",
-    });
+    throw createError(apiError(event, "SMTP_NOT_CONFIGURED", "SMTP not configured", 503));
   }
 
   const _auth = event.context.auth;
@@ -78,10 +72,7 @@ export default defineEventHandler(async (event) => {
       emailContent = paymentRecoveredEmail(username);
       break;
     default:
-      throw createError({
-        statusCode: 400,
-        message: `Unknown template: ${template}`,
-      });
+      throw createError(apiError(event, "UNKNOWN_TEMPLATE", `Unknown template: ${template}`));
   }
 
   const sent = await sendEmail({
@@ -92,10 +83,7 @@ export default defineEventHandler(async (event) => {
   });
 
   if (!sent) {
-    throw createError({
-      statusCode: 500,
-      message: "Failed to send email",
-    });
+    throw createError(internalError(event, "Failed to send email"));
   }
 
   return success(event, {

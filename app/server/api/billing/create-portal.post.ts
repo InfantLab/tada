@@ -22,18 +22,16 @@ const logger = createLogger("api:billing:create-portal");
 export default defineEventHandler(async (event) => {
   // Require authentication
   if (!event.context.user) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: "Unauthorized",
-    });
+    throw createError(
+      unauthorized(event)
+    );
   }
 
   // Check if billing is enabled
   if (!isBillingEnabled()) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: "Billing is not enabled",
-    });
+    throw createError(
+      apiError(event, "BILLING_NOT_CONFIGURED", "Billing is not enabled", 400)
+    );
   }
 
   const userId = event.context.user.id;
@@ -46,10 +44,9 @@ export default defineEventHandler(async (event) => {
     .limit(1);
 
   if (!user?.stripeCustomerId) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: "No billing account found. Please upgrade first.",
-    });
+    throw createError(
+      apiError(event, "SUBSCRIPTION_NOT_FOUND", "No billing account found. Please upgrade first.", 400)
+    );
   }
 
   // Create portal session
@@ -64,10 +61,9 @@ export default defineEventHandler(async (event) => {
       error: result.error,
       userId,
     });
-    throw createError({
-      statusCode: 500,
-      statusMessage: "Failed to create portal session",
-    });
+    throw createError(
+      internalError(event, "Failed to create portal session")
+    );
   }
 
   return {

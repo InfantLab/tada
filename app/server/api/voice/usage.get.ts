@@ -95,10 +95,7 @@ async function countVoiceEntriesThisMonth(userId: string): Promise<number> {
 export default defineEventHandler(async (event) => {
   // Require authentication
   if (!event.context.user) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: "Unauthorized",
-    });
+    throw createError(unauthorized(event));
   }
 
   const userId = event.context.user.id;
@@ -135,9 +132,6 @@ export default defineEventHandler(async (event) => {
     return response;
   } catch (err) {
     logger.error("Error getting voice usage:", err);
-    throw createError({
-      statusCode: 500,
-      statusMessage: "Failed to get usage statistics",
-    });
+    throw createError(internalError(event, "Failed to get usage statistics"));
   }
 });

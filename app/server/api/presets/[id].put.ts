@@ -30,20 +30,16 @@ export default defineEventHandler(async (event) => {
   // Get authenticated user
   const user = event.context.user;
   if (!user?.id) {
-    throw createError({
-      statusCode: 401,
-      message: "Authentication required",
-    });
+    throw createError(unauthorized(event));
   }
 
   const userId = user.id;
   const presetId = getRouterParam(event, "id");
 
   if (!presetId) {
-    throw createError({
-      statusCode: 400,
-      message: "Preset ID is required",
-    });
+    throw createError(
+      apiError(event, "PRESET_ID_REQUIRED", "Preset ID is required", 400)
+    );
   }
 
   const body = await readBody<PresetUpdate>(event);
@@ -61,10 +57,7 @@ export default defineEventHandler(async (event) => {
       .limit(1);
 
     if (!existing) {
-      throw createError({
-        statusCode: 404,
-        message: "Preset not found",
-      });
+      throw createError(notFound(event, "Preset"));
     }
 
     const now = new Date().toISOString();
@@ -98,9 +91,6 @@ export default defineEventHandler(async (event) => {
       userId,
       presetId,
     });
-    throw createError({
-      statusCode: 500,
-      message: "Failed to update preset",
-    });
+    throw createError(internalError(event, "Failed to update preset"));
   }
 });

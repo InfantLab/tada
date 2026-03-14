@@ -30,18 +30,16 @@ interface CreateCheckoutBody {
 export default defineEventHandler(async (event) => {
   // Require authentication
   if (!event.context.user) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: "Unauthorized",
-    });
+    throw createError(
+      unauthorized(event)
+    );
   }
 
   // Check if billing is enabled
   if (!isBillingEnabled()) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: "Billing is not enabled",
-    });
+    throw createError(
+      apiError(event, "BILLING_NOT_CONFIGURED", "Billing is not enabled", 400)
+    );
   }
 
   const userId = event.context.user.id;
@@ -54,53 +52,47 @@ export default defineEventHandler(async (event) => {
     .limit(1);
 
   if (!user) {
-    throw createError({
-      statusCode: 404,
-      statusMessage: "User not found",
-    });
+    throw createError(
+      notFound(event, "User")
+    );
   }
 
   // In cloud mode, require verified email
   if (isCloudMode() && !user.emailVerified) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: "Please verify your email before upgrading",
-    });
+    throw createError(
+      apiError(event, "EMAIL_NOT_VERIFIED", "Please verify your email before upgrading", 400)
+    );
   }
 
   // Require email to be set
   if (!user.email) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: "Please add an email address before upgrading",
-    });
+    throw createError(
+      apiError(event, "EMAIL_REQUIRED", "Please add an email address before upgrading", 400)
+    );
   }
 
   // Check if already premium
   if (user.subscriptionTier === "premium" && user.subscriptionStatus === "active") {
-    throw createError({
-      statusCode: 400,
-      statusMessage: "You already have an active subscription",
-    });
+    throw createError(
+      apiError(event, "ALREADY_SUBSCRIBED", "You already have an active subscription", 400)
+    );
   }
 
   // Parse request body
   const body = await readBody<CreateCheckoutBody>(event);
 
   if (!body.plan || !["monthly", "yearly"].includes(body.plan)) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: "Invalid plan. Must be 'monthly' or 'yearly'",
-    });
+    throw createError(
+      apiError(event, "INVALID_PLAN", "Invalid plan. Must be 'monthly' or 'yearly'", 400)
+    );
   }
 
   // Validate amount if provided (must be one of the valid support levels)
   const validAmounts = [1, 5, 12, 25, 50];
   if (body.amount && !validAmounts.includes(body.amount)) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: `Invalid amount. Must be one of: ${validAmounts.join(", ")}`,
-    });
+    throw createError(
+      apiError(event, "INVALID_AMOUNT", `Invalid amount. Must be one of: ${validAmounts.join(", ")}`, 400)
+    );
   }
 
   // Create checkout session
@@ -120,10 +112,9 @@ export default defineEventHandler(async (event) => {
       error: result.error,
       userId,
     });
-    throw createError({
-      statusCode: 500,
-      statusMessage: "Failed to create checkout session",
-    });
+    throw createError(
+      internalError(event, "Failed to create checkout session")
+    );
   }
 
   return {

@@ -14,20 +14,16 @@ export default defineEventHandler(async (event) => {
   // Get authenticated user
   const user = event.context.user;
   if (!user?.id) {
-    throw createError({
-      statusCode: 401,
-      message: "Authentication required",
-    });
+    throw createError(unauthorized(event));
   }
 
   const userId = user.id;
   const presetId = getRouterParam(event, "id");
 
   if (!presetId) {
-    throw createError({
-      statusCode: 400,
-      message: "Preset ID is required",
-    });
+    throw createError(
+      apiError(event, "PRESET_ID_REQUIRED", "Preset ID is required", 400)
+    );
   }
 
   logger.debug("Deleting preset", { userId, presetId });
@@ -42,10 +38,7 @@ export default defineEventHandler(async (event) => {
       .returning({ id: timerPresets.id });
 
     if (result.length === 0) {
-      throw createError({
-        statusCode: 404,
-        message: "Preset not found",
-      });
+      throw createError(notFound(event, "Preset"));
     }
 
     logger.debug("Preset deleted", { userId, presetId });
@@ -58,9 +51,6 @@ export default defineEventHandler(async (event) => {
       userId,
       presetId,
     });
-    throw createError({
-      statusCode: 500,
-      message: "Failed to delete preset",
-    });
+    throw createError(internalError(event, "Failed to delete preset"));
   }
 });

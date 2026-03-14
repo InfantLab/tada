@@ -12,6 +12,7 @@ import {
 import { sendEmail, isEmailConfigured, getAppUrl } from "~/server/utils/email";
 import { passwordResetEmail } from "~/server/templates/email";
 import { logAuthEvent, isRateLimited } from "~/server/utils/authEvents";
+import { apiError, internalError } from "~/server/utils/response";
 
 const logger = createLogger("api:auth:forgot-password");
 
@@ -25,10 +26,9 @@ export default defineEventHandler(async (event) => {
 
     // Validate input
     if (!body.email || typeof body.email !== "string") {
-      throw createError({
-        statusCode: 400,
-        statusMessage: "Email is required",
-      });
+      throw createError(
+        apiError(event, "EMAIL_REQUIRED", "Email is required", 400)
+      );
     }
 
     const email = body.email.toLowerCase().trim();
@@ -36,10 +36,9 @@ export default defineEventHandler(async (event) => {
     // Basic email format validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: "Invalid email format",
-      });
+      throw createError(
+        apiError(event, "INVALID_EMAIL_FORMAT", "Invalid email format", 400)
+      );
     }
 
     // Rate limiting - prevent abuse
@@ -137,9 +136,6 @@ export default defineEventHandler(async (event) => {
       error: error instanceof Error ? error.message : "Unknown error",
     });
 
-    throw createError({
-      statusCode: 500,
-      statusMessage: "An error occurred. Please try again.",
-    });
+    throw createError(internalError(event, "An error occurred. Please try again."));
   }
 });

@@ -47,10 +47,7 @@ export default defineEventHandler(async (event) => {
   const updates = parseResult.data;
 
   if (Object.keys(updates).length === 0) {
-    throw createError({
-      statusCode: 400,
-      message: "No fields to update",
-    });
+    throw createError(apiError(event, "NO_FIELDS", "No fields to update"));
   }
 
   // Fetch current user for audit trail

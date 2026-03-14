@@ -8,18 +8,14 @@ const logger = createLogger("api:import:recipes:delete");
 export default defineEventHandler(async (event) => {
   const user = event.context.user;
   if (!user) {
-    throw createError({
-      statusCode: 401,
-      message: "Unauthorized",
-    });
+    throw createError(unauthorized(event));
   }
 
   const recipeId = getRouterParam(event, "id");
   if (!recipeId) {
-    throw createError({
-      statusCode: 400,
-      message: "Recipe ID is required",
-    });
+    throw createError(
+      apiError(event, "RECIPE_ID_REQUIRED", "Recipe ID is required", 400)
+    );
   }
 
   try {
@@ -32,10 +28,7 @@ export default defineEventHandler(async (event) => {
       .returning();
 
     if (deleted.length === 0) {
-      throw createError({
-        statusCode: 404,
-        message: "Recipe not found",
-      });
+      throw createError(notFound(event, "Recipe"));
     }
 
     logger.info(`Recipe deleted: ${recipeId} by user ${user.id}`);
@@ -46,9 +39,6 @@ export default defineEventHandler(async (event) => {
     };
   } catch (error) {
     logger.error("Error deleting recipe:", error);
-    throw createError({
-      statusCode: 500,
-      message: "Failed to delete recipe",
-    });
+    throw createError(internalError(event, "Failed to delete recipe"));
   }
 });

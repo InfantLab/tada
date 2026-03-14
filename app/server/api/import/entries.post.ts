@@ -19,30 +19,24 @@ const RATE_LIMIT_WINDOW_MS = 10000; // 10 seconds
 export default defineEventHandler(async (event) => {
   const user = event.context.user;
   if (!user) {
-    throw createError({
-      statusCode: 401,
-      message: "Unauthorized",
-    });
+    throw createError(unauthorized(event));
   }
 
   // Check rate limit
   if (!checkRateLimit(user.id, RATE_LIMIT_REQUESTS, RATE_LIMIT_WINDOW_MS)) {
     logger.warn("Rate limit exceeded", { userId: user.id });
-    throw createError({
-      statusCode: 429,
-      message:
-        "Too many import requests. Please wait 10 seconds before trying again.",
-    });
+    throw createError(
+      apiError(event, "RATE_LIMITED", "Too many import requests. Please wait 10 seconds before trying again.", 429)
+    );
   }
 
   const body = await readBody(event);
 
   // Validate request body
   if (!body || !Array.isArray(body.entries) || body.entries.length === 0) {
-    throw createError({
-      statusCode: 400,
-      message: "Request must include entries array",
-    });
+    throw createError(
+      apiError(event, "ENTRIES_REQUIRED", "Request must include entries array", 400)
+    );
   }
 
   const {
@@ -317,14 +311,12 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    throw createError({
-      statusCode: 500,
-      message: "Import failed",
-      data: {
+    throw createError(
+      apiError(event, "IMPORT_FAILED", "Import failed", 500, {
         successful: results.successful,
         failed: results.failed,
         errors: results.errors.slice(0, 10),
-      },
-    });
+      })
+    );
   }
 });

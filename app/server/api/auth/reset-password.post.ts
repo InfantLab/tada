@@ -8,6 +8,7 @@ import { hashPassword } from "~/server/utils/password";
 import { sendEmail, isEmailConfigured } from "~/server/utils/email";
 import { passwordChangedEmail } from "~/server/templates/email";
 import { logAuthEvent } from "~/server/utils/authEvents";
+import { apiError, internalError } from "~/server/utils/response";
 
 const logger = createLogger("api:auth:reset-password");
 
@@ -22,24 +23,21 @@ export default defineEventHandler(async (event) => {
 
     // Validate input
     if (!body.token || typeof body.token !== "string") {
-      throw createError({
-        statusCode: 400,
-        statusMessage: "Reset token is required",
-      });
+      throw createError(
+        apiError(event, "TOKEN_REQUIRED", "Reset token is required", 400)
+      );
     }
 
     if (!body.password || typeof body.password !== "string") {
-      throw createError({
-        statusCode: 400,
-        statusMessage: "New password is required",
-      });
+      throw createError(
+        apiError(event, "NEW_PASSWORD_REQUIRED", "New password is required", 400)
+      );
     }
 
     if (body.password.length < 8) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: "Password must be at least 8 characters",
-      });
+      throw createError(
+        apiError(event, "PASSWORD_TOO_SHORT", "Password must be at least 8 characters", 400)
+      );
     }
 
     // Hash the token to compare with stored hash
@@ -62,21 +60,18 @@ export default defineEventHandler(async (event) => {
       .limit(1);
 
     if (tokenRecords.length === 0) {
-      throw createError({
-        statusCode: 400,
-        statusMessage:
-          "Invalid or expired reset link. Please request a new one.",
-      });
+      throw createError(
+        apiError(event, "INVALID_TOKEN", "Invalid or expired reset link. Please request a new one.", 400)
+      );
     }
 
     const { token: tokenRecord, user } = tokenRecords[0]!;
 
     // Check expiry
     if (isTokenExpired(tokenRecord.expiresAt)) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: "This reset link has expired. Please request a new one.",
-      });
+      throw createError(
+        apiError(event, "TOKEN_EXPIRED", "This reset link has expired. Please request a new one.", 400)
+      );
     }
 
     // Hash the new password
@@ -135,9 +130,6 @@ export default defineEventHandler(async (event) => {
       error: error instanceof Error ? error.message : "Unknown error",
     });
 
-    throw createError({
-      statusCode: 500,
-      statusMessage: "An error occurred. Please try again.",
-    });
+    throw createError(internalError(event, "An error occurred. Please try again."));
   }
 });

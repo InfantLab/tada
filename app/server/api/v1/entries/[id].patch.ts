@@ -26,7 +26,7 @@ const updateSchema = z.object({
   timezone: z.string().optional(),
   tags: z.array(z.string()).optional(),
   notes: z.string().optional(),
-  data: z.record(z.any()).optional(),
+  data: z.record(z.string(), z.any()).optional(),
 }).strict(); // Reject unknown fields
 
 export default defineEventHandler(async (event) => {

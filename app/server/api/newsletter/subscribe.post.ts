@@ -21,19 +21,17 @@ export default defineEventHandler(async (event) => {
   // Validate email
   const email = body?.email?.trim()?.toLowerCase();
   if (!email) {
-    throw createError({
-      statusCode: 400,
-      message: "Email is required",
-    });
+    throw createError(
+      apiError(event, "EMAIL_REQUIRED", "Email is required", 400)
+    );
   }
 
   // Basic email validation
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
-    throw createError({
-      statusCode: 400,
-      message: "Please enter a valid email address",
-    });
+    throw createError(
+      apiError(event, "INVALID_EMAIL", "Please enter a valid email address", 400)
+    );
   }
 
   const source = body?.source || "blog";
@@ -88,9 +86,6 @@ export default defineEventHandler(async (event) => {
     };
   } catch (error) {
     logger.error("Newsletter subscription error", error, { email });
-    throw createError({
-      statusCode: 500,
-      message: "Something went wrong. Please try again.",
-    });
+    throw createError(internalError(event, "Something went wrong. Please try again."));
   }
 });

@@ -19,10 +19,7 @@ import {
 export default defineEventHandler(async (event) => {
   // Require authentication
   if (!event.context.user) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: "Unauthorized",
-    });
+    throw createError(unauthorized(event));
   }
 
   const userId = event.context.user.id;
@@ -35,10 +32,7 @@ export default defineEventHandler(async (event) => {
     .limit(1);
 
   if (!user) {
-    throw createError({
-      statusCode: 404,
-      statusMessage: "User not found",
-    });
+    throw createError(notFound(event, "User"));
   }
 
   // If not in cloud mode, return minimal response

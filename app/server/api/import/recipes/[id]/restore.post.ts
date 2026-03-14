@@ -8,28 +8,23 @@ const logger = createLogger("api:import:recipes:restore");
 export default defineEventHandler(async (event) => {
   const user = event.context.user;
   if (!user) {
-    throw createError({
-      statusCode: 401,
-      message: "Unauthorized",
-    });
+    throw createError(unauthorized(event));
   }
 
   const recipeId = getRouterParam(event, "id");
   if (!recipeId) {
-    throw createError({
-      statusCode: 400,
-      message: "Recipe ID is required",
-    });
+    throw createError(
+      apiError(event, "RECIPE_ID_REQUIRED", "Recipe ID is required", 400)
+    );
   }
 
   const body = await readBody(event);
   const { versionIndex } = body;
 
   if (typeof versionIndex !== "number" || versionIndex < 0) {
-    throw createError({
-      statusCode: 400,
-      message: "Valid version index is required",
-    });
+    throw createError(
+      apiError(event, "INVALID_VERSION_INDEX", "Valid version index is required", 400)
+    );
   }
 
   try {
@@ -43,18 +38,12 @@ export default defineEventHandler(async (event) => {
       .limit(1);
 
     if (recipe.length === 0) {
-      throw createError({
-        statusCode: 404,
-        message: "Recipe not found",
-      });
+      throw createError(notFound(event, "Recipe"));
     }
 
     const recipeData = recipe[0];
     if (!recipeData) {
-      throw createError({
-        statusCode: 404,
-        message: "Recipe not found",
-      });
+      throw createError(notFound(event, "Recipe"));
     }
 
     const previousVersions =
@@ -65,18 +54,16 @@ export default defineEventHandler(async (event) => {
       }>) || [];
 
     if (versionIndex >= previousVersions.length) {
-      throw createError({
-        statusCode: 400,
-        message: "Version index out of range",
-      });
+      throw createError(
+        apiError(event, "VERSION_OUT_OF_RANGE", "Version index out of range", 400)
+      );
     }
 
     const versionToRestore = previousVersions[versionIndex];
     if (!versionToRestore) {
-      throw createError({
-        statusCode: 400,
-        message: "Invalid version",
-      });
+      throw createError(
+        apiError(event, "INVALID_VERSION", "Invalid version", 400)
+      );
     }
 
     // Store current version before restoring
@@ -112,9 +99,6 @@ export default defineEventHandler(async (event) => {
     };
   } catch (error) {
     logger.error("Error restoring recipe version:", error);
-    throw createError({
-      statusCode: 500,
-      message: "Failed to restore recipe version",
-    });
+    throw createError(internalError(event, "Failed to restore recipe version"));
   }
 });

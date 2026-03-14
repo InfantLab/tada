@@ -16,7 +16,7 @@ const logger = createLogger("api:v1:import:json");
 
 // JSON import request schema
 const jsonImportRequestSchema = z.object({
-  entries: z.array(z.record(z.any())).min(1),
+  entries: z.array(z.record(z.string(), z.any())).min(1),
   dryRun: z.boolean().default(false),
   skipDuplicates: z.boolean().default(true),
   updateExisting: z.boolean().default(false),

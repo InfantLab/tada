@@ -20,24 +20,21 @@ export default defineEventHandler(async (event): Promise<LinkMetadata> => {
   const url = query["url"] as string | undefined;
 
   if (!url) {
-    throw createError({
-      statusCode: 400,
-      message: "URL parameter is required",
-    });
+    throw createError(
+      apiError(event, "URL_REQUIRED", "URL parameter is required", 400)
+    );
   }
 
   if (!isValidUrl(url)) {
-    throw createError({
-      statusCode: 400,
-      message: "Invalid URL format",
-    });
+    throw createError(
+      apiError(event, "INVALID_URL", "Invalid URL format", 400)
+    );
   }
 
   if (isPrivateUrl(url)) {
-    throw createError({
-      statusCode: 400,
-      message: "URL not allowed",
-    });
+    throw createError(
+      apiError(event, "URL_NOT_ALLOWED", "URL not allowed", 400)
+    );
   }
 
   log.info("Fetching link preview", { url });

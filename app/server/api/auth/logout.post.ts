@@ -1,6 +1,7 @@
 import { defineEventHandler, createError } from "h3";
 import { invalidateSession, clearSessionCookie } from "~/server/utils/auth";
 import { createLogger } from "~/server/utils/logger";
+import { unauthorized, internalError } from "~/server/utils/response";
 
 const SESSION_COOKIE_NAME = "auth_session";
 const logger = createLogger("api:auth:logout");
@@ -10,10 +11,7 @@ export default defineEventHandler(async (event) => {
     const sessionId = getCookie(event, SESSION_COOKIE_NAME);
 
     if (!sessionId) {
-      throw createError({
-        statusCode: 401,
-        statusMessage: "No session found",
-      });
+      throw createError(unauthorized(event, "No session found"));
     }
 
     await invalidateSession(sessionId);
@@ -31,9 +29,6 @@ export default defineEventHandler(async (event) => {
       throw error;
     }
 
-    throw createError({
-      statusCode: 500,
-      statusMessage: "Logout failed",
-    });
+    throw createError(internalError(event, "Logout failed"));
   }
 });

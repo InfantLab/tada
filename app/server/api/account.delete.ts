@@ -31,19 +31,15 @@ export default defineEventHandler(async (event) => {
   const { user } = await validateSessionRequest(event);
 
   if (!user) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: "Unauthorized",
-    });
+    throw createError(unauthorized(event));
   }
 
   // Require confirmation phrase in body
   const body = await readBody(event);
   if (body?.confirmation !== "DELETE") {
-    throw createError({
-      statusCode: 400,
-      statusMessage: "Please confirm deletion by sending confirmation: 'DELETE'",
-    });
+    throw createError(
+      apiError(event, "CONFIRMATION_REQUIRED", "Please confirm deletion by sending confirmation: 'DELETE'", 400)
+    );
   }
 
   const userId = user.id;
@@ -116,9 +112,6 @@ export default defineEventHandler(async (event) => {
       error: error instanceof Error ? error.message : "Unknown error",
     });
 
-    throw createError({
-      statusCode: 500,
-      statusMessage: "Failed to delete account",
-    });
+    throw createError(internalError(event, "Failed to delete account"));
   }
 });

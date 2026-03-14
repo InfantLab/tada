@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 import { createLogger } from "~/server/utils/logger";
 import { verifyPassword } from "~/server/utils/password";
 import { logAuthEvent } from "~/server/utils/authEvents";
+import { apiError, internalError } from "~/server/utils/response";
 
 const logger = createLogger("api:auth:login");
 
@@ -20,10 +21,9 @@ export default defineEventHandler(async (event) => {
 
     // Validate input
     if (!body.username || !body.password) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: "Username and password are required",
-      });
+      throw createError(
+        apiError(event, "MISSING_CREDENTIALS", "Username and password are required", 400)
+      );
     }
 
     // Find user
@@ -34,19 +34,17 @@ export default defineEventHandler(async (event) => {
       .limit(1);
 
     if (existingUser.length === 0) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: "Invalid username or password",
-      });
+      throw createError(
+        apiError(event, "INVALID_CREDENTIALS", "Invalid username or password", 400)
+      );
     }
 
     const user = existingUser[0];
 
     if (!user || !user.passwordHash) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: "Invalid username or password",
-      });
+      throw createError(
+        apiError(event, "INVALID_CREDENTIALS", "Invalid username or password", 400)
+      );
     }
 
     // Verify password
@@ -56,10 +54,9 @@ export default defineEventHandler(async (event) => {
     );
 
     if (!validPassword) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: "Invalid username or password",
-      });
+      throw createError(
+        apiError(event, "INVALID_CREDENTIALS", "Invalid username or password", 400)
+      );
     }
 
     // Create session
@@ -89,9 +86,6 @@ export default defineEventHandler(async (event) => {
       throw error;
     }
 
-    throw createError({
-      statusCode: 500,
-      statusMessage: "Login failed",
-    });
+    throw createError(internalError(event, "Login failed"));
   }
 });

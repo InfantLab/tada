@@ -2,7 +2,7 @@
 
 What's coming next. For what already shipped, see [CHANGELOG.md](../CHANGELOG.md) and the release notes.
 
-**Current Version:** v0.4.2 (March 2026) | **Next:** v0.5.0 (Q2 2026)
+**Current Version:** v0.5.0 (March 2026) | **Next:** v0.6.0 (2027+)
 
 ---
 
@@ -16,39 +16,41 @@ What's coming next. For what already shipped, see [CHANGELOG.md](../CHANGELOG.md
 | **v0.3.1** | REST API                    | ✅ Shipped Jan 2026 | [CHANGELOG](../CHANGELOG.md) |
 | **v0.4.0** | Ontology & Cloud Service    | ✅ Shipped Feb 2026 | [Release Notes](../RELEASE_NOTES_v0.4.0.md) |
 | **v0.4.2** | Backups, Polish & Code Quality | ✅ Shipped Mar 2026 | [Release Notes](../RELEASE_NOTES_v0.4.2.md) |
+| **v0.5.0** | Housekeeping & Infrastructure | ✅ Shipped Mar 2026 | [Release Notes](../RELEASE_NOTES_v0.5.0.md) |
 
 ## Upcoming
 
 | Version    | Theme                       | Target   |
 | ---------- | --------------------------- | -------- |
-| **v0.5.0** | Modularity                  | Q2 2026  |
 | **v0.6.0** | Features & Integrations     | 2027+    |
 
 ---
 
-## v0.5.0: Modularity & Sync
+## v0.5.0: Housekeeping & Infrastructure ✅
 
-_Target: Q2 2026_
+_Shipped: March 2026_
 
-**Theme:** Reorganize the codebase into self-contained modules, then build an extensible sync framework on top. Each entry type (tada, tally, timed, moment) becomes a module with its own components, composables, and metadata. Importers, exporters, and **sync providers** become pluggable. New entry types and integrations become addable without touching core code.
+**Theme:** Comprehensive housekeeping release — security audit and hardening, dependency modernization, test coverage expansion, and infrastructure improvements. No new user-facing features; instead, 32 of 33 audit items completed across security, dependencies, testing, documentation, and code quality.
 
-**Approach:** Internal module registry (Option B from [modularity.md](modularity.md)) — no external plugin loading, just clean internal boundaries. Full design details in [spec](../specs/006-modularity/spec.md) and [implementation plan](../specs/006-modularity/plan.md).
+**Key deliverables — Security:**
+- Lucia auth migration to direct session management
+- Session cookie hardening (sameSite, httpOnly, secure)
+- Security headers middleware (CSP, HSTS, X-Frame-Options, etc.)
+- SSRF protection, error sanitization, password policy, CSV limits
+- Persistent SQLite-backed rate limiting
 
-**Key deliverables — Modularity (done):**
-- Module registry with `EntryTypeDefinition`, `DataImporter`, `DataExporter` interfaces
-- Core types (tada, tally, timed, moment) extracted into modules as reference implementations
-- Generic `/create/[type]` page powered by registry
-- Importer/exporter refactor to pluggable interfaces
-- Test coverage expansion for services and composables
-- Validation with one new entry type built as a pure module
+**Key deliverables — Dependencies:**
+- Nuxt 3 → 4.4.2, Stripe 17 → 20, TypeScript 5.7 → 5.9, Zod 3 → 4
+- @libsql/client updated, @nuxt/devtools removed (bundled in Nuxt 4)
 
-**Key deliverables — Sync API & Provider Framework ([spec](../specs/007-sync-api/spec.md)):**
-- `SyncProvider` interface — fourth module type alongside entry types, importers, exporters
-- `sync_mappings` table for per-provider external ID tracking (separate from entries)
-- Sync engine with pull/push orchestration, last-write-wins conflict resolution
-- API extensions: `updated_since` filter, `contentHash` field, `/sync/status`, `/sync/trigger`
-- **Obsidian sync provider** — bidirectional sync of entries with Obsidian vault markdown files
-- `sync-obsidian` CLI script for cron-based or manual sync
+**Key deliverables — Testing (209 new tests):**
+- Auth endpoints (38), entry CRUD (33), admin API (26), sync engine (25)
+- Billing/Stripe (40), component tests (47), Playwright E2E (4)
+
+**Key deliverables — Documentation & Quality:**
+- Admin API documented in API-SPECIFICATION.md
+- CONTRIBUTING.md created, version references updated, specs marked complete
+- Structured logging with request IDs, console.log cleanup
 
 ---
 
@@ -56,7 +58,11 @@ _Target: Q2 2026_
 
 _Target: 2027+_
 
-Everything below benefits from the modular architecture built in v0.5.0 — new features ship as plugins rather than core changes.
+Everything below benefits from the modular architecture and hardened infrastructure from v0.5.0.
+
+### Deferred from v0.5.0
+
+- [ ] **Tailwind v4 upgrade** — deferred, @nuxtjs/tailwindcss module not yet compatible with v4
 
 ### Celestial Calendar (Plugin)
 

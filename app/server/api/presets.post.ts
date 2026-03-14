@@ -30,10 +30,7 @@ export default defineEventHandler(async (event) => {
   // Get authenticated user
   const user = event.context.user;
   if (!user?.id) {
-    throw createError({
-      statusCode: 401,
-      message: "Authentication required",
-    });
+    throw createError(unauthorized(event));
   }
 
   const userId = user.id;
@@ -41,24 +38,21 @@ export default defineEventHandler(async (event) => {
 
   // Validate required fields
   if (!body.name || typeof body.name !== "string") {
-    throw createError({
-      statusCode: 400,
-      message: "name is required",
-    });
+    throw createError(
+      apiError(event, "NAME_REQUIRED", "name is required", 400)
+    );
   }
 
   if (!body.category || typeof body.category !== "string") {
-    throw createError({
-      statusCode: 400,
-      message: "category is required",
-    });
+    throw createError(
+      apiError(event, "CATEGORY_REQUIRED", "category is required", 400)
+    );
   }
 
   if (!body.subcategory || typeof body.subcategory !== "string") {
-    throw createError({
-      statusCode: 400,
-      message: "subcategory is required",
-    });
+    throw createError(
+      apiError(event, "SUBCATEGORY_REQUIRED", "subcategory is required", 400)
+    );
   }
 
   logger.debug("Creating preset", { userId, name: body.name });
@@ -92,9 +86,6 @@ export default defineEventHandler(async (event) => {
     return preset;
   } catch (error) {
     logger.error("Failed to create preset", error as Error, { userId });
-    throw createError({
-      statusCode: 500,
-      message: "Failed to create preset",
-    });
+    throw createError(internalError(event, "Failed to create preset"));
   }
 });

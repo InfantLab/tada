@@ -32,10 +32,7 @@ export default defineEventHandler(async (event) => {
   // Get authenticated user
   const user = event.context.user;
   if (!user?.id) {
-    throw createError({
-      statusCode: 401,
-      message: "Authentication required",
-    });
+    throw createError(unauthorized(event));
   }
 
   const userId = user.id;
@@ -45,52 +42,45 @@ export default defineEventHandler(async (event) => {
 
   // Validate arrays
   if (body.hiddenCategories && !Array.isArray(body.hiddenCategories)) {
-    throw createError({
-      statusCode: 400,
-      message: "hiddenCategories must be an array",
-    });
+    throw createError(
+      apiError(event, "INVALID_FIELD", "hiddenCategories must be an array", 400)
+    );
   }
   if (body.hiddenEntryTypes && !Array.isArray(body.hiddenEntryTypes)) {
-    throw createError({
-      statusCode: 400,
-      message: "hiddenEntryTypes must be an array",
-    });
+    throw createError(
+      apiError(event, "INVALID_FIELD", "hiddenEntryTypes must be an array", 400)
+    );
   }
   if (body.customEntryTypes && !Array.isArray(body.customEntryTypes)) {
-    throw createError({
-      statusCode: 400,
-      message: "customEntryTypes must be an array",
-    });
+    throw createError(
+      apiError(event, "INVALID_FIELD", "customEntryTypes must be an array", 400)
+    );
   }
   if (body.tallyPresets && !Array.isArray(body.tallyPresets)) {
-    throw createError({
-      statusCode: 400,
-      message: "tallyPresets must be an array",
-    });
+    throw createError(
+      apiError(event, "INVALID_FIELD", "tallyPresets must be an array", 400)
+    );
   }
   if (body.customCategories && !Array.isArray(body.customCategories)) {
-    throw createError({
-      statusCode: 400,
-      message: "customCategories must be an array",
-    });
+    throw createError(
+      apiError(event, "INVALID_FIELD", "customCategories must be an array", 400)
+    );
   }
 
   // Validate customEmojis is an object
   if (body.customEmojis && typeof body.customEmojis !== "object") {
-    throw createError({
-      statusCode: 400,
-      message: "customEmojis must be an object",
-    });
+    throw createError(
+      apiError(event, "INVALID_FIELD", "customEmojis must be an object", 400)
+    );
   }
 
   // Validate customEntryTypes structure
   if (body.customEntryTypes) {
     for (const entry of body.customEntryTypes) {
       if (typeof entry.name !== "string" || typeof entry.emoji !== "string") {
-        throw createError({
-          statusCode: 400,
-          message: "customEntryTypes entries must have name and emoji strings",
-        });
+        throw createError(
+          apiError(event, "INVALID_FIELD", "customEntryTypes entries must have name and emoji strings", 400)
+        );
       }
     }
   }
@@ -162,9 +152,6 @@ export default defineEventHandler(async (event) => {
     return prefs;
   } catch (error) {
     logger.error("Failed to update preferences", { userId, error });
-    throw createError({
-      statusCode: 500,
-      message: "Failed to update preferences",
-    });
+    throw createError(internalError(event, "Failed to update preferences"));
   }
 });

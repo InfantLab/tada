@@ -36,10 +36,7 @@ export default defineEventHandler(async (event) => {
   // Get authenticated user
   const user = event.context.user;
   if (!user?.id) {
-    throw createError({
-      statusCode: 401,
-      message: "Authentication required",
-    });
+    throw createError(unauthorized(event, "Authentication required"));
   }
 
   const userId = user.id;
@@ -165,9 +162,6 @@ export default defineEventHandler(async (event) => {
       query,
       error,
     });
-    throw createError({
-      statusCode: 500,
-      message: "Failed to fetch activity suggestions",
-    });
+    throw createError(internalError(event));
   }
 });

@@ -12,19 +12,15 @@ export default defineEventHandler(async (event) => {
 
     // Require authentication
     if (!event.context.user) {
-      throw createError({
-        statusCode: 401,
-        statusMessage: "Unauthorized",
-      });
+      throw createError(unauthorized(event));
     }
 
     const userId = event.context.user.id;
 
     if (!id) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: "Entry ID is required",
-      });
+      throw createError(
+        apiError(event, "INVALID_ID", "Entry ID is required", 400)
+      );
     }
 
     // Check if entry exists and belongs to user
@@ -35,10 +31,7 @@ export default defineEventHandler(async (event) => {
       .limit(1);
 
     if (!existing) {
-      throw createError({
-        statusCode: 404,
-        statusMessage: "Entry not found",
-      });
+      throw createError(notFound(event, "Entry"));
     }
 
     // Soft delete by setting deletedAt
@@ -52,17 +45,12 @@ export default defineEventHandler(async (event) => {
 
     return { success: true, id };
   } catch (error: unknown) {
-    logger.error("Failed to delete entry", error, { entryId: id });
+    logger.error("Failed to delete entry", error);
 
     if (error && typeof error === "object" && "statusCode" in error) {
       throw error;
     }
 
-    const message = error instanceof Error ? error.message : "Unknown error";
-    throw createError({
-      statusCode: 500,
-      statusMessage: "Failed to delete entry",
-      data: { error: message },
-    });
+    throw createError(internalError(event));
   }
 });

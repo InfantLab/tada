@@ -29,10 +29,7 @@ export default defineEventHandler(async (event) => {
   // Get authenticated user
   const user = event.context.user;
   if (!user?.id) {
-    throw createError({
-      statusCode: 401,
-      message: "Authentication required",
-    });
+    throw createError(unauthorized(event));
   }
 
   const userId = user.id;
@@ -86,9 +83,6 @@ export default defineEventHandler(async (event) => {
       userId,
       error,
     });
-    throw createError({
-      statusCode: 500,
-      message: "Failed to fetch recent activities",
-    });
+    throw createError(internalError(event, "Failed to fetch recent activities"));
   }
 });

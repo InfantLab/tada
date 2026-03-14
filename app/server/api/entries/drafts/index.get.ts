@@ -31,10 +31,7 @@ export default defineEventHandler(async (event) => {
   // Get authenticated user
   const user = event.context.user;
   if (!user?.id) {
-    throw createError({
-      statusCode: 401,
-      message: "Authentication required",
-    });
+    throw createError(unauthorized(event, "Authentication required"));
   }
 
   const userId = user.id;
@@ -44,10 +41,9 @@ export default defineEventHandler(async (event) => {
   const validation = querySchema.safeParse(query);
 
   if (!validation.success) {
-    throw createError({
-      statusCode: 400,
-      message: `Invalid query params: ${validation.error.issues[0]?.message}`,
-    });
+    throw createError(
+      apiError(event, "INVALID_ENTRY_DATA", `Invalid query params: ${validation.error.issues[0]?.message}`, 400)
+    );
   }
 
   const { limit, includeExpired } = validation.data;
@@ -88,9 +84,6 @@ export default defineEventHandler(async (event) => {
     };
   } catch (error) {
     logger.error("Failed to fetch drafts", { userId, error });
-    throw createError({
-      statusCode: 500,
-      message: "Failed to fetch drafts",
-    });
+    throw createError(internalError(event));
   }
 });

@@ -23,6 +23,7 @@ import {
 import { sendEmail, isEmailConfigured, getAppUrl } from "~/server/utils/email";
 import { emailVerificationEmail } from "~/server/templates/email";
 import { logAuthEvent } from "~/server/utils/authEvents";
+import { unauthorized, notFound, apiError, internalError } from "~/server/utils/response";
 
 const logger = createLogger("api:auth:send-verification");
 
@@ -33,10 +34,7 @@ const RATE_LIMIT_MS = 60 * 1000; // 1 minute
 export default defineEventHandler(async (event) => {
   // Require authentication
   if (!event.context.user) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: "Unauthorized",
-    });
+    throw createError(unauthorized(event));
   }
 
   const userId = event.context.user.id;
@@ -44,10 +42,9 @@ export default defineEventHandler(async (event) => {
   // Rate limiting check
   const lastRequest = rateLimitMap.get(userId);
   if (lastRequest && Date.now() - lastRequest < RATE_LIMIT_MS) {
-    throw createError({
-      statusCode: 429,
-      statusMessage: "Please wait before requesting another verification email",
-    });
+    throw createError(
+      apiError(event, "RATE_LIMITED", "Please wait before requesting another verification email", 429)
+    );
   }
 
   try {
@@ -59,18 +56,14 @@ export default defineEventHandler(async (event) => {
       .limit(1);
 
     if (!user) {
-      throw createError({
-        statusCode: 404,
-        statusMessage: "User not found",
-      });
+      throw createError(notFound(event, "User"));
     }
 
     // Check if email is set
     if (!user.email) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: "No email address set. Please add an email first.",
-      });
+      throw createError(
+        apiError(event, "EMAIL_NOT_SET", "No email address set. Please add an email first.", 400)
+      );
     }
 
     // Check if already verified
@@ -120,10 +113,9 @@ export default defineEventHandler(async (event) => {
 
       if (!sent) {
         logger.error("Failed to send verification email", { email: user.email });
-        throw createError({
-          statusCode: 500,
-          statusMessage: "Failed to send verification email. Please try again.",
-        });
+        throw createError(
+          internalError(event, "Failed to send verification email. Please try again.")
+        );
       }
 
       return {
@@ -157,9 +149,6 @@ export default defineEventHandler(async (event) => {
       userId,
     });
 
-    throw createError({
-      statusCode: 500,
-      statusMessage: "An error occurred. Please try again.",
-    });
+    throw createError(internalError(event, "An error occurred. Please try again."));
   }
 });
