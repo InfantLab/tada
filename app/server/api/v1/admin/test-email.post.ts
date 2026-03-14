@@ -43,7 +43,7 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const auth = event.context.auth;
+  const _auth = event.context.auth;
   const username = "friend";
 
   // Generate email content based on template

@@ -12,11 +12,9 @@ import {
   rhythms,
   newsletterSubscribers,
   feedback,
-  authEvents,
   subscriptionEvents,
-  sessions,
 } from "~/server/db/schema";
-import { eq, and, gte, lte, sql, count, ne, isNull, isNotNull } from "drizzle-orm";
+import { eq, and, gte, sql, count, ne, isNull, isNotNull } from "drizzle-orm";
 
 type Period = "24h" | "7d" | "30d" | "90d" | "all";
 

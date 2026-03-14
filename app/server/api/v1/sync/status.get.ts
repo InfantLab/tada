@@ -4,8 +4,7 @@
  * Returns sync status: server time, entry counts, per-provider stats.
  */
 
-import { sql, isNull, isNotNull } from "drizzle-orm";
-import { eq, and } from "drizzle-orm";
+import { sql, eq, and } from "drizzle-orm";
 import { requirePermission } from "~/server/utils/permissions";
 import { success } from "~/server/utils/response";
 import { db } from "~/server/db";

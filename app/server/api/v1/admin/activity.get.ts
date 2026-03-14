@@ -5,12 +5,13 @@
  * and notable events.
  */
 
+import type { H3Event } from "h3";
 import { z } from "zod";
 import { requireAdmin } from "~/server/utils/admin";
 import { paginated, validationError } from "~/server/utils/response";
 import { db } from "~/server/db";
 import { authEvents, subscriptionEvents, users } from "~/server/db/schema";
-import { eq, and, desc, sql, count, inArray } from "drizzle-orm";
+import { eq, desc, count, inArray } from "drizzle-orm";
 
 const querySchema = z.object({
   type: z.enum(["signup", "subscription", "login", "password_reset"]).optional(),
@@ -90,7 +91,7 @@ export default defineEventHandler(async (event) => {
 });
 
 async function getSubscriptionActivity(
-  event: any,
+  event: H3Event,
   limit: number,
   offset: number,
 ) {

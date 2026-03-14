@@ -6,8 +6,8 @@
  * Self-registers with the sync provider registry on import.
  */
 
-import { readdir, readFile, writeFile, stat, mkdir, rename, unlink } from "node:fs/promises";
-import { join, basename, extname } from "node:path";
+import { readdir, readFile, writeFile, stat, mkdir, rename } from "node:fs/promises";
+import { join, extname } from "node:path";
 import { existsSync } from "node:fs";
 import { registerSyncProvider } from "~/registry/syncProviders";
 import {
@@ -91,6 +91,7 @@ function slugify(str: string): string {
  */
 function sanitizeFilename(name: string): string {
   return name
+    // eslint-disable-next-line no-control-regex
     .replace(/[<>:"/\\|?*\x00-\x1f]/g, "-")
     .replace(/-+/g, "-")
     .slice(0, 200);

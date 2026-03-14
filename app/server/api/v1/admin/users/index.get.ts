@@ -18,7 +18,6 @@ import {
   asc,
   desc,
   count,
-  isNull,
 } from "drizzle-orm";
 
 const querySchema = z.object({

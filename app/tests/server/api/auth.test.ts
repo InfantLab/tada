@@ -10,6 +10,18 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import loginHandler from "~/server/api/auth/login.post";
+import registerHandler from "~/server/api/auth/register.post";
+import logoutHandler from "~/server/api/auth/logout.post";
+import changePasswordHandler from "~/server/api/auth/change-password.post";
+import resetPasswordHandler from "~/server/api/auth/reset-password.post";
+import { verifyPassword } from "~/server/utils/password";
+import {
+  createSession,
+  setSessionCookie,
+  invalidateSession,
+} from "~/server/utils/auth";
+import { isTokenExpired } from "~/server/utils/tokens";
 
 // ---------------------------------------------------------------------------
 // Hoisted mocks — these run before any module-level imports
@@ -169,24 +181,6 @@ function setReadBody(value: Record<string, unknown>) {
     .fn()
     .mockResolvedValue(value);
 }
-
-// ---------------------------------------------------------------------------
-// Import handlers *after* all mocks are registered
-// ---------------------------------------------------------------------------
-
-import loginHandler from "~/server/api/auth/login.post";
-import registerHandler from "~/server/api/auth/register.post";
-import logoutHandler from "~/server/api/auth/logout.post";
-import changePasswordHandler from "~/server/api/auth/change-password.post";
-import resetPasswordHandler from "~/server/api/auth/reset-password.post";
-
-import { verifyPassword } from "~/server/utils/password";
-import {
-  createSession,
-  setSessionCookie,
-  invalidateSession,
-} from "~/server/utils/auth";
-import { isTokenExpired } from "~/server/utils/tokens";
 
 // ---------------------------------------------------------------------------
 // Tests

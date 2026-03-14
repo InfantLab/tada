@@ -6,7 +6,7 @@
  */
 
 import type { H3Event } from "h3";
-import type { Permission, ApiAuthContext } from "~/types/api";
+import type { Permission } from "~/types/api";
 import { requireAuth, requirePermission } from "~/server/utils/permissions";
 import { forbidden } from "~/server/utils/response";
 

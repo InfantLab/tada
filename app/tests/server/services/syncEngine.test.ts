@@ -10,6 +10,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { runSync } from "~/server/services/syncEngine";
 
 // ---------------------------------------------------------------------------
 // Hoisted mocks — these run before any module-level imports
@@ -88,7 +89,7 @@ vi.mock("~/server/utils/logger", () => ({
 
 // Mock DB modules (needed because the global setup file imports them)
 vi.mock("~/server/db", () => {
-  const noop = vi.fn().mockReturnValue({
+  const _noop = vi.fn().mockReturnValue({
     execute: vi.fn().mockResolvedValue([]),
   });
   const chain: Record<string, unknown> = {};
@@ -118,13 +119,6 @@ vi.mock("drizzle-orm", () => ({
 vi.mock("~/server/db/operations", () => ({
   withRetry: vi.fn((fn: () => unknown) => fn()),
 }));
-
-// ---------------------------------------------------------------------------
-// Import after mocks are registered
-// ---------------------------------------------------------------------------
-
-import { runSync } from "~/server/services/syncEngine";
-import { computeContentHash } from "~/server/utils/contentHash";
 
 // ---------------------------------------------------------------------------
 // Test helpers
@@ -820,7 +814,7 @@ describe("Push operations", () => {
     });
     mocks.getMappingByEntryId.mockResolvedValue(mapping);
 
-    const result = await runSync("user-1", "test-provider", { direction: "push" });
+    const _result = await runSync("user-1", "test-provider", { direction: "push" });
 
     // The provider's pushChanges should be called with empty array
     // (since the only entry was skipped)

@@ -6,6 +6,11 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import createHandler from "~/server/api/entries/index.post";
+import listHandler from "~/server/api/entries/index.get";
+import getByIdHandler from "~/server/api/entries/[id].get";
+import patchHandler from "~/server/api/entries/[id].patch";
+import deleteHandler from "~/server/api/entries/[id].delete";
 
 // ---------------------------------------------------------------------------
 // vi.hoisted: define mocks before any module imports
@@ -130,15 +135,6 @@ vi.mock("~/server/utils/logger", () => ({
     error: vi.fn(),
   }),
 }));
-
-// ---------------------------------------------------------------------------
-// Import handlers AFTER mocks are set up
-// ---------------------------------------------------------------------------
-import createHandler from "~/server/api/entries/index.post";
-import listHandler from "~/server/api/entries/index.get";
-import getByIdHandler from "~/server/api/entries/[id].get";
-import patchHandler from "~/server/api/entries/[id].patch";
-import deleteHandler from "~/server/api/entries/[id].delete";
 
 // ---------------------------------------------------------------------------
 // Helpers

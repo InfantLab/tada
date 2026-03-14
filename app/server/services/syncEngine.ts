@@ -17,7 +17,7 @@ import {
   updateMapping,
   getLastSyncTimestamp,
 } from "~/server/services/syncMappings";
-import type { SyncRunSummary, ExternalChange, EntryWithMapping, SyncDirection } from "~/types/syncProvider";
+import type { SyncRunSummary, ExternalChange, EntryWithMapping } from "~/types/syncProvider";
 import type { NewEntry } from "~/server/db/schema";
 
 interface SyncOptions {

@@ -7,8 +7,7 @@
 import { z } from "zod";
 import { requirePermission } from "~/server/utils/permissions";
 import { paginated, validationError } from "~/server/utils/response";
-import { getMappingsByProvider } from "~/server/services/syncMappings";
-import { getMappingsForEntry } from "~/server/services/syncMappings";
+import { getMappingsByProvider, getMappingsForEntry } from "~/server/services/syncMappings";
 
 const querySchema = z.object({
   provider: z.string().optional(),

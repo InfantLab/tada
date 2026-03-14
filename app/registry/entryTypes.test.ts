@@ -2,7 +2,7 @@
  * Tests for Entry Type Registry
  */
 
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect } from "vitest";
 import {
   registerEntryType,
   getRegisteredTypes,

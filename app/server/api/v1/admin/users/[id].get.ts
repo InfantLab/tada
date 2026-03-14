@@ -16,7 +16,7 @@ import {
   sessions,
   authEvents,
 } from "~/server/db/schema";
-import { eq, and, gte, sql, count, isNull, isNotNull } from "drizzle-orm";
+import { eq, and, gte, sql, count, isNull } from "drizzle-orm";
 
 export default defineEventHandler(async (event) => {
   requireAdmin(event, "admin:users");

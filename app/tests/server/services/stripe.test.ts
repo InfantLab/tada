@@ -13,6 +13,15 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import {
+  getStripe,
+  getOrCreateCustomer,
+  createCheckoutSession,
+  createPortalSession,
+  handleWebhookEvent,
+  logSubscriptionEvent,
+} from "~/server/services/stripe";
+import { isBillingEnabled } from "~/server/utils/cloudMode";
 
 // ---------------------------------------------------------------------------
 // Hoisted mocks — run before any module-level imports
@@ -157,29 +166,15 @@ vi.mock("~/server/templates/email", () => ({
 }));
 
 // ---------------------------------------------------------------------------
-// Imports (after mocks)
-// ---------------------------------------------------------------------------
-
-import {
-  getStripe,
-  getOrCreateCustomer,
-  createCheckoutSession,
-  createPortalSession,
-  handleWebhookEvent,
-  logSubscriptionEvent,
-} from "~/server/services/stripe";
-import { isBillingEnabled } from "~/server/utils/cloudMode";
-
-// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
 const originalEnv = { ...process.env };
 
-function setEnv(vars: Record<string, string | undefined>) {
+function _setEnv(vars: Record<string, string | undefined>) {
   for (const [key, val] of Object.entries(vars)) {
     if (val === undefined) {
-      delete process.env[key];
+      process.env[key] = undefined;
     } else {
       process.env[key] = val;
     }
@@ -210,7 +205,7 @@ describe("getStripe", () => {
 
   it("returns null when STRIPE_SECRET_KEY is not set", async () => {
     vi.mocked(isBillingEnabled).mockReturnValue(true);
-    delete process.env["STRIPE_SECRET_KEY"];
+    process.env["STRIPE_SECRET_KEY"] = undefined;
 
     // Need fresh module to reset cached client
     vi.resetModules();
@@ -500,7 +495,7 @@ describe("handleWebhookEvent", () => {
   });
 
   it("returns failure when webhook secret is not set", async () => {
-    delete process.env["STRIPE_WEBHOOK_SECRET"];
+    process.env["STRIPE_WEBHOOK_SECRET"] = undefined;
     const result = await handleWebhookEvent("payload", "sig");
     expect(result).toEqual({
       success: false,

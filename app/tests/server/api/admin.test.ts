@@ -11,6 +11,12 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import usersListHandler from "~/server/api/v1/admin/users/index.get";
+import userDetailHandler from "~/server/api/v1/admin/users/[id].get";
+import userPatchHandler from "~/server/api/v1/admin/users/[id].patch";
+import sessionsDeleteHandler from "~/server/api/v1/admin/users/[id]/sessions.delete";
+import statsHandler from "~/server/api/v1/admin/stats.get";
+import healthHandler from "~/server/api/v1/admin/health.get";
 
 // ---------------------------------------------------------------------------
 // vi.hoisted: define mocks before any module imports
@@ -226,7 +232,7 @@ vi.mock("zod", () => {
   // so that any chain of .int().min().max().default().optional() etc. works.
   const createSchema = (): any => {
     const schema: any = {};
-    const self = () => schema;
+    const _self = () => schema;
     const methods = [
       "optional", "default", "nullable", "strict", "int", "min", "max",
       "datetime", "safeParse", "object", "string", "number", "boolean",
@@ -247,7 +253,7 @@ vi.mock("zod", () => {
     return schema;
   };
 
-  const root = createSchema();
+  const _root = createSchema();
 
   return {
     z: {
@@ -336,17 +342,6 @@ vi.mock("~/server/utils/permissions", () => ({
 vi.mock("nanoid", () => ({
   nanoid: vi.fn(() => "generated-id-1234"),
 }));
-
-// ---------------------------------------------------------------------------
-// Import handlers AFTER mocks are set up
-// ---------------------------------------------------------------------------
-
-import usersListHandler from "~/server/api/v1/admin/users/index.get";
-import userDetailHandler from "~/server/api/v1/admin/users/[id].get";
-import userPatchHandler from "~/server/api/v1/admin/users/[id].patch";
-import sessionsDeleteHandler from "~/server/api/v1/admin/users/[id]/sessions.delete";
-import statsHandler from "~/server/api/v1/admin/stats.get";
-import healthHandler from "~/server/api/v1/admin/health.get";
 
 // ---------------------------------------------------------------------------
 // Helpers
