@@ -958,3 +958,209 @@ export const rateLimits = sqliteTable("rate_limits", {
 
 export type RateLimit = typeof rateLimits.$inferSelect;
 export type NewRateLimit = typeof rateLimits.$inferInsert;
+
+// ============================================================================
+// Weekly Rhythm Settings - Per-user opt-in state and preferences (v0.6.0+)
+// ============================================================================
+
+export const weeklyRhythmSettings = sqliteTable("weekly_rhythm_settings", {
+  id: text("id").primaryKey(), // UUID
+  userId: text("user_id")
+    .notNull()
+    .unique()
+    .references(() => users.id, { onDelete: "cascade" }),
+
+  celebrationEnabled: integer("celebration_enabled", { mode: "boolean" })
+    .notNull()
+    .default(false),
+  encouragementEnabled: integer("encouragement_enabled", { mode: "boolean" })
+    .notNull()
+    .default(false),
+
+  celebrationTier: text("celebration_tier")
+    .notNull()
+    .default("stats_only"), // 'stats_only' | 'private_ai' | 'cloud_factual' | 'cloud_creative'
+
+  deliveryChannels: text("delivery_channels", { mode: "json" }).$type<{
+    celebration: { inApp: boolean; email: boolean; push: boolean };
+    encouragement: { inApp: boolean; email: boolean; push: boolean };
+  }>().notNull(),
+
+  generationSchedule: text("generation_schedule", { mode: "json" }).$type<{
+    encouragementLocalTime: string; // '15:03'
+    celebrationGenerateLocalTime: string; // '03:33'
+    celebrationDeliverLocalTime: string; // '08:08'
+  }>().notNull(),
+
+  onboardingCompletedAt: text("onboarding_completed_at"),
+  cloudPrivacyAcknowledgedAt: text("cloud_privacy_acknowledged_at"),
+  privateAiUnavailableDismissedAt: text("private_ai_unavailable_dismissed_at"),
+
+  emailUnsubscribedAt: text("email_unsubscribed_at"),
+  emailUnsubscribeSource: text("email_unsubscribe_source"), // 'email_link' | 'settings' | 'bounce' | null
+  consecutiveEmailFailures: integer("consecutive_email_failures")
+    .notNull()
+    .default(0),
+  lastEmailFailureAt: text("last_email_failure_at"),
+
+  createdAt: text("created_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
+});
+
+export type WeeklyRhythmSetting = typeof weeklyRhythmSettings.$inferSelect;
+export type NewWeeklyRhythmSetting = typeof weeklyRhythmSettings.$inferInsert;
+
+// ============================================================================
+// Weekly Stats Snapshots - Immutable factual aggregates per user/week (v0.6.0+)
+// ============================================================================
+
+export const weeklyStatsSnapshots = sqliteTable("weekly_stats_snapshots", {
+  id: text("id").primaryKey(), // UUID
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+
+  kind: text("kind").notNull(), // 'celebration' | 'encouragement'
+  weekStartDate: text("week_start_date").notNull(), // local Monday, YYYY-MM-DD
+  weekEndDate: text("week_end_date").notNull(), // local Sunday for celebrations
+  timezone: text("timezone").notNull(),
+
+  periodRange: text("period_range", { mode: "json" }).$type<{
+    localStart: string;
+    localEnd: string;
+    utcStart: string;
+    utcEnd: string;
+  }>().notNull(),
+
+  generalProgress: text("general_progress", { mode: "json" }).$type<{
+    entryCountsByType: Record<string, number>;
+    sessionDurationsByCategory: Record<string, number>;
+    weekOverWeek: {
+      entryCountDelta: number;
+      durationDeltaSeconds: number;
+      byType: Record<string, number>;
+      byCategorySeconds: Record<string, number>;
+    };
+    personalRecordsThisMonth: Array<{
+      type: string;
+      label: string;
+      value: number;
+      unit: string;
+      happenedAt: string;
+    }>;
+    quietWeek: boolean;
+  }>().notNull(),
+
+  rhythmWins: text("rhythm_wins", { mode: "json" }).$type<Array<{
+    rhythmId: string;
+    rhythmName: string;
+    chainType: string;
+    chainStatus: "maintained" | "extended" | "bending" | "broken" | "quiet";
+    achievedTier: string;
+    completedDays: number;
+    totalSeconds: number;
+    totalCount: number;
+    allTimeMilestones: Array<{ label: string; value: number; unit: string }>;
+    stretchGoal?: string;
+  }>>().notNull(),
+
+  encouragementContext: text("encouragement_context", { mode: "json" }).$type<{
+    trailingFourWeekAverages: {
+      totalEntries: number;
+      totalDurationSeconds: number;
+      byRhythmCompletedDays: Record<string, number>;
+    };
+    generalMomentum: "quiet" | "steady" | "ahead";
+  }>(),
+
+  generatedAt: text("generated_at").notNull(),
+});
+
+export type WeeklyStatsSnapshot = typeof weeklyStatsSnapshots.$inferSelect;
+export type NewWeeklyStatsSnapshot = typeof weeklyStatsSnapshots.$inferInsert;
+
+// ============================================================================
+// Weekly Messages - Rendered user-facing content and tier fallback results (v0.6.0+)
+// ============================================================================
+
+export const weeklyMessages = sqliteTable("weekly_messages", {
+  id: text("id").primaryKey(), // UUID
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  snapshotId: text("snapshot_id")
+    .notNull()
+    .references(() => weeklyStatsSnapshots.id, { onDelete: "cascade" }),
+
+  kind: text("kind").notNull(), // 'celebration' | 'encouragement'
+  weekStartDate: text("week_start_date").notNull(),
+
+  tierRequested: text("tier_requested").notNull(),
+  tierApplied: text("tier_applied").notNull(),
+  fallbackReason: text("fallback_reason"),
+
+  status: text("status").notNull().default("generated"),
+  // 'generated' | 'queued' | 'delivered' | 'partially_delivered' | 'failed' | 'dismissed'
+
+  title: text("title").notNull(),
+  summaryBlocks: text("summary_blocks", { mode: "json" }).$type<Array<{
+    section: "general_progress" | "rhythm_wins" | "stretch_goals" | "footer";
+    heading: string;
+    lines: string[];
+  }>>().notNull(),
+  narrativeText: text("narrative_text"),
+  emailSubject: text("email_subject"),
+  emailHtml: text("email_html"),
+  emailText: text("email_text"),
+
+  inAppVisibleFrom: text("in_app_visible_from").notNull(),
+  scheduledDeliveryAt: text("scheduled_delivery_at"),
+  deliveredAt: text("delivered_at"),
+  dismissedAt: text("dismissed_at"),
+
+  createdAt: text("created_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
+});
+
+export type WeeklyMessage = typeof weeklyMessages.$inferSelect;
+export type NewWeeklyMessage = typeof weeklyMessages.$inferInsert;
+
+// ============================================================================
+// Weekly Delivery Attempts - Channel-level audit trail and retry state (v0.6.0+)
+// ============================================================================
+
+export const weeklyDeliveryAttempts = sqliteTable("weekly_delivery_attempts", {
+  id: text("id").primaryKey(), // UUID
+  messageId: text("message_id")
+    .notNull()
+    .references(() => weeklyMessages.id, { onDelete: "cascade" }),
+
+  channel: text("channel").notNull(), // 'in_app' | 'email' | 'push'
+  status: text("status").notNull(), // 'queued' | 'sent' | 'failed' | 'bounced' | 'skipped'
+  attemptNumber: integer("attempt_number").notNull(),
+
+  scheduledFor: text("scheduled_for").notNull(),
+  attemptedAt: text("attempted_at"),
+  retryAfter: text("retry_after"),
+
+  provider: text("provider"),
+  providerMessageId: text("provider_message_id"),
+  failureCode: text("failure_code"),
+  failureMessage: text("failure_message"),
+  rawResponse: text("raw_response", { mode: "json" }).$type<Record<string, unknown>>(),
+
+  createdAt: text("created_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
+});
+
+export type WeeklyDeliveryAttempt = typeof weeklyDeliveryAttempts.$inferSelect;
+export type NewWeeklyDeliveryAttempt = typeof weeklyDeliveryAttempts.$inferInsert;

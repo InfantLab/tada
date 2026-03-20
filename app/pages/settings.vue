@@ -1936,6 +1936,20 @@ onMounted(() => {
           </div>
         </section>
 
+        <!-- Weekly Rhythms -->
+        <section v-if="currentUser" id="section-weekly-rhythms">
+          <h2
+            class="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-4"
+          >
+            Weekly Rhythms
+          </h2>
+          <div
+            class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 divide-y divide-stone-200 dark:divide-stone-700"
+          >
+            <WeeklyRhythmsSettings />
+          </div>
+        </section>
+
         <!-- Appearance (Theme + Notifications) -->
         <section id="section-appearance">
           <h2
