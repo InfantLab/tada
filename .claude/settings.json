@@ -38,11 +38,43 @@
       "Bash(npm ls:*)",
       "Bash(npx tsc:*)",
       "Bash(npx vue-tsc:*)",
-      "Bash(echo $?)"
+      "Bash(echo $?)",
+      "Bash(bunx eslint:*)",
+      "Bash(then echo:*)",
+      "Bash(DATABASE_URL=file:../data/db.sqlite timeout 90 bun vitest --run --reporter=verbose)",
+      "Bash(DATABASE_URL=file:../data/db.sqlite bun vitest --run)",
+      "Bash(npm run:*)",
+      "Bash(DATABASE_URL=file:../data/db.sqlite timeout 180 bun vitest --run --reporter=verbose)",
+      "Bash(npx eslint:*)",
+      "Bash(node_modules/.bin/eslint tests/server/api/admin.test.ts tests/server/api/auth.test.ts tests/server/api/entries.test.ts tests/server/services/stripe.test.ts tests/server/services/syncEngine.test.ts registry/entryTypes.test.ts)",
+      "Bash(node_modules/.bin/nuxi typecheck:*)",
+      "Bash(while read:*)",
+      "Bash(do sed:*)",
+      "Bash(done)",
+      "Bash(git tag -a v0.5.0 -m \"v0.5.0: Housekeeping & Infrastructure:*)",
+      "WebFetch(domain:docs.docker.com)",
+      "WebFetch(domain:releasebot.io)",
+      "Bash(wsl --version)",
+      "Bash(wsl --status)",
+      "Read(//c/Users/caspar/code/tada/$USERPROFILE/**)",
+      "Read(//c/Users/caspar/code/tada/$APPDATA/Docker/**)",
+      "Bash(powershell.exe -Command \"Get-ComputerInfo | Select-Object WindowsProductName, WindowsVersion, OsBuildNumber, OsHardwareAbstractionLayer, CsModel, CsManufacturer | Format-List\")",
+      "Bash(python -m json.tool)",
+      "Bash(powershell.exe -Command \"Get-WinEvent -FilterHashtable @{LogName=''System''; ProviderName=''Microsoft-Windows-Kernel-Power''; Id=107,507} -MaxEvents 10 2>&1 | Format-Table TimeCreated, Id, Message -Wrap\")",
+      "Bash(bunx @spec-kit/cli@latest)",
+      "Bash(cp -r /tmp/spec-kit-latest/templates/* /workspaces/tada/.specify/templates/)",
+      "Bash(cp -r /tmp/spec-kit-latest/scripts/* /workspaces/tada/.specify/scripts/)",
+      "Bash(bash .specify/scripts/bash/create-new-feature.sh --json --short-name \"weekly-rhythms\" \"Weekly Rhythms — Encouragement & Celebration: Thursday mid-week nudge and Sunday end-of-week celebration summary with tiered AI options\")",
+      "Bash(bash .specify/scripts/bash/check-prerequisites.sh --json --require-tasks --include-tasks)",
+      "Bash(DATABASE_URL=file:../data/db.sqlite drizzle-kit push)",
+      "Bash(DATABASE_URL=file:../data/db.sqlite bun drizzle-kit push --config=drizzle.config.ts)"
     ],
     "additionalDirectories": [
       "/tmp",
-      "/workspaces/tada/specs"
+      "/workspaces/tada/specs",
+      "C:\\Users\\caspar\\scripts",
+      "/workspaces/tada/.claude",
+      "/workspaces/tada/app/server/api/weekly-rhythms/messages"
     ]
   }
 }
