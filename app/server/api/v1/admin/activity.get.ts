@@ -6,7 +6,7 @@
  */
 
 import type { H3Event } from "h3";
-import { z } from "zod";
+import * as z from "zod";
 import { requireAdmin } from "~/server/utils/admin";
 import { paginated, validationError } from "~/server/utils/response";
 import { db } from "~/server/db";

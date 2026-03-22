@@ -3,7 +3,7 @@
  * Creates or updates weekly-rhythm settings with validation.
  */
 
-import { z } from "zod";
+import * as z from "zod";
 import {
   upsertWeeklyRhythmSettings,
   getWeeklyRhythmSettings,

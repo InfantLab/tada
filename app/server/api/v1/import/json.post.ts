@@ -6,7 +6,7 @@
  * User Story 7: Historical Data Import
  */
 
-import { z } from "zod";
+import * as z from "zod";
 import { requirePermission } from "~/server/utils/permissions";
 import { success, apiError, validationError } from "~/server/utils/response";
 import { createPreview, importEntries } from "~/server/services/import";

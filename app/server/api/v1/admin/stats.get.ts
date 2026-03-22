@@ -5,7 +5,7 @@
  * Replaces the shell-script approach to gathering stats.
  */
 
-import { z } from "zod";
+import * as z from "zod";
 import { requireAdmin } from "~/server/utils/admin";
 import { success, validationError } from "~/server/utils/response";
 import { getAdminStats } from "~/server/services/admin-stats";

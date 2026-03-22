@@ -7,7 +7,7 @@
  * @module utils/entrySchemas
  */
 
-import { z } from "zod";
+import * as z from "zod";
 import {
   REGISTERED_ENTRY_TYPES,
   isKnownEntryType,

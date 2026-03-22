@@ -6,7 +6,7 @@
  * User Story 1: OpenClaw Daily Summary
  */
 
-import { z } from "zod";
+import * as z from "zod";
 import { requirePermission } from "~/server/utils/permissions";
 import { paginated, apiError, validationError } from "~/server/utils/response";
 import { getEntries } from "~/server/services/entries";

@@ -6,7 +6,7 @@
  * User Story 6: Pattern Discovery
  */
 
-import { z } from "zod";
+import * as z from "zod";
 import { requirePermission } from "~/server/utils/permissions";
 import { success, apiError, validationError } from "~/server/utils/response";
 import { db } from "~/server/db";

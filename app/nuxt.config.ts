@@ -179,15 +179,7 @@ export default defineNuxtConfig({
   vite: {
     // Pre-bundle heavy dependencies
     optimizeDeps: {
-      include: ["vue", "vue-router", "drizzle-orm", "emoji-picker-element", "zod"],
-    },
-    // Zod v4 re-exports a namespace (`import * as z; export { z }`) which
-    // Vite's SSR module runner doesn't resolve correctly. Pre-bundling for
-    // SSR normalises the exports so `import { z } from "zod"` works.
-    ssr: {
-      optimizeDeps: {
-        include: ["zod"],
-      },
+      include: ["vue", "vue-router", "drizzle-orm", "emoji-picker-element"],
     },
     // Faster builds
     build: {

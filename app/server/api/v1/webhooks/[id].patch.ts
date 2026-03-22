@@ -6,7 +6,7 @@
  * User Story 4: Real-time Webhooks
  */
 
-import { z } from "zod";
+import * as z from "zod";
 import { success, apiError, validationError } from "~/server/utils/response";
 import { updateWebhook } from "~/server/services/webhooks";
 import { createLogger } from "~/server/utils/logger";

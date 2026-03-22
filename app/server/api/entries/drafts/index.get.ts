@@ -17,7 +17,7 @@ import { createLogger } from "~/utils/logger";
 import { db } from "~/server/db";
 import { entryDrafts } from "~/server/db/schema";
 import { eq, and, gte, desc } from "drizzle-orm";
-import { z } from "zod";
+import * as z from "zod";
 
 const logger = createLogger("api:entries:drafts:get");
 

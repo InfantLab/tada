@@ -5,7 +5,7 @@
  * Public endpoint - no authentication required.
  */
 
-import { z } from "zod";
+import * as z from "zod";
 import { db } from "~/server/db";
 import { feedback } from "~/server/db/schema";
 import { createLogger } from "~/server/utils/logger";

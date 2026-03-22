@@ -6,7 +6,7 @@
  * User Story 3: API Key Management
  */
 
-import { z } from "zod";
+import * as z from "zod";
 import { created, apiError, validationError } from "~/server/utils/response";
 import { createApiKey } from "~/server/utils/api-key";
 import { createLogger } from "~/server/utils/logger";

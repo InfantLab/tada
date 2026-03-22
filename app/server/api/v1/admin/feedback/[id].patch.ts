@@ -4,7 +4,7 @@
  * Update feedback status, add internal notes, and optionally send a reply email.
  */
 
-import { z } from "zod";
+import * as z from "zod";
 import { requireAdmin } from "~/server/utils/admin";
 import { success, notFound, validationError } from "~/server/utils/response";
 import { logAuthEvent } from "~/server/utils/authEvents";

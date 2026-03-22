@@ -6,7 +6,7 @@
  * User Story 5: Obsidian Export
  */
 
-import { z } from "zod";
+import * as z from "zod";
 import { requirePermission } from "~/server/utils/permissions";
 import { apiError, validationError } from "~/server/utils/response";
 import { getEntries } from "~/server/services/entries";

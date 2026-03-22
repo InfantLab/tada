@@ -4,7 +4,7 @@
  * Does not send email. Uses same sanitization and fallback rules.
  */
 
-import { z } from "zod";
+import * as z from "zod";
 import { renderCelebration } from "~/server/services/weekly-rhythms/celebration";
 import { renderEncouragement } from "~/server/services/weekly-rhythms/encouragement";
 import { createLogger } from "~/server/utils/logger";

@@ -21,7 +21,7 @@ import {
   parseNaturalLanguage,
   type ParsedEntry,
 } from "~/utils/naturalLanguageParser";
-import { z } from "zod";
+import * as z from "zod";
 
 const logger = createLogger("api:entries:parse");
 

@@ -10,7 +10,7 @@
  */
 
 import Papa from "papaparse";
-import { z } from "zod";
+import * as z from "zod";
 import { db } from "~/server/db";
 import { entries } from "~/server/db/schema";
 import { eq, and, gte, lte, isNull } from "drizzle-orm";

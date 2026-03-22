@@ -19,7 +19,7 @@ import { createLogger } from "~/utils/logger";
 import { db } from "~/server/db";
 import { entries, entryDrafts } from "~/server/db/schema";
 import { eq, and } from "drizzle-orm";
-import { z } from "zod";
+import * as z from "zod";
 import { randomUUID } from "crypto";
 
 const logger = createLogger("api:entries:drafts:commit");

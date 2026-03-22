@@ -4,7 +4,7 @@
  * List feedback submissions with filtering by status and type.
  */
 
-import { z } from "zod";
+import * as z from "zod";
 import { requireAdmin } from "~/server/utils/admin";
 import { paginated, validationError } from "~/server/utils/response";
 import { db } from "~/server/db";

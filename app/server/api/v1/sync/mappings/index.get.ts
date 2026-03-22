@@ -4,7 +4,7 @@
  * List sync mappings with optional provider filter.
  */
 
-import { z } from "zod";
+import * as z from "zod";
 import { requirePermission } from "~/server/utils/permissions";
 import { paginated, validationError } from "~/server/utils/response";
 import { getMappingsByProvider, getMappingsForEntry } from "~/server/services/syncMappings";

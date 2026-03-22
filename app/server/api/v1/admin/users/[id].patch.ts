@@ -4,7 +4,7 @@
  * Update user account properties for support purposes.
  */
 
-import { z } from "zod";
+import * as z from "zod";
 import { requireAdmin } from "~/server/utils/admin";
 import { success, notFound, validationError } from "~/server/utils/response";
 import { logAuthEvent } from "~/server/utils/authEvents";

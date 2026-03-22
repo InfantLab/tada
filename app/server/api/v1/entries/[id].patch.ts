@@ -6,7 +6,7 @@
  * User Story 2: Voice Entry Creation
  */
 
-import { z } from "zod";
+import * as z from "zod";
 import { requirePermission } from "~/server/utils/permissions";
 import { success, apiError, notFound, validationError } from "~/server/utils/response";
 import { updateEntry } from "~/server/services/entries";
