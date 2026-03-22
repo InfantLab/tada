@@ -7,6 +7,74 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Daily Timeline Bar** ([Spec 010](specs/010-daily-timelines/spec.md)):
+  - Per-card timeline indicator on each activity card in day view showing when the activity happened on a 24-hour line
+  - Combined day strip above the card list showing all activities for the day overlaid on a single timeline
+  - Category colour coding using the existing palette — consistent across cards, strip, and filter chips
+  - Percentage-based positioning future-proofed for week/month/year zoom levels
+  - Semi-transparent layering for overlapping timed entries, z-ordering for emoji markers
+  - Responsive from 320px mobile to wide desktop — no charting library, pure CSS
+  - Short entries (<5 min) and instant entries (ta-das, moments, tallies) display as dots
+
+## [0.6.0] - 2026-03-22
+
+### Theme: Weekly Rhythms — Encouragement & Celebration
+
+Weekly review features that celebrate what you've done — never guilt what you haven't. Thursday mid-week encouragement nudges and Monday morning celebration summaries with four privacy tiers.
+
+### Added
+
+- **Weekly Celebration Pipeline** ([Spec 009](specs/009-weekly-rhythms/spec.md)):
+  - 4-tier celebration system: Stats Only, Private AI, Cloud AI Factual, Cloud AI Creative
+  - Monday celebration generation (default 3:33am) with email delivery (default 8:08am)
+  - Per-user timezone-aware scheduling for both generation and delivery
+  - Weekly data aggregation: entry counts by type, session durations by category, week-over-week comparisons, personal records
+  - Per-rhythm chain status (maintained, extended, bending, broken) and all-time milestone tracking
+  - Celebrations adapt to users with 0 to N active rhythms
+
+- **Thursday Mid-Week Encouragement**:
+  - In-app dismissible banner with general progress encouragement and rhythm-specific stretch goals
+  - Default delivery at Thursday 3:03pm in user's local timezone
+  - Activity comparison against rolling 4-week averages
+  - Optional push notification and email delivery
+  - Positive, guilt-free messaging — quiet weeks acknowledged gently, never shamed
+
+- **Email Delivery Infrastructure**:
+  - HTML and plain text email rendering
+  - Retry with exponential backoff on delivery failure
+  - One-click unsubscribe link in every email
+  - Bounce tracking with auto-disable after 3 consecutive failures
+  - In-app-only delivery as alternative to email
+
+- **Weekly Rhythms Settings UI**:
+  - Settings panel with tier picker and plain-language privacy notices for cloud AI tiers
+  - Independent toggles for Thursday encouragement and Monday celebration
+  - Email address configuration with in-app-only option
+  - All features off by default (opt-in only)
+
+- **Components**:
+  - `WeeklyRhythmsSettings.vue` — settings panel for weekly rhythm preferences
+  - `WeeklyCelebrationCard.vue` — in-app celebration summary display
+  - `WeeklyEncouragementBanner.vue` — dismissible Thursday encouragement banner
+  - `WeeklyRhythmsCard.vue` — weekly rhythms overview card
+  - `WeeklyTierPicker.vue` — tier selection with privacy descriptions
+  - `useWeeklyRhythms` composable for client-side state management
+
+- **API Endpoints**:
+  - `GET /api/weekly-rhythms/current` — current week's celebration/encouragement
+  - `GET /api/weekly-rhythms/history` — past celebrations
+  - `POST /api/weekly-rhythms/messages/:id/dismiss` — dismiss in-app message
+  - `POST /api/weekly-rhythms/preview` — preview celebration for current data
+  - `GET /api/weekly-rhythms/settings` — get weekly rhythm preferences
+  - `PUT /api/weekly-rhythms/settings` — update weekly rhythm preferences
+  - `GET /api/weekly-rhythms/unsubscribe/:token` — one-click email unsubscribe
+
+- **Database**: `weekly_rhythms` tables for settings, celebrations, encouragements, and email delivery tracking
+
+- **80 new tests** covering celebration pipeline, encouragement generation, delivery service, cloud AI providers, stats aggregation, and message templates
+
 ## [0.5.0] - 2026-03-10
 
 ### Theme: Housekeeping — Security, Testing, Infrastructure

@@ -2,7 +2,7 @@
 
 What's coming next. For what already shipped, see [CHANGELOG.md](../CHANGELOG.md) and the release notes.
 
-**Current Version:** v0.5.0 (March 2026) | **Next:** v0.6.0 (2027+)
+**Current Version:** v0.6.0 (March 2026) | **Next:** v0.7.0 (2027+)
 
 ---
 
@@ -17,12 +17,49 @@ What's coming next. For what already shipped, see [CHANGELOG.md](../CHANGELOG.md
 | **v0.4.0** | Ontology & Cloud Service    | ✅ Shipped Feb 2026 | [Release Notes](../RELEASE_NOTES_v0.4.0.md) |
 | **v0.4.2** | Backups, Polish & Code Quality | ✅ Shipped Mar 2026 | [Release Notes](../RELEASE_NOTES_v0.4.2.md) |
 | **v0.5.0** | Housekeeping & Infrastructure | ✅ Shipped Mar 2026 | [Release Notes](../RELEASE_NOTES_v0.5.0.md) |
+| **v0.6.0** | Weekly Rhythms & Review     | ✅ Shipped Mar 2026 | [CHANGELOG](../CHANGELOG.md) |
 
 ## Upcoming
 
 | Version    | Theme                       | Target   |
 | ---------- | --------------------------- | -------- |
-| **v0.6.0** | Features & Integrations     | 2027+    |
+| **v0.6.1** | Daily Timeline Bar          | Mar 2026 |
+| **v0.7.0** | Features & Integrations     | 2027+    |
+
+---
+
+## v0.6.0: Weekly Rhythms & Review ✅
+
+_Shipped: March 2026_
+
+**Theme:** Weekly review features — encouragement, celebration, and email delivery. Users can opt in to a Thursday mid-week encouragement nudge and a Monday morning celebration summary with four privacy tiers (stats-only, local AI, cloud AI factual, cloud AI creative).
+
+**Key deliverables — Weekly Celebration Pipeline** ([Spec 009](../specs/009-weekly-rhythms/spec.md)):
+- 4-tier celebration system: Stats Only, Private AI, Cloud AI Factual, Cloud AI Creative
+- Monday celebration generation (3:33am) with email delivery (8:08am), per-user timezone-aware
+- Weekly data aggregation: entry counts by type, session durations, week-over-week comparisons, personal records
+- Per-rhythm chain status and all-time milestone tracking in celebrations
+
+**Key deliverables — Thursday Encouragement:**
+- Mid-week encouragement nudge (default Thursday 3:03pm) with general progress and rhythm-specific stretch goals
+- In-app dismissible banner and optional push notification / email delivery
+- Activity comparison against rolling 4-week averages
+- Positive, guilt-free messaging — never shame-based
+
+**Key deliverables — Email & Delivery Infrastructure:**
+- HTML and plain text email delivery with retry and backoff
+- One-click unsubscribe link in every email
+- Bounce tracking with auto-disable after 3 consecutive failures
+- In-app-only delivery as alternative to email
+
+**Key deliverables — Settings & Configuration:**
+- Weekly Rhythms settings panel with tier picker and plain-language privacy notices
+- Independent toggles for Thursday encouragement and Monday celebration
+- Email address configuration with in-app-only option
+- All features off by default (opt-in only)
+
+**Key deliverables — Testing:**
+- 80 tests covering celebration pipeline, encouragement, delivery, cloud AI providers, stats aggregation, and messages
 
 ---
 
@@ -54,7 +91,7 @@ _Shipped: March 2026_
 
 ---
 
-## v0.6.0: Features & Integrations
+## v0.7.0: Features & Integrations
 
 _Target: 2027+_
 
@@ -95,14 +132,14 @@ Private, opt-in AI analysis. All features off by default.
 Gentle, celebratory nudges — never pushy, never guilt-tripping. Off by default.
 
 - [ ] Web Push API integration (PWA)
-- [ ] Notification types: milestone celebrations, rhythm encouragement
+- [x] Notification types: milestone celebrations, rhythm encouragement — shipped in v0.6.0 (weekly rhythms)
 - [ ] Quiet hours and frequency controls
 
 ### Automated Email (opt-in only)
 
 - [ ] Journey milestone: "You've reached Building stage in Meditation!"
 - [ ] Anniversary: "You've been with Ta-Da! for 1 year!"
-- [ ] Weekly/monthly digest (user must opt in)
+- [x] Weekly/monthly digest (user must opt in) — weekly celebration shipped in v0.6.0
 - [ ] Set up dedicated support@tada.living email
 
 ### External Integrations (Plugins)

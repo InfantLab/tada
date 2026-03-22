@@ -3,6 +3,15 @@
 import type { Entry } from "~/server/db/schema";
 import { getEntryDisplayProps } from "~/utils/categoryDefaults";
 
+// Compute day range (midnight to midnight) for a given entry timestamp
+function getDayRange(timestamp: string): { start: Date; end: Date } {
+  const d = new Date(timestamp);
+  const start = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const end = new Date(start);
+  end.setDate(end.getDate() + 1);
+  return { start, end };
+}
+
 // Get usePreferences to check for custom emojis
 const { getCustomEmoji, loadPreferences } = usePreferences();
 
@@ -359,6 +368,14 @@ defineExpose({ loadInitial, entries });
         >
           {{ group.date }}
         </h3>
+
+        <!-- Day timeline strip -->
+        <TimelineTimelineStrip
+          :entries="group.entries"
+          :range-start="getDayRange(group.entries[0]?.timestamp ?? '').start"
+          :range-end="getDayRange(group.entries[0]?.timestamp ?? '').end"
+        />
+
         <div class="space-y-2">
           <div
             v-for="entry in group.entries"
@@ -440,6 +457,13 @@ defineExpose({ loadInitial, entries });
                 </p>
               </div>
             </div>
+
+            <!-- Per-card timeline indicator -->
+            <TimelineCardTimeIndicator
+              :entry="entry"
+              :range-start="getDayRange(entry.timestamp).start"
+              :range-end="getDayRange(entry.timestamp).end"
+            />
           </div>
         </div>
       </div>

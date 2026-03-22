@@ -15,8 +15,8 @@
 
 **Purpose**: Create the directory structure and shared infrastructure
 
-- [ ] T001 Create `app/components/timeline/` directory
-- [ ] T002 Create `app/composables/useTimelinePosition.ts` — composable stub exporting `useTimelinePosition(rangeStart: Date, rangeEnd: Date)` with `getPosition()`, `getWidth()`, `isDot()` functions returning placeholder values
+- [x] T001 Create `app/components/timeline/` directory
+- [x] T002 Create `app/composables/useTimelinePosition.ts` — composable stub exporting `useTimelinePosition(rangeStart: Date, rangeEnd: Date)` with `getPosition()`, `getWidth()`, `isDot()` functions returning placeholder values
 
 **Checkpoint**: Directory structure exists, composable file is importable
 
@@ -26,14 +26,14 @@
 
 **Purpose**: Core positioning logic that BOTH user stories depend on
 
-- [ ] T003 Implement `useTimelinePosition` composable in `app/composables/useTimelinePosition.ts`:
+- [x] T003 Implement `useTimelinePosition` composable in `app/composables/useTimelinePosition.ts`:
   - `getPosition(timestamp: string): number` — returns 0-100% position within range
   - `getWidth(durationSeconds: number): number` — returns 0-100% width, minimum 0.5%
   - `isDot(type: string, durationSeconds?: number | null): boolean` — true for instant types or duration < 300s
   - `getColor(category?: string | null): string` — category colour lookup from `categoryDefaults.ts`, fallback `#9CA3AF`
   - Accept `rangeStart` and `rangeEnd` as Date params (future-proofed for week/month/year)
   - Handle midnight clipping: `effectiveEnd = min(entryEnd, rangeEnd)`
-- [ ] T004 Write unit tests for `useTimelinePosition` in `app/composables/useTimelinePosition.test.ts`:
+- [x] T004 Write unit tests for `useTimelinePosition` in `app/composables/useTimelinePosition.test.ts`:
   - Test noon (12:00) returns ~50%
   - Test 6am returns ~25%
   - Test duration width for 47 minutes
@@ -56,7 +56,7 @@
 
 ### Implementation for User Story 1
 
-- [ ] T005 [US1] Create `app/components/timeline/CardTimeIndicator.vue`:
+- [x] T005 [US1] Create `app/components/timeline/CardTimeIndicator.vue`:
   - Props: `entry` (object with timestamp, durationSeconds, category, type), `rangeStart: Date`, `rangeEnd: Date`
   - Render a thin horizontal line (full width, subtle `stone-200`/`dark:stone-600` colour)
   - If `isDot`: render a 6px coloured dot at `getPosition()%`
@@ -64,13 +64,13 @@
   - Bar opacity: full (1.0) — per-card has no overlap
   - Use `position: relative` container with `position: absolute` children
   - Tailwind for baseline styling, inline style for dynamic `left`/`width` percentages
-- [ ] T006 [US1] Integrate `CardTimeIndicator` into `app/components/VirtualTimeline.vue`:
+- [x] T006 [US1] Integrate `CardTimeIndicator` into `app/components/VirtualTimeline.vue`:
   - Import `CardTimeIndicator` component
   - Add it inside the entry card template (after the content div, before the card closing div, around line ~440)
   - Compute `rangeStart`/`rangeEnd` for the displayed day (midnight to midnight)
   - Only render when zoom level is `day` (check existing zoom state in parent)
   - Pass entry data as props
-- [ ] T007 [US1] Visual verification of per-card indicator:
+- [x] T007 [US1] Visual verification of per-card indicator:
   - Verify timed entry shows coloured bar at correct position
   - Verify ta-da shows dot marker
   - Verify moment/tally show dot markers
@@ -91,7 +91,7 @@
 
 ### Implementation for User Story 2
 
-- [ ] T008 [US2] Create `app/components/timeline/TimelineStrip.vue`:
+- [x] T008 [US2] Create `app/components/timeline/TimelineStrip.vue`:
   - Props: `entries` (array of entry objects), `rangeStart: Date`, `rangeEnd: Date`
   - Render a horizontal container (2-3x taller than CardTimeIndicator, e.g., 12-16px height)
   - Baseline: full-width subtle line (`stone-200`/`dark:stone-600`)
@@ -101,14 +101,14 @@
   - Overlap handling for bars: semi-transparency (opacity 0.7) allows layered colours to show through
   - Overlap handling for dots: z-ordering via DOM order (later entries on top)
   - Empty state: render baseline line even with zero entries
-- [ ] T009 [US2] Integrate `TimelineStrip` into `app/pages/index.vue`:
+- [x] T009 [US2] Integrate `TimelineStrip` into `app/pages/index.vue`:
   - Import `TimelineStrip` component
   - Place it above the `VirtualTimeline` component in the day view layout
   - Compute `rangeStart`/`rangeEnd` for the displayed day
   - Pass the day's entries array as prop
   - Only render when zoom level is `day`
   - Ensure it sits below any daily summary and above the card list
-- [ ] T010 [US2] Visual verification of day strip:
+- [x] T010 [US2] Visual verification of day strip:
   - Verify all entries appear at correct positions
   - Verify overlapping timed entries layer with transparency
   - Verify overlapping dots use z-ordering
@@ -129,12 +129,12 @@
 
 ### Implementation for User Story 3
 
-- [ ] T011 [US3] Audit colour consistency across all timeline components:
+- [x] T011 [US3] Audit colour consistency across all timeline components:
   - Verify `CardTimeIndicator` and `TimelineStrip` both use `getColor()` from `useTimelinePosition`
   - Verify `getColor()` sources from `CATEGORY_DEFAULTS` in `app/utils/categoryDefaults.ts` (same source as `TimelineHeader.vue` filter chips)
   - Verify fallback colour `#9CA3AF` renders for entries with no/unknown category
   - If any divergence found, fix in the composable to ensure single source of truth
-- [ ] T012 [US3] Test all 10 categories render with distinguishable colours on the day strip
+- [x] T012 [US3] Test all 10 categories render with distinguishable colours on the day strip
 
 **Checkpoint**: Colours are consistent across all surfaces.
 
@@ -148,16 +148,16 @@
 
 ### Implementation for User Story 4
 
-- [ ] T013 [US4] Test and fix responsive rendering in `CardTimeIndicator.vue`:
+- [x] T013 [US4] Test and fix responsive rendering in `CardTimeIndicator.vue`:
   - Verify at 320px: indicator visible, bars/dots positioned correctly
   - Verify sub-5-minute entries show as dots (not sub-pixel slivers) at all widths
   - Verify no horizontal overflow from the card boundary
-- [ ] T014 [P] [US4] Test and fix responsive rendering in `TimelineStrip.vue`:
+- [x] T014 [P] [US4] Test and fix responsive rendering in `TimelineStrip.vue`:
   - Verify at 320px: strip spans full width
   - Verify emoji markers overlap freely (no clipping or hiding)
   - Verify at 1200px: fine-grained detail is visible
   - Ensure no fixed pixel widths that would break at narrow viewports
-- [ ] T015 [US4] Test dark mode rendering for both components:
+- [x] T015 [US4] Test dark mode rendering for both components:
   - Verify baseline line uses `stone-200` (light) / `stone-600` (dark)
   - Verify category colours have sufficient contrast against `stone-800` dark background
 
@@ -169,10 +169,12 @@
 
 **Purpose**: Final quality pass across all components
 
-- [ ] T016 [P] Verify day view zoom gating — switch between day/week/month/year and confirm timeline elements appear only in day view
-- [ ] T017 [P] Performance sanity check — scroll through a day with 50+ entries in VirtualTimeline; confirm no jank or FPS drop
-- [ ] T018 Run existing test suite (`npx vitest run`) to ensure no regressions
-- [ ] T019 Run quickstart.md verification checklist
+- [x] T016 [P] Verify day view zoom gating — switch between day/week/month/year and confirm timeline elements appear only in day view
+- [x] T017 [P] Performance sanity check — scroll through a day with 50+ entries in VirtualTimeline; confirm no jank or FPS drop
+- [x] T018 Run existing test suite (`npx vitest run`) to ensure no regressions
+- [x] T019 Run quickstart.md verification checklist
+- [x] T020 Update `CHANGELOG.md` with daily timeline bar feature for release v0.6.0
+- [x] T021 Update `design/roadmap.md` to mark daily timelines as complete
 
 ---
 
@@ -229,6 +231,6 @@ T001 → T002 → T003 → T004 → T005 → T006 → T007 → T008 → T009 →
 - No backend tasks — this is entirely frontend
 - No database migrations
 - No new dependencies to install
-- 19 total tasks, 4 user stories
+- 21 total tasks, 4 user stories
 - MVP scope: 10 tasks (Phase 1-4, T001-T010)
 - Parallel opportunities: 3 pairs identified
