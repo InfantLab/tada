@@ -6,8 +6,9 @@
 import { eq } from "drizzle-orm";
 import { db } from "~/server/db";
 import { withRetry } from "~/server/db/operations";
-import { weeklyRhythmSettings } from "~/server/db/schema";
+import { weeklyRhythmSettings, users } from "~/server/db/schema";
 import { createLogger } from "~/server/utils/logger";
+import { getNextFutureScheduledUtc } from "./time";
 import type {
   CelebrationTier,
   DeliveryChannelPreferences,
@@ -88,6 +89,60 @@ export async function upsertWeeklyRhythmSettings(
       })
       .returning(),
   );
+}
+
+/**
+ * Compute and persist the next due UTC times for a user's celebrations
+ * and encouragements. Called after settings changes and after each generation.
+ */
+export async function refreshNextDueTimes(userId: string): Promise<void> {
+  const settings = await getWeeklyRhythmSettings(userId);
+  if (!settings) return;
+
+  const user = await withRetry(() =>
+    db.query.users.findFirst({
+      where: eq(users.id, userId),
+      columns: { timezone: true },
+    }),
+  );
+  const timezone = user?.timezone ?? "UTC";
+  const now = new Date();
+  const schedule = settings.generationSchedule;
+
+  const nextCelebrationDueUtc = settings.celebrationEnabled
+    ? getNextFutureScheduledUtc(
+        now,
+        timezone,
+        0, // Monday
+        schedule.celebrationGenerateLocalTime ?? "03:33",
+      ).toISOString()
+    : null;
+
+  const nextEncouragementDueUtc = settings.encouragementEnabled
+    ? getNextFutureScheduledUtc(
+        now,
+        timezone,
+        3, // Thursday
+        schedule.encouragementLocalTime ?? "15:03",
+      ).toISOString()
+    : null;
+
+  await withRetry(() =>
+    db
+      .update(weeklyRhythmSettings)
+      .set({
+        nextCelebrationDueUtc,
+        nextEncouragementDueUtc,
+        updatedAt: now.toISOString(),
+      })
+      .where(eq(weeklyRhythmSettings.userId, userId)),
+  );
+
+  logger.debug("Refreshed next due times", {
+    userId,
+    nextCelebrationDueUtc,
+    nextEncouragementDueUtc,
+  });
 }
 
 export async function updateWeeklyRhythmSettings(

@@ -7,6 +7,7 @@ import { z } from "zod";
 import {
   upsertWeeklyRhythmSettings,
   getWeeklyRhythmSettings,
+  refreshNextDueTimes,
 } from "~/server/services/weekly-rhythms/settings";
 import { createLogger } from "~/server/utils/logger";
 
@@ -136,6 +137,9 @@ export default defineEventHandler(async (event) => {
     }
 
     await upsertWeeklyRhythmSettings(user.id, updates);
+
+    // Recompute next due times based on updated settings + user timezone
+    await refreshNextDueTimes(user.id);
 
     const warnings: string[] = [];
 

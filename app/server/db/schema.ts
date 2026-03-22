@@ -1003,6 +1003,10 @@ export const weeklyRhythmSettings = sqliteTable("weekly_rhythm_settings", {
     .default(0),
   lastEmailFailureAt: text("last_email_failure_at"),
 
+  // Pre-computed UTC due times for efficient sweep queries
+  nextCelebrationDueUtc: text("next_celebration_due_utc"),
+  nextEncouragementDueUtc: text("next_encouragement_due_utc"),
+
   createdAt: text("created_at")
     .notNull()
     .default(sql`(datetime('now'))`),

@@ -1,18 +1,21 @@
 /**
  * Weekly Rhythms scheduler plugin.
  *
- * Bootstraps the scheduler sweep on server startup and sets up a periodic
- * interval to process due generation and delivery work.
- * Auto-creates tables if they don't exist yet.
+ * On startup: ensures tables exist, migrates new columns, runs one sweep
+ * to catch anything missed during downtime. Then sweeps every 15 minutes.
+ * Uses pre-computed UTC due time columns for efficient queries.
  */
 
 import { createLogger } from "~/server/utils/logger";
 import { sql } from "drizzle-orm";
 import { db } from "~/server/db";
+import { weeklyRhythmSettings } from "~/server/db/schema";
+import { withRetry } from "~/server/db/operations";
+import { refreshNextDueTimes } from "~/server/services/weekly-rhythms/settings";
 
 const logger = createLogger("plugin:weekly-rhythms");
 
-const SWEEP_INTERVAL_MS = 60 * 1000; // 1 minute
+const SWEEP_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
 
 /** Ensure weekly-rhythms tables exist (safe for repeated calls) */
 async function ensureTables(): Promise<boolean> {
@@ -22,7 +25,6 @@ async function ensureTables(): Promise<boolean> {
     );
     if (result.length > 0) return true;
 
-    // Tables missing — create them
     logger.info("Creating weekly-rhythms tables");
     const ddl = [
       sql`CREATE TABLE IF NOT EXISTS weekly_rhythm_settings (
@@ -32,6 +34,7 @@ async function ensureTables(): Promise<boolean> {
         generation_schedule TEXT NOT NULL, onboarding_completed_at TEXT, cloud_privacy_acknowledged_at TEXT,
         private_ai_unavailable_dismissed_at TEXT, email_unsubscribed_at TEXT, email_unsubscribe_source TEXT,
         consecutive_email_failures INTEGER NOT NULL DEFAULT 0, last_email_failure_at TEXT,
+        next_celebration_due_utc TEXT, next_encouragement_due_utc TEXT,
         created_at TEXT NOT NULL DEFAULT (datetime('now')), updated_at TEXT NOT NULL DEFAULT (datetime('now'))
       )`,
       sql`CREATE TABLE IF NOT EXISTS weekly_stats_snapshots (
@@ -74,31 +77,83 @@ async function ensureTables(): Promise<boolean> {
   }
 }
 
+/** Add next_*_due_utc columns if they don't exist (migration for existing installs) */
+async function migrateNextDueColumns(): Promise<void> {
+  try {
+    const cols = await db.all<{ name: string }>(
+      sql`PRAGMA table_info(weekly_rhythm_settings)`,
+    );
+    const colNames = new Set(cols.map((c) => c.name));
+
+    if (!colNames.has("next_celebration_due_utc")) {
+      await db.run(
+        sql`ALTER TABLE weekly_rhythm_settings ADD COLUMN next_celebration_due_utc TEXT`,
+      );
+      logger.info("Added next_celebration_due_utc column");
+    }
+    if (!colNames.has("next_encouragement_due_utc")) {
+      await db.run(
+        sql`ALTER TABLE weekly_rhythm_settings ADD COLUMN next_encouragement_due_utc TEXT`,
+      );
+      logger.info("Added next_encouragement_due_utc column");
+    }
+  } catch (err) {
+    logger.error("Failed to migrate next_due columns", err as Error);
+  }
+}
+
+/** Backfill pre-computed due times for users that don't have them yet */
+async function backfillDueTimes(): Promise<void> {
+  const needsBackfill = await withRetry(() =>
+    db
+      .select({ userId: weeklyRhythmSettings.userId })
+      .from(weeklyRhythmSettings)
+      .where(
+        sql`(celebration_enabled = 1 AND next_celebration_due_utc IS NULL)
+            OR (encouragement_enabled = 1 AND next_encouragement_due_utc IS NULL)`,
+      ),
+  );
+
+  if (needsBackfill.length === 0) return;
+
+  logger.info(`Backfilling due times for ${needsBackfill.length} user(s)`);
+  for (const { userId } of needsBackfill) {
+    try {
+      await refreshNextDueTimes(userId);
+    } catch (err) {
+      logger.error("Failed to backfill due times for user", err as Error, { userId });
+    }
+  }
+}
+
 export default defineNitroPlugin((nitroApp) => {
   logger.info("Weekly rhythms plugin initializing");
 
   let sweepTimer: ReturnType<typeof setInterval> | null = null;
 
-  // Delay first sweep to let the server fully start
   const startupDelay = setTimeout(async () => {
-    // Ensure tables exist before first sweep
     const tablesReady = await ensureTables();
     if (!tablesReady) {
       logger.warn("Weekly rhythms tables not available, skipping scheduler");
       return;
     }
 
+    // Migrate and backfill for existing installs
+    await migrateNextDueColumns();
+    await backfillDueTimes();
+
+    // Run one immediate sweep to catch anything missed during downtime
     try {
       const { runSchedulerSweep } = await import(
         "~/server/services/weekly-rhythms/scheduler"
       );
       await runSchedulerSweep();
-      logger.info("Initial weekly rhythms sweep complete");
+      logger.info("Startup sweep complete");
     } catch (err) {
-      logger.error("Initial weekly rhythms sweep failed", err as Error);
+      logger.error("Startup sweep failed", err as Error);
     }
 
-    // Set up periodic sweep
+    // Periodic sweep every 15 minutes
     sweepTimer = setInterval(async () => {
       try {
         const { runSchedulerSweep } = await import(
@@ -106,12 +161,13 @@ export default defineNitroPlugin((nitroApp) => {
         );
         await runSchedulerSweep();
       } catch (err) {
-        logger.error("Periodic weekly rhythms sweep failed", err as Error);
+        logger.error("Periodic sweep failed", err as Error);
       }
     }, SWEEP_INTERVAL_MS);
-  }, 5000); // 5s startup delay
 
-  // Cleanup on shutdown
+    logger.info("Scheduler running (15-minute interval)");
+  }, 5000);
+
   nitroApp.hooks.hook("close", () => {
     logger.info("Weekly rhythms plugin shutting down");
     clearTimeout(startupDelay);

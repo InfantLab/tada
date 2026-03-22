@@ -131,6 +131,23 @@ export function getNextScheduledUtc(
   return toUtcFromLocal(targetStr, timezone);
 }
 
+/**
+ * Compute the next future UTC time for a scheduled event.
+ * If this week's time has already passed, returns next week's time.
+ */
+export function getNextFutureScheduledUtc(
+  now: Date,
+  timezone: string,
+  dayOffset: number,
+  localTime: string,
+): Date {
+  const thisWeek = getNextScheduledUtc(now, timezone, dayOffset, localTime);
+  if (thisWeek > now) return thisWeek;
+  // This week's time has passed — advance to next week
+  const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+  return getNextScheduledUtc(nextWeek, timezone, dayOffset, localTime);
+}
+
 /** Format a YYYY-MM-DD date string from a local-perspective date */
 export function formatLocalDate(date: Date, timezone: string): string {
   const formatter = new Intl.DateTimeFormat("en-CA", {

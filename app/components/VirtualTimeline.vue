@@ -370,7 +370,7 @@ defineExpose({ loadInitial, entries });
         </h3>
 
         <!-- Day timeline strip -->
-        <TimelineTimelineStrip
+        <TimelineStrip
           :entries="group.entries"
           :range-start="getDayRange(group.entries[0]?.timestamp ?? '').start"
           :range-end="getDayRange(group.entries[0]?.timestamp ?? '').end"

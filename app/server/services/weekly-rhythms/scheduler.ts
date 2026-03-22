@@ -1,47 +1,43 @@
 /**
  * Weekly rhythms scheduler — sweeps for due generation and delivery work.
  *
- * The scheduler runs periodically (via the plugin) and:
- * 1. Finds users with enabled celebrations whose Monday generation time has passed
- * 2. Finds users with enabled encouragement whose Thursday time has passed
- * 3. Generates snapshots and messages for due users
- * 4. Queues email delivery for messages past their delivery time
+ * Uses pre-computed `next_celebration_due_utc` and `next_encouragement_due_utc`
+ * columns for efficient queries. After each generation, refreshes the due time
+ * to the next week's scheduled time.
  */
 
-import { eq, and } from "drizzle-orm";
+import { eq, and, lte } from "drizzle-orm";
 import { db } from "~/server/db";
 import { withRetry } from "~/server/db/operations";
-import { weeklyRhythmSettings, users } from "~/server/db/schema";
+import { weeklyRhythmSettings, weeklyMessages, users } from "~/server/db/schema";
 import { createLogger } from "~/server/utils/logger";
-import { getWeekBoundaries, getNextScheduledUtc } from "./time";
+import { getWeekBoundaries } from "./time";
 import { renderCelebration } from "./celebration";
 import { getExistingMessage } from "./messages";
+import { refreshNextDueTimes } from "./settings";
 
 const logger = createLogger("service:weekly-rhythms:scheduler");
 
 /**
  * Main scheduler sweep — called periodically by the plugin.
- * Processes all due generation and delivery work.
+ * Queries pre-computed UTC due times instead of recalculating per user.
  */
 export async function runSchedulerSweep(): Promise<void> {
   const now = new Date();
-  logger.debug("Scheduler sweep starting", { now: now.toISOString() });
+  const nowIso = now.toISOString();
 
   try {
-    await sweepCelebrationGeneration(now);
-    await sweepEncouragementGeneration(now);
-    await sweepEmailDelivery(now);
+    await sweepCelebrationGeneration(now, nowIso);
+    await sweepEncouragementGeneration(now, nowIso);
+    await sweepEmailDelivery(now, nowIso);
   } catch (err) {
     logger.error("Scheduler sweep error", err as Error);
   }
-
-  logger.debug("Scheduler sweep complete");
 }
 
-/** Find users whose Monday generation time (03:33 local) has passed */
-async function sweepCelebrationGeneration(now: Date): Promise<void> {
-  // Find all users with celebrations enabled
-  const enabledSettings = await withRetry(() =>
+/** Find users whose pre-computed celebration due time has passed */
+async function sweepCelebrationGeneration(now: Date, nowIso: string): Promise<void> {
+  const dueSettings = await withRetry(() =>
     db
       .select({
         settings: weeklyRhythmSettings,
@@ -49,37 +45,35 @@ async function sweepCelebrationGeneration(now: Date): Promise<void> {
       })
       .from(weeklyRhythmSettings)
       .innerJoin(users, eq(users.id, weeklyRhythmSettings.userId))
-      .where(eq(weeklyRhythmSettings.celebrationEnabled, true)),
+      .where(
+        and(
+          eq(weeklyRhythmSettings.celebrationEnabled, true),
+          lte(weeklyRhythmSettings.nextCelebrationDueUtc, nowIso),
+        ),
+      ),
   );
 
-  if (enabledSettings.length === 0) return;
+  if (dueSettings.length === 0) return;
 
   let generated = 0;
-  for (const { settings, timezone } of enabledSettings) {
+  for (const { settings, timezone } of dueSettings) {
     try {
-      const schedule = settings.generationSchedule;
-      const genTime = schedule.celebrationGenerateLocalTime ?? "03:33";
-
-      // For celebrations, we generate for the PREVIOUS week
-      // Get Monday 03:33 of the current week
-      const currentWeekGenUtc = getNextScheduledUtc(now, timezone, 0, genTime);
-
-      // If we haven't passed this week's generation time, skip
-      if (now < currentWeekGenUtc) continue;
-
       // The celebration covers the previous week
       const previousWeekDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
       const prevBoundaries = getWeekBoundaries(previousWeekDate, timezone);
 
-      // Check if we already have a message for last week
+      // Check if we already have a message for last week (idempotency)
       const existing = await getExistingMessage(
         settings.userId,
         "celebration",
         prevBoundaries.weekStartDate,
       );
-      if (existing) continue;
+      if (existing) {
+        // Already generated — just refresh the due time to next week
+        await refreshNextDueTimes(settings.userId);
+        continue;
+      }
 
-      // Generate
       const tier = settings.celebrationTier as
         | "stats_only"
         | "private_ai"
@@ -92,6 +86,9 @@ async function sweepCelebrationGeneration(now: Date): Promise<void> {
         timezone,
       );
       generated++;
+
+      // Advance due time to next week
+      await refreshNextDueTimes(settings.userId);
     } catch (err) {
       logger.error("Celebration generation failed for user", err as Error, {
         userId: settings.userId,
@@ -104,9 +101,9 @@ async function sweepCelebrationGeneration(now: Date): Promise<void> {
   }
 }
 
-/** Find users whose Thursday encouragement time (15:03 local) has passed */
-async function sweepEncouragementGeneration(now: Date): Promise<void> {
-  const enabledSettings = await withRetry(() =>
+/** Find users whose pre-computed encouragement due time has passed */
+async function sweepEncouragementGeneration(now: Date, nowIso: string): Promise<void> {
+  const dueSettings = await withRetry(() =>
     db
       .select({
         settings: weeklyRhythmSettings,
@@ -114,36 +111,37 @@ async function sweepEncouragementGeneration(now: Date): Promise<void> {
       })
       .from(weeklyRhythmSettings)
       .innerJoin(users, eq(users.id, weeklyRhythmSettings.userId))
-      .where(eq(weeklyRhythmSettings.encouragementEnabled, true)),
+      .where(
+        and(
+          eq(weeklyRhythmSettings.encouragementEnabled, true),
+          lte(weeklyRhythmSettings.nextEncouragementDueUtc, nowIso),
+        ),
+      ),
   );
 
-  if (enabledSettings.length === 0) return;
+  if (dueSettings.length === 0) return;
 
   let generated = 0;
-  for (const { settings, timezone } of enabledSettings) {
+  for (const { settings, timezone } of dueSettings) {
     try {
-      const schedule = settings.generationSchedule;
-      const encTime = schedule.encouragementLocalTime ?? "15:03";
-
-      // Thursday = day offset 3
-      const thursdayUtc = getNextScheduledUtc(now, timezone, 3, encTime);
-
-      // If we haven't passed Thursday's time, skip
-      if (now < thursdayUtc) continue;
-
-      // Check for this week's Monday
       const boundaries = getWeekBoundaries(now, timezone);
       const existing = await getExistingMessage(
         settings.userId,
         "encouragement",
         boundaries.weekStartDate,
       );
-      if (existing) continue;
+      if (existing) {
+        // Already generated — just refresh the due time to next week
+        await refreshNextDueTimes(settings.userId);
+        continue;
+      }
 
-      // Generate
       const { renderEncouragement } = await import("./encouragement");
       await renderEncouragement(settings.userId, now, timezone);
       generated++;
+
+      // Advance due time to next week
+      await refreshNextDueTimes(settings.userId);
     } catch (err) {
       logger.error("Encouragement generation failed for user", err as Error, {
         userId: settings.userId,
@@ -157,19 +155,15 @@ async function sweepEncouragementGeneration(now: Date): Promise<void> {
 }
 
 /** Find queued messages whose scheduled delivery time has passed */
-async function sweepEmailDelivery(now: Date): Promise<void> {
-  const { lte } = await import("drizzle-orm");
-  const { weeklyMessages: wm } = await import("~/server/db/schema");
-
-  // Find messages that are generated/queued and past their delivery time
+async function sweepEmailDelivery(now: Date, nowIso: string): Promise<void> {
   const dueMessages = await withRetry(() =>
     db
       .select()
-      .from(wm)
+      .from(weeklyMessages)
       .where(
         and(
-          eq(wm.status, "generated"),
-          lte(wm.scheduledDeliveryAt, now.toISOString()),
+          eq(weeklyMessages.status, "generated"),
+          lte(weeklyMessages.scheduledDeliveryAt, nowIso),
         ),
       ),
   );
@@ -179,7 +173,6 @@ async function sweepEmailDelivery(now: Date): Promise<void> {
   let delivered = 0;
   for (const message of dueMessages) {
     try {
-      // Check if user has email delivery enabled
       const settings = await withRetry(() =>
         db.query.weeklyRhythmSettings.findFirst({
           where: eq(weeklyRhythmSettings.userId, message.userId),
@@ -197,16 +190,15 @@ async function sweepEmailDelivery(now: Date): Promise<void> {
         await deliverEmailForMessage(message.id, message.userId);
         delivered++;
       } else {
-        // Mark as delivered (in-app only)
         await withRetry(() =>
           db
-            .update(wm)
+            .update(weeklyMessages)
             .set({
               status: "delivered",
-              deliveredAt: now.toISOString(),
-              updatedAt: now.toISOString(),
+              deliveredAt: nowIso,
+              updatedAt: nowIso,
             })
-            .where(eq(wm.id, message.id)),
+            .where(eq(weeklyMessages.id, message.id)),
         );
       }
     } catch (err) {
