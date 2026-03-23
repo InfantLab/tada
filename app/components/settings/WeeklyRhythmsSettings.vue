@@ -123,7 +123,7 @@ async function handleSave() {
         <div class="font-medium text-sm text-stone-800 dark:text-stone-100 mb-2">
           Celebration Style
         </div>
-        <WeeklyTierPicker
+        <WeeklyRhythmsTierPicker
           v-model="celebrationTier"
           :cloud-ai-available="settings?.capabilities.cloudAiAvailable ?? false"
           :private-ai-available="settings?.capabilities.privateAiAvailable ?? false"

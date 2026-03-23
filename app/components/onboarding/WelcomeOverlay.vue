@@ -93,6 +93,10 @@ onUnmounted(() => {
           <!-- Gentle navigation hints -->
           <div class="flex flex-wrap justify-center gap-4 text-sm text-white/70 mb-8">
             <span class="flex items-center gap-2">
+              <span class="text-lg">📊</span>
+              <span>Timelines</span>
+            </span>
+            <span class="flex items-center gap-2">
               <span class="text-lg">🧘</span>
               <span>Sessions</span>
             </span>

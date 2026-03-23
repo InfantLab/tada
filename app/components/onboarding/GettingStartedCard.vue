@@ -14,6 +14,12 @@ const { shouldShowFirstWeekCard, dismissFirstWeekCard } = useOnboarding();
 
 const quickStarts = [
   {
+    icon: "📊",
+    label: "Timelines",
+    description: "See your day unfold in colourful blocks",
+    to: "/",
+  },
+  {
     icon: "⚡",
     label: "Ta-Da!",
     description: "Celebrate wins as they happen",

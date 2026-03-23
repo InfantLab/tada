@@ -57,12 +57,12 @@ onMounted(() => {
 
 <template>
   <div v-if="!loading && (encouragement || celebration)" class="space-y-3">
-    <WeeklyEncouragementBanner
+    <WeeklyRhythmsEncouragementBanner
       v-if="encouragement && !encouragement.dismissedAt"
       :encouragement="encouragement"
       @dismissed="handleDismissed"
     />
-    <WeeklyCelebrationCard
+    <WeeklyRhythmsCelebrationCard
       v-if="celebration"
       :celebration="celebration"
     />

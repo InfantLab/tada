@@ -65,6 +65,18 @@ const faqs: FAQ[] = [
   },
   {
     category: "Timeline",
+    question: "What is the daily timeline strip?",
+    answer:
+      "The colourful bar at the top of each day. Each block represents an entry, sized by duration and coloured by category — so you can see at a glance how your day unfolded. Tap any block to jump to that entry.",
+  },
+  {
+    category: "Timeline",
+    question: "What are Beautiful vs Minimal timelines?",
+    answer:
+      "Beautiful timelines (the default) show rich, colourful category blocks. Minimal timelines show simple dots instead. You can switch between them in Settings → Timelines.",
+  },
+  {
+    category: "Timeline",
     question: "What are the zoom views?",
     answer:
       "Use the Day / Week / Month / Year toggle to change how you see your history. Day shows individual entries. Week, Month, and Year show summaries — tap any period card to zoom in and see its details.",
@@ -234,6 +246,18 @@ const faqs: FAQ[] = [
     question: "Does deleting a rhythm delete my data?",
     answer:
       "No. Rhythms are derived data. Deleting a rhythm removes only the configuration — all your entries remain untouched. You can always create a new rhythm that matches the same entries.",
+  },
+  {
+    category: "Rhythms",
+    question: "What are weekly encouragement messages?",
+    answer:
+      "Every Thursday afternoon Ta-Da! sends a gentle mid-week check-in with stretch goals based on your activity. Monday morning brings a celebration summary of the previous week. Both are optional — enable or disable them in Settings → Rhythms.",
+  },
+  {
+    category: "Rhythms",
+    question: "Can I get weekly messages by email?",
+    answer:
+      "Yes. When you have a verified email address, you can opt into email delivery for celebrations and encouragements separately. Toggle these in Settings → Rhythms under Email Delivery.",
   },
 
   // ── Settings ────────────────────────────────────────────

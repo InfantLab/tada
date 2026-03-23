@@ -206,6 +206,11 @@ watch(zoomLevel, (newLevel) => {
     <!-- Getting Started Card (for new users) -->
     <OnboardingGettingStartedCard />
 
+    <!-- Weekly Rhythms (encouragement + celebration messages) -->
+    <div class="mb-4">
+      <WeeklyRhythmsCard />
+    </div>
+
     <!-- Journey Badge - Accumulated time celebration -->
     <div class="mb-4">
       <JourneyBadge :zoom-level="zoomLevel" />

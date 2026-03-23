@@ -1,4 +1,4 @@
-import { CATEGORY_DEFAULTS, DEFAULT_COLOR } from "~/utils/categoryDefaults";
+import { CATEGORY_DEFAULTS, DEFAULT_COLOR, getEntryDisplayProps } from "~/utils/categoryDefaults";
 
 const INSTANT_TYPES = new Set(["tada", "moment", "tally"]);
 const DOT_THRESHOLD_SECONDS = 300; // 5 minutes
@@ -11,6 +11,9 @@ export interface TimelineEntry {
   isDot: boolean;
   color: string;
   type: string;
+  emoji: string;
+  jitterYPx: number;
+  jitterXPct: number;
 }
 
 export function useTimelinePosition(rangeStart: Date, rangeEnd: Date) {
@@ -54,6 +57,8 @@ export function useTimelinePosition(rangeStart: Date, rangeEnd: Date) {
     timestamp: string;
     durationSeconds?: number | null;
     category?: string | null;
+    subcategory?: string | null;
+    emoji?: string | null;
   }): TimelineEntry {
     const dot = isDot(entry.type, entry.durationSeconds);
     const position = getPosition(entry.timestamp);
@@ -63,6 +68,8 @@ export function useTimelinePosition(rangeStart: Date, rangeEnd: Date) {
         ? getClippedWidth(entry.timestamp, entry.durationSeconds)
         : 0;
 
+    const { emoji } = getEntryDisplayProps(entry);
+
     return {
       id: entry.id,
       positionPercent: position,
@@ -70,7 +77,37 @@ export function useTimelinePosition(rangeStart: Date, rangeEnd: Date) {
       isDot: dot,
       color: getColor(entry.category),
       type: entry.type,
+      emoji,
+      jitterYPx: 0, // computed after all entries via applyJitter
+      jitterXPct: 0,
     };
+  }
+
+  /** Spread overlapping icons so they don't stack — small vertical nudge + horizontal fan-out. */
+  function applyJitter(entries: TimelineEntry[]): TimelineEntry[] {
+    const COLLISION_THRESHOLD = 1.5; // percent — icons closer than this collide
+    const JITTER_Y_STEP = 3; // px vertical nudge per collision level
+    const JITTER_X_STEP = 0.8; // percent horizontal fan-out per collision level
+
+    // Sort by position so we can compare neighbours
+    const sorted = [...entries].sort(
+      (a, b) => a.positionPercent - b.positionPercent,
+    );
+
+    for (let i = 1; i < sorted.length; i++) {
+      const prev = sorted[i - 1];
+      const curr = sorted[i];
+      const gap = curr.positionPercent - (prev.positionPercent + prev.jitterXPct);
+      if (gap < COLLISION_THRESHOLD) {
+        // Alternate up/down from centre, fan out horizontally
+        const level = prev.jitterYPx <= 0
+          ? Math.abs(prev.jitterYPx) / JITTER_Y_STEP + 1
+          : -(Math.abs(prev.jitterYPx) / JITTER_Y_STEP);
+        curr.jitterYPx = level * JITTER_Y_STEP;
+        curr.jitterXPct = Math.abs(level) * JITTER_X_STEP;
+      }
+    }
+    return sorted;
   }
 
   return {
@@ -80,5 +117,6 @@ export function useTimelinePosition(rangeStart: Date, rangeEnd: Date) {
     isDot,
     getColor,
     toTimelineEntry,
+    applyJitter,
   };
 }

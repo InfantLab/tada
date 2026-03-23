@@ -8,6 +8,7 @@ import type { Entry } from "~/server/db/schema";
 import { getExporter } from "~/registry/exporters";
 
 const { success: showSuccess, error: showError } = useToast();
+const { timelineStyle, setTimelineStyle } = useTimelineStyle();
 
 definePageMeta({
   layout: "default",
@@ -919,6 +920,7 @@ const sidebarNavItems = [
   { id: "security", label: "Security", icon: "🔒" },
   { id: "voice", label: "Voice & AI", icon: "🎤" },
   { id: "categories", label: "Categories", icon: "🏷️" },
+  { id: "timelines", label: "Timelines", icon: "📊" },
   { id: "tada", label: "Ta-Da!", icon: "⚡" },
   { id: "moments", label: "Moments", icon: "✨" },
   { id: "sessions", label: "Sessions", icon: "⏱️" },
@@ -1488,6 +1490,40 @@ onMounted(() => {
           </div>
         </section>
 
+        <!-- Timelines Settings -->
+        <section id="section-timelines">
+          <h2
+            class="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-4"
+          >
+            Timelines
+          </h2>
+          <div
+            class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 divide-y divide-stone-200 dark:divide-stone-700"
+          >
+            <div class="p-4 flex items-center justify-between">
+              <div>
+                <div class="font-medium text-sm text-stone-800 dark:text-stone-100">
+                  Beautiful Daily Timelines
+                </div>
+                <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5">
+                  Show icons for daily activities instead of minimal bars and dots
+                </p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  class="sr-only peer"
+                  :checked="timelineStyle === 'beautiful'"
+                  @change="setTimelineStyle(timelineStyle === 'beautiful' ? 'minimal' : 'beautiful')"
+                />
+                <div
+                  class="w-9 h-5 bg-stone-200 peer-focus:outline-none rounded-full peer dark:bg-stone-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-stone-600 peer-checked:bg-emerald-500"
+                />
+              </label>
+            </div>
+          </div>
+        </section>
+
         <!-- Ta-Da! Settings -->
         <section id="section-tada">
           <h2
@@ -1946,7 +1982,7 @@ onMounted(() => {
           <div
             class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 divide-y divide-stone-200 dark:divide-stone-700"
           >
-            <WeeklyRhythmsSettings />
+            <SettingsWeeklyRhythms />
           </div>
         </section>
 
