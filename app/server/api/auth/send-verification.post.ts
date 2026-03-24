@@ -112,7 +112,19 @@ export default defineEventHandler(async (event) => {
       });
 
       if (!sent) {
-        logger.error("Failed to send verification email", { email: user.email });
+        const verifyUrl = `${getAppUrl()}/verify-email?token=${encodeURIComponent(token)}`;
+        logger.error("Failed to send verification email", undefined, { email: user.email });
+
+        // In development, fall back to logging the link rather than hard-failing
+        if (process.env["NODE_ENV"] !== "production") {
+          logger.info("Verification link (email send failed in dev)", { verifyUrl });
+          return {
+            success: false,
+            message: "Email send failed — check server logs for the verification link.",
+            _debug: { token, verifyUrl },
+          };
+        }
+
         throw createError(
           internalError(event, "Failed to send verification email. Please try again.")
         );
@@ -123,20 +135,23 @@ export default defineEventHandler(async (event) => {
         message: "Verification email sent. Please check your inbox.",
       };
     } else {
-      // In development without SMTP, log the verification link
+      // SMTP not configured
       const verifyUrl = `${getAppUrl()}/verify-email?token=${encodeURIComponent(token)}`;
       logger.info("Email verification link (SMTP not configured)", {
         email: user.email,
         verifyUrl,
       });
 
+      if (process.env["NODE_ENV"] === "production") {
+        throw createError(
+          internalError(event, "Email delivery is not configured. Please contact your administrator.")
+        );
+      }
+
       return {
-        success: true,
-        message: "Verification email would be sent (SMTP not configured)",
-        // Only include debug info in development
-        ...(process.env["NODE_ENV"] !== "production"
-          ? { _debug: { token, verifyUrl } }
-          : {}),
+        success: false,
+        message: "SMTP not configured — check server logs for the verification link.",
+        _debug: { token, verifyUrl },
       };
     }
   } catch (error) {
@@ -144,10 +159,7 @@ export default defineEventHandler(async (event) => {
       throw error;
     }
 
-    logger.error("Error in send-verification", {
-      error: error instanceof Error ? error.message : "Unknown error",
-      userId,
-    });
+    logger.error("Error in send-verification", error, { userId });
 
     throw createError(internalError(event, "An error occurred. Please try again."));
   }
