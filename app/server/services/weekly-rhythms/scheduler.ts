@@ -9,7 +9,7 @@
 import { eq, and, lte } from "drizzle-orm";
 import { db } from "~/server/db";
 import { withRetry } from "~/server/db/operations";
-import { weeklyRhythmSettings, weeklyMessages, users } from "~/server/db/schema";
+import { weeklyRhythmSettings, systemMessages, users } from "~/server/db/schema";
 import { createLogger } from "~/server/utils/logger";
 import { getWeekBoundaries } from "./time";
 import { renderCelebration } from "./celebration";
@@ -159,11 +159,11 @@ async function sweepEmailDelivery(now: Date, nowIso: string): Promise<void> {
   const dueMessages = await withRetry(() =>
     db
       .select()
-      .from(weeklyMessages)
+      .from(systemMessages)
       .where(
         and(
-          eq(weeklyMessages.status, "generated"),
-          lte(weeklyMessages.scheduledDeliveryAt, nowIso),
+          eq(systemMessages.status, "generated"),
+          lte(systemMessages.scheduledDeliveryAt, nowIso),
         ),
       ),
   );
@@ -192,13 +192,13 @@ async function sweepEmailDelivery(now: Date, nowIso: string): Promise<void> {
       } else {
         await withRetry(() =>
           db
-            .update(weeklyMessages)
+            .update(systemMessages)
             .set({
               status: "delivered",
               deliveredAt: nowIso,
               updatedAt: nowIso,
             })
-            .where(eq(weeklyMessages.id, message.id)),
+            .where(eq(systemMessages.id, message.id)),
         );
       }
     } catch (err) {

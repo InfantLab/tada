@@ -132,10 +132,9 @@ export async function sendEmail(options: SendEmailOptions): Promise<boolean> {
 
     return true;
   } catch (error) {
-    logger.error("Failed to send email", {
+    logger.error("Failed to send email", error, {
       to: options.to,
       subject: options.subject,
-      error: error instanceof Error ? error.message : "Unknown error",
     });
     return false;
   }
@@ -157,9 +156,7 @@ export async function verifyEmailConnection(): Promise<boolean> {
     logger.info("SMTP connection verified");
     return true;
   } catch (error) {
-    logger.error("SMTP connection failed", {
-      error: error instanceof Error ? error.message : "Unknown error",
-    });
+    logger.error("SMTP connection failed", error);
     return false;
   }
 }

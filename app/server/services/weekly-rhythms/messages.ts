@@ -8,7 +8,7 @@
 import { eq, and, desc, lte, isNull } from "drizzle-orm";
 import { db } from "~/server/db";
 import { withRetry } from "~/server/db/operations";
-import { weeklyMessages } from "~/server/db/schema";
+import { systemMessages } from "~/server/db/schema";
 import { createLogger } from "~/server/utils/logger";
 import type { WeeklyMessageKind, SummaryBlock } from "~/types/weekly-rhythms";
 
@@ -35,7 +35,7 @@ interface PersistMessageInput {
  */
 export async function persistWeeklyMessage(
   input: PersistMessageInput,
-): Promise<typeof weeklyMessages.$inferSelect> {
+): Promise<typeof systemMessages.$inferSelect> {
   // Check idempotency
   const existing = await getExistingMessage(
     input.userId,
@@ -56,7 +56,7 @@ export async function persistWeeklyMessage(
 
   const [message] = await withRetry(() =>
     db
-      .insert(weeklyMessages)
+      .insert(systemMessages)
       .values({
         id,
         userId: input.userId,
@@ -98,11 +98,11 @@ export async function getExistingMessage(
   weekStartDate: string,
 ) {
   return withRetry(() =>
-    db.query.weeklyMessages.findFirst({
+    db.query.systemMessages.findFirst({
       where: and(
-        eq(weeklyMessages.userId, userId),
-        eq(weeklyMessages.kind, kind),
-        eq(weeklyMessages.weekStartDate, weekStartDate),
+        eq(systemMessages.userId, userId),
+        eq(systemMessages.kind, kind),
+        eq(systemMessages.weekStartDate, weekStartDate),
       ),
     }),
   );
@@ -118,15 +118,15 @@ export async function getActiveMessages(
   return withRetry(() =>
     db
       .select()
-      .from(weeklyMessages)
+      .from(systemMessages)
       .where(
         and(
-          eq(weeklyMessages.userId, userId),
-          lte(weeklyMessages.inAppVisibleFrom, now),
-          isNull(weeklyMessages.dismissedAt),
+          eq(systemMessages.userId, userId),
+          lte(systemMessages.inAppVisibleFrom, now),
+          isNull(systemMessages.dismissedAt),
         ),
       )
-      .orderBy(desc(weeklyMessages.createdAt))
+      .orderBy(desc(systemMessages.createdAt))
       .limit(10),
   );
 }
@@ -139,17 +139,17 @@ export async function getMessageHistory(
   options: { kind?: WeeklyMessageKind; limit?: number } = {},
 ) {
   const { kind, limit = 8 } = options;
-  const conditions = [eq(weeklyMessages.userId, userId)];
+  const conditions = [eq(systemMessages.userId, userId)];
   if (kind) {
-    conditions.push(eq(weeklyMessages.kind, kind));
+    conditions.push(eq(systemMessages.kind, kind));
   }
 
   return withRetry(() =>
     db
       .select()
-      .from(weeklyMessages)
+      .from(systemMessages)
       .where(and(...conditions))
-      .orderBy(desc(weeklyMessages.createdAt))
+      .orderBy(desc(systemMessages.createdAt))
       .limit(Math.min(Math.max(limit, 1), 26)),
   );
 }
@@ -161,7 +161,7 @@ export async function dismissMessage(messageId: string, userId: string) {
   const now = new Date().toISOString();
   return withRetry(() =>
     db
-      .update(weeklyMessages)
+      .update(systemMessages)
       .set({
         dismissedAt: now,
         status: "dismissed",
@@ -169,8 +169,8 @@ export async function dismissMessage(messageId: string, userId: string) {
       })
       .where(
         and(
-          eq(weeklyMessages.id, messageId),
-          eq(weeklyMessages.userId, userId),
+          eq(systemMessages.id, messageId),
+          eq(systemMessages.userId, userId),
         ),
       ),
   );

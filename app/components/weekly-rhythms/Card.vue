@@ -24,6 +24,8 @@ interface CelebrationData {
   title: string;
   summaryBlocks: SummaryBlock[];
   narrativeText: string | null;
+  tierApplied: string;
+  dismissedAt: string | null;
 }
 
 const encouragement = ref<EncouragementData | null>(null);
@@ -46,8 +48,12 @@ async function fetchCurrent() {
   }
 }
 
-function handleDismissed() {
+function handleEncouragementDismissed() {
   encouragement.value = null;
+}
+
+function handleCelebrationDismissed() {
+  celebration.value = null;
 }
 
 onMounted(() => {
@@ -60,11 +66,12 @@ onMounted(() => {
     <WeeklyRhythmsEncouragementBanner
       v-if="encouragement && !encouragement.dismissedAt"
       :encouragement="encouragement"
-      @dismissed="handleDismissed"
+      @dismissed="handleEncouragementDismissed"
     />
     <WeeklyRhythmsCelebrationCard
-      v-if="celebration"
+      v-if="celebration && !celebration.dismissedAt"
       :celebration="celebration"
+      @dismissed="handleCelebrationDismissed"
     />
   </div>
 </template>

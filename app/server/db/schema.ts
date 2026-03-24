@@ -1088,10 +1088,11 @@ export type WeeklyStatsSnapshot = typeof weeklyStatsSnapshots.$inferSelect;
 export type NewWeeklyStatsSnapshot = typeof weeklyStatsSnapshots.$inferInsert;
 
 // ============================================================================
-// Weekly Messages - Rendered user-facing content and tier fallback results (v0.6.0+)
+// System Messages - System-generated user-facing content (celebrations,
+// encouragements, and future types). Renamed from weekly_messages (v0.6.1+)
 // ============================================================================
 
-export const weeklyMessages = sqliteTable("weekly_messages", {
+export const systemMessages = sqliteTable("system_messages", {
   id: text("id").primaryKey(), // UUID
   userId: text("user_id")
     .notNull()
@@ -1134,18 +1135,18 @@ export const weeklyMessages = sqliteTable("weekly_messages", {
     .default(sql`(datetime('now'))`),
 });
 
-export type WeeklyMessage = typeof weeklyMessages.$inferSelect;
-export type NewWeeklyMessage = typeof weeklyMessages.$inferInsert;
+export type SystemMessage = typeof systemMessages.$inferSelect;
+export type NewSystemMessage = typeof systemMessages.$inferInsert;
 
 // ============================================================================
-// Weekly Delivery Attempts - Channel-level audit trail and retry state (v0.6.0+)
+// System Message Deliveries - Channel-level audit trail and retry state (v0.6.1+)
 // ============================================================================
 
-export const weeklyDeliveryAttempts = sqliteTable("weekly_delivery_attempts", {
+export const systemMessageDeliveries = sqliteTable("system_message_deliveries", {
   id: text("id").primaryKey(), // UUID
   messageId: text("message_id")
     .notNull()
-    .references(() => weeklyMessages.id, { onDelete: "cascade" }),
+    .references(() => systemMessages.id, { onDelete: "cascade" }),
 
   channel: text("channel").notNull(), // 'in_app' | 'email' | 'push'
   status: text("status").notNull(), // 'queued' | 'sent' | 'failed' | 'bounced' | 'skipped'
@@ -1166,5 +1167,5 @@ export const weeklyDeliveryAttempts = sqliteTable("weekly_delivery_attempts", {
     .default(sql`(datetime('now'))`),
 });
 
-export type WeeklyDeliveryAttempt = typeof weeklyDeliveryAttempts.$inferSelect;
-export type NewWeeklyDeliveryAttempt = typeof weeklyDeliveryAttempts.$inferInsert;
+export type SystemMessageDelivery = typeof systemMessageDeliveries.$inferSelect;
+export type NewSystemMessageDelivery = typeof systemMessageDeliveries.$inferInsert;

@@ -9,8 +9,8 @@ import { withRetry } from "~/server/db/operations";
 import {
   weeklyRhythmSettings,
   weeklyStatsSnapshots,
-  weeklyMessages,
-  weeklyDeliveryAttempts,
+  systemMessages,
+  systemMessageDeliveries,
 } from "~/server/db/schema";
 import { createLogger } from "~/server/utils/logger";
 
@@ -71,43 +71,43 @@ export async function findMessage(
   weekStartDate: string,
 ) {
   return withRetry(() =>
-    db.query.weeklyMessages.findFirst({
+    db.query.systemMessages.findFirst({
       where: and(
-        eq(weeklyMessages.userId, userId),
-        eq(weeklyMessages.kind, kind),
-        eq(weeklyMessages.weekStartDate, weekStartDate),
+        eq(systemMessages.userId, userId),
+        eq(systemMessages.kind, kind),
+        eq(systemMessages.weekStartDate, weekStartDate),
       ),
     }),
   );
 }
 
 export async function insertMessage(
-  values: typeof weeklyMessages.$inferInsert,
+  values: typeof systemMessages.$inferInsert,
 ) {
   return withRetry(() =>
-    db.insert(weeklyMessages).values(values).returning(),
+    db.insert(systemMessages).values(values).returning(),
   );
 }
 
 export async function updateMessageStatus(
   messageId: string,
-  updates: Partial<typeof weeklyMessages.$inferInsert>,
+  updates: Partial<typeof systemMessages.$inferInsert>,
 ) {
   return withRetry(() =>
     db
-      .update(weeklyMessages)
+      .update(systemMessages)
       .set({ ...updates, updatedAt: new Date().toISOString() })
-      .where(eq(weeklyMessages.id, messageId)),
+      .where(eq(systemMessages.id, messageId)),
   );
 }
 
 // ── Delivery Attempts ─────────────────────────────────────────────────────
 
 export async function insertDeliveryAttempt(
-  values: typeof weeklyDeliveryAttempts.$inferInsert,
+  values: typeof systemMessageDeliveries.$inferInsert,
 ) {
   return withRetry(() =>
-    db.insert(weeklyDeliveryAttempts).values(values).returning(),
+    db.insert(systemMessageDeliveries).values(values).returning(),
   );
 }
 
@@ -115,10 +115,10 @@ export async function findDueRepository(status: string, _beforeUtc: string) {
   return withRetry(() =>
     db
       .select()
-      .from(weeklyDeliveryAttempts)
+      .from(systemMessageDeliveries)
       .where(
         and(
-          eq(weeklyDeliveryAttempts.status, status),
+          eq(systemMessageDeliveries.status, status),
         ),
       ),
   );

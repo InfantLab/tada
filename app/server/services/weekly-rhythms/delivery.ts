@@ -10,13 +10,13 @@ import { db } from "~/server/db";
 import { withRetry } from "~/server/db/operations";
 import {
   weeklyRhythmSettings,
-  weeklyMessages,
-  weeklyDeliveryAttempts,
+  systemMessages,
+  systemMessageDeliveries,
   users,
 } from "~/server/db/schema";
 import { createLogger } from "~/server/utils/logger";
 import { sendEmail, getAppUrl } from "~/server/utils/email";
-import { generateUnsubscribeToken } from "~/server/utils/weeklyRhythmTokens";
+import { generateUnsubscribeToken } from "~/server/utils/hmacTokens";
 import {
   weeklyCelebrationEmail,
   weeklyEncouragementEmail,
@@ -45,8 +45,8 @@ export async function deliverEmailForMessage(
 ): Promise<{ success: boolean; error?: string }> {
   // Get the message
   const message = await withRetry(() =>
-    db.query.weeklyMessages.findFirst({
-      where: eq(weeklyMessages.id, messageId),
+    db.query.systemMessages.findFirst({
+      where: eq(systemMessages.id, messageId),
     }),
   );
   if (!message) {
@@ -74,10 +74,10 @@ export async function deliverEmailForMessage(
   }
 
   // Build email content
-  const tokenSecret = process.env["WEEKLY_RHYTHMS_TOKEN_SECRET"];
+  const tokenSecret = process.env["HMAC_SECRET"];
   if (!tokenSecret) {
-    logger.error("WEEKLY_RHYTHMS_TOKEN_SECRET not configured");
-    return { success: false, error: "Token secret not configured" };
+    logger.error("HMAC_SECRET not configured");
+    return { success: false, error: "Email delivery is not available right now. Please try again later." };
   }
 
   const { token } = generateUnsubscribeToken(userId, tokenSecret);
@@ -114,7 +114,7 @@ export async function deliverEmailForMessage(
 
     // Record successful delivery
     await withRetry(() =>
-      db.insert(weeklyDeliveryAttempts).values({
+      db.insert(systemMessageDeliveries).values({
         id: crypto.randomUUID(),
         messageId,
         channel: "email",
@@ -138,9 +138,9 @@ export async function deliverEmailForMessage(
     // Update message status
     await withRetry(() =>
       db
-        .update(weeklyMessages)
+        .update(systemMessages)
         .set({ status: "delivered", deliveredAt: now, updatedAt: now })
-        .where(eq(weeklyMessages.id, messageId)),
+        .where(eq(systemMessages.id, messageId)),
     );
 
     logger.info("Weekly email delivered", { messageId, userId });
@@ -155,7 +155,7 @@ export async function deliverEmailForMessage(
     const retryAfter = new Date(Date.now() + backoffMs).toISOString();
 
     await withRetry(() =>
-      db.insert(weeklyDeliveryAttempts).values({
+      db.insert(systemMessageDeliveries).values({
         id: crypto.randomUUID(),
         messageId,
         channel: "email",
@@ -193,9 +193,9 @@ export async function deliverEmailForMessage(
       // Update message status
       await withRetry(() =>
         db
-          .update(weeklyMessages)
+          .update(systemMessages)
           .set({ status: "failed", updatedAt: now })
-          .where(eq(weeklyMessages.id, messageId)),
+          .where(eq(systemMessages.id, messageId)),
       );
     } else {
       // Record failure, schedule retry

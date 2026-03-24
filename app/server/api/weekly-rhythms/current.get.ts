@@ -38,6 +38,8 @@ export default defineEventHandler(async (event) => {
             title: celebration.title,
             summaryBlocks: celebration.summaryBlocks,
             narrativeText: celebration.narrativeText,
+            tierApplied: celebration.tierApplied,
+            dismissedAt: celebration.dismissedAt,
           }
         : null,
     };

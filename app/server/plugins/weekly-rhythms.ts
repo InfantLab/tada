@@ -45,7 +45,7 @@ async function ensureTables(): Promise<boolean> {
       )`,
       sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_weekly_snapshots_user_kind_week ON weekly_stats_snapshots(user_id, kind, week_start_date)`,
       sql`CREATE INDEX IF NOT EXISTS idx_weekly_snapshots_kind_generated ON weekly_stats_snapshots(kind, generated_at)`,
-      sql`CREATE TABLE IF NOT EXISTS weekly_messages (
+      sql`CREATE TABLE IF NOT EXISTS system_messages (
         id TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         snapshot_id TEXT NOT NULL REFERENCES weekly_stats_snapshots(id) ON DELETE CASCADE,
         kind TEXT NOT NULL, week_start_date TEXT NOT NULL, tier_requested TEXT NOT NULL, tier_applied TEXT NOT NULL,
@@ -54,17 +54,17 @@ async function ensureTables(): Promise<boolean> {
         in_app_visible_from TEXT NOT NULL, scheduled_delivery_at TEXT, delivered_at TEXT, dismissed_at TEXT,
         created_at TEXT NOT NULL DEFAULT (datetime('now')), updated_at TEXT NOT NULL DEFAULT (datetime('now'))
       )`,
-      sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_weekly_messages_user_kind_week ON weekly_messages(user_id, kind, week_start_date)`,
-      sql`CREATE INDEX IF NOT EXISTS idx_weekly_messages_status_scheduled ON weekly_messages(status, scheduled_delivery_at)`,
-      sql`CREATE TABLE IF NOT EXISTS weekly_delivery_attempts (
-        id TEXT PRIMARY KEY, message_id TEXT NOT NULL REFERENCES weekly_messages(id) ON DELETE CASCADE,
+      sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_system_messages_user_kind_week ON system_messages(user_id, kind, week_start_date)`,
+      sql`CREATE INDEX IF NOT EXISTS idx_system_messages_status_scheduled ON system_messages(status, scheduled_delivery_at)`,
+      sql`CREATE TABLE IF NOT EXISTS system_message_deliveries (
+        id TEXT PRIMARY KEY, message_id TEXT NOT NULL REFERENCES system_messages(id) ON DELETE CASCADE,
         channel TEXT NOT NULL, status TEXT NOT NULL, attempt_number INTEGER NOT NULL,
         scheduled_for TEXT NOT NULL, attempted_at TEXT, retry_after TEXT, provider TEXT,
         provider_message_id TEXT, failure_code TEXT, failure_message TEXT, raw_response TEXT,
         created_at TEXT NOT NULL DEFAULT (datetime('now'))
       )`,
-      sql`CREATE INDEX IF NOT EXISTS idx_weekly_delivery_message ON weekly_delivery_attempts(message_id)`,
-      sql`CREATE INDEX IF NOT EXISTS idx_weekly_delivery_retry ON weekly_delivery_attempts(status, retry_after)`,
+      sql`CREATE INDEX IF NOT EXISTS idx_system_message_deliveries_message ON system_message_deliveries(message_id)`,
+      sql`CREATE INDEX IF NOT EXISTS idx_system_message_deliveries_retry ON system_message_deliveries(status, retry_after)`,
     ];
     for (const stmt of ddl) {
       await db.run(stmt);
