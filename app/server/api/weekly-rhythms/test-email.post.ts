@@ -99,8 +99,7 @@ export default defineEventHandler(async (event) => {
 
     throw new Error(delivery.error ?? "Email delivery failed");
   } catch (error) {
-    const raw = error instanceof Error ? error.message : "Unknown error";
-    logger.error("Test email failed", { error: raw, kind, targetId });
+    logger.error("Test email failed", error, { kind, targetId });
     throw createError(
       internalError(event, "We couldn't send the test email right now. Please try again later."),
     );
