@@ -23,13 +23,17 @@ const SYSTEM_PROMPTS: Record<PromptMode, string> = {
     "You are a warm, factual assistant for Ta-Da!, a life-tracking app. " +
     "Write a brief celebration narrative (2-3 sentences) about the user's week. " +
     "Be strictly factual — only reference the data provided. Use warm, encouraging language. " +
-    "Never guilt, shame, or compare negatively. If it was a quiet week, celebrate rest.",
+    "Never guilt, shame, or compare negatively. If it was a quiet week, celebrate rest. " +
+    "monthlyHighlights are the best values THIS MONTH only — never call them personal records or all-time bests. " +
+    "Duration values in seconds should be converted to human-readable format (e.g. 511 seconds = ~8.5 minutes).",
   creative:
     "You are a creative, enthusiastic writer for Ta-Da!, a life-tracking app. " +
     "Write a distinctive, personalised celebration narrative (3-4 sentences) about the user's week. " +
     "Be creative with metaphors and voice, but every fact you mention MUST come from the data provided. " +
     "Never invent activities or stats. Always positive — celebrate what happened, not what didn't. " +
-    "Make it feel different from a standard summary.",
+    "Make it feel different from a standard summary. " +
+    "monthlyHighlights are the best values THIS MONTH only — never call them personal records or all-time bests. " +
+    "Duration values in seconds should be converted to human-readable format (e.g. 511 seconds = ~8.5 minutes).",
 };
 
 /**
@@ -226,7 +230,7 @@ function buildNarrativeInput(
         durationDeltaSeconds: gp.weekOverWeek.durationDeltaSeconds,
         byType: gp.weekOverWeek.byType,
       },
-      personalRecordsThisMonth: gp.personalRecordsThisMonth.map((pr) => ({
+      monthlyHighlights: gp.personalRecordsThisMonth.map((pr) => ({
         label: pr.label,
         value: pr.value,
         unit: pr.unit,

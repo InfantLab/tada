@@ -13,17 +13,24 @@ const emailCelebration = ref(false);
 const emailEncouragement = ref(false);
 const acknowledgeCloud = ref(false);
 
+// Prevent watchers from firing during server-to-local sync
+const syncing = ref(false);
+
 // Watch settings to sync form
 watch(
   () => settings.value,
   (s) => {
     if (!s) return;
+    syncing.value = true;
     celebrationEnabled.value = s.celebrationEnabled;
     encouragementEnabled.value = s.encouragementEnabled;
     celebrationTier.value = s.celebrationTier;
     emailCelebration.value = s.deliveryChannels.celebration.email;
     emailEncouragement.value = s.deliveryChannels.encouragement.email;
     acknowledgeCloud.value = s.privacy.cloudAcknowledged;
+    nextTick(() => {
+      syncing.value = false;
+    });
   },
   { immediate: true },
 );
@@ -39,42 +46,130 @@ const needsCloudAck = computed(() => {
   return isCloud && !settings.value?.privacy.cloudAcknowledged && !acknowledgeCloud.value;
 });
 
-async function handleSave() {
-  const result = await saveSettings({
-    celebrationEnabled: celebrationEnabled.value,
-    encouragementEnabled: encouragementEnabled.value,
-    celebrationTier: celebrationTier.value,
-    deliveryChannels: {
-      celebration: {
-        inApp: true,
-        email: emailCelebration.value,
-        push: false,
-      },
-      encouragement: {
-        inApp: true,
-        email: emailEncouragement.value,
-        push: false,
-      },
-    },
-    acknowledgeCloudPrivacy: acknowledgeCloud.value || undefined,
-  });
-
-  if (result?.saved) {
-    showSuccess("Weekly rhythm settings saved");
-  } else if (error.value) {
+// Auto-save helper
+async function autoSave(input: Parameters<typeof saveSettings>[0]) {
+  const result = await saveSettings(input);
+  if (!result?.saved && error.value) {
     showError(error.value);
+  }
+}
+
+// Per-field watchers for auto-save
+watch(encouragementEnabled, (val) => {
+  if (syncing.value) return;
+  const input: Parameters<typeof saveSettings>[0] = { encouragementEnabled: val };
+  // Auto-enable email delivery when opting in
+  if (val && settings.value?.email.configured && !settings.value?.email.unsubscribed) {
+    emailEncouragement.value = true;
+    input.deliveryChannels = {
+      celebration: { inApp: true, email: emailCelebration.value, push: false },
+      encouragement: { inApp: true, email: true, push: false },
+    };
+  }
+  autoSave(input);
+});
+
+watch(celebrationEnabled, (val) => {
+  if (syncing.value) return;
+  const input: Parameters<typeof saveSettings>[0] = { celebrationEnabled: val };
+  // Auto-enable email delivery when opting in
+  if (val && settings.value?.email.configured && !settings.value?.email.unsubscribed) {
+    emailCelebration.value = true;
+    input.deliveryChannels = {
+      celebration: { inApp: true, email: true, push: false },
+      encouragement: { inApp: true, email: emailEncouragement.value, push: false },
+    };
+  }
+  autoSave(input);
+});
+
+watch(celebrationTier, (val) => {
+  if (syncing.value) return;
+  autoSave({ celebrationTier: val });
+});
+
+watch(emailCelebration, (val) => {
+  if (syncing.value) return;
+  autoSave({
+    deliveryChannels: {
+      celebration: { inApp: true, email: val, push: false },
+      encouragement: { inApp: true, email: emailEncouragement.value, push: false },
+    },
+  });
+});
+
+watch(emailEncouragement, (val) => {
+  if (syncing.value) return;
+  autoSave({
+    deliveryChannels: {
+      celebration: { inApp: true, email: emailCelebration.value, push: false },
+      encouragement: { inApp: true, email: val, push: false },
+    },
+  });
+});
+
+// Cloud ack: only auto-save when checked (intentional friction)
+watch(acknowledgeCloud, (val) => {
+  if (syncing.value || !val) return;
+  autoSave({ acknowledgeCloudPrivacy: true });
+});
+
+// Test email
+const sendingTestCelebration = ref(false);
+const sendingTestEncouragement = ref(false);
+
+async function sendTestEmail(kind: "celebration" | "encouragement") {
+  const sending = kind === "celebration" ? sendingTestCelebration : sendingTestEncouragement;
+  sending.value = true;
+  try {
+    await $fetch("/api/weekly-rhythms/test-email", {
+      method: "POST",
+      body: { kind },
+    });
+    const label = kind === "celebration" ? "celebration" : "encouragement";
+    showSuccess(`Test ${label} email sent! Check your inbox.`);
+  } catch (err: unknown) {
+    const message =
+      err && typeof err === "object" && "data" in err
+        ? (err as { data?: { message?: string } }).data?.message
+        : null;
+    showError(message || "Something went wrong sending the test email. Please try again later.");
+  } finally {
+    sending.value = false;
   }
 }
 </script>
 
 <template>
   <div>
-    <div v-if="loading" class="text-sm text-stone-500 dark:text-stone-400 py-4">
-      Loading weekly rhythm settings...
+    <div v-if="loading" class="text-sm text-stone-500 dark:text-stone-400 py-4 px-4">
+      Loading rhythm settings...
     </div>
 
-    <div v-else class="space-y-4">
-      <!-- Celebration toggle -->
+    <div v-else class="space-y-0">
+      <!-- Mid-Week Encouragement toggle -->
+      <div class="p-4 flex items-center justify-between">
+        <div>
+          <div class="font-medium text-sm text-stone-800 dark:text-stone-100">
+            Mid-Week Encouragement
+          </div>
+          <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5">
+            A gentle Thursday check-in with stretch goals
+          </p>
+        </div>
+        <label class="relative inline-flex items-center cursor-pointer">
+          <input
+            v-model="encouragementEnabled"
+            type="checkbox"
+            class="sr-only peer"
+          />
+          <div
+            class="w-9 h-5 bg-stone-200 peer-focus:outline-none rounded-full peer dark:bg-stone-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-stone-600 peer-checked:bg-emerald-500"
+          />
+        </label>
+      </div>
+
+      <!-- Weekly Celebration toggle -->
       <div class="p-4 flex items-center justify-between">
         <div>
           <div class="font-medium text-sm text-stone-800 dark:text-stone-100">
@@ -87,28 +182,6 @@ async function handleSave() {
         <label class="relative inline-flex items-center cursor-pointer">
           <input
             v-model="celebrationEnabled"
-            type="checkbox"
-            class="sr-only peer"
-          />
-          <div
-            class="w-9 h-5 bg-stone-200 peer-focus:outline-none rounded-full peer dark:bg-stone-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-stone-600 peer-checked:bg-emerald-500"
-          />
-        </label>
-      </div>
-
-      <!-- Encouragement toggle -->
-      <div class="p-4 flex items-center justify-between">
-        <div>
-          <div class="font-medium text-sm text-stone-800 dark:text-stone-100">
-            Thursday Encouragement
-          </div>
-          <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5">
-            A mid-week check-in with gentle stretch goals
-          </p>
-        </div>
-        <label class="relative inline-flex items-center cursor-pointer">
-          <input
-            v-model="encouragementEnabled"
             type="checkbox"
             class="sr-only peer"
           />
@@ -161,48 +234,76 @@ async function handleSave() {
             (unsubscribed)
           </span>
         </p>
-        <div class="space-y-2">
-          <label
+        <div class="space-y-3">
+          <!-- Email celebration toggle -->
+          <div
             v-if="celebrationEnabled"
-            class="flex items-center gap-2 text-sm text-stone-700 dark:text-stone-300"
+            class="flex items-center justify-between"
           >
-            <input
-              v-model="emailCelebration"
-              type="checkbox"
-              class="rounded border-stone-300 text-emerald-500 focus:ring-emerald-500"
-              :disabled="settings.email.unsubscribed"
-            />
-            Email celebrations
-          </label>
-          <label
+            <span class="text-sm text-stone-700 dark:text-stone-300">Email celebrations</span>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input
+                v-model="emailCelebration"
+                type="checkbox"
+                class="sr-only peer"
+                :disabled="settings.email.unsubscribed"
+              />
+              <div
+                class="w-9 h-5 bg-stone-200 peer-focus:outline-none rounded-full peer dark:bg-stone-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-stone-600 peer-checked:bg-emerald-500 peer-disabled:opacity-50"
+              />
+            </label>
+          </div>
+
+          <!-- Email encouragement toggle -->
+          <div
             v-if="encouragementEnabled"
-            class="flex items-center gap-2 text-sm text-stone-700 dark:text-stone-300"
+            class="flex items-center justify-between"
           >
-            <input
-              v-model="emailEncouragement"
-              type="checkbox"
-              class="rounded border-stone-300 text-emerald-500 focus:ring-emerald-500"
-              :disabled="settings.email.unsubscribed"
-            />
-            Email encouragements
-          </label>
+            <span class="text-sm text-stone-700 dark:text-stone-300">Email encouragements</span>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input
+                v-model="emailEncouragement"
+                type="checkbox"
+                class="sr-only peer"
+                :disabled="settings.email.unsubscribed"
+              />
+              <div
+                class="w-9 h-5 bg-stone-200 peer-focus:outline-none rounded-full peer dark:bg-stone-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-stone-600 peer-checked:bg-emerald-500 peer-disabled:opacity-50"
+              />
+            </label>
+          </div>
+        </div>
+
+        <!-- Test email buttons -->
+        <div
+          v-if="(emailCelebration && celebrationEnabled) || (emailEncouragement && encouragementEnabled)"
+          class="mt-3 flex gap-2"
+        >
+          <button
+            v-if="emailCelebration && celebrationEnabled"
+            class="text-xs px-3 py-1.5 rounded-lg border border-stone-200 dark:border-stone-600 text-stone-600 dark:text-stone-400 hover:bg-stone-50 dark:hover:bg-stone-700 disabled:opacity-50 transition-colors"
+            :disabled="sendingTestCelebration"
+            @click="sendTestEmail('celebration')"
+          >
+            {{ sendingTestCelebration ? "Sending..." : "Send Test Celebration" }}
+          </button>
+          <button
+            v-if="emailEncouragement && encouragementEnabled"
+            class="text-xs px-3 py-1.5 rounded-lg border border-stone-200 dark:border-stone-600 text-stone-600 dark:text-stone-400 hover:bg-stone-50 dark:hover:bg-stone-700 disabled:opacity-50 transition-colors"
+            :disabled="sendingTestEncouragement"
+            @click="sendTestEmail('encouragement')"
+          >
+            {{ sendingTestEncouragement ? "Sending..." : "Send Test Encouragement" }}
+          </button>
         </div>
       </div>
 
-      <!-- Save button -->
-      <div class="p-4 pt-0">
-        <button
-          class="px-4 py-2 bg-emerald-500 text-white text-sm font-medium rounded-lg hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          :disabled="saving || (needsCloudAck && !acknowledgeCloud)"
-          @click="handleSave"
-        >
-          {{ saving ? "Saving..." : "Save Weekly Rhythm Settings" }}
-        </button>
+      <!-- Status indicators -->
+      <div v-if="saving" class="px-4 pb-3">
+        <p class="text-xs text-stone-400 dark:text-stone-500">Saving...</p>
       </div>
-
-      <!-- Error message -->
-      <div v-if="error" class="p-4 pt-0">
-        <p class="text-sm text-red-600 dark:text-red-400">{{ error }}</p>
+      <div v-if="error" class="px-4 pb-3">
+        <p class="text-xs text-red-600 dark:text-red-400">{{ error }}</p>
       </div>
     </div>
   </div>

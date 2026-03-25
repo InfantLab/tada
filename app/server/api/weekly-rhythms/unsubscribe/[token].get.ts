@@ -3,7 +3,7 @@
  * One-click email unsubscribe endpoint linked from weekly-rhythm emails.
  */
 
-import { verifyUnsubscribeToken } from "~/server/utils/weeklyRhythmTokens";
+import { verifyUnsubscribeToken } from "~/server/utils/hmacTokens";
 import { updateWeeklyRhythmSettings } from "~/server/services/weekly-rhythms/settings";
 import { createLogger } from "~/server/utils/logger";
 
@@ -21,9 +21,9 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const secret = process.env["WEEKLY_RHYTHMS_TOKEN_SECRET"];
+  const secret = process.env["HMAC_SECRET"];
   if (!secret) {
-    logger.error("WEEKLY_RHYTHMS_TOKEN_SECRET not configured");
+    logger.error("HMAC_SECRET not configured");
     throw createError({
       statusCode: 500,
       data: { error: "SERVER_ERROR", message: "Server configuration error" },

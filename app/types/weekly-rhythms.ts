@@ -133,7 +133,7 @@ export interface WeeklyNarrativeInput {
       durationDeltaSeconds: number;
       byType: Record<string, number>;
     };
-    personalRecordsThisMonth: Array<{
+    monthlyHighlights: Array<{
       label: string;
       value: number;
       unit: string;

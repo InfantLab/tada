@@ -1955,34 +1955,16 @@ onMounted(() => {
         </section>
 
         <!-- Rhythms Settings -->
-        <section id="section-rhythms">
+        <section v-if="currentUser" id="section-rhythms">
           <h2
             class="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-4"
           >
             Rhythms
           </h2>
-
-          <div
-            class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 p-4"
-          >
-            <p class="text-sm text-stone-600 dark:text-stone-400">
-              Rhythm settings coming soon. Configure grace periods, chain
-              styles, and rhythm goals.
-            </p>
-          </div>
-        </section>
-
-        <!-- Weekly Rhythms -->
-        <section v-if="currentUser" id="section-weekly-rhythms">
-          <h2
-            class="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-4"
-          >
-            Weekly Rhythms
-          </h2>
           <div
             class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 divide-y divide-stone-200 dark:divide-stone-700"
           >
-            <SettingsWeeklyRhythms />
+            <SettingsWeeklyRhythmsSettings />
           </div>
         </section>
 

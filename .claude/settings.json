@@ -67,7 +67,15 @@
       "Bash(bash .specify/scripts/bash/create-new-feature.sh --json --short-name \"weekly-rhythms\" \"Weekly Rhythms — Encouragement & Celebration: Thursday mid-week nudge and Sunday end-of-week celebration summary with tiered AI options\")",
       "Bash(bash .specify/scripts/bash/check-prerequisites.sh --json --require-tasks --include-tasks)",
       "Bash(DATABASE_URL=file:../data/db.sqlite drizzle-kit push)",
-      "Bash(DATABASE_URL=file:../data/db.sqlite bun drizzle-kit push --config=drizzle.config.ts)"
+      "Bash(DATABASE_URL=file:../data/db.sqlite bun drizzle-kit push --config=drizzle.config.ts)",
+      "Bash(git log:*)",
+      "Bash(bash .specify/scripts/bash/create-new-feature.sh --json --short-name \"daily-timelines\" \"Daily Timeline Bar — A minimalistic 24-hour timeline visualization showing when activities happened during the day\")",
+      "Bash(bash .specify/scripts/bash/setup-plan.sh --json)",
+      "Bash(bash .specify/scripts/bash/update-agent-context.sh speckit.plan)",
+      "Bash(ln -s /workspaces/tada/specs/010-daily-timelines /workspaces/tada/specs/011-daily-timelines)",
+      "Bash(bash .specify/scripts/bash/update-agent-context.sh claude)",
+      "Bash(bash .specify/scripts/bash/check-prerequisites.sh --json)",
+      "Bash(node --input-type=module -e \":*)"
     ],
     "additionalDirectories": [
       "/tmp",

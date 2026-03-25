@@ -1,6 +1,7 @@
 /**
- * Signed token helpers for weekly-rhythm email unsubscribe links.
- * Uses HMAC-SHA256 with a server-side secret.
+ * Signed token helpers for HMAC-verified email action links.
+ * Used for unsubscribe links, and reusable for verify-email, magic links, etc.
+ * Uses HMAC-SHA256 with the HMAC_SECRET environment variable.
  */
 
 import { createHmac } from "crypto";

@@ -292,7 +292,7 @@ async function extractPersonalRecords(
 
   const records: PersonalRecord[] = [];
 
-  // Longest single session this month
+  // Longest single session this month (not an all-time record)
   let longestSession: typeof entries.$inferSelect | null = null;
   for (const e of monthEntries) {
     if (
@@ -304,9 +304,10 @@ async function extractPersonalRecords(
     }
   }
   if (longestSession && longestSession.durationSeconds) {
+    const sessionName = longestSession.name ?? longestSession.category ?? "session";
     records.push({
       type: "longest_session",
-      label: `Longest ${longestSession.name} session`,
+      label: `Longest ${sessionName} session this month`,
       value: longestSession.durationSeconds,
       unit: "seconds",
       happenedAt: longestSession.timestamp,
@@ -328,9 +329,15 @@ async function extractPersonalRecords(
     }
   }
   if (bestDayCount > 2) {
+    const dayDate = new Date(bestDay + "T12:00:00Z");
+    const dayLabel = dayDate.toLocaleDateString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    });
     records.push({
       type: "most_active_day",
-      label: "Most active day this month",
+      label: `Most active day this month (${dayLabel})`,
       value: bestDayCount,
       unit: "entries",
       happenedAt: `${bestDay}T00:00:00Z`,
@@ -433,15 +440,17 @@ async function aggregateRhythmWins(
     const milestones: Array<{ label: string; value: number; unit: string }> = [];
     if (cached?.totals) {
       if (cached.totals.totalHours >= 100) {
+        const hoursLabel = formatMilestoneLabel(cached.totals.totalHours, "hours");
         milestones.push({
-          label: "100+ hours",
+          label: hoursLabel,
           value: cached.totals.totalHours,
           unit: "hours",
         });
       }
       if (cached.totals.totalSessions >= 100) {
+        const sessionsLabel = formatMilestoneLabel(cached.totals.totalSessions, "sessions");
         milestones.push({
-          label: "100+ sessions",
+          label: sessionsLabel,
           value: cached.totals.totalSessions,
           unit: "sessions",
         });
@@ -547,4 +556,18 @@ export async function computeEncouragementContext(
     },
     generalMomentum,
   };
+}
+
+/**
+ * Format a milestone label using the highest reached threshold.
+ * e.g. 4200 hours → "4,000+ hours", 150 sessions → "100+ sessions"
+ */
+function formatMilestoneLabel(value: number, unit: string): string {
+  const thresholds = [10000, 5000, 2000, 1000, 500, 100];
+  for (const t of thresholds) {
+    if (value >= t) {
+      return `${t.toLocaleString("en-US")}+ ${unit}`;
+    }
+  }
+  return `100+ ${unit}`;
 }

@@ -30,7 +30,7 @@ export function mapSnapshotToNarrativeInput(
         durationDeltaSeconds: gp.weekOverWeek.durationDeltaSeconds,
         byType: gp.weekOverWeek.byType,
       },
-      personalRecordsThisMonth: gp.personalRecordsThisMonth.map((pr) => ({
+      monthlyHighlights: gp.personalRecordsThisMonth.map((pr) => ({
         label: pr.label,
         value: pr.value,
         unit: pr.unit,

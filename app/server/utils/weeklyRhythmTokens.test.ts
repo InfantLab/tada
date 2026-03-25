@@ -6,11 +6,11 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import {
   generateUnsubscribeToken,
   verifyUnsubscribeToken,
-} from "~/server/utils/weeklyRhythmTokens";
+} from "~/server/utils/hmacTokens";
 
 const TEST_SECRET = "test-secret-key-for-hmac-sha256-tokens";
 
-describe("weeklyRhythmTokens", () => {
+describe("hmacTokens", () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });

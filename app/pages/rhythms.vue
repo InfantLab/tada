@@ -395,6 +395,8 @@ function getDailyGaps(rhythmId: string): string[] {
         <div class="flex items-center gap-3">
           <p class="text-sm text-stone-500 dark:text-stone-400">
             See your natural patterns
+            <span class="mx-1">&middot;</span>
+            <span class="text-xs">Rhythms are views — they never alter your data</span>
           </p>
           <HelpLink search="chains" label="Need help?" />
         </div>
@@ -769,8 +771,8 @@ function getDailyGaps(rhythmId: string): string[] {
             Delete Rhythm?
           </h3>
           <p class="mt-2 text-sm text-stone-600 dark:text-stone-400">
-            This will permanently delete this rhythm and all its tracking data.
-            This action cannot be undone.
+            This will remove the rhythm. Your entries and data are not
+            affected — rhythms are just views of your existing data.
           </p>
           <div class="mt-6 flex justify-end gap-3">
             <button
