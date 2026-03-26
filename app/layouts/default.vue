@@ -347,6 +347,7 @@ onUnmounted(() => {
     <ErrorTrackerPanel />
     <CookieConsent />
     <onboarding-WelcomeOverlay />
+    <OnboardingWhatsNewOverlay />
     <ContextualHelpPanel v-model:open="showHelpPanel" />
   </div>
 </template>

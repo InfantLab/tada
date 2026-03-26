@@ -304,7 +304,7 @@ async function extractPersonalRecords(
     }
   }
   if (longestSession && longestSession.durationSeconds) {
-    const sessionName = longestSession.name ?? longestSession.category ?? "session";
+    const sessionName = longestSession.subcategory ?? longestSession.category ?? "session";
     records.push({
       type: "longest_session",
       label: `Longest ${sessionName} session this month`,

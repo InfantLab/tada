@@ -7,6 +7,7 @@ import { nanoid } from "nanoid";
 import { createLogger } from "~/server/utils/logger";
 import { hashPassword } from "~/server/utils/password";
 import { apiError, internalError } from "~/server/utils/response";
+import { upsertWeeklyRhythmSettings, refreshNextDueTimes } from "~/server/services/weekly-rhythms/settings";
 
 const logger = createLogger("api:auth:register");
 
@@ -67,6 +68,20 @@ export default defineEventHandler(async (event) => {
     // Create session
     const session = await createSession(userId);
     setSessionCookie(event, session.id);
+
+    // Auto-enable weekly celebrations + encouragement for new users
+    try {
+      await upsertWeeklyRhythmSettings(userId, {
+        celebrationEnabled: true,
+        encouragementEnabled: true,
+        celebrationTier: "stats_only",
+        onboardingCompletedAt: new Date().toISOString(),
+      });
+      await refreshNextDueTimes(userId);
+    } catch (settingsErr) {
+      // Non-fatal — user can enable manually in settings
+      logger.error("Failed to create default weekly rhythm settings", settingsErr);
+    }
 
     logger.info("User registered successfully", { username: body.username });
 

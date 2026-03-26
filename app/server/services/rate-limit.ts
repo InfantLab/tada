@@ -63,7 +63,17 @@ export function checkRateLimit(
     .where(eq(rateLimits.key, cacheKey))
     .get();
 
-  if (!existing || existing.windowEnd <= now) {
+  // Guard against corrupt data — treat non-finite values as expired
+  if (
+    existing &&
+    (!Number.isFinite(existing.windowEnd) ||
+      !Number.isFinite(existing.windowStart) ||
+      !Number.isFinite(existing.count))
+  ) {
+    db.delete(rateLimits).where(eq(rateLimits.key, cacheKey)).run();
+  }
+
+  if (!existing || !Number.isFinite(existing.windowEnd) || existing.windowEnd <= now) {
     // No entry or window has expired — start a new window
     const windowEnd = now + WINDOW_DURATION;
 
