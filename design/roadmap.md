@@ -17,7 +17,7 @@ What's coming next. For what already shipped, see [CHANGELOG.md](../CHANGELOG.md
 | **v0.4.0** | Ontology & Cloud Service    | ✅ Shipped Feb 2026 | [Release Notes](../RELEASE_NOTES_v0.4.0.md) |
 | **v0.4.2** | Backups, Polish & Code Quality | ✅ Shipped Mar 2026 | [Release Notes](../RELEASE_NOTES_v0.4.2.md) |
 | **v0.5.0** | Housekeeping & Infrastructure | ✅ Shipped Mar 2026 | [Release Notes](../RELEASE_NOTES_v0.5.0.md) |
-| **v0.6.0** | Weekly Rhythms, Daily Timelines & Polish | ✅ Shipped Mar 2026 | [CHANGELOG](../CHANGELOG.md) |
+| **v0.6.0** | Weekly Rhythms, Daily Timelines & Polish | ✅ Shipped Mar 2026 | [Release Notes](../RELEASE_NOTES_v0.6.0.md) |
 
 ## Upcoming
 
