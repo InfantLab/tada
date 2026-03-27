@@ -28,9 +28,9 @@ export default defineEventHandler(async (event) => {
       );
     }
 
-    if (body.username.length < 3 || body.username.length > 31) {
+    if (body.username.length > 31) {
       throw createError(
-        apiError(event, "INVALID_USERNAME_LENGTH", "Username must be between 3 and 31 characters", 400)
+        apiError(event, "INVALID_USERNAME_LENGTH", "Username must be 31 characters or fewer", 400)
       );
     }
 

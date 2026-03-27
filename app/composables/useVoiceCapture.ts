@@ -138,17 +138,27 @@ export function useVoiceCapture() {
     duration.value = 0;
 
     try {
-      // Get microphone stream
+      // Get microphone stream.
+      // echoCancellation/noiseSuppression/autoGainControl are disabled because enabling them
+      // triggers Android Chrome's MODE_IN_COMMUNICATION audio routing, which reroutes speaker
+      // output to the earpiece (right next to the mic) and causes loud beeping during recording.
+      // Whisper handles ambient noise well without these constraints.
       stream = await navigator.mediaDevices.getUserMedia({
         audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false,
+          channelCount: 1,
         },
       });
 
-      // Setup audio context for level visualization
+      // Setup audio context for level visualization only — never connected to destination.
       audioContext = new AudioContext();
+      // Silence the output sink so Chrome doesn't route this context's audio to any speaker
+      // (guards against an Android Chrome quirk that can keep the communication session alive).
+      if ("setSinkId" in audioContext) {
+        await (audioContext as AudioContext & { setSinkId: (id: string) => Promise<void> }).setSinkId("");
+      }
       analyser = audioContext.createAnalyser();
       analyser.fftSize = 256;
       const source = audioContext.createMediaStreamSource(stream);
@@ -285,16 +295,16 @@ export function useVoiceCapture() {
       maxDurationTimeout = null;
     }
 
+    // Close audio context before stopping tracks to avoid a second routing-switch artifact
+    if (audioContext && audioContext.state !== "closed") {
+      audioContext.close();
+      audioContext = null;
+    }
+
     // Stop media stream tracks
     if (stream) {
       stream.getTracks().forEach((track) => track.stop());
       stream = null;
-    }
-
-    // Close audio context
-    if (audioContext && audioContext.state !== "closed") {
-      audioContext.close();
-      audioContext = null;
     }
 
     analyser = null;
