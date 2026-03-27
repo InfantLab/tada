@@ -263,9 +263,15 @@ const faqs: FAQ[] = [
   // ── Settings ────────────────────────────────────────────
   {
     category: "Settings",
+    question: "What is the Settings page?",
+    answer:
+      "Settings is where you make Ta-Da! feel like yours — choose a theme, configure celebration sounds, manage session presets, set up voice input, control notifications, and import or export your data.",
+  },
+  {
+    category: "Settings",
     question: "What can I customise in Settings?",
     answer:
-      "Theme (light, dark, or system), celebration sounds, session presets with bells and background audio, voice input provider, notification preferences, and more. Settings is where you make Ta-Da! feel like yours.",
+      "Theme (light, dark, or system), celebration sounds, session presets with bells and background audio, voice input provider, notification preferences, and more.",
   },
   {
     category: "Settings",
@@ -287,6 +293,12 @@ const faqs: FAQ[] = [
   },
 
   // ── Account ─────────────────────────────────────────────
+  {
+    category: "Account",
+    question: "What does the Account page manage?",
+    answer:
+      "The Account page is home to your profile, password, email, and subscription. If you ever need to export your data or delete your account, those options live here too.",
+  },
   {
     category: "Account",
     question: "What's the difference between free and premium?",
@@ -367,9 +379,15 @@ const faqs: FAQ[] = [
   // ── Site ────────────────────────────────────────────────
   {
     category: "Site",
+    question: "What kind of app is Ta-Da!?",
+    answer:
+      "Ta-Da! is a Progressive Web App — install it on any device for a native-app feel, use it offline, and capture moments by voice or text. The full source code is open for anyone to run their own instance.",
+  },
+  {
+    category: "Site",
     question: "Can I install Ta-Da! as an app?",
     answer:
-      "Yes! Ta-Da! is a Progressive Web App. On mobile, tap 'Add to Home Screen' from your browser menu. On desktop, look for the install icon in the address bar. Once installed, it launches full-screen like a native app.",
+      "Yes! On mobile, tap 'Add to Home Screen' from your browser menu. On desktop, look for the install icon in the address bar. Once installed, it launches full-screen like a native app.",
   },
   {
     category: "Site",
@@ -391,6 +409,12 @@ const faqs: FAQ[] = [
   },
 
   // ── Support ─────────────────────────────────────────────
+  {
+    category: "Support",
+    question: "How can I get help with Ta-Da!?",
+    answer:
+      "We're here to help — reach us via the Feedback page in the sidebar or email us directly. We read everything and respond personally.",
+  },
   {
     category: "Support",
     question: "How do I report a bug or request a feature?",

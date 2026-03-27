@@ -42,6 +42,16 @@ const extractedTadas = ref<ExtractedTada[]>([]);
 const showCelebration = ref(false);
 
 // Fetch journal entries from API
+const MOMENT_TYPES = [
+  "moment",
+  "dream",
+  "journal",
+  "note",
+  "gratitude",
+  "magic",
+  "reflection",
+  "memory",
+];
 const entries = ref<Entry[]>([]);
 const isLoading = ref(true);
 const error = ref<string | null>(null);
@@ -87,16 +97,10 @@ onMounted(async () => {
       entries: Entry[];
       nextCursor: string | null;
       hasMore: boolean;
-    }>("/api/entries");
+    }>("/api/entries", { params: { limit: 100 } });
     entries.value = data.entries.filter(
       (e) =>
-        [
-          "dream",
-          "journal",
-          "note", // backward compat for old data
-          "gratitude",
-          "magic",
-        ].includes(e.type) ||
+        MOMENT_TYPES.includes(e.type) ||
         e.category === "moments" ||
         e.subcategory === "journal",
     );
@@ -362,19 +366,10 @@ async function refreshEntries() {
       entries: Entry[];
       nextCursor: string | null;
       hasMore: boolean;
-    }>("/api/entries");
+    }>("/api/entries", { params: { limit: 100 } });
     entries.value = data.entries.filter(
       (e) =>
-        [
-          "dream",
-          "journal",
-          "note",
-          "gratitude",
-          "magic",
-          "reflection",
-          "memory",
-          "moment",
-        ].includes(e.type) ||
+        MOMENT_TYPES.includes(e.type) ||
         e.category === "moments" ||
         e.subcategory === "journal",
     );
