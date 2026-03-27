@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-03-27
+
+### Theme: Weekly Rhythms, Daily Timelines & Polish
+
+Weekly review features that celebrate what you've done — never guilt what you haven't. Colourful daily timeline bars bring your day to life at a glance. Plus a round of UX polish across moments, help, and onboarding.
+
 ### Added
 
 - **Daily Timeline Bar** ([Spec 010](specs/010-daily-timelines/spec.md)):
@@ -18,13 +24,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Responsive from 320px mobile to wide desktop — no charting library, pure CSS
   - Short entries (<5 min) and instant entries (ta-das, moments, tallies) display as dots
 
-## [0.6.0] - 2026-03-22
+- **What's New popup**: first-time overlay for returning users when a new version is detected — highlights Weekly Celebrations and prompts opt-in with one tap
 
-### Theme: Weekly Rhythms — Encouragement & Celebration
+- **New-user defaults**: first-time users get sensible out-of-the-box settings so the app feels welcoming without configuration
 
-Weekly review features that celebrate what you've done — never guilt what you haven't. Thursday mid-week encouragement nudges and Monday morning celebration summaries with four privacy tiers.
-
-### Added
+- **Help page section subtitles**: each section now shows a visible one-line description beneath its heading (the "What is X?" answer), so users can scan the page without expanding accordions
 
 - **Weekly Celebration Pipeline** ([Spec 009](specs/009-weekly-rhythms/spec.md)):
   - 4-tier celebration system: Stats Only, Private AI, Cloud AI Factual, Cloud AI Creative
@@ -74,6 +78,12 @@ Weekly review features that celebrate what you've done — never guilt what you 
 - **Database**: `weekly_rhythms` tables for settings, celebrations, encouragements, and email delivery tracking
 
 - **80 new tests** covering celebration pipeline, encouragement generation, delivery service, cloud AI providers, stats aggregation, and message templates
+
+### Fixed
+
+- **Moments list false empty state**: entries saved as `type="moment"` were excluded by the initial page-load filter, causing "No moments yet" even when moments existed; unified the filter across load and refresh paths and bumped the API fetch limit to 100 to reduce pagination-related misses
+- **Celebration quality**: milestone labels, active-day highlighting, record labels, and card UX sharpened based on real-world feedback
+- **Rate limit handling**: improved error responses to surface wait time clearly
 
 ## [0.5.0] - 2026-03-10
 

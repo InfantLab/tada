@@ -86,11 +86,13 @@ function handleDismiss() {
           </h2>
 
           <p class="text-sm text-stone-600 dark:text-stone-300 mb-1">
-            <strong>Weekly Celebrations</strong> — get a stats summary every Monday
-            to see how your week went.
+            <strong>Daily timeline bars</strong> — see how your day unfolded at a glance, colour-coded by category.
+          </p>
+          <p class="text-sm text-stone-600 dark:text-stone-300 mb-1">
+            <strong>Weekly Celebrations</strong> — a stats summary every Monday and a gentle nudge on Thursdays.
           </p>
           <p class="text-sm text-stone-600 dark:text-stone-300 mb-5">
-            Plus a gentle <strong>mid-week encouragement</strong> on Thursdays.
+            Plus moments list fixes and a refreshed help page.
           </p>
 
           <p class="text-sm text-stone-500 dark:text-stone-400 mb-5">

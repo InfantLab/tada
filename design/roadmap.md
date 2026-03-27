@@ -2,7 +2,7 @@
 
 What's coming next. For what already shipped, see [CHANGELOG.md](../CHANGELOG.md) and the release notes.
 
-**Current Version:** v0.6.0 (March 2026) | **Next:** v0.7.0 (2027+)
+**Current Version:** v0.6.0 (March 2026) | **Next:** v0.7.0
 
 ---
 
@@ -17,22 +17,36 @@ What's coming next. For what already shipped, see [CHANGELOG.md](../CHANGELOG.md
 | **v0.4.0** | Ontology & Cloud Service    | ✅ Shipped Feb 2026 | [Release Notes](../RELEASE_NOTES_v0.4.0.md) |
 | **v0.4.2** | Backups, Polish & Code Quality | ✅ Shipped Mar 2026 | [Release Notes](../RELEASE_NOTES_v0.4.2.md) |
 | **v0.5.0** | Housekeeping & Infrastructure | ✅ Shipped Mar 2026 | [Release Notes](../RELEASE_NOTES_v0.5.0.md) |
-| **v0.6.0** | Weekly Rhythms & Review     | ✅ Shipped Mar 2026 | [CHANGELOG](../CHANGELOG.md) |
+| **v0.6.0** | Weekly Rhythms, Daily Timelines & Polish | ✅ Shipped Mar 2026 | [CHANGELOG](../CHANGELOG.md) |
 
 ## Upcoming
 
 | Version    | Theme                       | Target   |
 | ---------- | --------------------------- | -------- |
-| **v0.6.1** | Daily Timeline Bar          | Mar 2026 |
-| **v0.7.0** | Features & Integrations     | 2027+    |
+| **v0.7.0** | Features & Integrations     | 2026+    |
 
 ---
 
-## v0.6.0: Weekly Rhythms & Review ✅
+## v0.6.0: Weekly Rhythms, Daily Timelines & Polish ✅
 
 _Shipped: March 2026_
 
-**Theme:** Weekly review features — encouragement, celebration, and email delivery. Users can opt in to a Thursday mid-week encouragement nudge and a Monday morning celebration summary with four privacy tiers (stats-only, local AI, cloud AI factual, cloud AI creative).
+**Theme:** Weekly review features, daily timeline visualisation, and UX polish. Users can opt in to a Thursday mid-week encouragement nudge and a Monday morning celebration summary with four privacy tiers. Colourful daily timeline bars show how each day unfolded at a glance.
+
+**Key deliverables — Daily Timeline Bar** ([Spec 010](../specs/010-daily-timelines/spec.md)):
+- Per-card timeline indicator showing when each activity happened on a 24-hour line
+- Combined day strip above the card list with category colour coding
+- Responsive from 320px mobile to wide desktop — pure CSS, no charting library
+- Dots for short entries (<5 min) and instant entries (ta-das, moments, tallies)
+
+**Key deliverables — Onboarding & Help:**
+- What's New popup for returning users on version upgrade
+- New-user sensible defaults
+- Help page section subtitles — visible "What is X?" descriptions without expanding accordions
+
+**Key deliverables — Bug Fixes:**
+- Moments list false empty state fixed (type filter + pagination)
+- Celebration quality: milestone labels, active-day highlighting, record labels
 
 **Key deliverables — Weekly Celebration Pipeline** ([Spec 009](../specs/009-weekly-rhythms/spec.md)):
 - 4-tier celebration system: Stats Only, Private AI, Cloud AI Factual, Cloud AI Creative
