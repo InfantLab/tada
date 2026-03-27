@@ -35,6 +35,7 @@ export function useVoiceCapture() {
   let levelAnimationFrame: number | null = null;
   let durationInterval: ReturnType<typeof setInterval> | null = null;
   let maxDurationTimeout: ReturnType<typeof setTimeout> | null = null;
+  let wakeLock: WakeLockSentinel | null = null;
 
   /**
    * Check and request microphone permission
@@ -193,6 +194,19 @@ export function useVoiceCapture() {
       status.value = "recording";
       permissionStatus.value = "granted";
 
+      // Keep screen on during recording (non-fatal if unsupported)
+      if ("wakeLock" in navigator) {
+        try {
+          wakeLock = await navigator.wakeLock.request("screen");
+          // Re-acquire if the OS releases it while we're still recording (e.g. tab backgrounded)
+          wakeLock.addEventListener("release", async () => {
+            if (status.value === "recording" && "wakeLock" in navigator) {
+              try { wakeLock = await navigator.wakeLock.request("screen"); } catch { /* ignore */ }
+            }
+          });
+        } catch { /* ignore — user keeps screen active manually */ }
+      }
+
       // Track start latency
       const startLatency = performance.now() - startRequestTime;
       lastStartLatency.value = startLatency;
@@ -293,6 +307,12 @@ export function useVoiceCapture() {
     if (maxDurationTimeout) {
       clearTimeout(maxDurationTimeout);
       maxDurationTimeout = null;
+    }
+
+    // Release screen wake lock
+    if (wakeLock && !wakeLock.released) {
+      wakeLock.release().catch(() => {});
+      wakeLock = null;
     }
 
     // Close audio context before stopping tracks to avoid a second routing-switch artifact

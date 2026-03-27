@@ -57,6 +57,7 @@ export default defineNuxtConfig({
   pwa: {
     registerType: "autoUpdate",
     manifest: {
+      id: "/",
       name: "Tada - Life Tracker",
       short_name: "Tada",
       description:
@@ -77,17 +78,49 @@ export default defineNuxtConfig({
           type: "image/png",
         },
         {
-          src: "/icons/icon-512.png",
+          src: "/icons/maskable-icon.png",
           sizes: "512x512",
           type: "image/png",
           purpose: "maskable",
         },
       ],
+      shortcuts: [
+        {
+          name: "New Entry",
+          short_name: "Entry",
+          description: "Add a new activity or moment",
+          url: "/create/moment",
+          icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }],
+        },
+        {
+          name: "Record Dream",
+          short_name: "Record",
+          description: "Record a voice entry",
+          url: "/voice",
+          icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }],
+        },
+        {
+          name: "New Tally",
+          short_name: "Tally",
+          description: "Add a tally count",
+          url: "/tally",
+          icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }],
+        },
+      ],
+      share_target: {
+        action: "/share",
+        method: "GET",
+        params: {
+          title: "title",
+          text: "text",
+          url: "url",
+        },
+      },
     },
     workbox: {
-      // Disable navigation fallback to prevent "non-precached-url" errors
-      // Navigation requests should go to the network, not a cached fallback
-      navigateFallback: null,
+      // Serve offline fallback for failed navigations (excluding API routes)
+      navigateFallback: "/offline.html",
+      navigateFallbackDenylist: [/^\/api\//],
       // Cache strategies
       runtimeCaching: [
         {
