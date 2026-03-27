@@ -556,14 +556,18 @@ function scrollToSection(id: string) {
       >
         <template v-if="faqsByCategory[section]?.length">
           <h2
-            class="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-4 flex items-center gap-2"
+            class="text-lg font-semibold text-stone-800 dark:text-stone-100 mb-1 flex items-center gap-2"
           >
             <span>{{ sectionMeta[section]!.emoji }}</span>
             {{ section }}
           </h2>
+          <!-- First FAQ shown as section subtitle -->
+          <p class="text-stone-600 dark:text-stone-400 leading-relaxed mb-4">
+            {{ faqsByCategory[section]![0]!.answer }}
+          </p>
           <div class="space-y-3">
             <div
-              v-for="faq in faqsByCategory[section]"
+              v-for="faq in faqsByCategory[section]!.slice(1)"
               :key="faq.question"
               class="bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 overflow-hidden"
             >

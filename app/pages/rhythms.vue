@@ -398,7 +398,7 @@ function getDailyGaps(rhythmId: string): string[] {
             <span class="mx-1">&middot;</span>
             <span class="text-xs">Rhythms are views — they never alter your data</span>
           </p>
-          <HelpLink search="chains" label="Need help?" />
+          <HelpLink search="rhythms" label="Need help?" />
         </div>
       </div>
 
