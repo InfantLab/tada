@@ -53,7 +53,8 @@
       "Bash(npx tsc:*)",
       "Bash(bunx nuxi typecheck:*)",
       "Bash(git status:*)",
-      "Bash(APP_URL=https://tada.living bun:*)"
+      "Bash(APP_URL=https://tada.living bun:*)",
+      "Bash(git rm:*)"
     ]
   }
 }
