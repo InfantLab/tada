@@ -4,6 +4,7 @@ import type { CelebrationTier } from "~/types/weekly-rhythms";
 const { settings, loading, saving, error, fetchSettings, saveSettings } =
   useWeeklyRhythms();
 const { success: showSuccess, error: showError } = useToast();
+const push = usePushNotifications();
 
 // Local form state
 const celebrationEnabled = ref(false);
@@ -12,6 +13,8 @@ const celebrationTier = ref<CelebrationTier>("stats_only");
 const emailCelebration = ref(false);
 const emailEncouragement = ref(false);
 const acknowledgeCloud = ref(false);
+const pushCelebration = ref(false);
+const pushEncouragement = ref(false);
 
 // Prevent watchers from firing during server-to-local sync
 const syncing = ref(false);
@@ -27,6 +30,8 @@ watch(
     celebrationTier.value = s.celebrationTier;
     emailCelebration.value = s.deliveryChannels.celebration.email;
     emailEncouragement.value = s.deliveryChannels.encouragement.email;
+    pushCelebration.value = s.deliveryChannels.celebration.push;
+    pushEncouragement.value = s.deliveryChannels.encouragement.push;
     acknowledgeCloud.value = s.privacy.cloudAcknowledged;
     nextTick(() => {
       syncing.value = false;
@@ -62,8 +67,8 @@ watch(encouragementEnabled, (val) => {
   if (val && settings.value?.email.configured && !settings.value?.email.unsubscribed) {
     emailEncouragement.value = true;
     input.deliveryChannels = {
-      celebration: { inApp: true, email: emailCelebration.value, push: false },
-      encouragement: { inApp: true, email: true, push: false },
+      celebration: { inApp: true, email: emailCelebration.value, push: pushCelebration.value },
+      encouragement: { inApp: true, email: true, push: pushEncouragement.value },
     };
   }
   autoSave(input);
@@ -76,8 +81,8 @@ watch(celebrationEnabled, (val) => {
   if (val && settings.value?.email.configured && !settings.value?.email.unsubscribed) {
     emailCelebration.value = true;
     input.deliveryChannels = {
-      celebration: { inApp: true, email: true, push: false },
-      encouragement: { inApp: true, email: emailEncouragement.value, push: false },
+      celebration: { inApp: true, email: true, push: pushCelebration.value },
+      encouragement: { inApp: true, email: emailEncouragement.value, push: pushEncouragement.value },
     };
   }
   autoSave(input);
@@ -92,8 +97,8 @@ watch(emailCelebration, (val) => {
   if (syncing.value) return;
   autoSave({
     deliveryChannels: {
-      celebration: { inApp: true, email: val, push: false },
-      encouragement: { inApp: true, email: emailEncouragement.value, push: false },
+      celebration: { inApp: true, email: val, push: pushCelebration.value },
+      encouragement: { inApp: true, email: emailEncouragement.value, push: pushEncouragement.value },
     },
   });
 });
@@ -102,8 +107,42 @@ watch(emailEncouragement, (val) => {
   if (syncing.value) return;
   autoSave({
     deliveryChannels: {
-      celebration: { inApp: true, email: emailCelebration.value, push: false },
-      encouragement: { inApp: true, email: val, push: false },
+      celebration: { inApp: true, email: emailCelebration.value, push: pushCelebration.value },
+      encouragement: { inApp: true, email: val, push: pushEncouragement.value },
+    },
+  });
+});
+
+watch(pushCelebration, async (val) => {
+  if (syncing.value) return;
+  if (val && !push.isSubscribed.value) {
+    await push.subscribe();
+    if (!push.isSubscribed.value) {
+      pushCelebration.value = false;
+      return;
+    }
+  }
+  autoSave({
+    deliveryChannels: {
+      celebration: { inApp: true, email: emailCelebration.value, push: val },
+      encouragement: { inApp: true, email: emailEncouragement.value, push: pushEncouragement.value },
+    },
+  });
+});
+
+watch(pushEncouragement, async (val) => {
+  if (syncing.value) return;
+  if (val && !push.isSubscribed.value) {
+    await push.subscribe();
+    if (!push.isSubscribed.value) {
+      pushEncouragement.value = false;
+      return;
+    }
+  }
+  autoSave({
+    deliveryChannels: {
+      celebration: { inApp: true, email: emailCelebration.value, push: pushCelebration.value },
+      encouragement: { inApp: true, email: emailEncouragement.value, push: val },
     },
   });
 });
@@ -296,6 +335,62 @@ async function sendTestEmail(kind: "celebration" | "encouragement") {
             {{ sendingTestEncouragement ? "Sending..." : "Send Test Encouragement" }}
           </button>
         </div>
+      </div>
+
+      <!-- Push notification delivery toggles -->
+      <div
+        v-if="settings?.capabilities.pushAvailable && push.isSupported.value && (celebrationEnabled || encouragementEnabled)"
+        class="p-4"
+      >
+        <div class="font-medium text-sm text-stone-800 dark:text-stone-100 mb-2">
+          Push Notifications
+        </div>
+        <p class="text-xs text-stone-500 dark:text-stone-400 mb-3">
+          Delivered to this device when your weekly message is ready.
+        </p>
+
+        <div
+          v-if="push.permissionState.value === 'denied'"
+          class="text-xs text-amber-600 dark:text-amber-400 mb-2"
+        >
+          Notifications are blocked in your browser settings.
+        </div>
+
+        <div class="space-y-3">
+          <div v-if="celebrationEnabled" class="flex items-center justify-between">
+            <span class="text-sm text-stone-700 dark:text-stone-300">Push celebrations</span>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input
+                v-model="pushCelebration"
+                type="checkbox"
+                class="sr-only peer"
+                :disabled="push.permissionState.value === 'denied' || push.isLoading.value"
+              />
+              <div
+                class="w-9 h-5 bg-stone-200 peer-focus:outline-none rounded-full peer dark:bg-stone-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-stone-600 peer-checked:bg-emerald-500 peer-disabled:opacity-50"
+              />
+            </label>
+          </div>
+
+          <div v-if="encouragementEnabled" class="flex items-center justify-between">
+            <span class="text-sm text-stone-700 dark:text-stone-300">Push encouragements</span>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input
+                v-model="pushEncouragement"
+                type="checkbox"
+                class="sr-only peer"
+                :disabled="push.permissionState.value === 'denied' || push.isLoading.value"
+              />
+              <div
+                class="w-9 h-5 bg-stone-200 peer-focus:outline-none rounded-full peer dark:bg-stone-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-stone-600 peer-checked:bg-emerald-500 peer-disabled:opacity-50"
+              />
+            </label>
+          </div>
+        </div>
+
+        <p v-if="push.error.value" class="text-xs text-red-600 dark:text-red-400 mt-2">
+          {{ push.error.value }}
+        </p>
       </div>
 
       <!-- Status indicators -->

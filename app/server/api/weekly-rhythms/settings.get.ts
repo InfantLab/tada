@@ -4,6 +4,7 @@
  */
 
 import { getWeeklyRhythmSettings } from "~/server/services/weekly-rhythms/settings";
+import { isVapidConfigured } from "~/server/utils/push";
 import { createLogger } from "~/server/utils/logger";
 
 const logger = createLogger("api:weekly-rhythms:settings:get");
@@ -23,7 +24,7 @@ export default defineEventHandler(async (event) => {
       !!process.env["GROQ_API_KEY"] ||
       !!process.env["OPENAI_API_KEY"] ||
       !!process.env["ANTHROPIC_API_KEY"];
-    const pushAvailable = false; // Not yet implemented
+    const pushAvailable = isVapidConfigured();
 
     if (!settings) {
       // Return defaults for users who haven't onboarded

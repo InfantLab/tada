@@ -184,12 +184,28 @@ async function sweepEmailDelivery(now: Date, nowIso: string): Promise<void> {
         message.kind === "celebration"
           ? channels?.celebration?.email
           : channels?.encouragement?.email;
+      const pushEnabled =
+        message.kind === "celebration"
+          ? channels?.celebration?.push
+          : channels?.encouragement?.push;
+
+      let channelFired = false;
 
       if (emailEnabled && !settings?.emailUnsubscribedAt) {
         const { deliverEmailForMessage } = await import("./delivery");
         await deliverEmailForMessage(message.id, message.userId);
+        channelFired = true;
         delivered++;
-      } else {
+      }
+
+      if (pushEnabled) {
+        const { deliverPushForMessage } = await import("./push-delivery");
+        await deliverPushForMessage(message.id, message.userId);
+        channelFired = true;
+      }
+
+      if (!channelFired) {
+        // No delivery channels enabled — mark as delivered (in-app only)
         await withRetry(() =>
           db
             .update(systemMessages)

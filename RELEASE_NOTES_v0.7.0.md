@@ -1,7 +1,51 @@
 # Ta-Da! v0.7.0 Release Notes
 
 **Release Date:** March 2026
-**Codename:** TBD
+**Codename:** The PWA One
+
+---
+
+## What's New
+
+### PWA Glow-Up
+
+A round of progressive web app improvements across the board — making the installed app feel significantly more native.
+
+**Manifest fixes**
+- Maskable icon now correctly references `maskable-icon.png` (proper safe-zone cropping on Android home screens)
+- Added `id: "/"` to pin app identity across URL changes (reinstalls recognised as the same app)
+
+**App shortcuts**
+Long-press the Ta-Da! icon on Android or desktop Chromium for quick actions: New Entry, Record Dream, New Tally.
+
+**Offline fallback**
+Offline users now see a branded "You're offline" page instead of a raw browser error.
+
+**Screen Wake Lock**
+The screen stays on during voice recording sessions. No more mid-sentence screen-off interruptions. Re-acquires automatically if the OS releases the lock while still recording.
+
+### Web Push Notifications
+
+Weekly celebration and encouragement messages can now be delivered via push notification in addition to (or instead of) email — even when Ta-Da! isn't open.
+
+**How it works:**
+- Self-hosted operators generate VAPID keys (`npx web-push generate-vapid-keys`) and add them as env vars (`VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`)
+- Users opt in from Settings → Rhythms → Push Notifications
+- Toggling on triggers the browser permission prompt; the subscription is registered server-side
+- The Monday celebration and Thursday encouragement fire push notifications alongside (or instead of) email, per your channel preferences
+- Notifications click through directly to the `/rhythms` page
+
+**Platform notes:** Supported on Android Chrome and desktop Chromium. iOS requires the app to be installed to the home screen (standalone mode) and iOS 16.4+.
+
+**What was built:**
+- `push_subscriptions` table (endpoint, VAPID keys, failure tracking)
+- `POST /api/push/subscribe` and `DELETE /api/push/subscribe` endpoints
+- `GET /api/push/vapid-key` — exposes the public VAPID key to the client
+- Custom service worker (switched from `generateSW` to `injectManifest`) with `push` and `notificationclick` handlers
+- Push delivery service mirroring the email delivery pattern, with 410-gone handling (expired subscriptions soft-disabled)
+- Push delivery wired into the weekly rhythms scheduler sweep alongside email
+- `usePushNotifications` composable — permission request, subscribe/unsubscribe, reactive state
+- Push toggles in Settings → Weekly Rhythms (shown only when server is VAPID-configured and browser supports push)
 
 ---
 

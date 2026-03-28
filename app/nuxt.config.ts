@@ -55,6 +55,9 @@ export default defineNuxtConfig({
 
   // PWA configuration
   pwa: {
+    strategies: "injectManifest",
+    srcDir: "workers",
+    filename: "sw.ts",
     registerType: "autoUpdate",
     manifest: {
       id: "/",
@@ -117,38 +120,9 @@ export default defineNuxtConfig({
         },
       },
     },
+    // workbox config for injectManifest — caching strategies live in workers/sw.ts
     workbox: {
-      // Serve offline fallback for failed navigations (excluding API routes)
-      navigateFallback: "/offline.html",
-      navigateFallbackDenylist: [/^\/api\//],
-      // Cache strategies
-      runtimeCaching: [
-        {
-          // Handle navigation requests with NetworkFirst
-          urlPattern: ({ request }: { request: Request }) => request.mode === "navigate",
-          handler: "NetworkFirst",
-          options: {
-            cacheName: "pages-cache",
-            networkTimeoutSeconds: 10,
-          },
-        },
-        {
-          urlPattern: /^https:\/\/.*\.(mp3|wav|ogg|m4a)$/,
-          handler: "CacheFirst",
-          options: {
-            cacheName: "audio-cache",
-            expiration: {
-              maxEntries: 20,
-              maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
-            },
-          },
-        },
-        {
-          // Handle API requests with NetworkOnly (don't cache voice/structure endpoints)
-          urlPattern: /\/api\//,
-          handler: "NetworkOnly",
-        },
-      ],
+      globPatterns: ["**/*.{js,css,html,ico,png,svg,webp,woff,woff2}"],
     },
     client: {
       installPrompt: true,

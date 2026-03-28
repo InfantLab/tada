@@ -1169,3 +1169,27 @@ export const systemMessageDeliveries = sqliteTable("system_message_deliveries", 
 
 export type SystemMessageDelivery = typeof systemMessageDeliveries.$inferSelect;
 export type NewSystemMessageDelivery = typeof systemMessageDeliveries.$inferInsert;
+
+// ============================================================================
+// Push Subscriptions - Web Push subscription endpoints per device
+// ============================================================================
+
+export const pushSubscriptions = sqliteTable("push_subscriptions", {
+  id: text("id").primaryKey(), // UUID
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  endpoint: text("endpoint").notNull().unique(), // Push service URL
+  p256dh: text("p256dh").notNull(),              // Client public key (base64url)
+  auth: text("auth").notNull(),                  // Auth secret (base64url)
+  userAgent: text("user_agent"),                 // Informational only
+  createdAt: text("created_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
+  lastUsedAt: text("last_used_at"),
+  failureCount: integer("failure_count").notNull().default(0),
+  disabledAt: text("disabled_at"), // Set after repeated 410 responses
+});
+
+export type PushSubscription = typeof pushSubscriptions.$inferSelect;
+export type NewPushSubscription = typeof pushSubscriptions.$inferInsert;
