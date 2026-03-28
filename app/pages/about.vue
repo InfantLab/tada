@@ -89,8 +89,8 @@ const blogPosts = [
       <p class="text-lg text-stone-600 dark:text-stone-400">
         Track Activities, Discover Achievements
       </p>
-      <p class="text-sm text-stone-500 dark:text-stone-500 mt-2">
-        v{{ appVersion }}<template v-if="gitHash">+{{ gitHash }}</template>
+      <p class="text-sm font-medium text-stone-600 dark:text-stone-300 mt-2">
+        v{{ appVersion }}<template v-if="gitHash"> <span class="font-normal text-stone-400 dark:text-stone-500">+{{ gitHash }}</span></template>
       </p>
     </div>
 

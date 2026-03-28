@@ -25,6 +25,18 @@ interface FAQ {
 }
 
 // Section metadata for shortcuts and headings
+const appVersion = ref("");
+const gitHash = ref("");
+onMounted(async () => {
+  try {
+    const versionInfo = await $fetch("/api/version");
+    appVersion.value = versionInfo.version;
+    gitHash.value = versionInfo.gitShortHash;
+  } catch {
+    // Non-fatal
+  }
+});
+
 const sectionMeta: Record<string, { emoji: string; id: string }> = {
   Timeline: { emoji: "📅", id: "timeline" },
   "Ta-Da!": { emoji: "⚡", id: "tada" },
@@ -694,9 +706,14 @@ function scrollToSection(id: string) {
       </div>
     </div>
 
-    <!-- Footer Links -->
+    <!-- Version + Footer Links -->
+    <div class="mt-12 pt-8 border-t border-stone-200 dark:border-stone-700 text-center">
+      <p v-if="appVersion" class="text-sm font-medium text-stone-600 dark:text-stone-300 mb-4">
+        Ta-Da! v{{ appVersion }}<template v-if="gitHash"> <span class="font-normal text-stone-400 dark:text-stone-500">+{{ gitHash }}</span></template>
+      </p>
+    </div>
     <div
-      class="mt-12 pt-8 border-t border-stone-200 dark:border-stone-700 flex gap-4 text-sm justify-center"
+      class="flex gap-4 text-sm justify-center"
     >
       <NuxtLink
         to="/privacy"

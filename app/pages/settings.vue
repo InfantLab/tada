@@ -2314,9 +2314,9 @@ onMounted(() => {
 
         <!-- Version footer (About page accessible via help panel) -->
         <div class="text-center py-4">
-          <p class="text-xs text-stone-500 dark:text-stone-500 mb-2">
+          <p class="text-sm font-medium text-stone-600 dark:text-stone-300 mb-2">
             Ta-Da! v{{ appVersion
-            }}<template v-if="gitHash">+{{ gitHash }}</template>
+            }}<template v-if="gitHash"> <span class="font-normal text-stone-400 dark:text-stone-500">+{{ gitHash }}</span></template>
           </p>
           <div class="flex items-center justify-center gap-4 text-sm">
             <NuxtLink
