@@ -29,6 +29,16 @@ interface BlogPost {
 
 const posts: BlogPost[] = [
   {
+    slug: "whats-new-v06",
+    title: "What's New — March 2026",
+    excerpt:
+      "Three additions to Ta-Da!: a daily timeline bar that shows the shape of your day, weekly celebration summaries, and a mid-week encouragement check-in.",
+    date: "March 2026",
+    readTime: "3 min read",
+    category: "Updates",
+    emoji: "📅",
+  },
+  {
     slug: "counting-up",
     title: "Why We Count Up",
     excerpt:
