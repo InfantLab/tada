@@ -45,7 +45,9 @@ Weekly celebration and encouragement messages can now be delivered via push noti
 
 ### Registration error messages now surface correctly (#10)
 
-When registration failed (e.g. username already taken, password too short), users saw a generic "Registration failed" message instead of the actual reason. The frontend was reading the HTTP status text rather than the backend's validation message. Also removes the 3-character username minimum — single-character usernames are now valid.
+When registration failed (e.g. username already taken, password too short), users saw a generic "Registration failed" message instead of the actual reason. The frontend was reading the HTTP status text rather than the backend's validation message.
+
+Also adds enforcement of the 3-character username minimum on both the frontend (immediate feedback before submission) and backend (validation guard). Usernames must be between 3 and 31 characters.
 
 ### Android PWA: mic noise during recording fixed (#5)
 
