@@ -64,3 +64,10 @@ On Android Chrome, pressing the record button produced loud beeping and clunking
 **Root cause:** enabling `echoCancellation`, `noiseSuppression`, and `autoGainControl` in `getUserMedia` caused Chrome to activate Android's `MODE_IN_COMMUNICATION` audio routing — the same mode used for phone calls. This reroutes speaker output to the earpiece, which sits next to the microphone, and any system sounds (notifications, UI feedback) were picked up directly by the mic.
 
 **Fix:** all three audio processing constraints are now disabled. Whisper handles ambient noise well without browser-level processing, so transcription quality is unaffected. Additionally, `AudioContext.setSinkId('')` is set to prevent Chrome from routing the visualisation context's output to any speaker, and the cleanup order is reversed (AudioContext closed before stream tracks stopped) to eliminate a secondary clunk artifact at the end of recordings.
+
+---
+
+## What's Deferred
+
+- **LLM titles for audio entries (#6)** — auto-generating entry titles from voice transcriptions. Deferred to v0.8.0.
+- **Dedicated support channel for tada.living** — set up `bot@tada.living` as a transactional/support email address for push VAPID contact, SMTP from-address, and future in-app feedback routing.
