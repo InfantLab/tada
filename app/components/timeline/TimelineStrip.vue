@@ -38,6 +38,7 @@ const dots = computed(() => timelineEntries.value.filter((e) => e.isDot));
     <button
       class="absolute -right-1 -top-1 z-20 w-5 h-5 rounded-full bg-stone-100 dark:bg-stone-700 border border-stone-300 dark:border-stone-500 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-[10px] leading-none"
       :title="timelineStyle === 'minimal' ? 'Switch to beautiful view' : 'Switch to minimal view'"
+      :aria-label="timelineStyle === 'minimal' ? 'Switch to beautiful view' : 'Switch to minimal view'"
       @click.stop="toggleTimelineStyle()"
     >
       {{ timelineStyle === 'minimal' ? '✨' : '—' }}

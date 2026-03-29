@@ -40,6 +40,7 @@ const categories = computed(() => [
       :key="cat.value"
       type="button"
       class="flex items-center gap-1.5 px-3 py-2 rounded-full text-sm whitespace-nowrap transition-colors"
+      :aria-pressed="selectedCategory === cat.value"
       :class="
         selectedCategory === cat.value
           ? 'bg-tada-500 text-white shadow-md'

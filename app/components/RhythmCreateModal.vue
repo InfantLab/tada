@@ -52,6 +52,10 @@ const emit = defineEmits<{
   ): void;
 }>();
 
+// Focus management
+const nameInputRef = ref<HTMLInputElement | null>(null);
+const triggerElement = ref<Element | null>(null);
+
 // Form state
 const name = ref("");
 const entryType = ref<"timed" | "tally" | "moment" | "tada">("timed");
@@ -82,6 +86,9 @@ watch(
   () => props.isOpen,
   (isOpen) => {
     if (isOpen) {
+      // Save trigger element for focus restoration on close
+      triggerElement.value = document.activeElement;
+
       if (props.editRhythm) {
         // Edit mode
         name.value = props.editRhythm.name;
@@ -118,6 +125,15 @@ watch(
         specificActivityName.value = "";
       }
       error.value = null;
+
+      // Move focus into modal after DOM update
+      nextTick(() => {
+        nameInputRef.value?.focus();
+      });
+    } else {
+      // Restore focus to the element that opened the modal
+      (triggerElement.value as HTMLElement | null)?.focus();
+      triggerElement.value = null;
     }
   },
 );
@@ -345,11 +361,14 @@ async function save() {
 
         <!-- Modal -->
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="rhythm-create-title"
           class="relative my-auto w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-xl dark:bg-gray-800"
         >
           <!-- Header -->
           <div class="mb-6 flex items-center justify-between">
-            <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 id="rhythm-create-title" class="text-xl font-semibold text-gray-900 dark:text-white">
               {{ modalTitle }}
             </h2>
             <button
@@ -385,6 +404,7 @@ async function save() {
               </label>
               <input
                 id="rhythm-name"
+                ref="nameInputRef"
                 v-model="name"
                 type="text"
                 placeholder="Daily Meditation"
@@ -400,11 +420,13 @@ async function save() {
               >
                 Entry Type
               </label>
-              <div class="grid grid-cols-2 gap-2">
+              <div role="radiogroup" aria-label="Entry type" class="grid grid-cols-2 gap-2">
                 <button
                   v-for="option in entryTypeOptions"
                   :key="option.value"
                   type="button"
+                  role="radio"
+                  :aria-checked="entryType === option.value"
                   :class="[
                     'flex items-center justify-center gap-2 rounded-lg border-2 px-3 py-2.5 text-sm font-medium transition-colors',
                     entryType === option.value
@@ -426,11 +448,13 @@ async function save() {
               >
                 Type of moment
               </label>
-              <div class="flex gap-2">
+              <div role="radiogroup" aria-label="Type of moment" class="flex gap-2">
                 <button
                   v-for="option in momentSubcategories"
                   :key="String(option.value)"
                   type="button"
+                  role="radio"
+                  :aria-checked="subcategory === option.value"
                   :class="[
                     'flex-1 flex items-center justify-center gap-2 rounded-lg border-2 px-3 py-2 text-sm font-medium transition-colors',
                     subcategory === option.value
@@ -483,11 +507,13 @@ async function save() {
               >
                 Category
               </label>
-              <div class="mt-2 grid grid-cols-2 gap-2">
+              <div role="radiogroup" aria-label="Category" class="mt-2 grid grid-cols-2 gap-2">
                 <button
                   v-for="option in categoryOptions"
                   :key="option.value"
                   type="button"
+                  role="radio"
+                  :aria-checked="category === option.value"
                   :class="[
                     'flex items-center gap-2 rounded-lg border-2 px-3 py-2 text-sm font-medium transition-colors',
                     category === option.value

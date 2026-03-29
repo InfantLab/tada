@@ -56,6 +56,10 @@ const emit = defineEmits<{
 const { createEntry, checkConflicts, isLoading } = useEntryEngine();
 const toast = useToast();
 
+// Focus management
+const firstFocusRef = ref<HTMLElement | null>(null);
+const triggerElement = ref<Element | null>(null);
+
 // Form state
 const mode = ref<EntryMode>(props.initialMode);
 const name = ref(props.initialName);
@@ -107,6 +111,9 @@ watch(
   () => props.open,
   (isOpen) => {
     if (isOpen) {
+      // Save trigger element for focus restoration on close
+      triggerElement.value = document.activeElement;
+
       // Check if resuming from draft
       if (props.resumeDraft) {
         const draft = props.resumeDraft;
@@ -144,6 +151,15 @@ watch(
       }
       conflicts.value = null;
       conflictResolution.value = null;
+
+      // Move focus into modal after DOM update
+      nextTick(() => {
+        firstFocusRef.value?.focus();
+      });
+    } else {
+      // Restore focus to the element that opened the modal
+      (triggerElement.value as HTMLElement | null)?.focus();
+      triggerElement.value = null;
     }
   },
 );
@@ -355,18 +371,22 @@ const modeLabels: Record<EntryMode, string> = {
         >
           <div
             v-if="open"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="quick-entry-title"
             class="relative w-full sm:max-w-md mx-auto bg-white dark:bg-stone-900 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
           >
             <!-- Header -->
             <div
               class="flex items-center justify-between px-4 py-3 border-b border-stone-200 dark:border-stone-700"
             >
-              <h2 class="text-lg font-semibold text-stone-900 dark:text-white">
+              <h2 id="quick-entry-title" class="text-lg font-semibold text-stone-900 dark:text-white">
                 {{ modeLabels[mode] }}
               </h2>
               <button
+                ref="firstFocusRef"
                 type="button"
-                class="p-1 rounded-full text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
+                class="p-2 rounded-full text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
                 @click="closeModal"
               >
                 <svg
@@ -467,12 +487,14 @@ const modeLabels: Record<EntryMode, string> = {
               <!-- Notes (moved up, right after title) -->
               <div class="space-y-1">
                 <label
+                  for="entry-notes"
                   class="block text-sm font-medium text-stone-700 dark:text-stone-300"
                 >
                   Notes
                   <span class="text-stone-400 font-normal">(optional)</span>
                 </label>
                 <textarea
+                  id="entry-notes"
                   v-model="notes"
                   :rows="2"
                   :placeholder="

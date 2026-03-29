@@ -34,6 +34,7 @@ const levels: { value: ZoomLevel; label: string; icon: string }[] = [
       :key="level.value"
       type="button"
       class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200"
+      :aria-pressed="zoomLevel === level.value"
       :class="
         zoomLevel === level.value
           ? 'bg-white dark:bg-stone-700 text-stone-800 dark:text-stone-100 shadow-sm'

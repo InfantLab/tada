@@ -93,7 +93,7 @@ function select(value: CelebrationTier) {
           {{ tier.label }}
           <span
             v-if="isDisabled(tier)"
-            class="text-xs text-stone-400 dark:text-stone-500 ml-1"
+            class="text-xs text-stone-500 dark:text-stone-500 ml-1"
           >
             (unavailable)
           </span>

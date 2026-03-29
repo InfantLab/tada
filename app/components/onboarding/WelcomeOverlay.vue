@@ -76,12 +76,12 @@ onUnmounted(() => {
         <div class="absolute inset-0 bg-gradient-to-b from-tada-900/80 to-stone-900/90 backdrop-blur-sm" />
 
         <!-- Content -->
-        <div class="relative text-center max-w-md">
+        <div role="dialog" aria-modal="true" aria-labelledby="welcome-title" class="relative text-center max-w-md">
           <!-- Gentle sparkle -->
           <div class="text-6xl mb-6 animate-pulse">✨</div>
 
           <!-- Welcome message -->
-          <h1 class="text-3xl md:text-4xl font-bold text-white mb-4">
+          <h1 id="welcome-title" class="text-3xl md:text-4xl font-bold text-white mb-4">
             Welcome to Ta-Da!
           </h1>
 

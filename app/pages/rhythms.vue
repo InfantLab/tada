@@ -494,8 +494,11 @@ function getDailyGaps(rhythmId: string): string[] {
         class="rounded-xl border border-stone-200 bg-white shadow-sm dark:border-stone-700 dark:bg-stone-800"
       >
         <!-- Collapsed header - clickable to expand -->
-        <div
-          class="flex cursor-pointer items-start gap-4 p-4"
+        <button
+          type="button"
+          :aria-expanded="isPanelExpanded(rhythm.id)"
+          :aria-controls="`rhythm-panel-${rhythm.id}`"
+          class="flex w-full cursor-pointer items-start gap-4 p-4 text-left bg-transparent border-0 appearance-none"
           @click="togglePanel(rhythm.id)"
         >
           <!-- Emoji -->
@@ -587,11 +590,12 @@ function getDailyGaps(rhythmId: string): string[] {
               />
             </svg>
           </div>
-        </div>
+        </button>
 
         <!-- Expanded panel with chain tabs and encouragement -->
         <div
           v-if="isPanelExpanded(rhythm.id)"
+          :id="`rhythm-panel-${rhythm.id}`"
           class="border-t border-stone-200 p-4 dark:border-stone-700"
         >
           <template v-if="getProgress(rhythm.id)">

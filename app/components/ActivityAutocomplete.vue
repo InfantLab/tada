@@ -172,6 +172,7 @@ onUnmounted(() => {
     <!-- Label -->
     <label
       v-if="label"
+      for="activity-input"
       class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1"
     >
       {{ label }}
@@ -180,6 +181,7 @@ onUnmounted(() => {
     <!-- Input -->
     <div class="relative">
       <input
+        id="activity-input"
         ref="inputRef"
         :value="modelValue"
         type="text"

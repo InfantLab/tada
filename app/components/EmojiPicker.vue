@@ -22,10 +22,16 @@ const emit = defineEmits<Emits>();
 
 const pickerContainer = ref<HTMLElement | null>(null);
 const pickerInstance = ref<EmojiPickerElement | null>(null);
+const closeButtonRef = ref<HTMLElement | null>(null);
+const triggerElement = ref<Element | null>(null);
 
 // Close modal
 function close() {
   emit("update:modelValue", false);
+
+  // Restore focus to the element that opened the picker
+  (triggerElement.value as HTMLElement | null)?.focus();
+  triggerElement.value = null;
 
   // Clean up picker instance so it recreates fresh next time
   if (pickerInstance.value && pickerContainer.value) {
@@ -56,6 +62,9 @@ watch(
   () => props.modelValue,
   async (isOpen) => {
     if (isOpen && !pickerInstance.value) {
+      // Save trigger element for focus restoration on close
+      triggerElement.value = document.activeElement;
+
       // Wait for next tick to ensure DOM is ready
       await nextTick();
 
@@ -81,6 +90,11 @@ watch(
         // Store instance and append to container
         pickerInstance.value = picker;
         pickerContainer.value.appendChild(picker);
+
+        // Focus the close button so keyboard users land inside the modal
+        nextTick(() => {
+          closeButtonRef.value?.focus();
+        });
       } catch (error) {
         console.error("Failed to load emoji picker:", error);
       }
@@ -119,6 +133,9 @@ onUnmounted(() => {
         @click="close"
       >
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="emoji-picker-title"
           class="bg-white dark:bg-stone-800 rounded-xl shadow-xl overflow-hidden max-h-[90vh]"
           @click.stop
         >
@@ -127,6 +144,7 @@ onUnmounted(() => {
             class="flex items-center justify-between px-4 py-3 border-b border-stone-200 dark:border-stone-700"
           >
             <h3
+              id="emoji-picker-title"
               class="text-lg font-semibold text-stone-800 dark:text-stone-100"
             >
               Choose Emoji
@@ -135,6 +153,7 @@ onUnmounted(() => {
               </span>
             </h3>
             <button
+              ref="closeButtonRef"
               class="p-2 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-lg transition-colors"
               @click="close"
             >

@@ -92,6 +92,11 @@ onUnmounted(() => {
 
 <template>
   <div class="min-h-screen bg-pearl-base dark:bg-cosmic-violet">
+    <a
+      href="#main-content"
+      class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[200] focus:bg-white focus:dark:bg-stone-800 focus:px-4 focus:py-2 focus:rounded-lg focus:text-tada-600 focus:ring-2 focus:ring-tada-500 focus:text-sm focus:font-medium"
+    >Skip to main content</a>
+
     <!-- Dev Environment Banner -->
     <DevBanner />
     
@@ -184,7 +189,7 @@ onUnmounted(() => {
     </header>
 
     <!-- Main content -->
-    <main class="max-w-4xl mx-auto px-4 py-6 pb-24 sm:pb-6">
+    <main id="main-content" class="max-w-4xl mx-auto px-4 py-6 pb-24 sm:pb-6">
       <slot />
     </main>
 
@@ -211,6 +216,7 @@ onUnmounted(() => {
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
+            aria-hidden="true"
           >
             <path
               stroke-linecap="round"
@@ -226,6 +232,7 @@ onUnmounted(() => {
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
+            aria-hidden="true"
           >
             <path
               stroke-linecap="round"
@@ -247,6 +254,7 @@ onUnmounted(() => {
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
+            aria-hidden="true"
           >
             <path
               stroke-linecap="round"
@@ -262,6 +270,7 @@ onUnmounted(() => {
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
+            aria-hidden="true"
           >
             <path
               stroke-linecap="round"
@@ -277,6 +286,7 @@ onUnmounted(() => {
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
+            aria-hidden="true"
           >
             <path
               stroke-linecap="round"
@@ -292,6 +302,7 @@ onUnmounted(() => {
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
+            aria-hidden="true"
           >
             <path
               stroke-linecap="round"

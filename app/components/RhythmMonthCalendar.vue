@@ -3,7 +3,7 @@
     <!-- Month header -->
     <div class="mb-3 flex items-center justify-between">
       <button
-        class="rounded p-1 text-stone-400 hover:bg-stone-100 hover:text-stone-600 dark:hover:bg-stone-700 dark:hover:text-stone-300"
+        class="rounded p-2 text-stone-400 hover:bg-stone-100 hover:text-stone-600 dark:hover:bg-stone-700 dark:hover:text-stone-300"
         @click="previousMonth"
       >
         <svg
@@ -26,7 +26,7 @@
       </h4>
 
       <button
-        class="rounded p-1 text-stone-400 hover:bg-stone-100 hover:text-stone-600 dark:hover:bg-stone-700 dark:hover:text-stone-300"
+        class="rounded p-2 text-stone-400 hover:bg-stone-100 hover:text-stone-600 dark:hover:bg-stone-700 dark:hover:text-stone-300"
         :disabled="isCurrentMonth"
         :class="{ 'opacity-30 cursor-not-allowed': isCurrentMonth }"
         @click="nextMonth"
@@ -72,7 +72,7 @@
 
     <!-- Legend and Summary -->
     <div class="mt-3 flex items-center justify-between">
-      <div class="flex items-center gap-1 text-xs text-stone-400">
+      <div class="flex items-center gap-1 text-xs text-stone-500">
         <span>Less</span>
         <div class="flex gap-0.5">
           <div
@@ -363,7 +363,7 @@ function getLegendClass(level: number): string {
   text-align: center;
   font-size: 0.625rem;
   font-weight: 500;
-  color: #9ca3af;
+  color: #6b7280;
   padding: 0.25rem 0;
 }
 
@@ -394,7 +394,7 @@ function getLegendClass(level: number): string {
 }
 
 .calendar-day.is-future {
-  color: #9ca3af;
+  color: #6b7280;
   background: #fafafa;
 }
 

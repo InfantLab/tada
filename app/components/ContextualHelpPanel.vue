@@ -287,12 +287,15 @@ onUnmounted(() => {
     >
       <div
         v-if="open"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="help-panel-title"
         class="fixed right-0 top-0 bottom-0 w-full max-w-md bg-pearl-cream dark:bg-cosmic-void border-l border-stone-200 dark:border-stone-700 z-50 overflow-y-auto"
       >
         <!-- Header -->
         <div class="sticky top-0 bg-pearl-cream/95 dark:bg-cosmic-void/95 backdrop-blur-sm border-b border-stone-200 dark:border-stone-700 px-6 py-4 flex items-center justify-between">
           <div>
-            <h2 class="text-lg font-semibold text-stone-800 dark:text-stone-100">
+            <h2 id="help-panel-title" class="text-lg font-semibold text-stone-800 dark:text-stone-100">
               {{ currentHelp.title }}
             </h2>
             <p class="text-sm text-stone-500 dark:text-stone-400">
@@ -336,7 +339,7 @@ onUnmounted(() => {
                   </p>
                   <p
                     v-if="section.tip"
-                    class="mt-2 text-sm text-tada-600 dark:text-tada-400 flex items-start gap-1"
+                    class="mt-2 text-sm text-tada-700 dark:text-tada-400 flex items-start gap-1"
                   >
                     <span class="flex-shrink-0">💡</span>
                     <span>{{ section.tip }}</span>
@@ -350,7 +353,7 @@ onUnmounted(() => {
           <div class="pt-4 border-t border-stone-200 dark:border-stone-700 space-y-3">
             <NuxtLink
               to="/help"
-              class="flex items-center gap-2 text-tada-600 dark:text-tada-400 hover:underline"
+              class="flex items-center gap-2 text-tada-700 dark:text-tada-400 hover:underline"
               @click="close"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

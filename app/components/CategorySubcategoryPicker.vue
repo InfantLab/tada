@@ -64,8 +64,9 @@ const selectClass = computed(() =>
 <template>
   <div :class="gridClass">
     <div :class="wrapperClass">
-      <label :class="labelClass">Category</label>
+      <label for="category-select" :class="labelClass">Category</label>
       <select
+        id="category-select"
         :value="category ?? ''"
         :class="selectClass"
         @change="handleCategoryChange"
@@ -83,8 +84,9 @@ const selectClass = computed(() =>
       </select>
     </div>
     <div :class="wrapperClass">
-      <label :class="labelClass">Subcategory</label>
+      <label for="subcategory-select" :class="labelClass">Subcategory</label>
       <select
+        id="subcategory-select"
         :value="subcategory ?? ''"
         :disabled="!category"
         :class="selectClass"

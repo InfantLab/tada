@@ -256,7 +256,7 @@ watch(zoomLevel, (newLevel) => {
         </span>
         <button
           type="button"
-          class="text-tada-600 dark:text-tada-400 hover:underline"
+          class="text-tada-700 dark:text-tada-400 hover:underline"
           @click="clearFilter"
         >
           Clear

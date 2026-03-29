@@ -46,7 +46,7 @@ async function handleEnable() {
   enabling.value = false;
   isVisible.value = false;
   acknowledgeNewVersion();
-  await router.push("/settings");
+  await router.push("/settings#section-rhythms");
 }
 
 function handleDismiss() {

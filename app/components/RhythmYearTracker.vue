@@ -4,7 +4,7 @@
     <div class="mb-2 flex items-center justify-between">
       <div class="flex items-center gap-2">
         <button
-          class="rounded p-1 text-stone-400 hover:bg-stone-100 hover:text-stone-600 dark:hover:bg-stone-700 dark:hover:text-stone-300"
+          class="rounded p-2 text-stone-400 hover:bg-stone-100 hover:text-stone-600 dark:hover:bg-stone-700 dark:hover:text-stone-300"
           @click="previousYear"
         >
           <svg
@@ -25,7 +25,7 @@
           {{ periodLabel }}
         </h4>
         <button
-          class="rounded p-1 text-stone-400 hover:bg-stone-100 hover:text-stone-600 dark:hover:bg-stone-700 dark:hover:text-stone-300"
+          class="rounded p-2 text-stone-400 hover:bg-stone-100 hover:text-stone-600 dark:hover:bg-stone-700 dark:hover:text-stone-300"
           :disabled="isCurrentPeriod"
           :class="{ 'opacity-30 cursor-not-allowed': isCurrentPeriod }"
           @click="nextYear"
@@ -46,7 +46,7 @@
         </button>
       </div>
       <div
-        class="flex items-center gap-1 text-xs text-stone-400 dark:text-stone-500"
+        class="flex items-center gap-1 text-xs text-stone-500 dark:text-stone-500"
       >
         <span>Less</span>
         <div class="flex gap-0.5">
@@ -422,7 +422,7 @@ function getDayTooltip(day: DayData): string {
   display: flex;
   padding-left: 2rem; /* Space for day labels */
   font-size: 0.625rem;
-  color: #9ca3af;
+  color: #6b7280;
 }
 
 .month-label {
@@ -446,7 +446,7 @@ function getDayTooltip(day: DayData): string {
 
 .day-label {
   font-size: 0.625rem;
-  color: #9ca3af;
+  color: #6b7280;
   height: 0.625rem;
   line-height: 0.625rem;
 }

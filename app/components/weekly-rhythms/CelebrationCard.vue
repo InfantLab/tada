@@ -121,7 +121,7 @@ const sectionIcon = (section: string) => {
 
     <!-- Footer: tier badge + upgrade nudge -->
     <div class="px-4 pb-3 pt-1 flex items-center justify-between border-t border-amber-100/50 dark:border-stone-700/50">
-      <span class="text-xs text-stone-400 dark:text-stone-500">
+      <span class="text-xs text-stone-500 dark:text-stone-500">
         {{ tierLabel }}
       </span>
       <NuxtLink

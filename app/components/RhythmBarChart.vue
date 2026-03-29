@@ -3,7 +3,7 @@
     <!-- Navigation header -->
     <div class="mb-2 flex items-center justify-between">
       <button
-        class="rounded p-1 text-stone-400 hover:bg-stone-100 hover:text-stone-600 dark:hover:bg-stone-700 dark:hover:text-stone-300"
+        class="rounded p-2 text-stone-400 hover:bg-stone-100 hover:text-stone-600 dark:hover:bg-stone-700 dark:hover:text-stone-300"
         @click.stop="previousPeriod"
       >
         <svg
@@ -26,7 +26,7 @@
       </span>
 
       <button
-        class="rounded p-1 text-stone-400 hover:bg-stone-100 hover:text-stone-600 dark:hover:bg-stone-700 dark:hover:text-stone-300"
+        class="rounded p-2 text-stone-400 hover:bg-stone-100 hover:text-stone-600 dark:hover:bg-stone-700 dark:hover:text-stone-300"
         :disabled="isCurrentPeriod"
         :class="{ 'opacity-30 cursor-not-allowed': isCurrentPeriod }"
         @click.stop="nextPeriod"
@@ -350,7 +350,7 @@ function getTooltip(day: ChartDay): string {
 
 .day-label {
   font-size: 0.5rem;
-  color: #9ca3af;
+  color: #6b7280;
   margin-top: 2px;
   line-height: 1;
 }
@@ -379,7 +379,7 @@ function getTooltip(day: ChartDay): string {
   top: 50%;
   transform: translateY(-50%) rotate(-90deg);
   font-size: 0.5rem;
-  color: #9ca3af;
+  color: #6b7280;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
