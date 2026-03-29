@@ -39,6 +39,42 @@ Weekly celebration and encouragement messages can now be delivered via push noti
 
 **Operator setup:** generate keys with `npx web-push generate-vapid-keys`, then set `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, and `VAPID_SUBJECT` env vars in CapRover.
 
+### Accessibility Glow-Up (WCAG 2.2 AA)
+
+A comprehensive accessibility audit and two-phase implementation touching 22 files. Ta-Da! is now significantly more usable for keyboard-only users, screen reader users, and people with colour vision deficiencies.
+
+**Screen reader improvements:**
+- Skip-to-main-content link on every page
+- All 5 modals now announce as dialogs (`role="dialog"`, `aria-modal`, `aria-labelledby`)
+- Form labels properly wired to inputs across 4 components
+- Filter and toggle buttons announce their selected state (`aria-pressed`)
+- Decorative nav SVGs hidden from screen readers
+- Timeline strip toggle has a proper `aria-label`
+- Rhythm type/category selection buttons use `radiogroup` + `aria-checked` semantics
+
+**Keyboard navigation:**
+- Focus moves into modals on open and restores to the trigger on close
+- Rhythm expand/collapse panels are now keyboard-accessible buttons with `aria-expanded`
+
+**Colour contrast (WCAG AA):**
+- `tada-600` text upgraded to `tada-700` on light backgrounds (2.5:1 → 4.5:1+)
+- `stone-400` informational text upgraded to `stone-500` in light mode
+- Hardcoded low-contrast colours in chart labels fixed
+
+**Touch targets:**
+- Chart navigation buttons enlarged from ~28px to ~36px
+- Modal close button enlarged
+
+A Phase 3 handover doc lives at `design/accessibility.md` covering remaining work: focus traps, colourblind-safe heatmaps, category colour contrast, year tracker keyboard grid, `prefers-reduced-motion`, and more.
+
+### Version Number Visibility
+
+Version number at the bottom of the Help, Settings, and About pages is now legible in both light and dark mode (was previously faint and tiny). Also added to the Help page where it was missing entirely.
+
+### What's New → Settings Navigation
+
+Clicking "Yes, turn it on!" in the What's New overlay now navigates directly to the Rhythms section of Settings (`/settings#section-rhythms`) instead of the top of the settings page.
+
 ---
 
 ## Bug Fixes

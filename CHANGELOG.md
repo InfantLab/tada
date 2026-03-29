@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-03-29
+
+### Theme: PWA, Push Notifications & Accessibility
+
+Progressive web app glow-up, web push notifications for weekly rhythms, a comprehensive accessibility audit (WCAG 2.2 AA Phase 1+2), and several bug fixes.
+
+### Added
+
+- **Web Push Notifications**: weekly celebration and encouragement messages via push notification (requires VAPID keys)
+- **PWA improvements**: maskable icon fix, app identity pinning (`id: "/"`), app shortcuts (New Entry, Record Dream, New Tally), offline fallback page, screen wake lock during voice recording
+- **Accessibility — Screen reader support**:
+  - Skip-to-main-content link on every page
+  - `role="dialog"` + `aria-modal` + `aria-labelledby` on all 5 modals (QuickEntryModal, EmojiPicker, RhythmCreateModal, ContextualHelpPanel, WelcomeOverlay)
+  - Form labels wired to inputs via `for`/`id` in CategorySubcategoryPicker, ActivityAutocomplete, DurationPicker, QuickEntryModal
+  - `aria-pressed` on CategoryFilter and ZoomToggle buttons
+  - `aria-hidden="true"` on decorative nav SVGs
+  - `aria-label` on TimelineStrip toggle button
+  - `role="radiogroup"` + `aria-checked` on RhythmCreateModal button groups
+- **Accessibility — Keyboard navigation**:
+  - Focus moves into modals on open, restores to trigger on close
+  - Rhythm expand/collapse panels now keyboard-accessible (`<button aria-expanded>`)
+- **Accessibility — Touch targets**: chart navigation buttons enlarged from ~28px to ~36px; modal close button enlarged
+- **Version number** now displayed on Help/FAQ page (was missing)
+- **Accessibility handover doc** at `design/accessibility.md` for Phase 3 remaining work
+
+### Fixed
+
+- **Registration error messages** (#10): frontend now surfaces backend validation messages; added 3-character username minimum on both frontend and backend
+- **Android PWA mic noise** (#5): disabled echoCancellation/noiseSuppression/autoGainControl to prevent Android audio routing issues
+- **Colour contrast (WCAG AA)**: `text-tada-600` → `text-tada-700` on light backgrounds; `text-stone-400` → `text-stone-500` for light-mode informational text; hardcoded `#9ca3af` → `#6b7280` in chart scoped styles
+- **Version number legibility**: upgraded from `text-xs text-stone-500` to `text-sm text-stone-600 dark:text-stone-300` on Settings, About, and Help pages
+- **What's New overlay**: "Yes, turn it on!" now navigates to `/settings#section-rhythms` instead of top of settings
+
 ## [0.6.0] - 2026-03-27
 
 ### Theme: Weekly Rhythms, Daily Timelines & Polish

@@ -2,7 +2,7 @@
 
 What's coming next. For what already shipped, see [CHANGELOG.md](../CHANGELOG.md) and the release notes.
 
-**Current Version:** v0.6.0 (March 2026) | **Next:** v0.7.0
+**Current Version:** v0.6.1 (March 2026) | **Next:** v0.7.0
 
 ---
 
@@ -18,12 +18,39 @@ What's coming next. For what already shipped, see [CHANGELOG.md](../CHANGELOG.md
 | **v0.4.2** | Backups, Polish & Code Quality | ✅ Shipped Mar 2026 | [Release Notes](../RELEASE_NOTES_v0.4.2.md) |
 | **v0.5.0** | Housekeeping & Infrastructure | ✅ Shipped Mar 2026 | [Release Notes](../RELEASE_NOTES_v0.5.0.md) |
 | **v0.6.0** | Weekly Rhythms, Daily Timelines & Polish | ✅ Shipped Mar 2026 | [Release Notes](../RELEASE_NOTES_v0.6.0.md) |
+| **v0.6.1** | PWA, Push & Accessibility    | ✅ Shipped Mar 2026 | [Release Notes](../RELEASE_NOTES_v0.6.1.md) |
 
 ## Upcoming
 
 | Version    | Theme                       | Target   |
 | ---------- | --------------------------- | -------- |
 | **v0.7.0** | Features & Integrations     | 2026+    |
+
+---
+
+## v0.6.1: PWA, Push Notifications & Accessibility ✅
+
+_Shipped: March 2026_
+
+**Theme:** Progressive web app polish, web push notifications for weekly rhythms, and a comprehensive WCAG 2.2 AA accessibility audit (Phases 1+2 implemented, Phase 3 documented for future sprint).
+
+**Key deliverables — PWA & Push:**
+- Maskable icon, app identity pinning, app shortcuts, offline fallback page
+- Screen wake lock during voice recording
+- Web push notifications for Monday celebrations and Thursday encouragements (VAPID-based, opt-in)
+
+**Key deliverables — Accessibility (Phase 1+2):**
+- Skip-to-content link, dialog roles on all modals, form label wiring, aria-pressed/aria-checked semantics
+- Focus management: modals capture focus on open, restore on close
+- Colour contrast fixes: text-tada-600→700, stone-400→500, hardcoded chart colours
+- Chart button touch targets enlarged, keyboard-accessible rhythm panels
+- Handover doc at `design/accessibility.md` for Phase 3 (focus traps, colourblind heatmaps, reduced motion, etc.)
+
+**Bug fixes:**
+- Registration error messages now surface correctly (#10) — 3-char username minimum enforced
+- Android PWA mic noise fixed (#5)
+- Version number legibility on Help, Settings, About pages
+- What's New overlay navigates to rhythms section of settings
 
 ---
 
