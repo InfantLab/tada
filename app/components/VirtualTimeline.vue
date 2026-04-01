@@ -133,6 +133,7 @@ async function loadInitial() {
     entries.value = data.entries;
     nextCursor.value = data.nextCursor;
     hasMore.value = data.hasMore;
+    announceFilterResults();
   } catch (err: unknown) {
     console.error("Failed to fetch entries:", err);
     error.value = err instanceof Error ? err.message : "Failed to load entries";
@@ -156,6 +157,20 @@ async function loadMore() {
   } finally {
     isLoadingMore.value = false;
   }
+}
+
+// Screen reader announcement for filter results (debounced)
+const filterAnnouncement = ref('');
+let announceTimer: ReturnType<typeof setTimeout> | null = null;
+
+function announceFilterResults() {
+  if (announceTimer) clearTimeout(announceTimer);
+  announceTimer = setTimeout(() => {
+    const count = entries.value.length;
+    filterAnnouncement.value = count === 0
+      ? 'No entries found'
+      : `${count} ${count === 1 ? 'entry' : 'entries'} found`;
+  }, 300);
 }
 
 // Reload when filters change
@@ -323,6 +338,11 @@ defineExpose({ loadInitial, entries });
 
 <template>
   <div class="virtual-timeline">
+    <!-- Screen reader announcement for filter results -->
+    <div role="status" aria-live="polite" class="sr-only">
+      {{ filterAnnouncement }}
+    </div>
+
     <!-- Loading state -->
     <div v-if="isLoading" class="flex items-center justify-center py-12">
       <div
@@ -338,7 +358,7 @@ defineExpose({ loadInitial, entries });
       </h2>
       <p class="text-stone-500 dark:text-stone-400 mb-4">{{ error }}</p>
       <button
-        class="px-4 py-2 bg-tada-600 hover:opacity-90 text-black rounded-lg font-medium transition-colors dark:bg-tada-600 dark:text-white"
+        class="px-4 py-2 bg-tada-600 hover:opacity-90 text-stone-900 rounded-lg font-medium transition-colors dark:bg-tada-600 dark:text-stone-900"
         @click="loadInitial"
       >
         Try again

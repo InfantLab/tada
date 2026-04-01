@@ -291,7 +291,7 @@ function getMoodEmoji(mood: number): string {
       <p class="text-stone-500 dark:text-stone-400 mb-4">{{ error }}</p>
       <NuxtLink
         to="/"
-        class="inline-block px-4 py-2 bg-tada-600 hover:opacity-90 text-black dark:bg-tada-600 dark:text-white rounded-lg font-medium transition-colors"
+        class="inline-block px-4 py-2 bg-tada-600 hover:opacity-90 text-stone-900 dark:bg-tada-600 dark:text-stone-900 rounded-lg font-medium transition-colors"
       >
         Back to timeline
       </NuxtLink>

@@ -267,7 +267,7 @@ defineExpose({
         <!-- Confirm button -->
         <button
           type="button"
-          class="mt-4 w-full rounded-lg bg-tada-600 py-2 font-medium text-white transition-colors hover:bg-tada-700"
+          class="mt-4 w-full rounded-lg bg-tada-600 py-2 font-medium text-stone-900 transition-colors hover:bg-tada-700"
           @click="confirmTallies"
         >
           Add {{ extractedTallies.length }}

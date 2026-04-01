@@ -286,8 +286,8 @@ function formatDateKey(date: Date): string {
 
 function getBarClass(day: ChartDay): string {
   if (day.value === 0) return "bg-stone-100 dark:bg-stone-700";
-  if (day.isComplete) return "bg-green-500 dark:bg-green-500";
-  return "bg-green-300 dark:bg-green-600";
+  if (day.isComplete) return "bg-violet-600 dark:bg-violet-500 bar-complete";
+  return "bg-violet-300 dark:bg-violet-700 bar-partial";
 }
 
 function getTooltip(day: ChartDay): string {
@@ -348,6 +348,16 @@ function getTooltip(day: ChartDay): string {
   transition: height 0.2s ease;
 }
 
+/* Secondary visual cue: partial bars get a dashed border to distinguish from complete */
+.bar-fill.bar-partial {
+  border: 1px dashed rgba(139, 92, 246, 0.6); /* violet-500 */
+  border-bottom: none;
+}
+
+.bar-fill.bar-complete {
+  border: 1px solid transparent;
+}
+
 .day-label {
   font-size: 0.5rem;
   color: #6b7280;
@@ -404,6 +414,13 @@ function getTooltip(day: ChartDay): string {
 
   .bar-wrapper.weekend-day .bar-track {
     background: rgba(120, 113, 108, 0.25);
+  }
+}
+
+/* Reduced motion: suppress bar height transition */
+@media (prefers-reduced-motion: reduce) {
+  .bar-fill {
+    transition: none;
   }
 }
 </style>

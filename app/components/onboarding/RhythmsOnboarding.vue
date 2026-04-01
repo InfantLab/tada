@@ -86,7 +86,7 @@ async function handleSeedDemos() {
       <!-- Actions -->
       <div class="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
         <button
-          class="min-h-[44px] rounded-xl bg-tada-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-tada-700 disabled:opacity-50"
+          class="min-h-[44px] rounded-xl bg-tada-600 px-6 py-2.5 text-sm font-medium text-stone-900 hover:bg-tada-700 disabled:opacity-50"
           :disabled="seeding"
           @click="handleSeedDemos"
         >

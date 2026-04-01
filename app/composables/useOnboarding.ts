@@ -36,44 +36,49 @@ const defaultState: OnboardingState = {
   lastSeenVersion: "",
 };
 
+// Shared singleton state — all callers of useOnboarding() operate on the
+// same refs so that a saveState() in one component never overwrites changes
+// made by another component.
+const state = ref<OnboardingState>({ ...defaultState });
+const isLoaded = ref(false);
+
+// Load state from localStorage
+function loadState() {
+  if (typeof window === "undefined") return;
+
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored) as Partial<OnboardingState>;
+      state.value = { ...defaultState, ...parsed };
+    }
+  } catch {
+    // Ignore parse errors, use defaults
+  }
+  isLoaded.value = true;
+}
+
+// Save state to localStorage
+function saveState() {
+  if (typeof window === "undefined") return;
+
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state.value));
+  } catch {
+    // Ignore storage errors
+  }
+}
+
 export function useOnboarding() {
   const config = useRuntimeConfig();
   const currentVersion = ((config as unknown as Record<string, Record<string, unknown>>)['public']!)['appVersion'] as string || "0.0.0";
 
-  // State loaded from localStorage
-  const state = ref<OnboardingState>({ ...defaultState });
-  const isLoaded = ref(false);
-
-  // Load state from localStorage
-  function loadState() {
-    if (typeof window === "undefined") return;
-
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored) as Partial<OnboardingState>;
-        state.value = { ...defaultState, ...parsed };
-      }
-    } catch {
-      // Ignore parse errors, use defaults
-    }
-    isLoaded.value = true;
-  }
-
-  // Save state to localStorage
-  function saveState() {
-    if (typeof window === "undefined") return;
-
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.value));
-    } catch {
-      // Ignore storage errors
-    }
-  }
-
-  // Initialize on mount
+  // Initialize on mount — safe to call multiple times since all
+  // instances share the same state ref
   onMounted(() => {
-    loadState();
+    if (!isLoaded.value) {
+      loadState();
+    }
   });
 
   // Computed: Should show welcome overlay?

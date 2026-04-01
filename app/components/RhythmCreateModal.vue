@@ -55,6 +55,8 @@ const emit = defineEmits<{
 // Focus management
 const nameInputRef = ref<HTMLInputElement | null>(null);
 const triggerElement = ref<Element | null>(null);
+const dialogRef = ref<HTMLElement | null>(null);
+const { activate: activateTrap, deactivate: deactivateTrap } = useFocusTrap(dialogRef);
 
 // Form state
 const name = ref("");
@@ -129,8 +131,10 @@ watch(
       // Move focus into modal after DOM update
       nextTick(() => {
         nameInputRef.value?.focus();
+        activateTrap();
       });
     } else {
+      deactivateTrap();
       // Restore focus to the element that opened the modal
       (triggerElement.value as HTMLElement | null)?.focus();
       triggerElement.value = null;
@@ -361,6 +365,7 @@ async function save() {
 
         <!-- Modal -->
         <div
+          ref="dialogRef"
           role="dialog"
           aria-modal="true"
           aria-labelledby="rhythm-create-title"

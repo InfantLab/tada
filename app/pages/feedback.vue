@@ -130,7 +130,7 @@ function resetForm() {
       </p>
       <div class="flex flex-col sm:flex-row gap-4 justify-center">
         <button
-          class="px-6 py-3 bg-tada-600 text-white rounded-xl font-medium hover:bg-tada-700 transition-colors"
+          class="px-6 py-3 bg-tada-600 text-stone-900 rounded-xl font-medium hover:bg-tada-700 transition-colors"
           @click="resetForm"
         >
           Send More Feedback
@@ -294,7 +294,7 @@ function resetForm() {
       <button
         type="submit"
         :disabled="!canSubmit || isSubmitting"
-        class="w-full px-6 py-3 bg-tada-600 text-white rounded-xl font-semibold hover:bg-tada-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        class="w-full px-6 py-3 bg-tada-600 text-stone-900 rounded-xl font-semibold hover:bg-tada-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <span v-if="isSubmitting">Sending...</span>
         <span v-else>Send Feedback</span>

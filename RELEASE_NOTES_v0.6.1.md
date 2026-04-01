@@ -39,11 +39,11 @@ Weekly celebration and encouragement messages can now be delivered via push noti
 
 **Operator setup:** generate keys with `npx web-push generate-vapid-keys`, then set `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, and `VAPID_SUBJECT` env vars in CapRover.
 
-### Accessibility Glow-Up (WCAG 2.2 AA)
+### Accessibility Glow-Up (WCAG 2.2 AA) — All 3 Phases
 
-A comprehensive accessibility audit and two-phase implementation touching 22 files. Ta-Da! is now significantly more usable for keyboard-only users, screen reader users, and people with colour vision deficiencies.
+A comprehensive three-phase accessibility audit touching 50+ files. Ta-Da! is now significantly more usable for keyboard-only users, screen reader users, and people with colour vision deficiencies.
 
-**Screen reader improvements:**
+**Screen reader improvements (Phase 1+2):**
 - Skip-to-main-content link on every page
 - All 5 modals now announce as dialogs (`role="dialog"`, `aria-modal`, `aria-labelledby`)
 - Form labels properly wired to inputs across 4 components
@@ -52,20 +52,39 @@ A comprehensive accessibility audit and two-phase implementation touching 22 fil
 - Timeline strip toggle has a proper `aria-label`
 - Rhythm type/category selection buttons use `radiogroup` + `aria-checked` semantics
 
-**Keyboard navigation:**
+**Screen reader improvements (Phase 3):**
+- Timeline filter results announced via `aria-live="polite"` region — screen readers hear "12 entries found" when filters change
+- Settings toggles now use `role="switch"` + `aria-checked` for proper announcement
+- Heatmap legends include tooltips and `aria-label` (None / Low / Medium / High / Very High)
+- Every day cell in the year tracker has a descriptive `aria-label` ("April 1: 3 entries")
+
+**Keyboard navigation (Phase 1+2):**
 - Focus moves into modals on open and restores to the trigger on close
 - Rhythm expand/collapse panels are now keyboard-accessible buttons with `aria-expanded`
 
-**Colour contrast (WCAG AA):**
+**Keyboard navigation (Phase 3):**
+- **Focus traps** — new `useFocusTrap` composable confines Tab/Shift+Tab to the open modal. Applied to QuickAddMenu and all dialog components. Tab no longer escapes into the page behind.
+- **Year tracker keyboard grid** — the heatmap is now a proper `role="grid"`. Arrow keys move between days, Home/End jump to start/end, Enter/Space select. Roving tabindex keeps focus intuitive.
+
+**Colour & contrast (Phase 1+2):**
 - `tada-600` text upgraded to `tada-700` on light backgrounds (2.5:1 → 4.5:1+)
 - `stone-400` informational text upgraded to `stone-500` in light mode
 - Hardcoded low-contrast colours in chart labels fixed
 
-**Touch targets:**
+**Colour & contrast (Phase 3):**
+- **Colourblind-safe heatmaps** — green → violet sequential scale in year tracker and month calendar. Distinguishable under deuteranopia, protanopia, and tritanopia.
+- **Category colour contrast** — Creative, Social, Life Admin, and Events category colours darkened to meet 3:1 minimum contrast on white backgrounds.
+- **Button text contrast** — `text-white` → `text-stone-900` on `bg-tada-600` buttons across Settings for WCAG AA compliance.
+
+**Touch targets (Phase 1):**
 - Chart navigation buttons enlarged from ~28px to ~36px
 - Modal close button enlarged
 
-A Phase 3 handover doc lives at `design/accessibility.md` covering remaining work: focus traps, colourblind-safe heatmaps, category colour contrast, year tracker keyboard grid, `prefers-reduced-motion`, and more.
+**Reduced motion (Phase 3):**
+- New `useReducedMotion` composable respects `prefers-reduced-motion: reduce`
+- CelebrationOverlay suppresses confetti, bounce, and fade animations when the OS preference is set
+
+The full audit is documented at `design/accessibility.md`.
 
 ### Version Number Visibility
 

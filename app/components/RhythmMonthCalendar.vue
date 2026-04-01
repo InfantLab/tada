@@ -72,14 +72,15 @@
 
     <!-- Legend and Summary -->
     <div class="mt-3 flex items-center justify-between">
-      <div class="flex items-center gap-1 text-xs text-stone-500">
+      <div class="flex items-center gap-1 text-xs text-stone-500" role="img" aria-label="Heatmap legend: None, Low, Medium, High, Very High intensity levels">
         <span>Less</span>
         <div class="flex gap-0.5">
           <div
-            v-for="level in [0, 1, 2, 3, 4]"
+            v-for="(level, i) in [0, 1, 2, 3, 4]"
             :key="level"
             class="h-3 w-3 rounded-sm"
             :class="getLegendClass(level)"
+            :title="['None', 'Low', 'Medium', 'High', 'Very High'][i]"
           />
         </div>
         <span>More</span>
@@ -339,10 +340,10 @@ function getDayTooltip(day: CalendarDay): string {
 function getLegendClass(level: number): string {
   const classes: Record<number, string> = {
     0: "bg-stone-100 dark:bg-stone-700",
-    1: "bg-green-100 dark:bg-green-900",
-    2: "bg-green-300 dark:bg-green-700",
-    3: "bg-green-500 dark:bg-green-500",
-    4: "bg-green-700 dark:bg-green-300",
+    1: "bg-violet-200 dark:bg-violet-900",
+    2: "bg-violet-400 dark:bg-violet-700",
+    3: "bg-violet-600 dark:bg-violet-500",
+    4: "bg-violet-800 dark:bg-violet-300",
   };
   return classes[level] ?? classes[0]!;
 }
@@ -398,29 +399,29 @@ function getLegendClass(level: number): string {
   background: #fafafa;
 }
 
-/* Intensity levels - light mode */
+/* Intensity levels - light mode (violet scale for colourblind safety) */
 .calendar-day.intensity-0 {
   background: #f5f5f4; /* stone-100 */
   color: #78716c;
 }
 
 .calendar-day.intensity-1 {
-  background: #dcfce7; /* green-100 */
-  color: #166534;
+  background: #ddd6fe; /* violet-200 */
+  color: #5b21b6;
 }
 
 .calendar-day.intensity-2 {
-  background: #86efac; /* green-300 */
-  color: #166534;
+  background: #a78bfa; /* violet-400 */
+  color: #4c1d95;
 }
 
 .calendar-day.intensity-3 {
-  background: #22c55e; /* green-500 */
+  background: #7c3aed; /* violet-600 */
   color: white;
 }
 
 .calendar-day.intensity-4 {
-  background: #15803d; /* green-700 */
+  background: #5b21b6; /* violet-800 */
   color: white;
 }
 
@@ -450,23 +451,23 @@ function getLegendClass(level: number): string {
   }
 
   .calendar-day.intensity-1 {
-    background: #14532d; /* green-900 */
-    color: #bbf7d0;
+    background: #4c1d95; /* violet-900 */
+    color: #ddd6fe;
   }
 
   .calendar-day.intensity-2 {
-    background: #15803d; /* green-700 */
-    color: #dcfce7;
+    background: #6d28d9; /* violet-700 */
+    color: #ede9fe;
   }
 
   .calendar-day.intensity-3 {
-    background: #22c55e; /* green-500 */
+    background: #8b5cf6; /* violet-500 */
     color: white;
   }
 
   .calendar-day.intensity-4 {
-    background: #86efac; /* green-300 */
-    color: #14532d;
+    background: #c4b5fd; /* violet-300 */
+    color: #4c1d95;
   }
 }
 </style>

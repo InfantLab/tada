@@ -101,7 +101,7 @@ function handleDismiss() {
 
           <div class="flex flex-col gap-2">
             <button
-              class="w-full py-2.5 px-4 rounded-xl bg-tada-600 hover:bg-tada-700 text-white font-medium text-sm transition-colors disabled:opacity-60"
+              class="w-full py-2.5 px-4 rounded-xl bg-tada-600 hover:bg-tada-700 text-stone-900 font-medium text-sm transition-colors disabled:opacity-60"
               :disabled="enabling"
               @click="handleEnable"
             >

@@ -371,6 +371,7 @@ function getSubcatDisplayEmoji(catSlug: string, subcatSlug: string): string {
     <div class="flex items-center gap-4 mb-8">
       <NuxtLink
         to="/settings"
+        aria-label="Go back"
         class="p-2 -ml-2 rounded-lg text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
       >
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -655,7 +656,7 @@ function getSubcatDisplayEmoji(catSlug: string, subcatSlug: string): string {
               </button>
               <button
                 type="button"
-                class="flex-1 px-4 py-2 bg-tada-600 text-white rounded-lg hover:bg-tada-700 transition-colors"
+                class="flex-1 px-4 py-2 bg-tada-600 text-stone-900 rounded-lg hover:bg-tada-700 transition-colors"
                 @click="addCustomCategory"
               >
                 Add Category
@@ -709,7 +710,7 @@ function getSubcatDisplayEmoji(catSlug: string, subcatSlug: string): string {
               </button>
               <button
                 type="button"
-                class="flex-1 px-4 py-2 bg-tada-600 text-white rounded-lg hover:bg-tada-700 transition-colors"
+                class="flex-1 px-4 py-2 bg-tada-600 text-stone-900 rounded-lg hover:bg-tada-700 transition-colors"
                 @click="addSubcategory"
               >
                 Add Subcategory

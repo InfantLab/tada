@@ -197,7 +197,7 @@ useSeoMeta({
         </NuxtLink>
         <NuxtLink
           to="/rhythms"
-          class="inline-flex items-center gap-2 px-4 py-2 bg-tada-600 text-white rounded-lg font-medium hover:bg-tada-700 transition-colors"
+          class="inline-flex items-center gap-2 px-4 py-2 bg-tada-600 text-stone-900 rounded-lg font-medium hover:bg-tada-700 transition-colors"
         >
           See your chains
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

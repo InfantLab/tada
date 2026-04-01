@@ -200,10 +200,13 @@ async function sendTestEmail(kind: "celebration" | "encouragement") {
           <input
             v-model="encouragementEnabled"
             type="checkbox"
+            role="switch"
+            :aria-checked="encouragementEnabled"
+            aria-label="Enable encouragements"
             class="sr-only peer"
           />
           <div
-            class="w-9 h-5 bg-stone-200 peer-focus:outline-none rounded-full peer dark:bg-stone-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-stone-600 peer-checked:bg-emerald-500"
+            class="w-9 h-5 bg-stone-300 ring-1 ring-stone-300 peer-focus:outline-none rounded-full peer dark:bg-stone-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-stone-600 peer-checked:bg-emerald-500"
           />
         </label>
       </div>
@@ -222,10 +225,13 @@ async function sendTestEmail(kind: "celebration" | "encouragement") {
           <input
             v-model="celebrationEnabled"
             type="checkbox"
+            role="switch"
+            :aria-checked="celebrationEnabled"
+            aria-label="Enable celebrations"
             class="sr-only peer"
           />
           <div
-            class="w-9 h-5 bg-stone-200 peer-focus:outline-none rounded-full peer dark:bg-stone-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-stone-600 peer-checked:bg-emerald-500"
+            class="w-9 h-5 bg-stone-300 ring-1 ring-stone-300 peer-focus:outline-none rounded-full peer dark:bg-stone-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-stone-600 peer-checked:bg-emerald-500"
           />
         </label>
       </div>
@@ -284,11 +290,14 @@ async function sendTestEmail(kind: "celebration" | "encouragement") {
               <input
                 v-model="emailCelebration"
                 type="checkbox"
+                role="switch"
+                :aria-checked="emailCelebration"
+                aria-label="Email celebrations"
                 class="sr-only peer"
                 :disabled="settings.email.unsubscribed"
               />
               <div
-                class="w-9 h-5 bg-stone-200 peer-focus:outline-none rounded-full peer dark:bg-stone-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-stone-600 peer-checked:bg-emerald-500 peer-disabled:opacity-50"
+                class="w-9 h-5 bg-stone-300 ring-1 ring-stone-300 peer-focus:outline-none rounded-full peer dark:bg-stone-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-stone-600 peer-checked:bg-emerald-500 peer-disabled:opacity-50"
               />
             </label>
           </div>
@@ -303,11 +312,14 @@ async function sendTestEmail(kind: "celebration" | "encouragement") {
               <input
                 v-model="emailEncouragement"
                 type="checkbox"
+                role="switch"
+                :aria-checked="emailEncouragement"
+                aria-label="Email encouragements"
                 class="sr-only peer"
                 :disabled="settings.email.unsubscribed"
               />
               <div
-                class="w-9 h-5 bg-stone-200 peer-focus:outline-none rounded-full peer dark:bg-stone-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-stone-600 peer-checked:bg-emerald-500 peer-disabled:opacity-50"
+                class="w-9 h-5 bg-stone-300 ring-1 ring-stone-300 peer-focus:outline-none rounded-full peer dark:bg-stone-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-stone-600 peer-checked:bg-emerald-500 peer-disabled:opacity-50"
               />
             </label>
           </div>
@@ -363,11 +375,14 @@ async function sendTestEmail(kind: "celebration" | "encouragement") {
               <input
                 v-model="pushCelebration"
                 type="checkbox"
+                role="switch"
+                :aria-checked="pushCelebration"
+                aria-label="Push celebrations"
                 class="sr-only peer"
                 :disabled="push.permissionState.value === 'denied' || push.isLoading.value"
               />
               <div
-                class="w-9 h-5 bg-stone-200 peer-focus:outline-none rounded-full peer dark:bg-stone-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-stone-600 peer-checked:bg-emerald-500 peer-disabled:opacity-50"
+                class="w-9 h-5 bg-stone-300 ring-1 ring-stone-300 peer-focus:outline-none rounded-full peer dark:bg-stone-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-stone-600 peer-checked:bg-emerald-500 peer-disabled:opacity-50"
               />
             </label>
           </div>
@@ -378,11 +393,14 @@ async function sendTestEmail(kind: "celebration" | "encouragement") {
               <input
                 v-model="pushEncouragement"
                 type="checkbox"
+                role="switch"
+                :aria-checked="pushEncouragement"
+                aria-label="Push encouragements"
                 class="sr-only peer"
                 :disabled="push.permissionState.value === 'denied' || push.isLoading.value"
               />
               <div
-                class="w-9 h-5 bg-stone-200 peer-focus:outline-none rounded-full peer dark:bg-stone-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-stone-600 peer-checked:bg-emerald-500 peer-disabled:opacity-50"
+                class="w-9 h-5 bg-stone-300 ring-1 ring-stone-300 peer-focus:outline-none rounded-full peer dark:bg-stone-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-stone-600 peer-checked:bg-emerald-500 peer-disabled:opacity-50"
               />
             </label>
           </div>

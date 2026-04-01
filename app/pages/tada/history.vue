@@ -151,6 +151,7 @@ async function updateEmoji(emoji: string) {
       <div class="flex items-center gap-4">
         <NuxtLink
           to="/tada"
+          aria-label="Go back"
           class="p-2 -ml-2 rounded-lg text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-700"
         >
           <svg
@@ -276,7 +277,7 @@ async function updateEmoji(emoji: string) {
                 {{ entry.name }}
               </h3>
               <span
-                class="text-xs text-stone-400 dark:text-stone-500 whitespace-nowrap"
+                class="text-xs text-stone-400 dark:text-stone-400 whitespace-nowrap"
               >
                 {{ formatDate(entry.timestamp) }}
               </span>

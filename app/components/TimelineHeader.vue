@@ -148,7 +148,7 @@ function toggleSearch() {
           class="flex items-center gap-1 px-3 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors"
           :class="
             selectedCategory === cat.value
-              ? 'bg-tada-500 text-white'
+              ? 'bg-tada-500 text-stone-900'
               : 'bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-700'
           "
           @click="selectedCategory = cat.value"
@@ -163,6 +163,7 @@ function toggleSearch() {
     <div class="flex items-center gap-2">
       <select
         v-model="selectedTimeRange"
+        aria-label="Time range filter"
         class="px-3 py-1.5 rounded-lg bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-sm text-stone-700 dark:text-stone-200 focus:outline-none focus:ring-2 focus:ring-tada-500"
       >
         <option

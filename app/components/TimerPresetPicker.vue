@@ -274,7 +274,7 @@ onMounted(loadPresets);
                 Cancel
               </button>
               <button
-                class="px-4 py-2 bg-tada-500 hover:bg-tada-600 text-white rounded-lg font-medium disabled:opacity-50"
+                class="px-4 py-2 bg-tada-500 hover:bg-tada-600 text-stone-900 rounded-lg font-medium disabled:opacity-50"
                 :disabled="!newPresetName.trim() || isSaving"
                 @click="savePreset"
               >

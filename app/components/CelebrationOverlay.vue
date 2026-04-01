@@ -222,4 +222,19 @@ function playSound() {
     opacity: 0;
   }
 }
+
+/* Reduced motion: suppress all animations */
+@media (prefers-reduced-motion: reduce) {
+  .celebration-content,
+  .celebration-emoji,
+  .confetti {
+    animation: none !important;
+  }
+
+  .celebration-enter-active,
+  .celebration-leave-active {
+    animation: none !important;
+    transition: opacity 0.1s !important;
+  }
+}
 </style>

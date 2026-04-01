@@ -404,7 +404,7 @@ function getDailyGaps(rhythmId: string): string[] {
 
       <!-- Add rhythm button -->
       <button
-        class="flex items-center gap-2 rounded-lg bg-tada-600 px-4 py-2 font-medium text-black shadow-sm transition-colors hover:opacity-90 dark:bg-tada-600 dark:text-white"
+        class="flex items-center gap-2 rounded-lg bg-tada-600 px-4 py-2 font-medium text-stone-900 shadow-sm transition-colors hover:opacity-90 dark:bg-tada-600 dark:text-stone-900"
         @click="showCreateModal = true"
       >
         <svg
@@ -464,7 +464,7 @@ function getDailyGaps(rhythmId: string): string[] {
           reveal itself over time.
         </p>
         <button
-          class="inline-flex items-center gap-2 rounded-lg bg-tada-600 px-4 py-2 font-medium text-black transition-colors hover:opacity-90 dark:bg-tada-600 dark:text-white"
+          class="inline-flex items-center gap-2 rounded-lg bg-tada-600 px-4 py-2 font-medium text-stone-900 transition-colors hover:opacity-90 dark:bg-tada-600 dark:text-stone-900"
           @click="showCreateModal = true"
         >
           <svg

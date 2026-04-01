@@ -116,7 +116,7 @@ useSeoMeta({
         </NuxtLink>
         <NuxtLink
           to="/"
-          class="inline-flex items-center gap-2 px-4 py-2 bg-tada-600 hover:bg-tada-700 text-white rounded-lg transition-colors text-sm font-medium"
+          class="inline-flex items-center gap-2 px-4 py-2 bg-tada-600 hover:bg-tada-700 text-stone-900 rounded-lg transition-colors text-sm font-medium"
         >
           Try Ta-Da! →
         </NuxtLink>

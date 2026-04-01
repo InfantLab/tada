@@ -2,13 +2,13 @@
 
 **Created:** 2026-03-28
 **Target standard:** WCAG 2.2 AA
-**Status:** Phase 1 + 2 complete. Phase 3 ready for implementation.
+**Status:** Phase 1 + 2 + 3 complete.
 
 ---
 
 ## Summary
 
-Full accessibility audit covering colour contrast, colourblind safety, screen reader support, keyboard navigation, and touch target sizing. Phases 1 and 2 were implemented in v0.6.1. Phase 3 contains deeper structural changes suitable for a dedicated accessibility sprint.
+Full accessibility audit covering colour contrast, colourblind safety, screen reader support, keyboard navigation, and touch target sizing. Phases 1 and 2 were implemented in v0.6.1. Phase 3 was implemented on branch `012-accessibility-phase3`.
 
 ---
 

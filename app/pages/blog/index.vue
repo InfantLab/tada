@@ -29,6 +29,16 @@ interface BlogPost {
 
 const posts: BlogPost[] = [
   {
+    slug: "whats-new-v061",
+    title: "Spring 2026: See Your Day, Celebrate Your Week, Welcome Everyone",
+    excerpt:
+      "Daily timelines, weekly celebrations, push notifications, and a full WCAG 2.2 AA accessibility overhaul across three phases.",
+    date: "April 2026",
+    readTime: "5 min read",
+    category: "Updates",
+    emoji: "♿",
+  },
+  {
     slug: "whats-new-v06",
     title: "What's New — March 2026",
     excerpt:
@@ -113,7 +123,7 @@ const filteredPosts = computed(() => {
         class="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors"
         :class="
           selectedCategory === category
-            ? 'bg-tada-500 text-white'
+            ? 'bg-tada-500 text-stone-900'
             : 'bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-700'
         "
         @click="selectedCategory = category"

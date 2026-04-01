@@ -16,6 +16,27 @@ const emit = defineEmits<{
 
 const route = useRoute();
 
+// Focus management
+const panelRef = ref<HTMLElement | null>(null);
+const triggerElement = ref<Element | null>(null);
+const { activate: activateTrap, deactivate: deactivateTrap } = useFocusTrap(panelRef);
+
+watch(
+  () => props.open,
+  (isOpen) => {
+    if (isOpen) {
+      triggerElement.value = document.activeElement;
+      nextTick(() => {
+        activateTrap();
+      });
+    } else {
+      deactivateTrap();
+      (triggerElement.value as HTMLElement | null)?.focus();
+      triggerElement.value = null;
+    }
+  },
+);
+
 // Page-specific help content
 interface HelpSection {
   title: string;
@@ -287,6 +308,7 @@ onUnmounted(() => {
     >
       <div
         v-if="open"
+        ref="panelRef"
         role="dialog"
         aria-modal="true"
         aria-labelledby="help-panel-title"

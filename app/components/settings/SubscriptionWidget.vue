@@ -169,7 +169,7 @@ function formatDate(dateString: string | null): string {
           </div>
         </div>
         <button
-          class="shrink-0 px-3 py-1.5 bg-tada-600 hover:bg-tada-700 text-white text-sm font-medium rounded-lg transition-colors"
+          class="shrink-0 px-3 py-1.5 bg-tada-600 hover:bg-tada-700 text-stone-900 text-sm font-medium rounded-lg transition-colors"
           :disabled="isLoading"
           @click="handleUpgrade"
         >

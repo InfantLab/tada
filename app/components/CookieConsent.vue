@@ -79,7 +79,7 @@ function declineCookies() {
                 Decline
               </button>
               <button
-                class="w-full md:w-auto px-5 py-2 bg-tada-600 text-white rounded-lg hover:bg-tada-700 transition-colors text-sm font-medium"
+                class="w-full md:w-auto px-5 py-2 bg-tada-600 text-stone-900 rounded-lg hover:bg-tada-700 transition-colors text-sm font-medium"
                 @click="acceptCookies"
               >
                 Accept

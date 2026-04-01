@@ -62,6 +62,7 @@ const dots = computed(() => timelineEntries.value.filter((e) => e.isDot));
           backgroundColor: entry.color,
           opacity: 0.7,
         }"
+        :aria-label="entry.categoryLabel || entry.type"
       />
 
       <!-- Instant entry dots -->
@@ -92,8 +93,9 @@ const dots = computed(() => timelineEntries.value.filter((e) => e.isDot));
           left: entry.positionPercent + '%',
           width: entry.widthPercent + '%',
           backgroundColor: entry.color,
-          opacity: 0.35,
+          opacity: 0.6,
         }"
+        :aria-label="entry.categoryLabel || entry.type"
       />
 
       <!-- Timed entries: emoji at start of interval (z-20, above bar) -->

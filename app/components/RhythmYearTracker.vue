@@ -47,14 +47,17 @@
       </div>
       <div
         class="flex items-center gap-1 text-xs text-stone-500 dark:text-stone-500"
+        role="img"
+        aria-label="Heatmap legend: None, Low, Medium, High, Very High intensity levels"
       >
         <span>Less</span>
         <div class="flex gap-0.5">
           <div
-            v-for="level in intensityLevels"
+            v-for="(level, i) in intensityLevels"
             :key="level"
             class="h-3 w-3 rounded-sm"
             :class="getIntensityClass(level)"
+            :title="['None', 'Low', 'Medium', 'High', 'Very High'][i]"
           />
         </div>
         <span>More</span>
@@ -89,19 +92,30 @@
         </div>
 
         <!-- Week columns with day cells -->
-        <div class="weeks-container">
+        <div
+          class="weeks-container"
+          role="grid"
+          aria-label="Year activity tracker"
+          @keydown="handleGridKeydown"
+        >
           <div
             v-for="(week, weekIndex) in weeks"
             :key="weekIndex"
+            role="row"
             class="week-column"
           >
             <div
               v-for="(day, dayIndex) in week"
               :key="dayIndex"
+              role="gridcell"
               class="day-cell"
               :class="getDayCellClass(day)"
               :title="getDayTooltip(day)"
+              :aria-label="getDayAriaLabel(day)"
+              :tabindex="isFocusedCell(weekIndex, dayIndex) ? 0 : -1"
               @click="handleDayClick(day)"
+              @keydown.enter.prevent="handleDayClick(day)"
+              @keydown.space.prevent="handleDayClick(day)"
             />
           </div>
         </div>
@@ -140,6 +154,83 @@ function handleDayClick(day: DayData) {
 }
 
 const intensityLevels = [0, 1, 2, 3, 4];
+
+// Roving tabindex: track the focused cell
+const focusedWeek = ref(0);
+const focusedDay = ref(0);
+
+function isFocusedCell(weekIndex: number, dayIndex: number): boolean {
+  return weekIndex === focusedWeek.value && dayIndex === focusedDay.value;
+}
+
+function handleGridKeydown(event: KeyboardEvent) {
+  const totalWeeks = weeks.value.length;
+  if (totalWeeks === 0) return;
+
+  let newWeek = focusedWeek.value;
+  let newDay = focusedDay.value;
+
+  switch (event.key) {
+    case 'ArrowRight':
+      event.preventDefault();
+      newWeek = Math.min(newWeek + 1, totalWeeks - 1);
+      break;
+    case 'ArrowLeft':
+      event.preventDefault();
+      newWeek = Math.max(newWeek - 1, 0);
+      break;
+    case 'ArrowDown':
+      event.preventDefault();
+      newDay = Math.min(newDay + 1, 6);
+      break;
+    case 'ArrowUp':
+      event.preventDefault();
+      newDay = Math.max(newDay - 1, 0);
+      break;
+    case 'Home':
+      event.preventDefault();
+      newWeek = 0;
+      break;
+    case 'End':
+      event.preventDefault();
+      newWeek = totalWeeks - 1;
+      break;
+    default:
+      return;
+  }
+
+  focusedWeek.value = newWeek;
+  focusedDay.value = newDay;
+
+  // Move focus to the new cell
+  nextTick(() => {
+    const grid = document.querySelector('[role="grid"][aria-label="Year activity tracker"]');
+    if (!grid) return;
+    const rows = grid.querySelectorAll('[role="row"]');
+    const row = rows[newWeek];
+    if (!row) return;
+    const cells = row.querySelectorAll<HTMLElement>('[role="gridcell"]');
+    cells[newDay]?.focus();
+  });
+}
+
+function getDayAriaLabel(day: DayData): string {
+  if (day.isEmpty) return '';
+
+  const dateStr = day.date.toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+  });
+
+  if (day.isFuture) return `${dateStr}: future`;
+
+  if (!day.status || (!day.status.isComplete && day.status.totalSeconds === 0 && day.status.entryCount === 0)) {
+    return `${dateStr}: no entries`;
+  }
+
+  const count = day.status.entryCount;
+  return `${dateStr}: ${count} ${count === 1 ? 'entry' : 'entries'}`;
+}
 
 // Year offset (0 = current year, 1 = previous year, etc.)
 const yearOffset = ref(0);
@@ -351,10 +442,10 @@ function getIntensityLevel(day: DayData): number {
 function getIntensityClass(level: number): string {
   const classes: string[] = [
     "bg-stone-100 dark:bg-stone-700", // Level 0 - none
-    "bg-green-100 dark:bg-green-900", // Level 1 - minimal
-    "bg-green-300 dark:bg-green-700", // Level 2 - some
-    "bg-green-500 dark:bg-green-500", // Level 3 - good
-    "bg-green-700 dark:bg-green-300", // Level 4 - great
+    "bg-violet-200 dark:bg-violet-900", // Level 1 - low
+    "bg-violet-400 dark:bg-violet-700", // Level 2 - medium
+    "bg-violet-600 dark:bg-violet-500", // Level 3 - high
+    "bg-violet-800 dark:bg-violet-300", // Level 4 - very high
   ];
   return classes[level] ?? classes[0] ?? "";
 }
@@ -481,6 +572,17 @@ function getDayTooltip(day: DayData): string {
   .month-label,
   .day-label {
     color: #6b7280;
+  }
+}
+
+/* Reduced motion: suppress cell hover transitions */
+@media (prefers-reduced-motion: reduce) {
+  .day-cell {
+    transition: none;
+  }
+
+  .day-cell:hover {
+    transform: none;
   }
 }
 </style>

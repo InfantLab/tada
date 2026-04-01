@@ -24,9 +24,12 @@ const pickerContainer = ref<HTMLElement | null>(null);
 const pickerInstance = ref<EmojiPickerElement | null>(null);
 const closeButtonRef = ref<HTMLElement | null>(null);
 const triggerElement = ref<Element | null>(null);
+const dialogRef = ref<HTMLElement | null>(null);
+const { activate: activateTrap, deactivate: deactivateTrap } = useFocusTrap(dialogRef);
 
 // Close modal
 function close() {
+  deactivateTrap();
   emit("update:modelValue", false);
 
   // Restore focus to the element that opened the picker
@@ -94,6 +97,7 @@ watch(
         // Focus the close button so keyboard users land inside the modal
         nextTick(() => {
           closeButtonRef.value?.focus();
+          activateTrap();
         });
       } catch (error) {
         console.error("Failed to load emoji picker:", error);
@@ -133,6 +137,7 @@ onUnmounted(() => {
         @click="close"
       >
         <div
+          ref="dialogRef"
           role="dialog"
           aria-modal="true"
           aria-labelledby="emoji-picker-title"

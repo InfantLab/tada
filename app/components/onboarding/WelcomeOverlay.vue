@@ -15,6 +15,8 @@ const { shouldShowWelcome, dismissWelcome } = useOnboarding();
 
 const isVisible = ref(false);
 const isAuthenticated = ref(false);
+const dialogRef = ref<HTMLElement | null>(null);
+const { activate: activateTrap, deactivate: deactivateTrap } = useFocusTrap(dialogRef);
 
 // Check if user is authenticated before showing
 onMounted(async () => {
@@ -29,12 +31,14 @@ onMounted(async () => {
   if (isAuthenticated.value && shouldShowWelcome.value) {
     setTimeout(() => {
       isVisible.value = true;
+      nextTick(() => activateTrap());
     }, 500);
   }
 });
 
 // Dismiss on any interaction
 function handleDismiss() {
+  deactivateTrap();
   isVisible.value = false;
   setTimeout(() => {
     dismissWelcome();
@@ -76,7 +80,7 @@ onUnmounted(() => {
         <div class="absolute inset-0 bg-gradient-to-b from-tada-900/80 to-stone-900/90 backdrop-blur-sm" />
 
         <!-- Content -->
-        <div role="dialog" aria-modal="true" aria-labelledby="welcome-title" class="relative text-center max-w-md">
+        <div ref="dialogRef" role="dialog" aria-modal="true" aria-labelledby="welcome-title" class="relative text-center max-w-md">
           <!-- Gentle sparkle -->
           <div class="text-6xl mb-6 animate-pulse">✨</div>
 
@@ -119,3 +123,15 @@ onUnmounted(() => {
     </Transition>
   </Teleport>
 </template>
+
+<style scoped>
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse {
+    animation: none !important;
+  }
+
+  .transition-all {
+    transition: none !important;
+  }
+}
+</style>

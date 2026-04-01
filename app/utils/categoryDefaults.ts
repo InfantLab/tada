@@ -56,7 +56,7 @@ export const CATEGORY_DEFAULTS: Record<string, CategoryDefinition> = {
   },
   creative: {
     emoji: "🎨",
-    color: "#D97706",
+    color: "#B45309",
     label: "Creative",
     allowedForTimed: true,
     subcategories: [
@@ -115,7 +115,7 @@ export const CATEGORY_DEFAULTS: Record<string, CategoryDefinition> = {
   },
   social: {
     emoji: "👥",
-    color: "#F43F5E",
+    color: "#BE123C",
     label: "Social",
     subcategories: [
       { slug: "family", emoji: "👨‍👩‍👧", label: "Family" },
@@ -126,7 +126,7 @@ export const CATEGORY_DEFAULTS: Record<string, CategoryDefinition> = {
   },
   life_admin: {
     emoji: "🏠",
-    color: "#78716C",
+    color: "#57534E",
     label: "Life Admin",
     allowedForTimed: true,
     subcategories: [
@@ -152,7 +152,7 @@ export const CATEGORY_DEFAULTS: Record<string, CategoryDefinition> = {
   },
   events: {
     emoji: "🎭",
-    color: "#EC4899",
+    color: "#BE185D",
     label: "Events",
     subcategories: [
       { slug: "concert", emoji: "🎵", label: "Concert" },

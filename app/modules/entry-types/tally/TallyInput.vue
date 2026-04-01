@@ -590,7 +590,7 @@ function handleVoiceError(message: string) {
             class="px-3 py-1.5 rounded-full text-sm font-medium transition-colors flex items-center gap-1"
             :class="
               activityName === preset.name
-                ? 'bg-tada-600 text-white'
+                ? 'bg-tada-600 text-stone-900'
                 : 'bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600'
             "
             @click="selectPreset(preset)"
@@ -647,6 +647,7 @@ function handleVoiceError(message: string) {
             v-model.number="count"
             type="number"
             min="1"
+            aria-label="Tally count"
             class="flex-1 text-center text-4xl font-bold text-stone-800 dark:text-stone-100 bg-transparent border-b-2 border-stone-200 dark:border-stone-600 focus:border-tada-500 focus:outline-none py-2"
           />
 
@@ -669,7 +670,7 @@ function handleVoiceError(message: string) {
             class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors"
             :class="
               count === preset.value
-                ? 'bg-tada-600 text-white'
+                ? 'bg-tada-600 text-stone-900'
                 : 'bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600'
             "
             @click="setCount(preset.value)"
@@ -703,7 +704,7 @@ function handleVoiceError(message: string) {
         class="w-full py-3 rounded-lg font-semibold text-lg transition-all transform"
         :class="
           activityName.trim() && count >= 1 && !isSaving
-            ? 'bg-tada-600 hover:bg-tada-700 text-white hover:scale-[1.02]'
+            ? 'bg-tada-600 hover:bg-tada-700 text-stone-900 hover:scale-[1.02]'
             : 'bg-stone-200 dark:bg-stone-700 text-stone-400 cursor-not-allowed'
         "
         @click="handleSave"

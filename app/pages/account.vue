@@ -140,6 +140,7 @@ function formatDate(dateString: string | null): string {
     <div class="flex items-center gap-4 mb-8">
       <NuxtLink
         to="/settings"
+        aria-label="Go back"
         class="p-2 -ml-2 rounded-lg text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
       >
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -351,7 +352,7 @@ function formatDate(dateString: string | null): string {
         </div>
 
         <button
-          class="w-full px-6 py-3 bg-tada-600 hover:bg-tada-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          class="w-full px-6 py-3 bg-tada-600 hover:bg-tada-700 text-stone-900 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           :disabled="!canUpgrade || isLoading"
           @click="handleUpgrade('yearly')"
         >
@@ -390,7 +391,7 @@ function formatDate(dateString: string | null): string {
 
         <button
           v-if="!verificationSent"
-          class="px-4 py-2 bg-tada-600 text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+          class="px-4 py-2 bg-tada-600 text-stone-900 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
           :disabled="isSendingVerification"
           @click="handleSendVerification"
         >

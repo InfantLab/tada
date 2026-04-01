@@ -302,7 +302,7 @@ const blogPosts = [
         <div class="flex flex-wrap gap-4">
           <NuxtLink
             to="/feedback"
-            class="inline-flex items-center gap-2 px-4 py-2 bg-tada-600 text-white rounded-lg hover:bg-tada-700 transition-colors"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-tada-600 text-stone-900 rounded-lg hover:bg-tada-700 transition-colors"
           >
             <span class="text-lg">💬</span>
             Send Feedback

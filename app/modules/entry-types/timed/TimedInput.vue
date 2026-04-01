@@ -1757,7 +1757,8 @@ onUnmounted(() => {
       <!-- Not running state -->
       <template v-if="!isRunning">
         <button
-          class="w-20 h-20 rounded-full bg-tada-600 hover:opacity-90 text-black dark:bg-tada-600 dark:text-white dark:hover:opacity-90 flex items-center justify-center shadow-lg transition-colors"
+          aria-label="Start timer"
+          class="w-20 h-20 rounded-full bg-tada-600 hover:opacity-90 text-stone-900 dark:bg-tada-600 dark:text-stone-900 dark:hover:opacity-90 flex items-center justify-center shadow-lg transition-colors"
           @click="startTimer"
         >
           <svg
@@ -1775,6 +1776,7 @@ onUnmounted(() => {
       <template v-else>
         <!-- Pause/Resume -->
         <button
+          :aria-label="isPaused ? 'Resume timer' : 'Pause timer'"
           class="w-16 h-16 rounded-full bg-stone-200 dark:bg-stone-700 hover:bg-stone-300 dark:hover:bg-stone-600 text-stone-700 dark:text-stone-200 flex items-center justify-center shadow transition-colors"
           @click="isPaused ? resumeTimer() : pauseTimer()"
         >
@@ -1800,8 +1802,9 @@ onUnmounted(() => {
 
         <!-- Stop / Save -->
         <button
+          aria-label="Stop and save"
           :disabled="isSaving"
-          class="w-20 h-20 rounded-full bg-tada-600 hover:opacity-90 text-black dark:bg-tada-600 dark:text-white dark:hover:opacity-90 disabled:bg-stone-300 disabled:cursor-not-allowed flex items-center justify-center shadow-lg transition-colors"
+          class="w-20 h-20 rounded-full bg-tada-600 hover:opacity-90 text-stone-900 dark:bg-tada-600 dark:text-stone-900 dark:hover:opacity-90 disabled:bg-stone-300 disabled:cursor-not-allowed flex items-center justify-center shadow-lg transition-colors"
           @click="requestSave(true)"
         >
           <svg
@@ -2102,7 +2105,7 @@ onUnmounted(() => {
           </button>
           <button
             :disabled="isSaving"
-            class="flex-1 px-4 py-2 rounded-lg bg-tada-600 hover:opacity-90 text-black dark:text-white font-medium transition-colors disabled:opacity-50"
+            class="flex-1 px-4 py-2 rounded-lg bg-tada-600 hover:opacity-90 text-stone-900 dark:text-stone-900 font-medium transition-colors disabled:opacity-50"
             @click="saveSession(pendingIncludeOvertime)"
           >
             {{ isSaving ? "Saving..." : "Save" }}
@@ -2132,7 +2135,7 @@ onUnmounted(() => {
         <div class="space-y-3">
           <!-- Save total time (default) -->
           <button
-            class="w-full px-6 py-4 rounded-xl bg-tada-600 hover:opacity-90 text-black dark:text-white font-medium transition-all shadow-md hover:shadow-lg"
+            class="w-full px-6 py-4 rounded-xl bg-tada-600 hover:opacity-90 text-stone-900 dark:text-stone-900 font-medium transition-all shadow-md hover:shadow-lg"
             @click="selectSaveOption(true)"
           >
             <div class="flex items-center justify-between">

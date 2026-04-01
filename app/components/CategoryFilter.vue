@@ -43,7 +43,7 @@ const categories = computed(() => [
       :aria-pressed="selectedCategory === cat.value"
       :class="
         selectedCategory === cat.value
-          ? 'bg-tada-500 text-white shadow-md'
+          ? 'bg-tada-500 text-stone-900 shadow-md'
           : 'bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-700'
       "
       @click="selectedCategory = cat.value"

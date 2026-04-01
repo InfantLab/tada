@@ -562,6 +562,7 @@ function handleReRecord() {
       <div class="flex items-center gap-4">
         <NuxtLink
           to="/"
+          aria-label="Go back"
           class="p-2 -ml-2 rounded-lg text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-700"
         >
           <svg

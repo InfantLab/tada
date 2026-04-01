@@ -667,7 +667,7 @@ function scrollToSection(id: string) {
       <div class="flex flex-col sm:flex-row gap-4 justify-center">
         <NuxtLink
           to="/feedback"
-          class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-tada-600 text-white rounded-xl font-medium hover:bg-tada-700 transition-colors"
+          class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-tada-600 text-stone-900 rounded-xl font-medium hover:bg-tada-700 transition-colors"
         >
           <svg
             class="w-5 h-5"

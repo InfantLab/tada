@@ -319,7 +319,7 @@ onUnmounted(() => {
     <!-- Quick Entry FAB (Floating Action Button) -->
     <button
       type="button"
-      class="fixed right-4 bottom-20 sm:bottom-6 z-50 w-14 h-14 rounded-full bg-tada-600 hover:bg-tada-700 text-white shadow-lg hover:shadow-xl transition-all transform hover:scale-105 flex items-center justify-center"
+      class="fixed right-4 bottom-20 sm:bottom-6 z-50 w-14 h-14 rounded-full bg-tada-600 hover:bg-tada-700 text-stone-900 shadow-lg hover:shadow-xl transition-all transform hover:scale-105 flex items-center justify-center"
       title="Quick Add Entry"
       aria-label="Quick add entry"
       @click="showQuickAddMenu = true"

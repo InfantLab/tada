@@ -664,7 +664,7 @@
           ← Back
         </button>
         <button
-          class="px-6 py-3 bg-tada-600 dark:bg-tada-600 text-white rounded-lg hover:opacity-90"
+          class="px-6 py-3 bg-tada-600 dark:bg-tada-600 text-stone-900 rounded-lg hover:opacity-90"
           :disabled="isImporting"
           @click="startImport"
         >

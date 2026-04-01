@@ -12,6 +12,7 @@ export interface TimelineEntry {
   color: string;
   type: string;
   emoji: string;
+  categoryLabel: string;
   jitterYPx: number;
   jitterXPct: number;
 }
@@ -68,7 +69,7 @@ export function useTimelinePosition(rangeStart: Date, rangeEnd: Date) {
         ? getClippedWidth(entry.timestamp, entry.durationSeconds)
         : 0;
 
-    const { emoji } = getEntryDisplayProps(entry);
+    const { emoji, label } = getEntryDisplayProps(entry);
 
     return {
       id: entry.id,
@@ -78,6 +79,7 @@ export function useTimelinePosition(rangeStart: Date, rangeEnd: Date) {
       color: getColor(entry.category),
       type: entry.type,
       emoji,
+      categoryLabel: label,
       jitterYPx: 0, // computed after all entries via applyJitter
       jitterXPct: 0,
     };

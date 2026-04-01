@@ -616,7 +616,7 @@ function handleVoiceCancel() {
           <button
             type="submit"
             :disabled="isSaving"
-            class="px-6 py-2 bg-tada-600 hover:bg-tada-700 disabled:bg-stone-300 dark:disabled:bg-stone-600 text-white rounded-lg font-medium transition-colors shadow-sm disabled:cursor-not-allowed"
+            class="px-6 py-2 bg-tada-600 hover:bg-tada-700 disabled:bg-stone-300 dark:disabled:bg-stone-600 text-stone-900 rounded-lg font-medium transition-colors shadow-sm disabled:cursor-not-allowed"
           >
             <span v-if="isSaving">Saving...</span>
             <span v-else>Save Moment</span>
@@ -633,7 +633,7 @@ function handleVoiceCancel() {
         class="px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors"
         :class="
           selectedType === type
-            ? 'bg-tada-600 text-black dark:bg-tada-600 dark:text-white'
+            ? 'bg-tada-600 text-stone-900 dark:bg-tada-600 dark:text-stone-900'
             : 'bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-600'
         "
         @click="selectedType = type as any"
@@ -690,7 +690,7 @@ function handleVoiceCancel() {
                 {{ entry.name }}
               </h3>
               <span
-                class="text-xs text-stone-400 dark:text-stone-500 whitespace-nowrap"
+                class="text-xs text-stone-400 dark:text-stone-400 whitespace-nowrap"
               >
                 {{ formatDate(entry.timestamp) }}
               </span>

@@ -59,6 +59,8 @@ const toast = useToast();
 // Focus management
 const firstFocusRef = ref<HTMLElement | null>(null);
 const triggerElement = ref<Element | null>(null);
+const dialogRef = ref<HTMLElement | null>(null);
+const { activate: activateTrap, deactivate: deactivateTrap } = useFocusTrap(dialogRef);
 
 // Form state
 const mode = ref<EntryMode>(props.initialMode);
@@ -155,8 +157,10 @@ watch(
       // Move focus into modal after DOM update
       nextTick(() => {
         firstFocusRef.value?.focus();
+        activateTrap();
       });
     } else {
+      deactivateTrap();
       // Restore focus to the element that opened the modal
       (triggerElement.value as HTMLElement | null)?.focus();
       triggerElement.value = null;
@@ -371,6 +375,7 @@ const modeLabels: Record<EntryMode, string> = {
         >
           <div
             v-if="open"
+            ref="dialogRef"
             role="dialog"
             aria-modal="true"
             aria-labelledby="quick-entry-title"

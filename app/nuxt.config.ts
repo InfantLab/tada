@@ -132,6 +132,9 @@ export default defineNuxtConfig({
   // App configuration
   app: {
     head: {
+      htmlAttrs: {
+        lang: "en",
+      },
       title: "Tada",
       meta: [
         {

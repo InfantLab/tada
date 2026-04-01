@@ -2,7 +2,7 @@
 import type { EntryMode } from "./EntryTypeToggle.vue";
 import { getQuickAddTypes } from "~/registry/entryTypes";
 
-defineProps<{
+const props = defineProps<{
   open: boolean;
 }>();
 
@@ -10,6 +10,25 @@ const emit = defineEmits<{
   (e: "select", mode: EntryMode): void;
   (e: "close"): void;
 }>();
+
+// Focus management
+const menuRef = ref<HTMLElement | null>(null);
+const triggerElement = ref<Element | null>(null);
+const { activate: activateTrap, deactivate: deactivateTrap } = useFocusTrap(menuRef);
+
+watch(
+  () => props.open,
+  (isOpen) => {
+    if (isOpen) {
+      triggerElement.value = document.activeElement;
+      nextTick(() => activateTrap());
+    } else {
+      deactivateTrap();
+      (triggerElement.value as HTMLElement | null)?.focus();
+      triggerElement.value = null;
+    }
+  },
+);
 
 interface MenuOption {
   mode?: EntryMode;
@@ -98,6 +117,7 @@ function handleKeydown(event: KeyboardEvent) {
         @keydown="handleKeydown"
       >
         <div
+          ref="menuRef"
           class="bg-white dark:bg-stone-800 rounded-2xl shadow-2xl border border-stone-200 dark:border-stone-700 overflow-hidden"
         >
           <!-- Header -->

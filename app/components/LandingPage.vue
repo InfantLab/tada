@@ -51,7 +51,7 @@ const philosophyPoints = [
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
           <NuxtLink
             to="/register"
-            class="px-8 py-3 bg-tada-600 text-white rounded-xl font-semibold hover:bg-tada-700 transition-colors shadow-lg hover:shadow-xl"
+            class="px-8 py-3 bg-tada-600 text-stone-900 rounded-xl font-semibold hover:bg-tada-700 transition-colors shadow-lg hover:shadow-xl"
           >
             Get Started Free
           </NuxtLink>
@@ -158,7 +158,7 @@ const philosophyPoints = [
 
           <!-- Premium Tier -->
           <div class="bg-white dark:bg-stone-800 rounded-2xl p-8 border-2 border-tada-500 relative">
-            <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-tada-600 text-white text-sm font-medium rounded-full">
+            <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-tada-600 text-stone-900 text-sm font-medium rounded-full">
               Most Popular
             </div>
             <h3 class="text-xl font-bold text-stone-800 dark:text-stone-100 mb-2">Premium</h3>
@@ -185,7 +185,7 @@ const philosophyPoints = [
             </ul>
             <NuxtLink
               to="/register"
-              class="block w-full text-center px-6 py-3 bg-tada-600 text-white rounded-xl font-semibold hover:bg-tada-700 transition-colors"
+              class="block w-full text-center px-6 py-3 bg-tada-600 text-stone-900 rounded-xl font-semibold hover:bg-tada-700 transition-colors"
             >
               Start Free Trial
             </NuxtLink>

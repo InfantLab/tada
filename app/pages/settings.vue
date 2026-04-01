@@ -539,6 +539,16 @@ const themes = [
   { id: "system", name: "System", icon: "💻" },
 ];
 
+function applyTheme(themeId: string) {
+  settings.value.theme = themeId as any;
+  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const shouldBeDark =
+    themeId === "dark" || (themeId === "system" && prefersDark);
+  document.documentElement.classList.toggle("dark", shouldBeDark);
+  localStorage.setItem("color-theme", themeId);
+  saveSettings();
+}
+
 // Timezone detection and load settings
 onMounted(() => {
   settings.value.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -971,6 +981,7 @@ onMounted(() => {
     <div class="flex items-center gap-4 mb-6">
       <NuxtLink
         to="/"
+        aria-label="Go back"
         class="p-2 -ml-2 rounded-lg text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-700"
       >
         <svg
@@ -1158,7 +1169,7 @@ onMounted(() => {
                 />
                 <button
                   :disabled="isUpdatingEmail || !emailForm.email"
-                  class="px-4 py-2 bg-tada-600 hover:bg-tada-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                  class="px-4 py-2 bg-tada-600 hover:bg-tada-700 text-stone-900 font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                   @click="updateEmail"
                 >
                   {{ isUpdatingEmail ? "Saving..." : "Save" }}
@@ -1263,7 +1274,7 @@ onMounted(() => {
                 />
                 <button
                   :disabled="isChangingPassword"
-                  class="w-full py-2 px-4 bg-tada-600 hover:opacity-90 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                  class="w-full py-2 px-4 bg-tada-600 hover:opacity-90 text-stone-900 font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                   @click="changePassword"
                 >
                   {{ isChangingPassword ? "Changing..." : "Change Password" }}
@@ -1380,7 +1391,7 @@ onMounted(() => {
                     />
                     <button
                       :disabled="!byokKeyInput.trim() || isSavingByokKey"
-                      class="px-4 py-2 bg-tada-600 hover:opacity-90 text-white text-sm font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                      class="px-4 py-2 bg-tada-600 hover:opacity-90 text-stone-900 text-sm font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
                       @click="saveByokKey"
                     >
                       Save
@@ -1468,7 +1479,7 @@ onMounted(() => {
             <NuxtLink
               to="/categories"
               :external="false"
-              class="inline-flex items-center gap-2 px-4 py-2 bg-tada-600 hover:bg-tada-700 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer relative z-10"
+              class="inline-flex items-center gap-2 px-4 py-2 bg-tada-600 hover:bg-tada-700 text-stone-900 text-sm font-medium rounded-lg transition-colors cursor-pointer relative z-10"
             >
               <span>🏷️</span>
               <span>Manage Categories</span>
@@ -1513,11 +1524,14 @@ onMounted(() => {
                 <input
                   type="checkbox"
                   class="sr-only peer"
+                  role="switch"
+                  :aria-checked="timelineStyle === 'beautiful'"
+                  aria-label="Beautiful daily timelines"
                   :checked="timelineStyle === 'beautiful'"
                   @change="setTimelineStyle(timelineStyle === 'beautiful' ? 'minimal' : 'beautiful')"
                 />
                 <div
-                  class="w-9 h-5 bg-stone-200 peer-focus:outline-none rounded-full peer dark:bg-stone-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-stone-600 peer-checked:bg-emerald-500"
+                  class="w-9 h-5 bg-stone-300 ring-1 ring-stone-300 peer-focus:outline-none rounded-full peer dark:bg-stone-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-stone-600 peer-checked:bg-emerald-500"
                 />
               </label>
             </div>
@@ -1628,6 +1642,9 @@ onMounted(() => {
               <label class="relative inline-flex items-center cursor-pointer">
                 <input
                   type="checkbox"
+                  role="switch"
+                  :aria-checked="isEntryTypeVisible(entryType.value)"
+                  :aria-label="`Show ${entryType.label} entries`"
                   :checked="isEntryTypeVisible(entryType.value)"
                   class="sr-only peer"
                   @change="toggleEntryTypeVisibility(entryType.value)"
@@ -1720,7 +1737,7 @@ onMounted(() => {
                 </div>
                 <div class="flex gap-2">
                   <button
-                    class="flex-1 py-2 px-3 bg-tada-600 text-white text-sm font-medium rounded-lg hover:opacity-90 disabled:opacity-50"
+                    class="flex-1 py-2 px-3 bg-tada-600 text-stone-900 text-sm font-medium rounded-lg hover:opacity-90 disabled:opacity-50"
                     :disabled="!newCustomType.name.trim()"
                     @click="addCustomType"
                   >
@@ -1767,6 +1784,9 @@ onMounted(() => {
                   <input
                     v-model="settings.captureMood"
                     type="checkbox"
+                    role="switch"
+                    :aria-checked="settings.captureMood"
+                    aria-label="Capture mood after sessions"
                     class="sr-only peer"
                     @change="saveSettings"
                   />
@@ -1794,6 +1814,9 @@ onMounted(() => {
                   <input
                     v-model="settings.captureReflection"
                     type="checkbox"
+                    role="switch"
+                    :aria-checked="settings.captureReflection"
+                    aria-label="Capture reflection after sessions"
                     class="sr-only peer"
                     @change="saveSettings"
                   />
@@ -1847,7 +1870,7 @@ onMounted(() => {
                   />
                   <div class="flex gap-2">
                     <button
-                      class="flex-1 py-2 px-3 bg-tada-600 text-white text-sm font-medium rounded-lg hover:opacity-90"
+                      class="flex-1 py-2 px-3 bg-tada-600 text-stone-900 text-sm font-medium rounded-lg hover:opacity-90"
                       @click="saveEditPreset"
                     >
                       Save
@@ -1995,7 +2018,7 @@ onMounted(() => {
                       ? 'border-tada-300 bg-tada-100/20 dark:border-tada-600 dark:bg-tada-600/10'
                       : 'border-stone-200 dark:border-stone-600 hover:border-stone-300'
                   "
-                  @click="settings.theme = theme.id as any"
+                  @click="applyTheme(theme.id)"
                 >
                   <span class="text-xl">{{ theme.icon }}</span>
                   <span class="text-sm text-stone-600 dark:text-stone-300">{{
@@ -2249,7 +2272,7 @@ onMounted(() => {
                 <div class="flex gap-2">
                   <button
                     :disabled="isCreatingKey || !newKeyName.trim()"
-                    class="px-3 py-1.5 bg-tada-600 hover:bg-tada-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
+                    class="px-3 py-1.5 bg-tada-600 hover:bg-tada-700 text-stone-900 text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
                     @click="createApiKey"
                   >
                     {{ isCreatingKey ? "Creating..." : "Create" }}
