@@ -118,7 +118,7 @@ useSeoMeta({
       <h2>Fixes</h2>
 
       <p>
-        Registration errors now tell you what actually went wrong instead of a generic "failed" message. Voice recording on Android no longer produces loud beeping. The moments list no longer says "No moments yet" when you clearly have moments. And "Yes, turn it on!" in the What's New popup now takes you to the right place.
+        Registration errors now tell you what actually went wrong instead of a generic "failed" message. The moments list no longer says "No moments yet" when you clearly have moments. And "Yes, turn it on!" in the What's New popup now takes you to the right place.
       </p>
 
       <p class="text-lg font-medium text-tada-700 dark:text-tada-400">
