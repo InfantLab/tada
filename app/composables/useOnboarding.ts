@@ -71,7 +71,7 @@ function saveState() {
 
 export function useOnboarding() {
   const config = useRuntimeConfig();
-  const currentVersion = ((config as unknown as Record<string, Record<string, unknown>>)['public']!)['appVersion'] as string || "0.0.0";
+  const currentVersion = String(config.public?.appVersion ?? "0.0.0");
 
   // Initialize on mount — safe to call multiple times since all
   // instances share the same state ref
