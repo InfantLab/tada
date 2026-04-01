@@ -145,3 +145,33 @@ useSeoMeta({
     </footer>
   </article>
 </template>
+
+<style scoped>
+.prose h2 {
+  @apply text-xl font-semibold text-stone-800 dark:text-stone-100 mt-8 mb-4;
+}
+
+.prose h3 {
+  @apply text-lg font-semibold text-stone-800 dark:text-stone-100 mt-6 mb-3;
+}
+
+.prose p {
+  @apply text-stone-600 dark:text-stone-400 leading-relaxed mb-4;
+}
+
+.prose ul {
+  @apply list-disc list-inside space-y-2 mb-4 text-stone-600 dark:text-stone-400;
+}
+
+.prose strong {
+  @apply text-stone-800 dark:text-stone-200 font-semibold;
+}
+
+.prose em {
+  @apply italic;
+}
+
+.prose code {
+  @apply text-sm bg-stone-100 dark:bg-stone-700 px-1 py-0.5 rounded;
+}
+</style>

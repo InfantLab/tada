@@ -57,19 +57,19 @@ const philosophyPoints = [
 
 const blogPosts = [
   {
+    title: "See Your Day, Celebrate Your Week, Welcome Everyone",
+    description: "Daily timelines, weekly celebrations, and a full accessibility overhaul.",
+    link: "/blog/whats-new-v061",
+  },
+  {
+    title: "What's New — March 2026",
+    description: "Daily timeline bars, weekly celebrations, and mid-week encouragement.",
+    link: "/blog/whats-new-v06",
+  },
+  {
     title: "Why Our Timer Counts Up",
     description: "The philosophy behind celebrating accomplishment over remaining time.",
     link: "/blog/counting-up",
-  },
-  {
-    title: "Identity Over Streaks",
-    description: "Why we focus on who you're becoming, not maintaining unbroken chains.",
-    link: "/blog/identity-over-streaks",
-  },
-  {
-    title: "Graceful Rhythms",
-    description: "How missing a day can be part of a beautiful pattern.",
-    link: "/blog/graceful-rhythms",
   },
 ];
 </script>
