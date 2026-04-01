@@ -30,13 +30,13 @@ interface BlogPost {
 const posts: BlogPost[] = [
   {
     slug: "whats-new-v061",
-    title: "Spring 2026: See Your Day, Celebrate Your Week, Welcome Everyone",
+    title: "See Your Day, Celebrate Your Week, Welcome Everyone",
     excerpt:
-      "Daily timelines, weekly celebrations, push notifications, and a full WCAG 2.2 AA accessibility overhaul across three phases.",
+      "Daily timelines show the shape of your day. Monday celebrations notice what you did. And Ta-Da! now works better with keyboards, screen readers, and all kinds of colour vision.",
     date: "April 2026",
-    readTime: "5 min read",
+    readTime: "4 min read",
     category: "Updates",
-    emoji: "♿",
+    emoji: "🌸",
   },
   {
     slug: "whats-new-v06",

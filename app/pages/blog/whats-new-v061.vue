@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * Blog Post: What's New in v0.6.0 & v0.6.1 — Spring 2026
+ * Blog Post: What's New — Spring 2026 (v0.6.0 + v0.6.1)
  */
 
 definePageMeta({
@@ -9,10 +9,10 @@ definePageMeta({
 });
 
 useSeoMeta({
-  title: "What's New in v0.6.0 & v0.6.1 — Ta-Da! Blog",
-  description: "Daily timelines, weekly celebrations, push notifications, and a full WCAG 2.2 AA accessibility overhaul across three phases.",
-  ogTitle: "What's New in Ta-Da! — v0.6.0 & v0.6.1",
-  ogDescription: "Daily timelines, weekly celebrations, push notifications, and a full WCAG 2.2 AA accessibility overhaul across three phases.",
+  title: "What's New — Spring 2026 — Ta-Da! Blog",
+  description: "See the shape of your day, get a Monday celebration, and use Ta-Da! your way — with keyboard, screen reader, or however works for you.",
+  ogTitle: "What's New in Ta-Da! — Spring 2026",
+  ogDescription: "See the shape of your day, get a Monday celebration, and use Ta-Da! your way — with keyboard, screen reader, or however works for you.",
 });
 </script>
 
@@ -39,99 +39,87 @@ useSeoMeta({
           April 2026
         </span>
         <span class="text-xs text-stone-500 dark:text-stone-400">
-          · 5 min read
+          · 4 min read
         </span>
       </div>
       <h1 class="text-3xl font-bold text-stone-800 dark:text-stone-100 mb-4">
-        Spring 2026: See Your Day, Celebrate Your Week, Welcome Everyone
+        See Your Day, Celebrate Your Week, Welcome Everyone
       </h1>
       <p class="text-lg text-stone-600 dark:text-stone-400 leading-relaxed">
-        Two releases in quick succession. v0.6.0 added daily timelines and weekly celebrations. v0.6.1 followed with push notifications, a PWA upgrade, and a comprehensive accessibility overhaul. Here's everything that changed.
+        Two updates this month. The first adds daily timelines and weekly celebrations. The second makes Ta-Da! work better for everyone — especially if you use a keyboard, a screen reader, or have trouble with certain colour combinations.
       </p>
     </header>
 
     <!-- Content -->
     <div class="prose prose-stone dark:prose-invert max-w-none">
 
-      <h2>Daily Timeline Bars (v0.6.0)</h2>
+      <h2>Your day has a shape now</h2>
 
       <p>
-        Every day in your Timeline now has a coloured bar showing when each entry happened across a 24-hour window. Your morning meditation sits near the left. An evening run near the right. A combined strip at the top of each day overlays everything at once — colour-coded by category, no axis labels, just the shape of your day.
+        Every day in your Timeline has a coloured bar showing when each entry happened. Morning meditation near the left. Evening run near the right. A combined strip at the top overlays everything at once, colour-coded by category.
       </p>
 
       <p>
-        Short entries and instant entries (ta-das, moments, tallies) appear as dots. Overlapping timed entries use semi-transparent layering. Pure CSS, no charting library, responsive from 320px to wide desktop.
+        No numbers. No axis labels. Just position. It turns a list of entries into something that looks like the shape of your day — easier to take in than a column of timestamps.
       </p>
-
-      <h2>Weekly Celebrations & Encouragement (v0.6.0)</h2>
 
       <p>
-        Two new optional weekly touchpoints, both off by default:
+        Short entries and instant entries (ta-das, moments, tallies) appear as dots. Overlapping sessions layer transparently so you can still read both.
       </p>
 
-      <ul>
-        <li>
-          <strong>Monday Celebration</strong> — a summary of your previous week: sessions completed, time by category, rhythms maintained or extended, personal records. Four privacy tiers from pure numbers to warm AI-written summaries.
-        </li>
-        <li>
-          <strong>Thursday Encouragement</strong> — a gentle mid-week check-in based on your rolling 4-week average. Quiet weeks are noted gently, never shamed.
-        </li>
-      </ul>
+      <h2>Monday celebrations</h2>
 
       <p>
-        Turn them on in <strong>Settings → Rhythms</strong>. Email delivery or in-app only — one-click unsubscribe in every message.
+        Every Monday morning, Ta-Da! can send you a summary of your previous week — sessions completed, time by category, rhythms maintained or extended, any personal records. It's optional and off by default. Turn it on in <strong>Settings → Rhythms</strong>.
       </p>
-
-      <h2>Push Notifications (v0.6.1)</h2>
 
       <p>
-        Monday celebrations and Thursday encouragements can now arrive as push notifications — even when Ta-Da! isn't open. Self-hosted operators generate VAPID keys and set three env vars; users opt in from Settings. Supported on Android Chrome, desktop Chromium, and iOS 16.4+ (home screen install required).
+        You choose how it's written. Pure numbers if you want the facts. Or a warmer, AI-written version that notices what you actually did and says something about it. Four options, from no AI at all to celebratory.
       </p>
 
-      <h2>PWA Improvements (v0.6.1)</h2>
+      <h2>Thursday encouragement</h2>
 
       <p>
-        The installed app feels more native now. Maskable icon fixed for Android home screens, app identity pinned so reinstalls are recognised, quick-action shortcuts (New Entry, Record Dream, New Tally) from a long-press on the icon, a branded offline page instead of a browser error, and screen wake lock during voice recording.
+        A shorter mid-week check-in, based on how your week compares to your recent average. Also optional, also off by default. Quiet weeks are noted gently. Nothing is shamed.
       </p>
-
-      <h2>Accessibility: WCAG 2.2 AA in Three Phases (v0.6.1)</h2>
 
       <p>
-        The biggest investment in v0.6.1 was a comprehensive accessibility audit and implementation across three phases, touching 50+ files. Ta-Da! is now significantly more usable for keyboard-only users, screen reader users, and people with colour vision deficiencies.
+        Both can arrive by email, in the app, or — new in the second update — as a notification on your phone or desktop, even when Ta-Da! isn't open.
       </p>
 
-      <h3>Screen readers</h3>
+      <h2>Ta-Da! for everyone</h2>
 
       <p>
-        Every page has a skip-to-main-content link. All modals announce as dialogs with proper ARIA attributes. Form labels are wired to their inputs. Filter and toggle buttons announce their state. The timeline announces filter results as they change. Settings toggles use <code>role="switch"</code> so screen readers speak "on" and "off" rather than nothing.
+        The biggest piece of work in these updates was making Ta-Da! more usable for more people. Not a checkbox exercise — a real pass through every screen, asking "can someone actually use this?"
       </p>
-
-      <h3>Keyboard navigation</h3>
 
       <p>
-        Focus traps keep Tab/Shift+Tab inside open modals — no more tabbing into the page behind a backdrop. The year heatmap is a proper keyboard grid: arrow keys move between days, Enter or Space selects, Home and End jump to the start or end. Rhythm accordion panels are now buttons with <code>aria-expanded</code>.
+        <strong>If you navigate with a keyboard:</strong> Tab now stays inside popups and dialogs instead of wandering into the page behind them. The year heatmap on Rhythms responds to arrow keys — move between days, press Enter to select one. Accordion panels are proper buttons you can activate without a mouse.
       </p>
-
-      <h3>Colour & contrast</h3>
 
       <p>
-        Heatmaps moved from a green scale to a violet sequential scale — easily distinguishable under deuteranopia, protanopia, and tritanopia. Four category colours (Creative, Social, Life Admin, Events) were darkened to meet the 3:1 minimum contrast ratio on white backgrounds. Button text on the brand-colour background was fixed across Settings. Text contrast was improved throughout.
+        <strong>If you use a screen reader:</strong> Modals announce themselves when they open. Buttons describe their current state — "filter: selected" or "toggle: on" — instead of just their label. When you filter your timeline, the results are announced. Every day in the year heatmap has a description like "April 1: 3 entries."
       </p>
-
-      <h3>Reduced motion</h3>
 
       <p>
-        The celebration overlay — confetti, bouncing emoji, fade effects — now respects <code>prefers-reduced-motion: reduce</code>. If your OS is set to reduce motion, you still see the celebration message, just without the animation.
+        <strong>If you have trouble distinguishing colours:</strong> The rhythm heatmaps used to be green, which is hard to read for people with red-green colour blindness (about 8% of men). They're now violet — distinguishable under all common types of colour vision deficiency. We also darkened several category colours that were too faint against white backgrounds.
       </p>
 
-      <h2>Bug fixes worth mentioning</h2>
+      <p>
+        <strong>If you prefer less motion:</strong> The celebration confetti and bouncing animations respect your system setting. If you've told your OS to reduce motion, you still see the celebration — just without the fireworks.
+      </p>
 
-      <ul>
-        <li><strong>Registration errors</strong> — failed registration (username taken, password too short) now shows the actual reason instead of a generic message.</li>
-        <li><strong>Android mic noise</strong> — recording no longer produces loud beeping on Android Chrome. The fix: disabling audio processing constraints that triggered Android's communication audio routing.</li>
-        <li><strong>Moments list</strong> — the "No moments yet" false empty state is fixed.</li>
-        <li><strong>What's New overlay</strong> — "Yes, turn it on!" now navigates to the right section of Settings.</li>
-      </ul>
+      <h2>The app on your home screen</h2>
+
+      <p>
+        If you've installed Ta-Da! to your home screen, a few things got better. The icon looks right on Android now (no more awkward cropping). Long-press gives you shortcuts to New Entry, Record Dream, and New Tally. Going offline shows a proper page instead of a browser error. And the screen stays on while you're voice-recording — no more mid-sentence interruptions.
+      </p>
+
+      <h2>Fixes</h2>
+
+      <p>
+        Registration errors now tell you what actually went wrong instead of a generic "failed" message. Voice recording on Android no longer produces loud beeping. The moments list no longer says "No moments yet" when you clearly have moments. And "Yes, turn it on!" in the What's New popup now takes you to the right place.
+      </p>
 
       <p class="text-lg font-medium text-tada-700 dark:text-tada-400">
         Ta-Da!
