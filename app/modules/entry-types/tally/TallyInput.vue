@@ -662,7 +662,7 @@ function handleVoiceError(message: string) {
         </div>
 
         <!-- Quick presets -->
-        <div class="flex gap-2 mt-3 justify-center">
+        <div class="flex flex-wrap gap-2 mt-3 justify-center">
           <button
             v-for="preset in quickPresets"
             :key="preset.value"
