@@ -54,7 +54,11 @@
       "Bash(bunx nuxi typecheck:*)",
       "Bash(git status:*)",
       "Bash(APP_URL=https://tada.living bun:*)",
-      "Bash(git rm:*)"
+      "Bash(git rm:*)",
+      "Bash(bash .specify/scripts/bash/create-new-feature.sh --json --short-name \"accessibility-phase3\" \"Implement remaining Phase 3 accessibility recommendations from WCAG 2.2 AA audit\")",
+      "Bash(bash .specify/scripts/bash/update-agent-context.sh __AGENT__)",
+      "Bash(find /workspaces/tada -maxdepth 2 -type f \\\\\\(-name CHANGELOG* -o -name RELEASE* -o -name ROADMAP* -o -name changelog* -o -name release* -o -name roadmap* \\\\\\))",
+      "WebFetch(domain:github.blog)"
     ]
   }
 }
