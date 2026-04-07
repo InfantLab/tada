@@ -105,19 +105,19 @@
 
 ### Tests for User Story 2
 
-- [ ] T041 [P] [US2] Add contract test for manual assignment trigger endpoint in `app/server/api/ourmoji/experiments/[experimentId]/assignments/trigger.post.test.ts`
-- [ ] T042 [P] [US2] Add unit tests for seeded assignment algorithm in `app/server/services/ourmoji/randomization.test.ts`
-- [ ] T043 [P] [US2] Add integration test for scheduler idempotency constraint in `app/tests/api/ourmoji-assignment-idempotency.integration.test.ts`
-- [ ] T044 [P] [US2] Add integration test for receiver blinding in notification payloads in `app/tests/api/ourmoji-blinding.integration.test.ts`
+- [X] T041 [P] [US2] Add contract test for manual assignment trigger endpoint in `app/server/api/ourmoji/experiments/[experimentId]/assignments/trigger.post.test.ts`
+- [X] T042 [P] [US2] Add unit tests for seeded assignment algorithm in `app/server/services/ourmoji/randomization.test.ts`
+- [X] T043 [P] [US2] Add integration test for scheduler idempotency constraint in `app/tests/api/ourmoji-assignment-idempotency.integration.test.ts`
+- [X] T044 [P] [US2] Add integration test for receiver blinding in notification payloads in `app/tests/api/ourmoji-blinding.integration.test.ts`
 
 ### Implementation for User Story 2
 
-- [ ] T045 [US2] Implement nightly assignment generation service in `app/server/services/ourmoji/assignments.ts`
-- [ ] T046 [US2] Implement earliest-timezone due-time computation in `app/server/services/ourmoji/schedule.ts`
-- [ ] T047 [US2] Implement email-first notification dispatch for sender/receiver roles in `app/server/services/ourmoji/notifications.ts`
-- [ ] T048 [US2] Implement delivery attempt audit persistence in `app/server/services/ourmoji/delivery.ts`
-- [ ] T049 [US2] Implement manual assignment trigger endpoint in `app/server/api/ourmoji/experiments/[experimentId]/assignments/trigger.post.ts`
-- [ ] T050 [US2] Complete scheduler sweep execution in `app/server/plugins/ourmoji-scheduler.ts`
+- [X] T045 [US2] Implement nightly assignment generation service in `app/server/services/ourmoji/assignments.ts`
+- [X] T046 [US2] Implement earliest-timezone due-time computation in `app/server/services/ourmoji/schedule.ts`
+- [X] T047 [US2] Implement email-first notification dispatch for sender/receiver roles in `app/server/services/ourmoji/notifications.ts`
+- [X] T048 [US2] Implement delivery attempt audit persistence in `app/server/services/ourmoji/delivery.ts`
+- [X] T049 [US2] Implement manual assignment trigger endpoint in `app/server/api/ourmoji/experiments/[experimentId]/assignments/trigger.post.ts`
+- [X] T050 [US2] Complete scheduler sweep execution in `app/server/plugins/ourmoji-scheduler.ts`
 
 **Checkpoint**: US2 assignments are correct, idempotent, and blinded.
 
