@@ -8,23 +8,23 @@ What's coming next. For what already shipped, see [CHANGELOG.md](../CHANGELOG.md
 
 ## Version History
 
-| Version    | Theme                       | Status              | Details |
-| ---------- | --------------------------- | ------------------- | ------- |
-| **v0.1.0** | MVP — Foundation            | ✅ Shipped Jan 2026 | [Release Notes](../RELEASE_NOTES_v0.1.0.md) |
-| **v0.2.0** | Graceful Rhythms            | ✅ Shipped Jan 2026 | [Release Notes](../RELEASE_NOTES_v0.2.0.md) |
-| **v0.3.0** | Magic & Voice               | ✅ Shipped Jan 2026 | [Release Notes](../RELEASE_NOTES_v0.3.0.md) |
-| **v0.3.1** | REST API                    | ✅ Shipped Jan 2026 | [CHANGELOG](../CHANGELOG.md) |
-| **v0.4.0** | Ontology & Cloud Service    | ✅ Shipped Feb 2026 | [Release Notes](../RELEASE_NOTES_v0.4.0.md) |
-| **v0.4.2** | Backups, Polish & Code Quality | ✅ Shipped Mar 2026 | [Release Notes](../RELEASE_NOTES_v0.4.2.md) |
-| **v0.5.0** | Housekeeping & Infrastructure | ✅ Shipped Mar 2026 | [Release Notes](../RELEASE_NOTES_v0.5.0.md) |
+| Version    | Theme                                    | Status              | Details                                     |
+| ---------- | ---------------------------------------- | ------------------- | ------------------------------------------- |
+| **v0.1.0** | MVP — Foundation                         | ✅ Shipped Jan 2026 | [Release Notes](../RELEASE_NOTES_v0.1.0.md) |
+| **v0.2.0** | Graceful Rhythms                         | ✅ Shipped Jan 2026 | [Release Notes](../RELEASE_NOTES_v0.2.0.md) |
+| **v0.3.0** | Magic & Voice                            | ✅ Shipped Jan 2026 | [Release Notes](../RELEASE_NOTES_v0.3.0.md) |
+| **v0.3.1** | REST API                                 | ✅ Shipped Jan 2026 | [CHANGELOG](../CHANGELOG.md)                |
+| **v0.4.0** | Ontology & Cloud Service                 | ✅ Shipped Feb 2026 | [Release Notes](../RELEASE_NOTES_v0.4.0.md) |
+| **v0.4.2** | Backups, Polish & Code Quality           | ✅ Shipped Mar 2026 | [Release Notes](../RELEASE_NOTES_v0.4.2.md) |
+| **v0.5.0** | Housekeeping & Infrastructure            | ✅ Shipped Mar 2026 | [Release Notes](../RELEASE_NOTES_v0.5.0.md) |
 | **v0.6.0** | Weekly Rhythms, Daily Timelines & Polish | ✅ Shipped Mar 2026 | [Release Notes](../RELEASE_NOTES_v0.6.0.md) |
-| **v0.6.1** | PWA, Push & Accessibility    | ✅ Shipped Mar 2026 | [Release Notes](../RELEASE_NOTES_v0.6.1.md) |
+| **v0.6.1** | PWA, Push & Accessibility                | ✅ Shipped Mar 2026 | [Release Notes](../RELEASE_NOTES_v0.6.1.md) |
 
 ## Upcoming
 
-| Version    | Theme                       | Target   |
-| ---------- | --------------------------- | -------- |
-| **v0.7.0** | Features & Integrations     | 2026+    |
+| Version    | Theme                   | Target |
+| ---------- | ----------------------- | ------ |
+| **v0.7.0** | Features & Integrations | 2026+  |
 
 ---
 
@@ -35,11 +35,13 @@ _Shipped: March 2026_
 **Theme:** Progressive web app polish, web push notifications for weekly rhythms, and a comprehensive WCAG 2.2 AA accessibility audit (Phases 1+2 implemented, Phase 3 documented for future sprint).
 
 **Key deliverables — PWA & Push:**
+
 - Maskable icon, app identity pinning, app shortcuts, offline fallback page
 - Screen wake lock during voice recording
 - Web push notifications for Monday celebrations and Thursday encouragements (VAPID-based, opt-in)
 
 **Key deliverables — Accessibility (Phase 1+2):**
+
 - Skip-to-content link, dialog roles on all modals, form label wiring, aria-pressed/aria-checked semantics
 - Focus management: modals capture focus on open, restore on close
 - Colour contrast fixes: text-tada-600→700, stone-400→500, hardcoded chart colours
@@ -47,6 +49,7 @@ _Shipped: March 2026_
 - Handover doc at `design/accessibility.md` for Phase 3 (focus traps, colourblind heatmaps, reduced motion, etc.)
 
 **Bug fixes:**
+
 - Registration error messages now surface correctly (#10) — 3-char username minimum enforced
 - Android PWA mic noise fixed (#5)
 - Version number legibility on Help, Settings, About pages
@@ -61,45 +64,53 @@ _Shipped: March 2026_
 **Theme:** Weekly review features, daily timeline visualisation, and UX polish. Users can opt in to a Thursday mid-week encouragement nudge and a Monday morning celebration summary with four privacy tiers. Colourful daily timeline bars show how each day unfolded at a glance.
 
 **Key deliverables — Daily Timeline Bar** ([Spec 010](../specs/010-daily-timelines/spec.md)):
+
 - Per-card timeline indicator showing when each activity happened on a 24-hour line
 - Combined day strip above the card list with category colour coding
 - Responsive from 320px mobile to wide desktop — pure CSS, no charting library
 - Dots for short entries (<5 min) and instant entries (ta-das, moments, tallies)
 
 **Key deliverables — Onboarding & Help:**
+
 - What's New popup for returning users on version upgrade
 - New-user sensible defaults
 - Help page section subtitles — visible "What is X?" descriptions without expanding accordions
 
 **Key deliverables — Bug Fixes:**
+
 - Moments list false empty state fixed (type filter + pagination)
 - Celebration quality: milestone labels, active-day highlighting, record labels
 
 **Key deliverables — Weekly Celebration Pipeline** ([Spec 009](../specs/009-weekly-rhythms/spec.md)):
+
 - 4-tier celebration system: Stats Only, Private AI, Cloud AI Factual, Cloud AI Creative
 - Monday celebration generation (3:33am) with email delivery (8:08am), per-user timezone-aware
 - Weekly data aggregation: entry counts by type, session durations, week-over-week comparisons, personal records
 - Per-rhythm chain status and all-time milestone tracking in celebrations
 
 **Key deliverables — Thursday Encouragement:**
+
 - Mid-week encouragement nudge (default Thursday 3:03pm) with general progress and rhythm-specific stretch goals
 - In-app dismissible banner and optional push notification / email delivery
 - Activity comparison against rolling 4-week averages
 - Positive, guilt-free messaging — never shame-based
 
 **Key deliverables — Email & Delivery Infrastructure:**
+
 - HTML and plain text email delivery with retry and backoff
 - One-click unsubscribe link in every email
 - Bounce tracking with auto-disable after 3 consecutive failures
 - In-app-only delivery as alternative to email
 
 **Key deliverables — Settings & Configuration:**
+
 - Weekly Rhythms settings panel with tier picker and plain-language privacy notices
 - Independent toggles for Thursday encouragement and Monday celebration
 - Email address configuration with in-app-only option
 - All features off by default (opt-in only)
 
 **Key deliverables — Testing:**
+
 - 80 tests covering celebration pipeline, encouragement, delivery, cloud AI providers, stats aggregation, and messages
 
 ---
@@ -111,6 +122,7 @@ _Shipped: March 2026_
 **Theme:** Comprehensive housekeeping release — security audit and hardening, dependency modernization, test coverage expansion, and infrastructure improvements. No new user-facing features; instead, 32 of 33 audit items completed across security, dependencies, testing, documentation, and code quality.
 
 **Key deliverables — Security:**
+
 - Lucia auth migration to direct session management
 - Session cookie hardening (sameSite, httpOnly, secure)
 - Security headers middleware (CSP, HSTS, X-Frame-Options, etc.)
@@ -118,14 +130,17 @@ _Shipped: March 2026_
 - Persistent SQLite-backed rate limiting
 
 **Key deliverables — Dependencies:**
+
 - Nuxt 3 → 4.4.2, Stripe 17 → 20, TypeScript 5.7 → 5.9, Zod 3 → 4
 - @libsql/client updated, @nuxt/devtools removed (bundled in Nuxt 4)
 
 **Key deliverables — Testing (209 new tests):**
+
 - Auth endpoints (38), entry CRUD (33), admin API (26), sync engine (25)
 - Billing/Stripe (40), component tests (47), Playwright E2E (4)
 
 **Key deliverables — Documentation & Quality:**
+
 - Admin API documented in API-SPECIFICATION.md
 - CONTRIBUTING.md created, version references updated, specs marked complete
 - Structured logging with request IDs, console.log cleanup
@@ -157,6 +172,18 @@ Optional "magic" layer, completely invisible to those who don't want it.
 - [ ] Flexible ritual sequences (not rigid schedules)
 - [ ] "Ritual mode" — guided flow through routine items
 - [ ] Time-of-day awareness (morning routine vs evening wind-down)
+
+### Daily Rituals (Plugin)
+
+User-defined lightweight daily rituals inspired by Ourmoji and reflective journaling.
+
+- [ ] Ritual template builder (name, cadence, prompt style, completion type)
+- [ ] Prompt-driven rituals: morning pages, evening reflection, gratitude, intention setting
+- [ ] "Fortune" ritual type (Ourmoji-style daily draw + short reflection prompt)
+- [ ] Ritual cards on Home/Timeline with one-tap "begin" and "complete" actions
+- [ ] Optional ritual reminders with quiet-hours support (opt-in only)
+- [ ] Ritual history + streaks with graceful-chain framing (never punitive)
+- [ ] Shareable ritual presets (private by default, import/export optional)
 
 ### AI Insights (Plugin, with Guardrails)
 
@@ -252,4 +279,4 @@ Things we're explicitly _not_ building:
 
 ---
 
-_Last updated: March 2026_
+_Last updated: April 2026_
