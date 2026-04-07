@@ -77,21 +77,21 @@
 
 ### Tests for User Story 4
 
-- [ ] T029 [P] [US4] Add contract test for `POST /api/ourmoji/experiments` in `app/server/api/ourmoji/experiments.post.test.ts`
-- [ ] T030 [P] [US4] Add contract test for `GET /api/ourmoji/experiments` in `app/server/api/ourmoji/experiments.get.test.ts`
-- [ ] T031 [P] [US4] Add contract tests for pause/resume endpoints in `app/server/api/ourmoji/experiments-status.post.test.ts`
-- [ ] T032 [P] [US4] Add integration test for one-active-experiment-per-user guard in `app/tests/api/ourmoji-participants.integration.test.ts`
+- [X] T029 [P] [US4] Add contract test for `POST /api/ourmoji/experiments` in `app/server/api/ourmoji/experiments.post.test.ts`
+- [X] T030 [P] [US4] Add contract test for `GET /api/ourmoji/experiments` in `app/server/api/ourmoji/experiments.get.test.ts`
+- [X] T031 [P] [US4] Add contract tests for pause/resume endpoints in `app/server/api/ourmoji/experiments-status.post.test.ts`
+- [X] T032 [P] [US4] Add integration test for one-active-experiment-per-user guard in `app/tests/api/ourmoji-participants.integration.test.ts`
 
 ### Implementation for User Story 4
 
-- [ ] T033 [US4] Implement experiment run lifecycle service in `app/server/services/ourmoji/experiments.ts`
-- [ ] T034 [US4] Implement participant membership and eligibility checks in `app/server/services/ourmoji/participants.ts`
-- [ ] T035 [US4] Implement `POST /api/ourmoji/experiments` in `app/server/api/ourmoji/experiments.post.ts`
-- [ ] T036 [US4] Implement `GET /api/ourmoji/experiments` in `app/server/api/ourmoji/experiments.get.ts`
-- [ ] T037 [US4] Implement pause endpoint in `app/server/api/ourmoji/experiments/[experimentId]/pause.post.ts`
-- [ ] T038 [US4] Implement resume endpoint in `app/server/api/ourmoji/experiments/[experimentId]/resume.post.ts`
-- [ ] T039 [US4] Build run management UI (list + create + pause/resume) in `app/components/ourmoji/ExperimentRunManager.vue`
-- [ ] T040 [US4] Add experiment management page and routing in `app/pages/ourmoji/experiments.vue`
+- [X] T033 [US4] Implement experiment run lifecycle service in `app/server/services/ourmoji/experiments.ts`
+- [X] T034 [US4] Implement participant membership and eligibility checks in `app/server/services/ourmoji/participants.ts`
+- [X] T035 [US4] Implement `POST /api/ourmoji/experiments` in `app/server/api/ourmoji/experiments.post.ts`
+- [X] T036 [US4] Implement `GET /api/ourmoji/experiments` in `app/server/api/ourmoji/experiments.get.ts`
+- [X] T037 [US4] Implement pause endpoint in `app/server/api/ourmoji/experiments/[experimentId]/pause.post.ts`
+- [X] T038 [US4] Implement resume endpoint in `app/server/api/ourmoji/experiments/[experimentId]/resume.post.ts`
+- [X] T039 [US4] Build run management UI (list + create + pause/resume) in `app/components/ourmoji/ExperimentRunManager.vue`
+- [X] T040 [US4] Add experiment management page and routing in `app/pages/ourmoji/experiments.vue`
 
 **Checkpoint**: US4 is independently testable for run control-plane behavior.
 
