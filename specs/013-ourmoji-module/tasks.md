@@ -131,15 +131,15 @@
 
 ### Tests for User Story 6
 
-- [ ] T051 [P] [US6] Add component test for VoiceRecorder integration path in `app/components/ourmoji/DreamCapturePanel.test.ts`
-- [ ] T052 [P] [US6] Add component test for transcription failure fallback in `app/components/ourmoji/DreamCapturePanel.test.ts`
+- [X] T051 [P] [US6] Add component test for VoiceRecorder integration path in `app/components/ourmoji/DreamCapturePanel.test.ts`
+- [X] T052 [P] [US6] Add component test for transcription failure fallback in `app/components/ourmoji/DreamCapturePanel.test.ts`
 
 ### Implementation for User Story 6
 
-- [ ] T053 [US6] Build dream capture panel using existing `VoiceRecorder` in `app/components/ourmoji/DreamCapturePanel.vue`
-- [ ] T054 [US6] Add transcription-to-dream-text state management in `app/composables/useDreamExperimentFlow.ts`
-- [ ] T055 [US6] Implement manual text fallback UX and error messaging in `app/components/ourmoji/DreamCapturePanel.vue`
-- [ ] T056 [US6] Add shared field length handling (5000-char limit + warning) in `app/server/services/ourmoji/validation.ts`
+- [X] T053 [US6] Build dream capture panel using existing `VoiceRecorder` in `app/components/ourmoji/DreamCapturePanel.vue`
+- [X] T054 [US6] Add transcription-to-dream-text state management in `app/composables/useDreamExperimentFlow.ts`
+- [X] T055 [US6] Implement manual text fallback UX and error messaging in `app/components/ourmoji/DreamCapturePanel.vue`
+- [X] T056 [US6] Add shared field length handling (5000-char limit + warning) in `app/server/services/ourmoji/validation.ts`
 
 **Checkpoint**: US6 voice integration is independently testable.
 
