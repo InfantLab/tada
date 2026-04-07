@@ -203,6 +203,9 @@ watch(zoomLevel, (newLevel) => {
       </div>
     </div>
 
+    <!-- Ourmoji morning banner — self-gates on feature flag + open prompt -->
+    <OurmojiMorningBanner />
+
     <!-- Getting Started Card (for new users) -->
     <OnboardingGettingStartedCard />
 

@@ -153,22 +153,22 @@
 
 ### Tests for User Story 3
 
-- [ ] T057 [P] [US3] Add contract test for `GET /api/ourmoji/experiments/{experimentId}/morning-prompt` in `app/server/api/ourmoji/experiments/[experimentId]/morning-prompt.get.test.ts`
-- [ ] T058 [P] [US3] Add contract test for dream submission endpoint in `app/server/api/ourmoji/submissions/[assignmentId]/dream.post.test.ts`
-- [ ] T059 [P] [US3] Add contract test for guess submission endpoint in `app/server/api/ourmoji/submissions/[assignmentId]/guess.post.test.ts`
-- [ ] T060 [P] [US3] Add integration test for interruption-safe resume (`dream_locked`) in `app/tests/api/ourmoji-resume.integration.test.ts`
+- [X] T057 [P] [US3] Add contract test for `GET /api/ourmoji/experiments/{experimentId}/morning-prompt` in `app/server/api/ourmoji/experiments/[experimentId]/morning-prompt.get.test.ts`
+- [X] T058 [P] [US3] Add contract test for dream submission endpoint in `app/server/api/ourmoji/submissions/[assignmentId]/dream.post.test.ts`
+- [X] T059 [P] [US3] Add contract test for guess submission endpoint in `app/server/api/ourmoji/submissions/[assignmentId]/guess.post.test.ts`
+- [X] T060 [P] [US3] Add integration test for interruption-safe resume (`dream_locked`) in `app/tests/api/ourmoji-resume.integration.test.ts`
 
 ### Implementation for User Story 3
 
-- [ ] T061 [US3] Implement morning prompt service + endpoint in `app/server/services/ourmoji/morningPrompt.ts` and `app/server/api/ourmoji/experiments/[experimentId]/morning-prompt.get.ts`
-- [ ] T062 [US3] Implement dream submission lock transition in `app/server/services/ourmoji/submissions.ts`
-- [ ] T063 [US3] Implement guess submission + hit/miss reveal transition in `app/server/services/ourmoji/reveal.ts`
-- [ ] T064 [US3] Implement dream submission endpoint in `app/server/api/ourmoji/submissions/[assignmentId]/dream.post.ts`
-- [ ] T065 [US3] Implement guess submission endpoint in `app/server/api/ourmoji/submissions/[assignmentId]/guess.post.ts`
-- [ ] T066 [US3] Build Sacred Set picker UI (23-choice forced grid + confidence) in `app/components/ourmoji/SacredSetPicker.vue`
-- [ ] T067 [US3] Build reveal panel UI (send/control + hit/miss states) in `app/components/ourmoji/DreamRevealPanel.vue`
-- [ ] T068 [US3] Build end-to-end flow wrapper (banner -> capture -> guess -> reveal) in `app/components/ourmoji/DreamExperimentFlow.vue`
-- [ ] T069 [US3] Mount morning flow entry point on main experience in `app/pages/index.vue`
+- [X] T061 [US3] Implement morning prompt service + endpoint in `app/server/services/ourmoji/morningPrompt.ts` and `app/server/api/ourmoji/experiments/[experimentId]/morning-prompt.get.ts`
+- [X] T062 [US3] Implement dream submission lock transition in `app/server/services/ourmoji/submissions.ts`
+- [X] T063 [US3] Implement guess submission + hit/miss reveal transition in `app/server/services/ourmoji/reveal.ts`
+- [X] T064 [US3] Implement dream submission endpoint in `app/server/api/ourmoji/submissions/[assignmentId]/dream.post.ts`
+- [X] T065 [US3] Implement guess submission endpoint in `app/server/api/ourmoji/submissions/[assignmentId]/guess.post.ts`
+- [X] T066 [US3] Build Sacred Set picker UI (23-choice forced grid + confidence) in `app/components/ourmoji/SacredSetPicker.vue`
+- [X] T067 [US3] Build reveal panel UI (send/control + hit/miss states) in `app/components/ourmoji/DreamRevealPanel.vue`
+- [X] T068 [US3] Build end-to-end flow wrapper (banner -> capture -> guess -> reveal) in `app/components/ourmoji/DreamExperimentFlow.vue`
+- [X] T069 [US3] Mount morning flow entry point on main experience in `app/pages/index.vue`
 
 **Checkpoint**: US3 core morning flow is complete and independently verifiable.
 
