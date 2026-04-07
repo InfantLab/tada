@@ -456,6 +456,14 @@ export const userPreferences = sqliteTable("user_preferences", {
     >()
     .default([]),
 
+  // Per-user feature module flags. Modules whose flag is `true` (or whose
+  // key is present with truthy value) are visible/active for this user.
+  // Used by the Ourmoji module (013-ourmoji-module) and any future opt-in
+  // feature flags.
+  enabledModules: text("enabled_modules", { mode: "json" })
+    .$type<Record<string, boolean>>()
+    .default({}),
+
   createdAt: text("created_at")
     .notNull()
     .default(sql`(datetime('now'))`),
@@ -1193,3 +1201,170 @@ export const pushSubscriptions = sqliteTable("push_subscriptions", {
 
 export type PushSubscription = typeof pushSubscriptions.$inferSelect;
 export type NewPushSubscription = typeof pushSubscriptions.$inferInsert;
+
+// ============================================================================
+// Ourmoji Module — Dream Experiment Tables (013-ourmoji-module)
+// ============================================================================
+//
+// Daily Ourmoji entries live in the existing `entries` table with type
+// `ourmoji`. The tables below back the dream experiment orchestration:
+// runs, participants, nightly assignments, morning submissions, and
+// notification delivery audit. See specs/013-ourmoji-module/data-model.md.
+// ============================================================================
+
+export type OurmojiExperimentStatus =
+  | "scheduled"
+  | "active"
+  | "paused"
+  | "completed";
+
+export const ourmojiExperimentRuns = sqliteTable("ourmoji_experiment_runs", {
+  id: text("id").primaryKey(), // UUID
+  name: text("name").notNull(),
+  status: text("status").$type<OurmojiExperimentStatus>().notNull().default("scheduled"),
+  startDate: text("start_date").notNull(), // YYYY-MM-DD
+  endDate: text("end_date").notNull(),     // YYYY-MM-DD
+  earliestParticipantTimezone: text("earliest_participant_timezone").notNull(),
+  // Normalised role weights summing to 1.0: { send, control, rest }
+  roleWeights: text("role_weights", { mode: "json" })
+    .$type<{ send: number; control: number; rest: number }>()
+    .notNull(),
+  randomizationSeed: text("randomization_seed").notNull(),
+  createdBy: text("created_by")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  createdAt: text("created_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
+});
+
+export const ourmojiExperimentParticipants = sqliteTable(
+  "ourmoji_experiment_participants",
+  {
+    id: text("id").primaryKey(), // UUID
+    experimentRunId: text("experiment_run_id")
+      .notNull()
+      .references(() => ourmojiExperimentRuns.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    anonymousLabel: text("anonymous_label").notNull(), // e.g. "participantA"
+    timezoneAtJoin: text("timezone_at_join").notNull(),
+    joinedAt: text("joined_at")
+      .notNull()
+      .default(sql`(datetime('now'))`),
+    leftAt: text("left_at"),
+  },
+);
+
+export type OurmojiAssignmentRole =
+  | "sender"
+  | "receiver"
+  | "control"
+  | "rest";
+
+export type OurmojiAssignmentCondition = "send" | "control" | "rest";
+
+export const ourmojiNightAssignments = sqliteTable(
+  "ourmoji_night_assignments",
+  {
+    id: text("id").primaryKey(), // UUID
+    experimentRunId: text("experiment_run_id")
+      .notNull()
+      .references(() => ourmojiExperimentRuns.id, { onDelete: "cascade" }),
+    nightDate: text("night_date").notNull(), // YYYY-MM-DD
+    participantId: text("participant_id")
+      .notNull()
+      .references(() => ourmojiExperimentParticipants.id, {
+        onDelete: "cascade",
+      }),
+    role: text("role").$type<OurmojiAssignmentRole>().notNull(),
+    targetEmoji: text("target_emoji"), // Set only when condition = "send"
+    condition: text("condition").$type<OurmojiAssignmentCondition>().notNull(),
+    assignmentSeed: text("assignment_seed").notNull(),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`(datetime('now'))`),
+  },
+);
+
+export type OurmojiSubmissionState = "none" | "dream_locked" | "complete";
+
+export const ourmojiSubmissions = sqliteTable("ourmoji_submissions", {
+  id: text("id").primaryKey(), // UUID
+  experimentRunId: text("experiment_run_id")
+    .notNull()
+    .references(() => ourmojiExperimentRuns.id, { onDelete: "cascade" }),
+  assignmentId: text("assignment_id")
+    .notNull()
+    .unique()
+    .references(() => ourmojiNightAssignments.id, { onDelete: "cascade" }),
+  participantId: text("participant_id")
+    .notNull()
+    .references(() => ourmojiExperimentParticipants.id, {
+      onDelete: "cascade",
+    }),
+  dreamText: text("dream_text"),
+  guessEmoji: text("guess_emoji"),
+  guessConfidence: integer("guess_confidence"), // 1..5
+  submissionState: text("submission_state")
+    .$type<OurmojiSubmissionState>()
+    .notNull()
+    .default("none"),
+  isHit: integer("is_hit", { mode: "boolean" }),
+  revealedAt: text("revealed_at"),
+  dreamLockedAt: text("dream_locked_at"),
+  guessLockedAt: text("guess_locked_at"),
+  createdAt: text("created_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
+});
+
+export type OurmojiDeliveryStatus = "queued" | "sent" | "failed";
+export type OurmojiDeliveryChannel = "email" | "push";
+
+export const ourmojiNotificationDeliveries = sqliteTable(
+  "ourmoji_notification_deliveries",
+  {
+    id: text("id").primaryKey(), // UUID
+    assignmentId: text("assignment_id")
+      .notNull()
+      .references(() => ourmojiNightAssignments.id, { onDelete: "cascade" }),
+    channel: text("channel").$type<OurmojiDeliveryChannel>().notNull(),
+    status: text("status")
+      .$type<OurmojiDeliveryStatus>()
+      .notNull()
+      .default("queued"),
+    attemptNumber: integer("attempt_number").notNull().default(1),
+    scheduledFor: text("scheduled_for").notNull(),
+    attemptedAt: text("attempted_at"),
+    failureCode: text("failure_code"),
+    failureMessage: text("failure_message"),
+    createdAt: text("created_at")
+      .notNull()
+      .default(sql`(datetime('now'))`),
+  },
+);
+
+export type OurmojiExperimentRun = typeof ourmojiExperimentRuns.$inferSelect;
+export type NewOurmojiExperimentRun = typeof ourmojiExperimentRuns.$inferInsert;
+export type OurmojiExperimentParticipant =
+  typeof ourmojiExperimentParticipants.$inferSelect;
+export type NewOurmojiExperimentParticipant =
+  typeof ourmojiExperimentParticipants.$inferInsert;
+export type OurmojiNightAssignment =
+  typeof ourmojiNightAssignments.$inferSelect;
+export type NewOurmojiNightAssignment =
+  typeof ourmojiNightAssignments.$inferInsert;
+export type OurmojiSubmission = typeof ourmojiSubmissions.$inferSelect;
+export type NewOurmojiSubmission = typeof ourmojiSubmissions.$inferInsert;
+export type OurmojiNotificationDelivery =
+  typeof ourmojiNotificationDeliveries.$inferSelect;
+export type NewOurmojiNotificationDelivery =
+  typeof ourmojiNotificationDeliveries.$inferInsert;

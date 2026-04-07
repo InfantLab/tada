@@ -1,0 +1,376 @@
+openapi: 3.0.3
+info:
+  title: Ourmoji Module API
+  version: 0.1.0
+  description: API contract for daily Ourmoji ingestion, experiment orchestration, and dream submission flow.
+
+servers:
+  - url: /api
+
+tags:
+  - name: Ourmoji
+  - name: Experiments
+  - name: Submissions
+  - name: Analytics
+
+paths:
+  /ourmoji/daily:
+    post:
+      tags: [Ourmoji]
+      summary: Upsert daily Ourmoji for a date
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpsertOurmojiRequest'
+      responses:
+        '200':
+          description: Upserted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OurmojiEntryResponse'
+        '400': { description: Validation error }
+        '403': { description: Module disabled }
+
+  /ourmoji/calendar:
+    get:
+      tags: [Ourmoji]
+      summary: List historical Ourmoji entries by date range
+      parameters:
+        - in: query
+          name: from
+          required: true
+          schema: { type: string, format: date }
+        - in: query
+          name: to
+          required: true
+          schema: { type: string, format: date }
+      responses:
+        '200':
+          description: Calendar entries
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/OurmojiEntryResponse'
+        '403': { description: Module disabled }
+
+  /ourmoji/experiments:
+    post:
+      tags: [Experiments]
+      summary: Create experiment run
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateExperimentRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentRunResponse'
+        '400': { description: Validation error }
+        '409': { description: Participant already in active run }
+
+    get:
+      tags: [Experiments]
+      summary: List experiment runs
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [scheduled, active, paused, completed]
+      responses:
+        '200':
+          description: List of runs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ExperimentRunResponse'
+
+  /ourmoji/experiments/{experimentId}/pause:
+    post:
+      tags: [Experiments]
+      summary: Pause active experiment
+      parameters:
+        - in: path
+          name: experimentId
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Paused }
+        '404': { description: Not found }
+
+  /ourmoji/experiments/{experimentId}/resume:
+    post:
+      tags: [Experiments]
+      summary: Resume paused experiment
+      parameters:
+        - in: path
+          name: experimentId
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Resumed }
+        '404': { description: Not found }
+
+  /ourmoji/experiments/{experimentId}/assignments/trigger:
+    post:
+      tags: [Experiments]
+      summary: Trigger nightly assignment sweep for one run (admin/testing)
+      parameters:
+        - in: path
+          name: experimentId
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Trigger result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  assignedNight:
+                    type: string
+                    format: date
+                  createdCount:
+                    type: integer
+
+  /ourmoji/experiments/{experimentId}/morning-prompt:
+    get:
+      tags: [Submissions]
+      summary: Fetch participant morning prompt state
+      parameters:
+        - in: path
+          name: experimentId
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Prompt state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MorningPromptResponse'
+        '404': { description: No pending prompt }
+
+  /ourmoji/submissions/{assignmentId}/dream:
+    post:
+      tags: [Submissions]
+      summary: Submit and lock dream text
+      parameters:
+        - in: path
+          name: assignmentId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [dreamText]
+              properties:
+                dreamText:
+                  type: string
+                  minLength: 1
+                  maxLength: 5000
+      responses:
+        '200':
+          description: Dream locked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  submissionState:
+                    type: string
+                    enum: [dream_locked]
+        '409': { description: Already locked }
+
+  /ourmoji/submissions/{assignmentId}/guess:
+    post:
+      tags: [Submissions]
+      summary: Submit and lock guess, returning reveal payload
+      parameters:
+        - in: path
+          name: assignmentId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [guessEmoji]
+              properties:
+                guessEmoji:
+                  type: string
+                confidence:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+      responses:
+        '200':
+          description: Guess locked and reveal computed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RevealResponse'
+        '409': { description: Guess already submitted }
+
+  /ourmoji/experiments/{experimentId}/stats:
+    get:
+      tags: [Analytics]
+      summary: Get progress or full stats depending on run state
+      parameters:
+        - in: path
+          name: experimentId
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Stats payload
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/ActiveRunProgressResponse'
+                  - $ref: '#/components/schemas/CompletedRunStatsResponse'
+
+components:
+  schemas:
+    UpsertOurmojiRequest:
+      type: object
+      required: [date, emoji, reflection, moonPhase]
+      properties:
+        date: { type: string, format: date }
+        emoji: { type: string }
+        reflection: { type: string, minLength: 1 }
+        moonPhase: { type: string }
+        moonIllumination: { type: integer, minimum: 0, maximum: 100, nullable: true }
+        wheelOfYear: { type: string, nullable: true }
+        wheelCategory: { type: string, nullable: true }
+        source:
+          type: string
+          enum: [manual, api]
+
+    OurmojiEntryResponse:
+      type: object
+      properties:
+        id: { type: string }
+        date: { type: string, format: date }
+        emoji: { type: string }
+        reflection: { type: string }
+        moonPhase: { type: string }
+        moonIllumination: { type: integer, nullable: true }
+        wheelOfYear: { type: string, nullable: true }
+        wheelCategory: { type: string, nullable: true }
+        source: { type: string, enum: [manual, api] }
+
+    CreateExperimentRequest:
+      type: object
+      required: [name, startDate, endDate, participants, roleWeights]
+      properties:
+        name: { type: string, minLength: 1 }
+        startDate: { type: string, format: date }
+        endDate: { type: string, format: date }
+        participants:
+          type: array
+          minItems: 2
+          items:
+            type: object
+            required: [userId, timezone]
+            properties:
+              userId: { type: string }
+              timezone: { type: string }
+        roleWeights:
+          type: object
+          required: [send, control, rest]
+          properties:
+            send: { type: number, minimum: 0, maximum: 1 }
+            control: { type: number, minimum: 0, maximum: 1 }
+            rest: { type: number, minimum: 0, maximum: 1 }
+
+    ExperimentRunResponse:
+      type: object
+      properties:
+        experimentId: { type: string }
+        name: { type: string }
+        status:
+          type: string
+          enum: [scheduled, active, paused, completed]
+        startDate: { type: string, format: date }
+        endDate: { type: string, format: date }
+        earliestParticipantTimezone: { type: string }
+        participants:
+          type: array
+          items:
+            type: object
+            properties:
+              userId: { type: string }
+              anonymousLabel: { type: string }
+
+    MorningPromptResponse:
+      type: object
+      properties:
+        assignmentId: { type: string }
+        nightDate: { type: string, format: date }
+        role: { type: string, enum: [receiver, control] }
+        submissionState:
+          type: string
+          enum: [none, dream_locked, complete]
+
+    RevealResponse:
+      type: object
+      properties:
+        assignmentId: { type: string }
+        isHit: { type: boolean }
+        targetEmoji: { type: string, nullable: true }
+        revealType:
+          type: string
+          enum: [send, control]
+        message: { type: string }
+
+    ActiveRunProgressResponse:
+      type: object
+      properties:
+        runState:
+          type: string
+          enum: [active]
+        nightsCompleted: { type: integer }
+        submissionsCount: { type: integer }
+        nightsRemaining: { type: integer }
+
+    CompletedRunStatsResponse:
+      type: object
+      properties:
+        runState:
+          type: string
+          enum: [completed]
+        totalGuesses: { type: integer }
+        hits: { type: integer }
+        hitRate: { type: number }
+        baselineRate: { type: number, example: 0.0435 }
+        binomialPValue: { type: number }
+        byCondition: { type: object, additionalProperties: true }
+        byParticipant: { type: object, additionalProperties: true }
+        byEmoji: { type: object, additionalProperties: true }
+        moonPhaseCorrelation: { type: object, additionalProperties: true }

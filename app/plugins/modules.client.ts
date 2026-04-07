@@ -14,6 +14,8 @@ import "~/modules/entry-types/timed";
 import "~/modules/entry-types/tally";
 import "~/modules/entry-types/moment";
 import "~/modules/entry-types/exercise";
+import "~/modules/entry-types/ourmoji";
+import "~/modules/entry-types/dream-experiment";
 
 // Importer modules (each calls registerImporter on import)
 import "~/modules/importers/csv-generic";
