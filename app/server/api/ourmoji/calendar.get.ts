@@ -1,25 +1,39 @@
 /**
  * GET /api/ourmoji/calendar
  *
- * Phase 1 stub. Implementation arrives in Phase 3 (T023).
+ * Returns Ourmoji entries for the authenticated user within an optional
+ * date range. Hidden behind the `enabled_modules.ourmoji` feature flag.
  */
 
 import { defineEventHandler, getQuery, createError } from "h3";
+
+import { unauthorized } from "~/server/utils/response";
+import { isOurmojiEnabledForUser } from "~/server/services/ourmoji/access";
+import { listDailyEntries } from "~/server/services/ourmoji/daily";
+import { parseOrThrow } from "~/server/services/ourmoji/validation";
 import { calendarQuerySchema } from "./schemas";
-import { ourmojiApiLogger } from "~/server/services/ourmoji/logger";
 
 export default defineEventHandler(async (event) => {
-  const parsed = calendarQuerySchema.safeParse(getQuery(event));
-  if (!parsed.success) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: "Invalid calendar query",
-      data: parsed.error.flatten(),
-    });
+  const user = event.context.user;
+  if (!user) {
+    throw createError(unauthorized(event));
   }
-  ourmojiApiLogger.debug("calendar.get stub invoked", parsed.data);
-  throw createError({
-    statusCode: 501,
-    statusMessage: "Ourmoji calendar not yet implemented (T023)",
+
+  const enabled = await isOurmojiEnabledForUser(user.id);
+  if (!enabled) {
+    throw createError({ statusCode: 404, statusMessage: "Not found" });
+  }
+
+  const query = parseOrThrow(
+    calendarQuerySchema,
+    getQuery(event),
+    "calendar query",
+  );
+
+  const entries = await listDailyEntries(user.id, {
+    from: query.from,
+    to: query.to,
   });
+
+  return { entries };
 });

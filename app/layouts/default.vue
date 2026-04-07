@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { EntryMode } from "~/components/EntryTypeToggle.vue";
 
-const navigation = [
+const baseNavigation = [
   { name: "Timeline", href: "/", icon: "i-heroicons-clock" },
   { name: "Ta-Da!", href: "/tada", icon: "i-heroicons-bolt" },
   { name: "Moments", href: "/moments", icon: "i-heroicons-sparkles" },
@@ -9,6 +9,29 @@ const navigation = [
   { name: "Tally", href: "/tally", icon: "i-heroicons-hashtag" },
   { name: "Rhythms", href: "/rhythms", icon: "i-heroicons-chart-bar" },
 ];
+
+// Per-user feature module flags. Loaded from /api/preferences once on mount;
+// `null` until loaded so we don't flash a missing nav entry. The Ourmoji
+// link is appended only when `enabled_modules.ourmoji === true`.
+const enabledModules = ref<Record<string, boolean> | null>(null);
+onMounted(async () => {
+  try {
+    const prefs = await $fetch<{ enabledModules?: Record<string, boolean> | null }>(
+      "/api/preferences",
+    );
+    enabledModules.value = prefs.enabledModules ?? {};
+  } catch {
+    enabledModules.value = {};
+  }
+});
+
+const navigation = computed(() => {
+  const nav = [...baseNavigation];
+  if (enabledModules.value?.["ourmoji"] === true) {
+    nav.push({ name: "Ourmoji", href: "/ourmoji", icon: "i-heroicons-moon" });
+  }
+  return nav;
+});
 
 const route = useRoute();
 const { triggerRefresh } = useTimelineRefresh();

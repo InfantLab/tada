@@ -49,21 +49,21 @@
 
 ### Tests for User Story 1
 
-- [ ] T017 [P] [US1] Add API contract test for `POST /api/ourmoji/daily` in `app/server/api/ourmoji/daily.post.test.ts`
-- [ ] T018 [P] [US1] Add API contract test for `GET /api/ourmoji/calendar` in `app/server/api/ourmoji/calendar.get.test.ts`
-- [ ] T019 [P] [US1] Add integration test for per-date upsert (no duplicates) in `app/tests/api/ourmoji-daily.integration.test.ts`
-- [ ] T020 [P] [US1] Add integration test for feature-flag invisibility behavior in `app/tests/api/ourmoji-access.integration.test.ts`
+- [X] T017 [P] [US1] Add API contract test for `POST /api/ourmoji/daily` in `app/server/api/ourmoji/daily.post.test.ts`
+- [X] T018 [P] [US1] Add API contract test for `GET /api/ourmoji/calendar` in `app/server/api/ourmoji/calendar.get.test.ts`
+- [X] T019 [P] [US1] Add integration test for per-date upsert (no duplicates) in `app/tests/api/ourmoji-daily.integration.test.ts`
+- [X] T020 [P] [US1] Add integration test for feature-flag invisibility behavior in `app/tests/api/ourmoji-access.integration.test.ts`
 
 ### Implementation for User Story 1
 
-- [ ] T021 [US1] Implement daily upsert service using `entries` table + typed `data` payload in `app/server/services/ourmoji/daily.ts`
-- [ ] T022 [US1] Implement `POST /api/ourmoji/daily` endpoint with schema validation in `app/server/api/ourmoji/daily.post.ts`
-- [ ] T023 [US1] Implement `GET /api/ourmoji/calendar` endpoint in `app/server/api/ourmoji/calendar.get.ts`
-- [ ] T024 [US1] Create today/history composable for Ourmoji data fetching in `app/composables/useOurmoji.ts`
-- [ ] T025 [US1] Build Ourmoji daily card UI (emoji, reflection, moon, wheel) in `app/components/ourmoji/OurmojiDailyCard.vue`
-- [ ] T026 [US1] Build calendar grid/detail UI for historical entries in `app/components/ourmoji/OurmojiCalendar.vue`
-- [ ] T027 [US1] Add Ourmoji page route with graceful hidden state in `app/pages/ourmoji.vue`
-- [ ] T028 [US1] Wire navigation visibility for enabled modules in `app/layouts/default.vue`
+- [X] T021 [US1] Implement daily upsert service using `entries` table + typed `data` payload in `app/server/services/ourmoji/daily.ts`
+- [X] T022 [US1] Implement `POST /api/ourmoji/daily` endpoint with schema validation in `app/server/api/ourmoji/daily.post.ts`
+- [X] T023 [US1] Implement `GET /api/ourmoji/calendar` endpoint in `app/server/api/ourmoji/calendar.get.ts`
+- [X] T024 [US1] Create today/history composable for Ourmoji data fetching in `app/composables/useOurmoji.ts`
+- [X] T025 [US1] Build Ourmoji daily card UI (emoji, reflection, moon, wheel) in `app/components/ourmoji/OurmojiDailyCard.vue`
+- [X] T026 [US1] Build calendar grid/detail UI for historical entries in `app/components/ourmoji/OurmojiCalendar.vue`
+- [X] T027 [US1] Add Ourmoji page route with graceful hidden state in `app/pages/ourmoji.vue`
+- [X] T028 [US1] Wire navigation visibility for enabled modules in `app/layouts/default.vue`
 
 **Checkpoint**: US1 is independently shippable as MVP.
 
