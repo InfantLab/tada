@@ -1,6 +1,6 @@
 # tada Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-03-18
+Auto-generated from all feature plans. Last updated: 2026-04-03
 
 ## Active Technologies
 - TypeScript 5.x, Vue 3.4+, Nuxt 3.x + Drizzle ORM, TailwindCSS, Lucia Auth (002-graceful-rhythms)
@@ -11,6 +11,8 @@ Auto-generated from all feature plans. Last updated: 2026-03-18
 - SQLite via Drizzle ORM (`app/server/db/schema.ts`) (004-better-add)
 - TypeScript 5.9, Vue 3, Nuxt 4 + Drizzle ORM, Zod, Nodemailer, existing rhythm calculators, existing email templates, provider adapter for cloud AI, direct `croner` dependency during implementation for scheduler sweeps (009-weekly-rhythms)
 - SQLite via Drizzle, plus existing environment-variable based SMTP/AI credentials (009-weekly-rhythms)
+- TypeScript 5.9.3, Vue 3 + Nuxt 4.4.2 (Nitro server) + Nuxt/Nitro, Drizzle ORM, Zod, Vitest, Playwright, Nodemailer, web-push (013-ourmoji-module)
+- SQLite (`file:../data/db.sqlite`) via Drizzle (`entries` table + new experiment tables) (013-ourmoji-module)
 
 - TypeScript 5.x (strict mode), Vue 3 Composition API + Nuxt 3, Drizzle ORM, TailwindCSS (001-v020-completion)
 
@@ -30,9 +32,9 @@ npm test && npm run lint
 TypeScript 5.x (strict mode), Vue 3 Composition API: Follow standard conventions
 
 ## Recent Changes
+- 013-ourmoji-module: Added TypeScript 5.9.3, Vue 3 + Nuxt 4.4.2 (Nitro server) + Nuxt/Nitro, Drizzle ORM, Zod, Vitest, Playwright, Nodemailer, web-push
 - 009-weekly-rhythms: Added TypeScript 5.9, Vue 3, Nuxt 4 + Drizzle ORM, Zod, Nodemailer, existing rhythm calculators, existing email templates, provider adapter for cloud AI, direct `croner` dependency during implementation for scheduler sweeps
 - 004-better-add: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
-- 004-better-add: Added TypeScript 5.x, Vue 3.4+, Nuxt 3.x + Nuxt 3, Vue 3, Drizzle ORM, SQLite, Zod (validation)
 
 
 <!-- MANUAL ADDITIONS START -->
