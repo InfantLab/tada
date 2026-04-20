@@ -1,4 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+import pkg from "./package.json";
+
 export default defineNuxtConfig({
   devtools: {
     enabled: true,
@@ -41,7 +43,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       appName: "Tada",
-      appVersion: "0.6.1",
+      appVersion: pkg.version,
       appUrl: process.env["APP_URL"] || "http://localhost:3000",
       isCloudMode:
         process.env["TADA_CLOUD_MODE"] === "true" ||
