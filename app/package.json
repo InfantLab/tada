@@ -1,6 +1,6 @@
 {
   "name": "tada",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "private": true,
   "type": "module",
   "description": "Personal lifelogger - Track Activities, Discover Achievements",
@@ -22,7 +22,8 @@
     "test:e2e:ui": "playwright test --ui",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "DATABASE_URL=file:../data/db.sqlite drizzle-kit migrate",
-    "db:studio": "DATABASE_URL=file:../data/db.sqlite drizzle-kit studio"
+    "db:studio": "DATABASE_URL=file:../data/db.sqlite drizzle-kit studio",
+    "admin": "bun run scripts/admin.ts"
   },
   "dependencies": {
     "@libsql/client": "^0.17.0",

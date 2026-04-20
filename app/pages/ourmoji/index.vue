@@ -25,13 +25,22 @@ onMounted(() => {
 
 <template>
   <div class="mx-auto max-w-3xl space-y-8 p-4 sm:p-6">
-    <header class="space-y-1">
-      <h1 class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-        Ourmoji
-      </h1>
-      <p class="text-sm text-gray-600 dark:text-gray-400">
-        A daily emoji + reflection, with moon phase and Wheel-of-Year context.
-      </p>
+    <header class="flex flex-wrap items-start justify-between gap-3">
+      <div class="space-y-1">
+        <h1 class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+          Ourmoji
+        </h1>
+        <p class="text-sm text-gray-600 dark:text-gray-400">
+          A daily emoji + reflection, with moon phase and Wheel-of-Year context.
+        </p>
+      </div>
+      <NuxtLink
+        v-if="enabled"
+        to="/ourmoji/experiments"
+        class="shrink-0 inline-flex items-center gap-2 rounded-lg border border-tada-500/40 bg-tada-50 px-3 py-1.5 text-sm font-medium text-tada-700 hover:bg-tada-100 dark:border-tada-400/40 dark:bg-tada-900/40 dark:text-tada-200 dark:hover:bg-tada-900/60"
+      >
+        Experiments
+      </NuxtLink>
     </header>
 
     <div v-if="loading && enabled === null" class="text-sm text-gray-500">

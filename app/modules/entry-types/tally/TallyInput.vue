@@ -636,7 +636,7 @@ function handleVoiceError(message: string) {
           <!-- Decrement -->
           <button
             type="button"
-            class="w-12 h-12 rounded-lg bg-stone-100 dark:bg-stone-700 hover:bg-stone-200 dark:hover:bg-stone-600 text-stone-700 dark:text-stone-200 font-bold text-xl transition-colors"
+            class="flex-shrink-0 w-12 h-12 rounded-lg bg-stone-100 dark:bg-stone-700 hover:bg-stone-200 dark:hover:bg-stone-600 text-stone-700 dark:text-stone-200 font-bold text-xl transition-colors"
             @click="incrementCount(-1)"
           >
             −
@@ -648,13 +648,13 @@ function handleVoiceError(message: string) {
             type="number"
             min="1"
             aria-label="Tally count"
-            class="flex-1 text-center text-4xl font-bold text-stone-800 dark:text-stone-100 bg-transparent border-b-2 border-stone-200 dark:border-stone-600 focus:border-tada-500 focus:outline-none py-2"
+            class="flex-1 min-w-0 text-center text-4xl font-bold text-stone-800 dark:text-stone-100 bg-transparent border-b-2 border-stone-200 dark:border-stone-600 focus:border-tada-500 focus:outline-none py-2"
           />
 
           <!-- Increment -->
           <button
             type="button"
-            class="w-12 h-12 rounded-lg bg-stone-100 dark:bg-stone-700 hover:bg-stone-200 dark:hover:bg-stone-600 text-stone-700 dark:text-stone-200 font-bold text-xl transition-colors"
+            class="flex-shrink-0 w-12 h-12 rounded-lg bg-stone-100 dark:bg-stone-700 hover:bg-stone-200 dark:hover:bg-stone-600 text-stone-700 dark:text-stone-200 font-bold text-xl transition-colors"
             @click="incrementCount(1)"
           >
             +

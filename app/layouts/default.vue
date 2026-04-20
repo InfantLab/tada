@@ -220,7 +220,10 @@ onUnmounted(() => {
     <nav
       class="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-pearl-cream/90 dark:bg-cosmic-void/90 backdrop-blur-sm border-t border-text-light-muted/20 dark:border-text-dark-muted/20 safe-area-bottom"
     >
-      <div class="grid grid-cols-6 h-16">
+      <div
+        class="grid h-16"
+        :style="{ gridTemplateColumns: `repeat(${navigation.length}, minmax(0, 1fr))` }"
+      >
         <NuxtLink
           v-for="item in navigation"
           :key="item.name"

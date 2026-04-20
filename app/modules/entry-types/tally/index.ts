@@ -23,7 +23,7 @@ export const tallyDefinition: EntryTypeDefinition = {
   quickAdd: {
     icon: "hashtag",
     color: "bg-amber-500",
-    order: 3,
+    order: 4,
   },
 
   navigation: {

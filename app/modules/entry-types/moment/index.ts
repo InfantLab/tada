@@ -21,7 +21,7 @@ export const momentDefinition: EntryTypeDefinition = {
   quickAdd: {
     icon: "sparkles",
     color: "bg-purple-500",
-    order: 4,
+    order: 2,
   },
 
   navigation: {

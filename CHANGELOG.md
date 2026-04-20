@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.3] - 2026-04-20
+
+### Added
+
+- **Ourmoji → Experiments** link on the daily page header so operators can reach `/ourmoji/experiments` from the app without typing the URL.
+- **Admin CLI** (`bun run admin …`) for `users list`, `users get`, and `modules set <userId> <flag>=<bool>`. Authenticates with session cookie from prod login; credentials loaded via `--env-file=.env.admin`. Template at `app/.env.admin.example`.
+
+### Fixed
+
+- **Mobile bottom nav overflow**: column count now follows the number of visible tabs, so the Ourmoji tab stays on the primary row instead of wrapping beneath the FAB.
+- **`/ourmoji/experiments` 404 / wrong content**: `pages/ourmoji.vue` was acting as an (empty) parent route wrapper, so nested routes rendered nothing. Flattened to `pages/ourmoji/index.vue` so child routes resolve.
+- **Tally input layout**: decrement/increment buttons no longer shrink when the number field is wide; `flex-shrink-0` on buttons and `min-w-0` on the input keep the three-up layout stable.
+
+### Changed
+
+- **Quick-add menu order** tightened: Moment moved up to position 2, Timed → 3, Tally → 4. Exercise no longer appears in the quick-add menu (still reachable via `/create/exercise`).
+
 ## [0.6.2] - 2026-04-20
 
 ### Added

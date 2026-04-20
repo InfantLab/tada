@@ -24,7 +24,7 @@ export const timedDefinition: EntryTypeDefinition = {
   quickAdd: {
     icon: "clock",
     color: "bg-emerald-500",
-    order: 2,
+    order: 3,
   },
 
   navigation: {

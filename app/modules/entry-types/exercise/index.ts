@@ -18,12 +18,6 @@ export const exerciseDefinition: EntryTypeDefinition = {
 
   inputComponent: "ExerciseInput",
 
-  quickAdd: {
-    icon: "fire",
-    color: "bg-red-500",
-    order: 5,
-  },
-
   navigation: {
     href: "/create/exercise",
     icon: "fire",
