@@ -14,6 +14,7 @@ Entry types define **how** an activity is recorded. Each module provides its own
 | [Sessions](./sessions.md) | `timed` | Timer for meditation and focused practices |
 | [Tally](./tally.md) | `tally` | Count-based tracking for discrete activities |
 | [Rhythms](./rhythms.md) | — | Graceful chains that celebrate consistency |
+| [Ourmoji](./ourmoji.md) ⚠️ | `ourmoji`, `dream-experiment` | Restricted: daily emoji oracle + shared dream experiments |
 
 ## Data Flow Modules
 

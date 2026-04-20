@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.2] - 2026-04-20
+
+### Added
+
+- **Ourmoji module** (restricted / feature-flagged): daily emoji oracle + multi-night dream-telepathy experiment runs, nightly role assignments, morning dream capture with voice or text, reveal flow, and experiment-run management page. Hidden unless the user has the `ourmoji` feature flag.
+- **Admin module-toggle endpoint**: `PATCH /api/v1/admin/users/:id/modules` merges per-user feature flags (e.g. `{ "ourmoji": true }`) into `user_preferences.enabled_modules`. Requires `admin:users:write`.
+
 ## [0.6.1] - 2026-03-29
 
 ### Theme: PWA, Push Notifications & Accessibility (WCAG 2.2 AA)
