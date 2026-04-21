@@ -157,9 +157,30 @@ export default defineNuxtConfig({
 
   // Nitro server configuration
   nitro: {
-    // Enable SQLite in production
+    // Enable SQLite in production + OpenAPI/Scalar docs
     experimental: {
       database: true,
+      openAPI: true,
+    },
+
+    // Public API documentation — served from the app itself so subscribed
+    // users can browse endpoints without leaving the site. Admin endpoints
+    // are listed but tagged so they're visually separated.
+    openAPI: {
+      route: "/api/openapi.json",
+      production: "runtime",
+      meta: {
+        title: "Ta-Da! API",
+        description:
+          "REST API for Ta-Da! — authenticate with a Bearer API key (tada_key_…). Admin endpoints require the caller's user id to be in ADMIN_USER_IDS on the server.",
+        version: pkg.version,
+      },
+      ui: {
+        scalar: {
+          route: "/api-docs",
+        },
+        swagger: false,
+      },
     },
     // Externalize native bindings - they can't be bundled, must use node_modules at runtime
     externals: {

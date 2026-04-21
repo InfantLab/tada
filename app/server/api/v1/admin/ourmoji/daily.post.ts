@@ -14,6 +14,62 @@
 
 import { defineEventHandler, readBody, createError } from "h3";
 
+defineRouteMeta({
+  openAPI: {
+    tags: ["Ourmoji", "Admin"],
+    summary: "Ingest a daily Ourmoji on behalf of a user (admin)",
+    description:
+      "Posts a single day's Ourmoji payload for a target user. Intended " +
+      "for trusted server-to-server agents authenticated with an admin " +
+      "API key. Idempotent per (userId, date).",
+    security: [{ bearerAuth: ["admin:users:write"] }],
+    requestBody: {
+      required: true,
+      content: {
+        "application/json": {
+          schema: {
+            type: "object",
+            required: [
+              "userId",
+              "date",
+              "emoji",
+              "reflection",
+              "moonPhase",
+              "timezone",
+            ],
+            properties: {
+              userId: { type: "string" },
+              date: { type: "string", format: "date" },
+              emoji: { type: "string", minLength: 1, maxLength: 16 },
+              reflection: { type: "string", minLength: 1, maxLength: 5000 },
+              moonPhase: { type: "string" },
+              moonIllumination: {
+                type: "number",
+                minimum: 0,
+                maximum: 100,
+                nullable: true,
+              },
+              wheelOfYear: { type: "string", nullable: true },
+              wheelCategory: { type: "string", nullable: true },
+              timezone: { type: "string" },
+            },
+          },
+        },
+      },
+    },
+    responses: {
+      "200": { description: "Ourmoji entry upserted" },
+      "400": {
+        description:
+          "Validation error or target user does not have ourmoji enabled",
+      },
+      "401": { description: "Missing or invalid Bearer token" },
+      "403": { description: "Caller is not an admin" },
+      "404": { description: "Target user not found" },
+    },
+  },
+});
+
 import { requireAdmin } from "~/server/utils/admin";
 import {
   notFound,

@@ -208,4 +208,14 @@ co-ordination across users.
 
 ---
 
+## Reference: live API docs
+
+Interactive docs for this endpoint (and the rest of the API) are served from
+the app itself — no local setup needed:
+
+- **Scalar UI:** https://tada.living/api-docs
+- **OpenAPI JSON:** https://tada.living/api/openapi.json
+
+---
+
 [Back to Ourmoji](./ourmoji.md)
