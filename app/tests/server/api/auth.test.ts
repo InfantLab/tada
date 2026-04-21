@@ -348,12 +348,13 @@ describe("POST /api/auth/register", () => {
     expect(result.success).toBe(true);
   });
 
-  it("should reject username shorter than 3 characters", async () => {
-    setReadBody({ username: "ab", password: "securepass123" });
+  it("should accept single-character username", async () => {
+    setReadBody({ username: "a", password: "securepass123" });
+    mocks.db.limit.mockResolvedValueOnce([]); // no duplicate
+    mocks.db.values.mockResolvedValueOnce(undefined);
 
-    await expect(registerHandler(mockEvent())).rejects.toThrow(
-      "Username must be between 3 and 31 characters",
-    );
+    const result = await registerHandler(mockEvent());
+    expect(result.success).toBe(true);
   });
 
   it("should reject username longer than 31 characters", async () => {
@@ -363,7 +364,7 @@ describe("POST /api/auth/register", () => {
     });
 
     await expect(registerHandler(mockEvent())).rejects.toThrow(
-      "Username must be between 3 and 31 characters",
+      "Username must be 31 characters or fewer",
     );
   });
 
