@@ -1352,6 +1352,36 @@ export const ourmojiNotificationDeliveries = sqliteTable(
   },
 );
 
+export type OurmojiInviteStatus =
+  | "pending"
+  | "accepted"
+  | "declined"
+  | "cancelled";
+
+export const ourmojiInvites = sqliteTable("ourmoji_invites", {
+  id: text("id").primaryKey(), // UUID
+  fromUserId: text("from_user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  toUserId: text("to_user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  startDate: text("start_date").notNull(), // YYYY-MM-DD
+  endDate: text("end_date").notNull(),     // YYYY-MM-DD
+  status: text("status")
+    .$type<OurmojiInviteStatus>()
+    .notNull()
+    .default("pending"),
+  runId: text("run_id").references(() => ourmojiExperimentRuns.id, {
+    onDelete: "set null",
+  }), // set when status = 'accepted'
+  createdAt: text("created_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
+  respondedAt: text("responded_at"),
+});
+
 export type OurmojiExperimentRun = typeof ourmojiExperimentRuns.$inferSelect;
 export type NewOurmojiExperimentRun = typeof ourmojiExperimentRuns.$inferInsert;
 export type OurmojiExperimentParticipant =
@@ -1368,3 +1398,5 @@ export type OurmojiNotificationDelivery =
   typeof ourmojiNotificationDeliveries.$inferSelect;
 export type NewOurmojiNotificationDelivery =
   typeof ourmojiNotificationDeliveries.$inferInsert;
+export type OurmojiInvite = typeof ourmojiInvites.$inferSelect;
+export type NewOurmojiInvite = typeof ourmojiInvites.$inferInsert;

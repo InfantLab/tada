@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.4] - 2026-04-21
+
+### Added
+
+- **Ourmoji pairing invites**: replaces the raw-user-id field on the experiments page with a username-based invite flow. The inviter picks a partner from a dropdown of ourmoji-enabled users, sets dates, and sends. The invitee sees the invite in an "Incoming invitations" section and accepts or declines. On accept, the experiment run is created automatically via the existing service.
+- New endpoints: `GET /api/ourmoji/partners`, `GET /api/ourmoji/invites`, `POST /api/ourmoji/invites`, and `POST /api/ourmoji/invites/:id/{accept,decline,cancel}`.
+- New `ourmoji_invites` table (migration `0024_ourmoji_invites.sql`).
+
 ## [0.6.3] - 2026-04-20
 
 ### Added

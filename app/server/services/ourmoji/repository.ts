@@ -6,21 +6,25 @@
  * composed inside transactions or batched in the scheduler sweep.
  */
 
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray, or, sql } from "drizzle-orm";
 import { db } from "~/server/db";
 import {
   ourmojiExperimentParticipants,
   ourmojiExperimentRuns,
+  ourmojiInvites,
   ourmojiNightAssignments,
   ourmojiNotificationDeliveries,
   ourmojiSubmissions,
   type NewOurmojiExperimentParticipant,
   type NewOurmojiExperimentRun,
+  type NewOurmojiInvite,
   type NewOurmojiNightAssignment,
   type NewOurmojiNotificationDelivery,
   type NewOurmojiSubmission,
   type OurmojiExperimentRun,
   type OurmojiExperimentStatus,
+  type OurmojiInvite,
+  type OurmojiInviteStatus,
   type OurmojiNightAssignment,
   type OurmojiSubmission,
 } from "~/server/db/schema";
@@ -202,4 +206,57 @@ export async function insertDelivery(row: NewOurmojiNotificationDelivery) {
     .values(row)
     .returning();
   return created!;
+}
+
+// ---------------------------------------------------------------------------
+// Invites
+// ---------------------------------------------------------------------------
+
+export async function insertInvite(
+  row: NewOurmojiInvite,
+): Promise<OurmojiInvite> {
+  const [created] = await db.insert(ourmojiInvites).values(row).returning();
+  return created!;
+}
+
+export async function getInviteById(
+  id: string,
+): Promise<OurmojiInvite | undefined> {
+  const rows = await db
+    .select()
+    .from(ourmojiInvites)
+    .where(eq(ourmojiInvites.id, id))
+    .limit(1);
+  return rows[0];
+}
+
+export async function listInvitesForUser(
+  userId: string,
+): Promise<OurmojiInvite[]> {
+  return db
+    .select()
+    .from(ourmojiInvites)
+    .where(
+      or(
+        eq(ourmojiInvites.fromUserId, userId),
+        eq(ourmojiInvites.toUserId, userId),
+      ),
+    );
+}
+
+export async function updateInviteStatus(
+  id: string,
+  patch: {
+    status: OurmojiInviteStatus;
+    runId?: string | null;
+  },
+): Promise<void> {
+  await db
+    .update(ourmojiInvites)
+    .set({
+      status: patch.status,
+      runId: patch.runId ?? null,
+      respondedAt: sql`(datetime('now'))`,
+    })
+    .where(eq(ourmojiInvites.id, id));
 }

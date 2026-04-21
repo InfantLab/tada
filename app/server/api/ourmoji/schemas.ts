@@ -67,6 +67,19 @@ export const createExperimentSchema = z.object({
 export type CreateExperimentInput = z.infer<typeof createExperimentSchema>;
 
 // ---------------------------------------------------------------------------
+// Pairing invites (US4)
+// ---------------------------------------------------------------------------
+
+export const createInviteSchema = z.object({
+  toUserId: z.string().min(1),
+  name: z.string().min(1).max(120),
+  startDate: isoDate,
+  endDate: isoDate,
+});
+
+export type CreateInviteInput = z.infer<typeof createInviteSchema>;
+
+// ---------------------------------------------------------------------------
 // Submissions (US3)
 // ---------------------------------------------------------------------------
 
