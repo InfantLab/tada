@@ -39,11 +39,30 @@ export type DailyOurmojiPayload = z.infer<typeof dailyOurmojiPayloadSchema>;
  * Admin variant — same fields as `dailyOurmojiPayloadSchema` plus a
  * target `userId` so a privileged caller can post on behalf of any
  * user. Used by `POST /api/v1/admin/ourmoji/daily`.
+ *
+ * Additional optional fields let a trusted agent post entries that match
+ * manually-created ones more closely:
+ * - `timestamp` — ISO-8601 datetime when the reading was generated.
+ *   Defaults to server-side NOW when omitted. If its calendar date does
+ *   not match `date`, the request is rejected (keeps idempotency sound).
+ * - `category` / `subcategory` — optional category hierarchy labels
+ *   (e.g. "Moments" / "Magic") written to the top-level columns on
+ *   `entries`, for parity with in-app submissions.
  */
-export const adminDailyOurmojiPayloadSchema =
-  dailyOurmojiPayloadSchema.extend({
+export const adminDailyOurmojiPayloadSchema = dailyOurmojiPayloadSchema
+  .extend({
     userId: z.string().min(1),
-  });
+    timestamp: z.string().datetime({ offset: true }).nullable().optional(),
+    category: z.string().min(1).nullable().optional(),
+    subcategory: z.string().min(1).nullable().optional(),
+  })
+  .refine(
+    (p) => !p.timestamp || p.timestamp.slice(0, 10) === p.date,
+    {
+      message: "timestamp date must match the `date` field (YYYY-MM-DD)",
+      path: ["timestamp"],
+    },
+  );
 
 export type AdminDailyOurmojiPayload = z.infer<
   typeof adminDailyOurmojiPayloadSchema

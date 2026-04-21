@@ -22,6 +22,13 @@ import type {
 import { OURMOJI_ENTRY_TYPE } from "~/utils/ourmoji/constants";
 import { ourmojiChildLogger } from "./logger";
 
+/**
+ * Default category/subcategory slugs for Ourmoji entries, matching the
+ * in-app "Moments → Magic" bucket in `categoryDefaults.ts`.
+ */
+const DEFAULT_OURMOJI_CATEGORY = "moments";
+const DEFAULT_OURMOJI_SUBCATEGORY = "magic";
+
 const logger = ourmojiChildLogger("service:daily");
 
 export interface DailyIngestInput {
@@ -36,6 +43,11 @@ export interface DailyIngestInput {
   timezone: string;
   /** Source label — `manual` for in-app submissions, `api` for OpenClaw. */
   source?: "manual" | "api";
+  /** ISO-8601 datetime when the reading was generated. Defaults to NOW. */
+  timestamp?: string | null;
+  /** Optional category hierarchy labels, matching `entries.category`. */
+  category?: string | null;
+  subcategory?: string | null;
 }
 
 /**
@@ -72,6 +84,11 @@ export async function upsertDailyOurmoji(
         timezone: input.timezone,
         source: input.source ?? "api",
         updatedAt: sql`(datetime('now'))`,
+        ...(input.timestamp ? { timestamp: input.timestamp } : {}),
+        ...(input.category !== undefined ? { category: input.category } : {}),
+        ...(input.subcategory !== undefined
+          ? { subcategory: input.subcategory }
+          : {}),
       })
       .where(eq(entries.id, existing.id))
       .returning();
@@ -90,10 +107,12 @@ export async function upsertDailyOurmoji(
     name: "Ourmoji",
     emoji: input.emoji,
     notes: input.reflection,
-    timestamp: `${input.date}T00:00:00Z`,
+    timestamp: input.timestamp ?? new Date().toISOString(),
     timezone: input.timezone,
     data: data as unknown as Record<string, unknown>,
     source: input.source ?? "api",
+    category: input.category ?? DEFAULT_OURMOJI_CATEGORY,
+    subcategory: input.subcategory ?? DEFAULT_OURMOJI_SUBCATEGORY,
   };
 
   const [created] = await db.insert(entries).values(newRow).returning();
@@ -104,15 +123,20 @@ export async function upsertDailyOurmoji(
  * Look up the Ourmoji entry for `userId` on `date` (YYYY-MM-DD), if any.
  *
  * Implementation note: the per-day uniqueness key lives in `data.date`,
- * not in a top-level column. We narrow with a timestamp range first
+ * not in a top-level column. We narrow with a ±1-day timestamp range
  * (cheap, indexed) and then filter rows whose JSON `date` matches.
+ * The widened window accommodates timezone offsets: a local-date entry
+ * stored with a UTC timestamp may fall into the prior or next UTC day.
  */
 export async function findDailyEntry(
   userId: string,
   date: string,
 ): Promise<Entry | undefined> {
-  const dayStart = `${date}T00:00:00Z`;
-  const dayEnd = `${date}T23:59:59Z`;
+  const windowStart = new Date(`${date}T00:00:00Z`);
+  windowStart.setUTCDate(windowStart.getUTCDate() - 1);
+  const windowEnd = new Date(`${date}T23:59:59Z`);
+  windowEnd.setUTCDate(windowEnd.getUTCDate() + 1);
+
   const candidates = await db
     .select()
     .from(entries)
@@ -121,8 +145,8 @@ export async function findDailyEntry(
         eq(entries.userId, userId),
         eq(entries.type, OURMOJI_ENTRY_TYPE),
         isNull(entries.deletedAt),
-        gte(entries.timestamp, dayStart),
-        lte(entries.timestamp, dayEnd),
+        gte(entries.timestamp, windowStart.toISOString()),
+        lte(entries.timestamp, windowEnd.toISOString()),
       ),
     );
   return candidates.find((row) => {
@@ -175,5 +199,7 @@ function rowToDTO(row: Entry): OurmojiDailyCardDTO {
     wheelCategory: data.wheelCategory ?? null,
     timestamp: row.timestamp,
     timezone: row.timezone,
+    category: row.category ?? null,
+    subcategory: row.subcategory ?? null,
   };
 }

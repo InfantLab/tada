@@ -56,6 +56,8 @@ export interface OurmojiDailyCardDTO {
   wheelCategory: string | null;
   timestamp: string;
   timezone: string;
+  category: string | null;
+  subcategory: string | null;
 }
 
 /** Stats DTO — active runs return only redacted progress. */

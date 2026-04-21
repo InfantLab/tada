@@ -108,13 +108,16 @@ curl -X POST https://tada.living/api/v1/admin/ourmoji/daily \
   -d '{
     "userId": "<CASPAR_USER_ID>",
     "date": "2026-04-21",
+    "timestamp": "2026-04-21T08:00:00+01:00",
     "emoji": "🌙",
     "reflection": "The waning gibbous whispers of release.",
     "moonPhase": "Waning Gibbous",
     "moonIllumination": 75,
     "wheelOfYear": "Beltane",
     "wheelCategory": "fire",
-    "timezone": "Europe/London"
+    "timezone": "Europe/London",
+    "category": "moments",
+    "subcategory": "magic"
   }'
 ```
 
@@ -123,7 +126,7 @@ curl -X POST https://tada.living/api/v1/admin/ourmoji/daily \
 | Field | Type | Required | Notes |
 |-------|------|----------|-------|
 | `userId` | string | yes | Target user (Caspar or Marian) |
-| `date` | string `YYYY-MM-DD` | yes | Local date the entry belongs to |
+| `date` | string `YYYY-MM-DD` | yes | Local date the entry belongs to; idempotency key |
 | `emoji` | string (1–16 chars) | yes | Drawn from the 23-emoji Sacred Set |
 | `reflection` | string (≤ 5000 chars) | yes | Poetic reflection text |
 | `moonPhase` | string | yes | e.g. "Waning Gibbous" |
@@ -131,6 +134,9 @@ curl -X POST https://tada.living/api/v1/admin/ourmoji/daily \
 | `wheelOfYear` | string | no | e.g. "Beltane", "Samhain" |
 | `wheelCategory` | string | no | e.g. "fire", "water" |
 | `timezone` | string | yes | IANA zone, e.g. "Europe/London" |
+| `timestamp` | string ISO-8601 | no | When the reading was generated. Defaults to server-side NOW. Its calendar date must match `date` |
+| `category` | string | no | Category slug. Defaults to `"moments"` for new Ourmoji entries |
+| `subcategory` | string | no | Subcategory slug. Defaults to `"magic"` for new Ourmoji entries |
 
 ### Idempotency
 
@@ -152,8 +158,10 @@ network failure.
       "moonIllumination": 75,
       "wheelOfYear": "Beltane",
       "wheelCategory": "fire",
-      "timestamp": "2026-04-21T00:00:00Z",
-      "timezone": "Europe/London"
+      "timestamp": "2026-04-21T08:00:00+01:00",
+      "timezone": "Europe/London",
+      "category": "moments",
+      "subcategory": "magic"
     }
   }
 }

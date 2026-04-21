@@ -21,7 +21,10 @@ defineRouteMeta({
     description:
       "Posts a single day's Ourmoji payload for a target user. Intended " +
       "for trusted server-to-server agents authenticated with an admin " +
-      "API key. Idempotent per (userId, date).",
+      "API key. Idempotent per (userId, date). " +
+      "Optional `timestamp` (ISO-8601) defaults to server-side NOW; its " +
+      "calendar date must match `date`. Optional `category` / " +
+      "`subcategory` default to 'moments' / 'magic' for new entries.",
     security: [{ bearerAuth: ["admin:users:write"] }],
     requestBody: {
       required: true,
@@ -52,6 +55,13 @@ defineRouteMeta({
               wheelOfYear: { type: "string", nullable: true },
               wheelCategory: { type: "string", nullable: true },
               timezone: { type: "string" },
+              timestamp: {
+                type: "string",
+                format: "date-time",
+                nullable: true,
+              },
+              category: { type: "string", nullable: true },
+              subcategory: { type: "string", nullable: true },
             },
           },
         },
@@ -133,6 +143,9 @@ export default defineEventHandler(async (event) => {
     wheelCategory: payload.wheelCategory ?? null,
     timezone: payload.timezone,
     source: "api",
+    timestamp: payload.timestamp ?? null,
+    category: payload.category ?? undefined,
+    subcategory: payload.subcategory ?? undefined,
   });
 
   const auth = event.context.auth!;
