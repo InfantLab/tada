@@ -8,7 +8,14 @@
  * and navigates to settings so they can see the options.
  */
 
-const { hasNewVersion, acknowledgeNewVersion } = useOnboarding();
+/**
+ * Announcement id for this overlay's current content. Bump when the
+ * copy below changes to announce something new — users who dismissed
+ * the previous announcement will see the next one once.
+ */
+const ANNOUNCEMENT_ID = "v0.6-celebrations-timelines";
+
+const { shouldShowAnnouncement, acknowledgeAnnouncement } = useOnboarding();
 const router = useRouter();
 
 const isVisible = ref(false);
@@ -23,7 +30,7 @@ onMounted(async () => {
     isAuthenticated.value = false;
   }
 
-  if (isAuthenticated.value && hasNewVersion.value) {
+  if (isAuthenticated.value && shouldShowAnnouncement(ANNOUNCEMENT_ID)) {
     setTimeout(() => {
       isVisible.value = true;
     }, 800);
@@ -45,13 +52,13 @@ async function handleEnable() {
   }
   enabling.value = false;
   isVisible.value = false;
-  acknowledgeNewVersion();
+  acknowledgeAnnouncement(ANNOUNCEMENT_ID);
   await router.push("/settings#section-rhythms");
 }
 
 function handleDismiss() {
   isVisible.value = false;
-  acknowledgeNewVersion();
+  acknowledgeAnnouncement(ANNOUNCEMENT_ID);
 }
 </script>
 

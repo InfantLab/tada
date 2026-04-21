@@ -23,6 +23,11 @@ interface OnboardingState {
   firstMomentCelebrated: boolean;
   firstWeekCardDismissed: boolean;
   lastSeenVersion: string;
+  /**
+   * Announcement ids the user has already dismissed (or acknowledged).
+   * Used by WhatsNewOverlay to avoid re-prompting on every patch release.
+   */
+  dismissedAnnouncements: string[];
 }
 
 const defaultState: OnboardingState = {
@@ -34,7 +39,16 @@ const defaultState: OnboardingState = {
   firstMomentCelebrated: false,
   firstWeekCardDismissed: false,
   lastSeenVersion: "",
+  dismissedAnnouncements: [],
 };
+
+/**
+ * Announcement id for the v0.6 "Daily timelines + Weekly Celebrations"
+ * overlay. Anyone who has seen any prior version of the app has already
+ * been shown this content (repeatedly, because of the old version-based
+ * gate) and should not see it again.
+ */
+const LEGACY_V06_ANNOUNCEMENT_ID = "v0.6-celebrations-timelines";
 
 // Shared singleton state — all callers of useOnboarding() operate on the
 // same refs so that a saveState() in one component never overwrites changes
@@ -51,6 +65,20 @@ function loadState() {
     if (stored) {
       const parsed = JSON.parse(stored) as Partial<OnboardingState>;
       state.value = { ...defaultState, ...parsed };
+
+      // Migration: users who already saw a version prior to this fix have
+      // been shown the v0.6 announcement on every patch release. Mark it
+      // dismissed on load so the modal stops reappearing.
+      if (
+        parsed.lastSeenVersion &&
+        !state.value.dismissedAnnouncements.includes(LEGACY_V06_ANNOUNCEMENT_ID)
+      ) {
+        state.value.dismissedAnnouncements = [
+          ...state.value.dismissedAnnouncements,
+          LEGACY_V06_ANNOUNCEMENT_ID,
+        ];
+        saveState();
+      }
     }
   } catch {
     // Ignore parse errors, use defaults
@@ -105,11 +133,20 @@ export function useOnboarding() {
     return !state.value.firstWeekCardDismissed;
   });
 
-  // Computed: Is this a new version the user hasn't seen?
-  const hasNewVersion = computed(() => {
+  function hasSeenAnnouncement(id: string): boolean {
+    return state.value.dismissedAnnouncements.includes(id);
+  }
+
+  /**
+   * Gate for WhatsNewOverlay. Shows only if the announcement has not
+   * been dismissed, and the user has completed the initial welcome
+   * (so a fresh signup doesn't get hit with two overlays at once).
+   */
+  function shouldShowAnnouncement(id: string): boolean {
     if (!isLoaded.value) return false;
-    return state.value.lastSeenVersion !== currentVersion && state.value.welcomeDismissed;
-  });
+    if (!state.value.welcomeDismissed) return false;
+    return !hasSeenAnnouncement(id);
+  }
 
   // Actions
   function dismissWelcome() {
@@ -160,7 +197,13 @@ export function useOnboarding() {
     saveState();
   }
 
-  function acknowledgeNewVersion() {
+  function acknowledgeAnnouncement(id: string) {
+    if (!state.value.dismissedAnnouncements.includes(id)) {
+      state.value.dismissedAnnouncements = [
+        ...state.value.dismissedAnnouncements,
+        id,
+      ];
+    }
     state.value.lastSeenVersion = currentVersion;
     saveState();
   }
@@ -178,7 +221,8 @@ export function useOnboarding() {
     shouldShowTimerHint,
     shouldShowSettingsHint,
     shouldShowFirstWeekCard,
-    hasNewVersion,
+    shouldShowAnnouncement,
+    hasSeenAnnouncement,
     state: readonly(state),
 
     // Actions
@@ -189,7 +233,7 @@ export function useOnboarding() {
     celebrateFirstTada,
     celebrateFirstMoment,
     dismissFirstWeekCard,
-    acknowledgeNewVersion,
+    acknowledgeAnnouncement,
     resetOnboarding,
   };
 }
