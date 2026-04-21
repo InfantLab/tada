@@ -175,6 +175,22 @@ export default defineNuxtConfig({
           "REST API for Ta-Da! — authenticate with a Bearer API key (tada_key_…). Admin endpoints require the caller's user id to be in ADMIN_USER_IDS on the server.",
         version: pkg.version,
       },
+      // Global components — declare the Bearer security scheme referenced
+      // by defineRouteMeta() blocks on individual handlers, so Scalar
+      // renders it as a recognised auth method rather than "Unknown".
+      $global: {
+        components: {
+          securitySchemes: {
+            bearerAuth: {
+              type: "http",
+              scheme: "bearer",
+              bearerFormat: "tada_key_…",
+              description:
+                "API key issued via POST /api/v1/auth/keys. Send as `Authorization: Bearer tada_key_…`.",
+            },
+          },
+        },
+      },
       ui: {
         scalar: {
           route: "/api-docs",
