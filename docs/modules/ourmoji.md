@@ -76,6 +76,10 @@ Requires admin auth (`ADMIN_USER_IDS` env var) with `admin:users:write` permissi
 
 Full design lives in [`specs/013-ourmoji-module/`](../../specs/013-ourmoji-module/) — see `spec.md`, `data-model.md`, and `contracts/openapi.yaml`.
 
+## Related docs
+
+- [Home-server agent setup](./ourmoji-agent-setup.md) — configuring an external agent to post the daily Ourmoji on behalf of multiple users
+
 ---
 
 [Back to modules](./README.md)

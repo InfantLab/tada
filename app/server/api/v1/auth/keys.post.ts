@@ -7,12 +7,22 @@
  */
 
 import * as z from "zod";
-import { created, apiError, validationError } from "~/server/utils/response";
+import { created, apiError, validationError, forbidden } from "~/server/utils/response";
 import { createApiKey } from "~/server/utils/api-key";
 import { createLogger } from "~/server/utils/logger";
+import { isAdmin } from "~/server/utils/admin";
 import type { Permission } from "~/types/api";
 
 const logger = createLogger("api:v1:auth:keys:create");
+
+const ADMIN_PERMISSIONS = [
+  "admin:stats",
+  "admin:users",
+  "admin:users:write",
+  "admin:activity",
+  "admin:health",
+  "admin:feedback",
+] as const satisfies readonly Permission[];
 
 // Validation schema for API key creation
 const createKeySchema = z.object({
@@ -26,7 +36,9 @@ const createKeySchema = z.object({
         "insights:read",
         "export:read",
         "webhooks:manage",
+        "sync:manage",
         "user:read",
+        ...ADMIN_PERMISSIONS,
       ]),
     )
     .min(1)
@@ -70,6 +82,15 @@ export default defineEventHandler(async (event) => {
   }
 
   const { name, permissions, expiresAt } = parseResult.data;
+
+  const requestsAdminPerm = permissions.some((p) =>
+    (ADMIN_PERMISSIONS as readonly string[]).includes(p),
+  );
+  if (requestsAdminPerm && !isAdmin(userId)) {
+    throw createError(
+      forbidden(event, "Admin permissions can only be granted to admin users"),
+    );
+  }
 
   try {
     // Create new API key

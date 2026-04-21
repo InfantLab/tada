@@ -35,6 +35,20 @@ export const dailyOurmojiPayloadSchema = z.object({
 
 export type DailyOurmojiPayload = z.infer<typeof dailyOurmojiPayloadSchema>;
 
+/**
+ * Admin variant — same fields as `dailyOurmojiPayloadSchema` plus a
+ * target `userId` so a privileged caller can post on behalf of any
+ * user. Used by `POST /api/v1/admin/ourmoji/daily`.
+ */
+export const adminDailyOurmojiPayloadSchema =
+  dailyOurmojiPayloadSchema.extend({
+    userId: z.string().min(1),
+  });
+
+export type AdminDailyOurmojiPayload = z.infer<
+  typeof adminDailyOurmojiPayloadSchema
+>;
+
 export const calendarQuerySchema = z.object({
   from: isoDate.optional(),
   to: isoDate.optional(),
