@@ -9,6 +9,7 @@
 import { describe, expect, it } from "vitest";
 import {
   computeNextAnchorUtc,
+  localDateInTimezone,
   nightDateForAnchor,
   nightIndexForRun,
 } from "./schedule";
@@ -26,7 +27,7 @@ describe("nightIndexForRun", () => {
   });
 });
 
-describe("nightDateForAnchor", () => {
+describe("localDateInTimezone / nightDateForAnchor", () => {
   it("returns the local YYYY-MM-DD for an anchor instant", () => {
     // 21:00 UTC on 2026-04-10 — same calendar day in UTC
     const anchor = new Date("2026-04-10T21:00:00Z");
@@ -36,6 +37,12 @@ describe("nightDateForAnchor", () => {
     // 04:00 UTC on 2026-04-11 = 21:00 PDT on 2026-04-10
     const anchor = new Date("2026-04-11T04:00:00Z");
     expect(nightDateForAnchor(anchor, "America/Los_Angeles")).toBe("2026-04-10");
+  });
+  it("returns today's local date for arbitrary instants", () => {
+    const instant = new Date("2026-04-29T22:30:00Z");
+    expect(localDateInTimezone(instant, "UTC")).toBe("2026-04-29");
+    expect(localDateInTimezone(instant, "Europe/London")).toBe("2026-04-29");
+    expect(localDateInTimezone(instant, "America/Los_Angeles")).toBe("2026-04-29");
   });
 });
 

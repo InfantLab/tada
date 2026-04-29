@@ -58,7 +58,17 @@ export function nightDateForAnchor(
   anchorUtc: Date,
   timezone: string,
 ): string {
-  const { year, month, day } = getLocalYMD(anchorUtc, timezone);
+  return localDateInTimezone(anchorUtc, timezone);
+}
+
+/**
+ * Returns the local YYYY-MM-DD for an arbitrary instant in `timezone`.
+ */
+export function localDateInTimezone(
+  instant: Date,
+  timezone: string,
+): string {
+  const { year, month, day } = getLocalYMD(instant, timezone);
   return `${pad4(year)}-${pad2(month)}-${pad2(day)}`;
 }
 

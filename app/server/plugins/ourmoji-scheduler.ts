@@ -4,30 +4,82 @@
  * On startup runs one catch-up sweep, then sweeps every 15 minutes.
  *
  * Sweep algorithm:
- *   1. Load all `active` runs.
- *   2. For each, compute today's "night date" in the run's earliest
+ *   1. Reconcile run lifecycle state (`scheduled -> active`,
+ *      `active|paused -> completed`) based on each run's local date.
+ *   2. Load all `active` runs.
+ *   3. For each, compute today's "night date" in the run's earliest
  *      participant timezone, and the 21:00 anchor in UTC.
- *   3. If the anchor has passed (or we're catching up after downtime),
+ *   4. If the anchor has passed (or we're catching up after downtime),
  *      generate assignments for tonight via the assignments service —
  *      this is idempotent at the DB level.
- *   4. Dispatch notifications for each freshly-inserted assignment.
+ *   5. Dispatch notifications for each freshly-inserted assignment.
  *
  * Failures are logged but never thrown — the timer keeps ticking.
  */
 
 import { ourmojiSchedulerLogger as logger } from "~/server/services/ourmoji/logger";
-import { listExperimentRunsByStatus, getParticipantsForRun } from "~/server/services/ourmoji/repository";
+import {
+  listExperimentRunsByStatus,
+  getParticipantsForRun,
+  updateExperimentRunStatus,
+} from "~/server/services/ourmoji/repository";
 import { generateAssignmentsForNight } from "~/server/services/ourmoji/assignments";
 import { dispatchAssignmentNotification } from "~/server/services/ourmoji/notifications";
 import {
   computeNextAnchorUtc,
+  localDateInTimezone,
   nightDateForAnchor,
 } from "~/server/services/ourmoji/schedule";
 
 const SWEEP_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
 
+async function reconcileRunStatuses(now: Date): Promise<void> {
+  const scheduledRuns = await listExperimentRunsByStatus(["scheduled"]);
+  for (const run of scheduledRuns) {
+    const localToday = localDateInTimezone(
+      now,
+      run.earliestParticipantTimezone || "UTC",
+    );
+
+    if (run.endDate < localToday) {
+      await updateExperimentRunStatus(run.id, "completed");
+      logger.info("Completed expired scheduled run", {
+        runId: run.id,
+        localToday,
+      });
+      continue;
+    }
+
+    if (run.startDate <= localToday) {
+      await updateExperimentRunStatus(run.id, "active");
+      logger.info("Activated scheduled run", {
+        runId: run.id,
+        localToday,
+      });
+    }
+  }
+
+  const liveRuns = await listExperimentRunsByStatus(["active", "paused"]);
+  for (const run of liveRuns) {
+    const localToday = localDateInTimezone(
+      now,
+      run.earliestParticipantTimezone || "UTC",
+    );
+    if (run.endDate < localToday) {
+      await updateExperimentRunStatus(run.id, "completed");
+      logger.info("Completed finished run", {
+        runId: run.id,
+        previousStatus: run.status,
+        localToday,
+      });
+    }
+  }
+}
+
 async function sweep(): Promise<void> {
   const now = new Date();
+  await reconcileRunStatuses(now);
+
   const runs = await listExperimentRunsByStatus(["active"]);
   if (runs.length === 0) {
     logger.debug("Sweep tick — no active runs");
