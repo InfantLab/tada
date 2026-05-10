@@ -57,6 +57,9 @@ async function handleRegister() {
     });
 
     showSuccess("Account created! Redirecting...");
+    if (typeof window !== "undefined" && window.umami) {
+      window.umami.track("sign_up");
+    }
     setTimeout(() => {
       router.push("/");
     }, 500);
