@@ -22,9 +22,39 @@ What's coming next. For what already shipped, see [CHANGELOG.md](../CHANGELOG.md
 
 ## Upcoming
 
-| Version    | Theme                   | Target |
-| ---------- | ----------------------- | ------ |
-| **v0.7.0** | Features & Integrations | 2026+  |
+| Version    | Theme                                | Target  |
+| ---------- | ------------------------------------ | ------- |
+| **v0.7.0** | Native Android + PWA Hardening       | 2026 Q2 |
+| **v0.8.0** | Features & Integrations              | 2026+   |
+
+### Candidate features for v0.8.0+ (not committed)
+
+Surfaced from the May 2026 product/positioning review. Park here so they don't get lost; promote into a versioned theme when prioritised.
+
+- **Random-interval pings (Reporter-style).** Opt-in mode that prompts "what are you doing?" at random intervals to surface entries you'd otherwise miss. Philosophically aligned with "noticing your life as you live it." Depends on reliable scheduled notifications, so blocked behind v0.7.0.
+- **Apple Health / Health Connect integration (minimal).** Meditation minutes, both directions. Plum Village does this; lowers friction. Cheap once we have a native Android wrapper.
+- **Lead with Wins on the homepage.** The `/tada` voice-first wins flow is the strongest unique entry point and the one that demos the moat. Current homepage emphasises generic timer screens. UX/copy work, not a versioned theme.
+- **Sign-up → first win in <60 seconds.** Most life-logger churn happens at the empty state. Pre-seed an example win that gracefully replaces. Onboarding work.
+- **Pricing tone decision.** "Pay what feels right, hobby project" and "Family tier $12/mo SaaS" don't fit together. Pick one. ([`commercial.md`](commercial.md))
+- **Don't surface Ourmoji externally.** It's gated, experimental, and tone-mismatched with the main pitch. Keep as a feature-flagged subscriber curiosity; don't reference it in homepage copy or marketing materials.
+
+### v0.7.0 — Native Android + PWA Hardening
+
+**Why now:** Session bells don't fire reliably when the phone is locked or the app is backgrounded. This is the user-experience blocker for any marketing/ads push, and it's the gap that separates Ta-Da! from Insight Timer / Calm on the meditation flow.
+
+**Two halves, sharing most of the codebase:**
+
+1. **PWA hardening** (Phase 1) — service-worker-scheduled bell notifications, recovery UX on visibility change, "screen off" mode toggle. Benefits all users immediately and is the foundation for native.
+2. **Capacitor Android** (Phases 2-6) — wraps the existing Nuxt frontend; adds local notifications + foreground service for sessions; ships to Google Play and F-Droid.
+
+**Explicit non-goals for v0.7.0:**
+- iOS native (waiting on revenue to cover $99/yr Apple developer cost)
+- Full offline entry sync (separate problem; defer)
+- Tablet UI / Wear OS
+
+**Full plan:** [`docs/plans/native-android.md`](../docs/plans/native-android.md). Realistic effort: 3-4 weeks focused, 6-10 weeks hobbyist pace.
+
+**Marketing/ads campaign is parked** until v1.0 native is in beta (or Phase 1 PWA hardening demonstrates good-enough reliability on Android Chrome). See [`design/positioning.md`](positioning.md) for the tightened message that goes out when we resume.
 
 ---
 

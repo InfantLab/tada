@@ -1,7 +1,7 @@
 # Tada - Design Decisions
 
 **Status:** Living document  
-**Updated:** January 9, 2026
+**Updated:** 2026-05-10
 
 Decisions made during design, with rationale. This complements the SDR.
 
@@ -28,6 +28,20 @@ Decisions made during design, with rationale. This complements the SDR.
 - No App Store discoverability
 
 **Mitigation:** Save timer state frequently; resume gracefully on reopen.
+
+#### Update — 2026-05-10: Add Native Android via Capacitor (v0.7.0)
+
+The "save timer state, resume gracefully" mitigation handles correctness — elapsed time is recomputed accurately from a stored `sessionStartTime` — but doesn't address the user-experience failure: **interval bells and completion sounds don't fire when the phone is locked or the app is backgrounded**. For a meditation timer this is a category-defining feature, not a polish item.
+
+**Decision:** Keep the PWA as the primary surface for desktop + Linux + iOS + self-hosters, AND add a native Android shell via [Capacitor](https://capacitorjs.com/) that wraps the same Nuxt frontend and adds reliable local notifications + a foreground service for active sessions.
+
+**Why Android first, not iOS:** Apple developer fee is $99/yr ongoing; deferred until the product earns enough to cover it. Google Play is $25 one-time. F-Droid is free and aligned with the AGPL ethos.
+
+**Why Capacitor, not React Native / Flutter:** Capacitor wraps the existing Nuxt code with no rewrite. RN/Flutter would be a full re-implementation of the UI — high cost, no commensurate benefit for a PWA-shaped product.
+
+**Phase 1 (PWA hardening) is not throwaway:** service-worker-scheduled notifications, recovery UX on visibility change, and a "screen off" mode toggle benefit current PWA users immediately AND become the foundation the Capacitor build inherits.
+
+Full plan: [`docs/plans/native-android.md`](../docs/plans/native-android.md). Roadmap entry: v0.7.0 in [`design/roadmap.md`](roadmap.md).
 
 ---
 

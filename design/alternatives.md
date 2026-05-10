@@ -1,8 +1,10 @@
 # Tada — Competitive Landscape
 
-**Updated:** January 9, 2026
+**Updated:** 2026-05-10 (originally January 9, 2026; May 2026 refresh lives in `tada.living/POSITIONING.md` — marketing repo)
 
 A survey of existing apps in the journaling, habit tracking, and lifelogging space—and why Tada takes a different path.
+
+> **May 2026 note:** The marketing-side positioning doc (in the `tada.living` repo, not this one) contains a fresh competitive read informed by 2025-2026 user-complaint research on Reddit and App Store reviews. It identifies a clean market gap between cold-punishment trackers (Streaks) and childlike companions (Finch) that no one credibly occupies. The product/engineering implications that came out of that work are tracked in [`decisions.md`](decisions.md) and [`roadmap.md`](roadmap.md); the *messaging* conclusions live in the marketing repo.
 
 ---
 
