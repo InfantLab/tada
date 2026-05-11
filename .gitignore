@@ -51,3 +51,7 @@ old_data/
 .eslintcache
 # Dev container
 .devcontainer/commandhistory/
+
+# Claude
+.claude/worktrees/
+**/.claude/settings.local.json
