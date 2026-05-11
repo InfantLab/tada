@@ -21,7 +21,7 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "DATABASE_URL=file:../data/db.sqlite drizzle-kit migrate",
+    "db:migrate": "DATABASE_URL=file:../data/db.sqlite bun run migrate.js",
     "db:studio": "DATABASE_URL=file:../data/db.sqlite drizzle-kit studio",
     "admin": "bun run scripts/admin.ts"
   },

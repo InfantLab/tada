@@ -10,11 +10,12 @@ const __dirname = dirname(__filename);
 
 // Default database path
 // Production: /data/db.sqlite (CapRover persistent volume at /data)
-// Dev: /workspaces/tada/app/data/db.sqlite (workspace-relative)
+// Dev: <repo>/data/db.sqlite — matches DATABASE_URL=file:../data/db.sqlite
+// convention used by package.json scripts (dev, db:migrate, etc.)
 const isDockerProduction = __dirname === "/app";
 const defaultDbPath = isDockerProduction
   ? "/data/db.sqlite"
-  : join(__dirname, "data", "db.sqlite");
+  : join(__dirname, "..", "data", "db.sqlite");
 
 const DB_PATH = process.env.DATABASE_URL?.replace("file:", "") || defaultDbPath;
 
@@ -144,14 +145,23 @@ async function runMigrations() {
       try {
         runSQL(statement);
       } catch (err) {
-        // Handle idempotent migrations: duplicate columns/tables are not fatal
+        // Tolerated patterns for idempotent re-runs and fresh-install no-ops:
+        //   - "duplicate column name" — ALTER TABLE ADD COLUMN on a column that
+        //     was already added by an earlier overlapping migration.
+        //   - "already exists" — CREATE TABLE/INDEX without IF NOT EXISTS that
+        //     was already created.
+        //   - "no such table" — legacy rename migrations (e.g. 0022 renames
+        //     weekly_messages→system_messages) where the source table never
+        //     existed on a fresh install because the plugin's ensureTables now
+        //     creates the target table directly. Safe to skip.
         const msg = err.message || "";
         if (
           msg.includes("duplicate column name") ||
-          msg.includes("already exists")
+          msg.includes("already exists") ||
+          msg.includes("no such table")
         ) {
           const short = statement.substring(0, 60).replace(/\n/g, " ");
-          console.log(`    ⚠ Skipped (already applied): ${short}...`);
+          console.log(`    ⚠ Skipped (already applied or N/A): ${short}...`);
           continue;
         }
         throw err;
