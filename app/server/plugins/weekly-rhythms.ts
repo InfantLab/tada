@@ -134,6 +134,10 @@ async function backfillDueTimes(): Promise<void> {
 }
 
 export default defineNitroPlugin((nitroApp) => {
+  // Skip during static prerender — the scheduler is a runtime background task
+  // and has no business creating tables or arming a setInterval during build.
+  if (import.meta.prerender) return;
+
   logger.info("Weekly rhythms plugin initializing");
 
   let sweepTimer: ReturnType<typeof setInterval> | null = null;

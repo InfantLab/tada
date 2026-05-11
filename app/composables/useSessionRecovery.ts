@@ -130,11 +130,14 @@ export function useSessionRecovery() {
   function setupVisibilityHandler(
     getElapsed: () => number,
     getIsPaused: () => boolean,
+    onResume?: () => void,
   ): void {
     teardownVisibilityHandler();
     visibilityHandler = () => {
       if (document.visibilityState === "hidden") {
         updateDraft(getElapsed(), getIsPaused());
+      } else if (document.visibilityState === "visible" && onResume) {
+        onResume();
       }
     };
     document.addEventListener("visibilitychange", visibilityHandler);

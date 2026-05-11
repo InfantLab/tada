@@ -139,6 +139,10 @@ async function sweep(): Promise<void> {
 }
 
 export default defineNitroPlugin(async () => {
+  // Skip during static prerender — the scheduler is a runtime background task
+  // and has no business querying the DB or arming a setInterval during build.
+  if (import.meta.prerender) return;
+
   logger.info("Ourmoji scheduler plugin starting");
 
   try {

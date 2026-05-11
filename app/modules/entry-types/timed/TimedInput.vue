@@ -35,6 +35,11 @@ const {
   teardownVisibilityHandler,
 } = useSessionRecovery();
 
+// Service-worker-scheduled bells (Phase 1.1) — fire when phone is locked or
+// page is backgrounded and the page's own setInterval has been suspended.
+const notifications = useSessionNotifications();
+const sessionId = ref<string>("");
+
 // Timer state
 const timerMode = ref<"fixed" | "unlimited">("unlimited");
 const targetMinutes = ref(10); // Fallback duration in minutes
@@ -593,6 +598,106 @@ function timerTick() {
   }
 }
 
+// --- Service-worker bell scheduling (Phase 1.1) ---
+
+const BELL_HORIZON_MS = 2 * 60 * 60 * 1000; // schedule up to 2h ahead
+
+function newSessionId(): string {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID();
+  }
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+function bellSoundForFixedIndex(idx: number): string {
+  let count = 0;
+  for (const int of intervals.value) {
+    const reps = int.repeats === 0 ? 1 : int.repeats;
+    if (idx < count + reps) return int.bellSound || "bell";
+    count += reps;
+  }
+  return intervals.value[0]?.bellSound || "bell";
+}
+
+function bellSoundUrl(name: string): string {
+  if (!name || name === "silence") return "";
+  return `/sounds/${name}.mp3`;
+}
+
+type ScheduledBell = {
+  atMs: number;
+  kind: "start" | "interval" | "completion";
+  soundUrl: string;
+  label: string;
+};
+
+function computeBellSchedule(): ScheduledBell[] {
+  if (sessionStartTime.value == null) return [];
+  // virtualStart = the timestamp that elapsedSeconds counts from, accounting
+  // for any pause/resume cycles where sessionStartTime got reset.
+  const virtualStartMs =
+    sessionStartTime.value - pausedElapsed.value * 1000;
+  const horizonAt = Date.now() + BELL_HORIZON_MS;
+  const bells: ScheduledBell[] = [];
+
+  if (timerMode.value === "fixed") {
+    const intrvls =
+      fixedIntervals.value.length > 0
+        ? fixedIntervals.value
+        : [targetMinutes.value * 60];
+    let acc = 0;
+    for (let i = 0; i < intrvls.length; i++) {
+      acc += intrvls[i] ?? 0;
+      const atMs = virtualStartMs + acc * 1000;
+      if (atMs <= Date.now() || atMs > horizonAt) continue;
+      const isLast = i === intrvls.length - 1;
+      const soundUrl = bellSoundUrl(bellSoundForFixedIndex(i));
+      if (!soundUrl) continue;
+      bells.push({
+        atMs,
+        kind: isLast ? "completion" : "interval",
+        soundUrl,
+        label: isLast
+          ? "Session complete"
+          : `${Math.round(acc / 60)} min`,
+      });
+    }
+  } else {
+    // Unlimited: schedule milestone bells out to the horizon (capped).
+    if (noIntervalBells.value) return [];
+    const intervalMs = milestoneInterval.value * 60 * 1000;
+    if (intervalMs <= 0) return [];
+    const soundUrl = bellSoundUrl(intervals.value[0]?.bellSound || "bell");
+    if (!soundUrl) return [];
+    const elapsedMs = Date.now() - virtualStartMs;
+    let n = Math.floor(elapsedMs / intervalMs) + 1;
+    while (bells.length < 24) {
+      const atMs = virtualStartMs + n * intervalMs;
+      if (atMs > horizonAt) break;
+      if (atMs > Date.now()) {
+        bells.push({
+          atMs,
+          kind: "interval",
+          soundUrl,
+          label: `${n * milestoneInterval.value} min`,
+        });
+      }
+      n += 1;
+    }
+  }
+  return bells;
+}
+
+function scheduleBellsForCurrentSession() {
+  if (!sessionId.value) return;
+  void notifications.schedule(sessionId.value, computeBellSchedule());
+}
+
+function cancelScheduledBells() {
+  if (!sessionId.value) return;
+  void notifications.cancel(sessionId.value);
+}
+
 function beginSession() {
   isRunning.value = true;
   isPaused.value = false;
@@ -613,6 +718,7 @@ function beginSession() {
   sessionStartTime.value = Date.now();
   pausedElapsed.value = 0;
   _lastCheckedElapsed = 0;
+  sessionId.value = newSessionId();
 
   // Persist session draft for crash recovery
   persistDraft({
@@ -643,9 +749,22 @@ function beginSession() {
   setupVisibilityHandler(
     () => elapsedSeconds.value,
     () => isPaused.value,
+    handleVisibilityResume,
   );
 
   timerInterval.value = setInterval(timerTick, 1000);
+
+  // Hand the SW a bell schedule so they fire even when JS is suspended.
+  scheduleBellsForCurrentSession();
+}
+
+// Phase 1.3 — when returning from a hidden/suspended tab, force a recalc and
+// refresh the SW bell schedule (we may have crossed bells while gone).
+function handleVisibilityResume() {
+  if (!isRunning.value || isPaused.value) return;
+  if (sessionStartTime.value == null) return;
+  timerTick();
+  scheduleBellsForCurrentSession();
 }
 
 // Timer controls
@@ -689,6 +808,7 @@ function pauseTimer() {
     timerInterval.value = null;
   }
   updateDraft(elapsedSeconds.value, true);
+  cancelScheduledBells();
 }
 
 function resumeTimer() {
@@ -712,6 +832,7 @@ function resumeTimer() {
   updateDraft(elapsedSeconds.value, false);
 
   timerInterval.value = setInterval(timerTick, 1000);
+  scheduleBellsForCurrentSession();
 }
 
 function stopTimer() {
@@ -723,6 +844,8 @@ function stopTimer() {
   }
   stopPeriodicUpdates();
   teardownVisibilityHandler();
+  cancelScheduledBells();
+  sessionId.value = "";
   // Reset time tracking
   sessionStartTime.value = null;
   pausedElapsed.value = 0;
@@ -975,6 +1098,7 @@ function handleRecoveryResume() {
   pausedElapsed.value = draft.elapsedSeconds;
   elapsedSeconds.value = draft.elapsedSeconds;
   sessionStartTime.value = Date.now();
+  sessionId.value = newSessionId();
 
   // Re-persist and start updates
   persistDraft({ ...draft, lastSeenAt: Date.now() });
@@ -985,9 +1109,11 @@ function handleRecoveryResume() {
   setupVisibilityHandler(
     () => elapsedSeconds.value,
     () => isPaused.value,
+    handleVisibilityResume,
   );
 
   timerInterval.value = setInterval(timerTick, 1000);
+  scheduleBellsForCurrentSession();
 }
 
 function handleRecoverySave() {
@@ -1142,6 +1268,7 @@ onUnmounted(() => {
   }
   stopPeriodicUpdates();
   teardownVisibilityHandler();
+  cancelScheduledBells();
   releaseWakeLock();
 });
 </script>
