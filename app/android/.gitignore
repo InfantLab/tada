@@ -6,6 +6,11 @@
 *.ap_
 *.aab
 
+# Signing keystores — never commit
+*.keystore
+*.jks
+keystore/
+
 # Files for the ART/Dalvik VM
 *.dex
 

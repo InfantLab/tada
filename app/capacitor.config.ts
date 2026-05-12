@@ -26,6 +26,17 @@ const config: CapacitorConfig = {
     // self-hosters add their own at first-run via the API server picker
     // (Phase 2.4); we whitelist tada.living up-front for the default flow.
     allowNavigation: ["tada.living", "*.tada.living"],
+    // Live Reload during development: set CAP_SERVER_URL to point the
+    // WebView at a Nuxt dev server (e.g. on the WSL devcontainer LAN
+    // address). When set, Capacitor loads from that URL instead of the
+    // bundled `webDir`, so HMR pushes JS/CSS changes straight to the
+    // phone. Empty in release builds — use only via `npm run android:dev`.
+    ...(process.env["CAP_SERVER_URL"]
+      ? {
+          url: process.env["CAP_SERVER_URL"],
+          cleartext: true,
+        }
+      : {}),
   },
 
   android: {

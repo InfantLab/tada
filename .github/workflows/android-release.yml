@@ -1,0 +1,127 @@
+name: Android Release
+
+on:
+  push:
+    tags:
+      # Build a release AAB on tags like v0.7.0-android, v0.7.1-android, etc.
+      - "v*-android"
+  workflow_dispatch:
+    inputs:
+      apiBaseUrl:
+        description: "API base URL to bake into the APK (default: https://tada.living)"
+        required: false
+        default: "https://tada.living"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build Android APK + AAB
+    runs-on: ubuntu-latest
+
+    env:
+      NUXT_TYPESCRIPT_TYPECHECK: "false"
+      NUXT_PUBLIC_API_BASE_URL: ${{ github.event.inputs.apiBaseUrl || 'https://tada.living' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: "platform-tools platforms;android-34 build-tools;34.0.0"
+
+      - name: Install dependencies
+        working-directory: ./app
+        run: bun install --frozen-lockfile
+
+      - name: Build static web bundle (build:capacitor)
+        working-directory: ./app
+        run: bun run build:capacitor
+
+      - name: Sync Capacitor → Android project
+        working-directory: ./app
+        run: bunx cap sync android
+
+      - name: Resolve gradle wrapper permissions
+        working-directory: ./app/android
+        run: chmod +x gradlew
+
+      # ── Debug APK ─────────────────────────────────────────────
+      # Always builds; uploads as a CI artifact so we can sideload
+      # it onto a test device without setting up signing secrets.
+      - name: Build debug APK
+        working-directory: ./app/android
+        run: ./gradlew assembleDebug
+
+      - name: Upload debug APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tada-debug-apk
+          path: app/android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 14
+
+      # ── Release AAB (only when signing secrets exist) ─────────
+      - name: Decode release keystore
+        if: env.HAS_SIGNING_KEY == 'true'
+        env:
+          HAS_SIGNING_KEY: ${{ secrets.ANDROID_SIGNING_KEY != '' }}
+          ANDROID_SIGNING_KEY: ${{ secrets.ANDROID_SIGNING_KEY }}
+        run: |
+          mkdir -p app/android/app/keystore
+          echo "$ANDROID_SIGNING_KEY" | base64 -d > app/android/app/keystore/release.keystore
+
+      - name: Build release AAB
+        if: env.HAS_SIGNING_KEY == 'true'
+        working-directory: ./app/android
+        env:
+          HAS_SIGNING_KEY: ${{ secrets.ANDROID_SIGNING_KEY != '' }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+        run: ./gradlew bundleRelease
+
+      - name: Upload release AAB artifact
+        if: env.HAS_SIGNING_KEY == 'true'
+        env:
+          HAS_SIGNING_KEY: ${{ secrets.ANDROID_SIGNING_KEY != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: tada-release-aab
+          path: app/android/app/build/outputs/bundle/release/app-release.aab
+          retention-days: 90
+
+      - name: Attach artifacts to GitHub release
+        if: startsWith(github.ref, 'refs/tags/v') && env.HAS_SIGNING_KEY == 'true'
+        env:
+          HAS_SIGNING_KEY: ${{ secrets.ANDROID_SIGNING_KEY != '' }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload "${{ github.ref_name }}" \
+            app/android/app/build/outputs/bundle/release/app-release.aab \
+            app/android/app/build/outputs/apk/debug/app-debug.apk \
+            --clobber
+
+      - name: Note when release AAB skipped
+        if: env.HAS_SIGNING_KEY != 'true'
+        env:
+          HAS_SIGNING_KEY: ${{ secrets.ANDROID_SIGNING_KEY != '' }}
+        run: |
+          echo "::notice title=Release AAB skipped::Signing secrets (ANDROID_SIGNING_KEY/_ALIAS/_PASSWORD/_STORE_PASSWORD) are not set. Debug APK uploaded as an artifact only."

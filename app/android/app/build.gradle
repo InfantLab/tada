@@ -16,10 +16,33 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    // Release signing pulled from env vars so the keystore never lives in
+    // source. CI sets ANDROID_SIGNING_KEY (base64-decoded into
+    // keystore/release.keystore) plus ANDROID_KEY_ALIAS/_PASSWORD/_STORE_PASSWORD.
+    // Locally, leave them unset and assembleRelease will use the debug key.
+    signingConfigs {
+        release {
+            def keystoreFile = file("keystore/release.keystore")
+            if (keystoreFile.exists()
+                && System.getenv("ANDROID_KEY_ALIAS")
+                && System.getenv("ANDROID_KEY_PASSWORD")
+                && System.getenv("ANDROID_STORE_PASSWORD")) {
+                storeFile = keystoreFile
+                keyAlias = System.getenv("ANDROID_KEY_ALIAS")
+                keyPassword = System.getenv("ANDROID_KEY_PASSWORD")
+                storePassword = System.getenv("ANDROID_STORE_PASSWORD")
+            }
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            // Only attach the release signing config when the keystore is present.
+            if (file("keystore/release.keystore").exists()
+                && System.getenv("ANDROID_KEY_ALIAS")) {
+                signingConfig = signingConfigs.release
+            }
         }
     }
 }
