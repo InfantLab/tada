@@ -82,6 +82,12 @@ export default defineNuxtPlugin(() => {
 
   const configured = $fetch.create({
     ...(baseURL ? { baseURL } : {}),
+    // Capacitor WebView origin is app.tada.living; API origin is tada.living.
+    // Same-site but cross-origin, so fetch needs credentials:'include' for
+    // the session cookie to ride along (Phase 3.2). On the PWA, baseURL is
+    // empty and this is a same-origin call where credentials default to
+    // 'same-origin' anyway.
+    credentials: baseURL ? "include" : "same-origin",
 
     async onResponse({ request, response, options }) {
       const method = String(options.method ?? "GET");

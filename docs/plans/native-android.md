@@ -68,8 +68,8 @@ The Nuxt app has no SSR routes detected — `nuxi generate` should work. But som
 
 - **Action:** spike `nuxi generate` once before Phase 1. ~30 min. If it fails, revisit decision.
 
-### D4. Lock versions
-Capacitor 7 (current), Android Studio Hedgehog or later, Java 17, Gradle 8.x.
+### D4. Lock versions (updated 2026-05-12)
+Capacitor 8.3.3 (Capacitor 7 was current when the plan was first drafted in May 2026; the v8 series shipped shortly after and is the new default — Phase 3 scaffolded with 8.3.3). Android Studio Hedgehog or later, Java 17, Gradle 8.x.
 
 ---
 
@@ -171,34 +171,38 @@ The offline gate for Android v1. Same code runs on the PWA.
 
 ---
 
-## Phase 3 — Capacitor Android shell (2-3 days)
+## Phase 3 — Capacitor Android shell (2-3 days) — scaffolded 2026-05-12
 
-### 3.1 Capacitor init + Android Studio first build (1 day)
+Phase 3 scaffolding was completed in the devcontainer; the parts that need Android Studio / Java run on the user's local machine. See [`docs/dev/android-build-handover.md`](../dev/android-build-handover.md) for the exact local checklist.
 
-- `npx cap init "Ta-Da!" living.tada.app --web-dir=dist`
-- `npx cap add android`
-- Configure `capacitor.config.ts`: app name, scheme, allow-navigation to `tada.living`.
-- Open in Android Studio, build to emulator.
-- Hello-world: confirm Nuxt frontend loads inside the WebView.
+### 3.1 Capacitor init + first build ✅ scaffolded, ⏳ awaits local emulator run
 
-### 3.2 Cookie + auth flow (0.5 day)
+- `@capacitor/{core,cli,android,preferences,app,splash-screen,local-notifications,assets}` installed at version 8.x.
+- [`app/capacitor.config.ts`](../../app/capacitor.config.ts) created with `appId=living.tada.app`, `appName="Ta-Da!"`, `webDir=".output/public"`, WebView origin `https://app.tada.living`, allow-navigation `tada.living` + `*.tada.living`.
+- `npx cap add android` ran cleanly and scaffolded the Gradle project under [`app/android/`](../../app/android/).
+- Helper scripts: `bun run android:sync`, `android:open`, `android:run`, `android:assets`.
+- **Remaining:** open `app/android` in Android Studio on the local machine, sync Gradle, run on a Pixel 6 / API 34 AVD, confirm the Nuxt frontend loads and login succeeds.
 
-- Install `@capacitor/cookies` (built-in in v7).
-- Test login → session cookie persists across app restart.
-- If broken: fall back to manual `Set-Cookie` extraction → `@capacitor/preferences` storage. Document workaround.
+### 3.2 Cookie + auth flow ✅
 
-### 3.3 App icon, splash, manifest (0.5 day)
+- Capacitor 8 ships the cookie store as part of `@capacitor/core` (the standalone `@capacitor/cookies` package from v6 is gone). Same-site cross-origin behaviour was the actual risk, not cookie persistence.
+- WebView origin `https://app.tada.living` is on the same registrable domain as `https://tada.living`, so `SameSite=Lax` cookies set by `/api/auth/login` are eligible to be sent on cross-subdomain fetches.
+- [`plugins/api-client.client.ts`](../../app/plugins/api-client.client.ts) now sets `credentials: "include"` whenever a non-empty `apiBaseUrl` is configured, so cross-origin `$fetch` calls actually carry the cookie.
+- [`server/middleware/cors.ts`](../../app/server/middleware/cors.ts) default allow-list now includes `https://app.tada.living`; production should also pin `CORS_ALLOWED_ORIGINS` explicitly.
+- **Remaining:** verify on emulator that login persists across an app restart. If the Android WebView drops cookies (rare since API 31, but possible on some OEMs), fall back to a session token stored via `@capacitor/preferences` — flagged in the handover doc.
 
-- Generate Android icon set from `public/icons/icon-512.png`.
-- Splash screen via `@capacitor/splash-screen`.
-- App name and metadata in `AndroidManifest.xml`.
+### 3.3 App icon, splash, manifest ✅
 
-### 3.4 Deep linking + share target (0.5 day)
+- 92 Android assets generated from [`app/public/icons/tada-fullicon.png`](../../app/public/icons/tada-fullicon.png) via `@capacitor/assets`. Background `#10b981` (brand green), dark splash `#0c8e6f`.
+- `strings.xml` already has the right `app_name="Ta-Da!"` and `package_name="living.tada.app"`.
+- SplashScreen plugin configured in [`capacitor.config.ts`](../../app/capacitor.config.ts) — 1000ms launch duration, brand background, centre-crop.
 
-- Configure intent filters for `https://tada.living/*` to open in app (App Links).
-- Wire the existing `share_target` from PWA manifest to Android share intent.
+### 3.4 Deep linking + share target ✅ scaffolded
 
-**Phase 3 deliverable:** A real Android app that loads Ta-Da!, lets you log in, and works for everything except backgrounded sessions.
+- App Links intent filter on `MainActivity` for `https://tada.living/*` with `android:autoVerify="true"`. Verification will only succeed once `https://tada.living/.well-known/assetlinks.json` is published with the release signing-key fingerprint (Phase 6 task).
+- Web Share Target wired as a `SEND` `text/plain` intent filter, surfacing shared text/URLs to the app via standard Android share-sheet routing. The existing PWA `share_target` config points at `/share` and continues to work in the WebView.
+
+**Phase 3 deliverable:** A real Android app that loads Ta-Da!, lets you log in, and works for everything except backgrounded sessions. Scaffolding committed; final emulator validation is a one-evening task on the user's local machine (see handover doc).
 
 ---
 

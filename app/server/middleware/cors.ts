@@ -16,6 +16,9 @@ export default defineEventHandler((event) => {
         "http://localhost:3000",
         "http://localhost:5173",
         "https://tada.app", // Production domain
+        // Capacitor Android shell — the WebView's origin is the hostname
+        // configured in capacitor.config.ts (Phase 3.1).
+        "https://app.tada.living",
       ];
 
   // Check if origin is allowed

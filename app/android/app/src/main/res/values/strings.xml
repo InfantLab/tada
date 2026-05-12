@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Ta-Da!</string>
+    <string name="title_activity_main">Ta-Da!</string>
+    <string name="package_name">living.tada.app</string>
+    <string name="custom_url_scheme">living.tada.app</string>
+</resources>
