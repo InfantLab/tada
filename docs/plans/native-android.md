@@ -164,7 +164,7 @@ The offline gate for Android v1. Same code runs on the PWA.
 - TTL: 7 days. Per-route override for endpoints that should never be cached (e.g. `/api/auth/*`, `/api/v1/health`).
 - Invalidate cache entries that share a path prefix with a successful mutation (e.g. `POST /api/v1/entries` busts `/api/v1/entries*` reads).
 - Online/offline detection via `navigator.onLine` + first-failed-request signal. Don't trust `navigator.onLine` alone — captive portals lie.
-- Mutations (POST/PUT/DELETE) while offline: return a clear "queued for next sync" toast and fail loudly (do **not** silently optimistic-update — that's option B, v0.8.0).
+- Mutations (POST/PUT/DELETE) while offline: throw `OfflineWriteError` (`code: "OFFLINE_WRITE"`) and surface an honest toast — "You're offline — couldn't save. Try again when you reconnect." We do **not** silently optimistic-update or actually queue the change (that's option B / v0.8.0); the toast must not promise a sync that won't happen.
 - Tests: vitest unit tests for the cache layer covering hit/miss/stale/eviction; an integration test that simulates offline by stubbing `$fetch` to reject.
 
 **Phase 2 deliverable:** `npm run build:capacitor` produces a static `.output/public/` that talks to a remote backend with offline read-cache support. Browsing entries, timeline, rhythms works in airplane mode after first online load.

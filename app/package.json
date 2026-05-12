@@ -8,6 +8,7 @@
     "dev": "DATABASE_URL=file:../data/db.sqlite nuxt dev",
     "build": "nuxt build",
     "build:docker": "node scripts/capture-git-info.js && NUXT_TYPESCRIPT_TYPECHECK=false nuxt build",
+    "build:capacitor": "node scripts/capture-git-info.js && NUXT_TYPESCRIPT_TYPECHECK=false NUXT_PUBLIC_API_BASE_URL=${NUXT_PUBLIC_API_BASE_URL:-https://tada.living} nuxt generate",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",

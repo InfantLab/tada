@@ -45,6 +45,11 @@ export default defineNuxtConfig({
       appName: "Tada",
       appVersion: pkg.version,
       appUrl: process.env["APP_URL"] || "http://localhost:3000",
+      // Base for API calls. Empty in SSR/PWA (same-origin relative URLs work);
+      // set to https://tada.living for Capacitor/static builds so the APK
+      // talks to the cloud backend (D1=B — overridable per-user at runtime in
+      // the Phase 2.4 server-picker UI).
+      apiBaseUrl: process.env["NUXT_PUBLIC_API_BASE_URL"] || "",
       isCloudMode:
         process.env["TADA_CLOUD_MODE"] === "true" ||
         !!process.env["STRIPE_SECRET_KEY"],

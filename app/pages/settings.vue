@@ -764,6 +764,50 @@ interface ApiKeyInfo {
   expiresAt: string | null;
 }
 
+// API server URL (Developer section, Phase 2.4 of v0.7.0)
+// Self-hosters can repoint the app at their own server. The default for the
+// Capacitor build is https://tada.living; on the PWA it's empty (same-origin).
+const apiBase = useApiBaseUrl();
+const apiBaseInput = ref(apiBase.current());
+const apiBaseChanging = ref(false);
+const apiBaseValidationMessage = ref<string | null>(null);
+const apiBaseDirty = computed(
+  () => apiBaseInput.value.trim().replace(/\/+$/, "") !== apiBase.current(),
+);
+
+async function saveApiBase() {
+  const url = apiBaseInput.value.trim().replace(/\/+$/, "");
+  if (!url) {
+    // Empty input: clear the override and fall back to the build-time default.
+    apiBase.setOverride("");
+    apiBaseValidationMessage.value = "Cleared — will use the default on reload.";
+    return;
+  }
+  apiBaseChanging.value = true;
+  apiBaseValidationMessage.value = null;
+  try {
+    const ok = await apiBase.validate(url);
+    if (!ok) {
+      apiBaseValidationMessage.value =
+        "Couldn't reach that server. Check the URL and try again.";
+      return;
+    }
+    apiBase.setOverride(url);
+    apiBaseValidationMessage.value = "Saved. Reloading to apply…";
+    setTimeout(() => apiBase.applyAndReload(), 800);
+  } finally {
+    apiBaseChanging.value = false;
+  }
+}
+
+function resetApiBase() {
+  apiBase.setOverride("");
+  apiBaseInput.value = apiBase.buildTime;
+  apiBaseValidationMessage.value =
+    "Reverted to default. Reloading to apply…";
+  setTimeout(() => apiBase.applyAndReload(), 800);
+}
+
 // Voice AI provider selection
 const selectedVoiceProvider = ref("auto");
 const byokProviders = [
@@ -2332,6 +2376,65 @@ onMounted(() => {
                 </li>
               </ul>
             </div>
+          </div>
+
+          <!-- API server URL (self-host override) -->
+          <div
+            class="mt-6 bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 p-4"
+          >
+            <h3
+              class="text-sm font-semibold text-stone-800 dark:text-stone-100 mb-1"
+            >
+              API server
+            </h3>
+            <p class="text-xs text-stone-500 dark:text-stone-400 mb-3">
+              The Ta-Da! app talks to this server for sync and account data.
+              Most people should leave this alone. Self-hosters can point it at
+              their own server.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-2">
+              <input
+                v-model="apiBaseInput"
+                type="url"
+                spellcheck="false"
+                autocomplete="off"
+                inputmode="url"
+                :placeholder="apiBase.buildTime || 'https://your-server.example'"
+                class="flex-1 px-3 py-2 text-sm rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-900 text-stone-800 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-tada-500"
+              >
+              <button
+                :disabled="!apiBaseDirty || apiBaseChanging"
+                class="shrink-0 px-3 py-2 text-sm font-medium rounded-lg bg-tada-600 hover:bg-tada-700 disabled:opacity-50 disabled:cursor-not-allowed text-white transition-colors"
+                @click="saveApiBase"
+              >
+                {{ apiBaseChanging ? "Checking…" : "Save" }}
+              </button>
+              <button
+                v-if="apiBase.readOverride()"
+                class="shrink-0 px-3 py-2 text-sm font-medium rounded-lg border border-stone-300 dark:border-stone-600 hover:bg-stone-50 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 transition-colors"
+                @click="resetApiBase"
+              >
+                Reset
+              </button>
+            </div>
+            <p
+              v-if="apiBaseValidationMessage"
+              class="mt-2 text-xs"
+              :class="
+                apiBaseValidationMessage.startsWith('Couldn')
+                  ? 'text-red-600 dark:text-red-400'
+                  : 'text-stone-600 dark:text-stone-400'
+              "
+            >
+              {{ apiBaseValidationMessage }}
+            </p>
+            <p
+              v-else-if="apiBase.readOverride()"
+              class="mt-2 text-xs text-stone-500 dark:text-stone-400"
+            >
+              Currently overriding the default
+              ({{ apiBase.buildTime || "same origin" }}).
+            </p>
           </div>
         </section>
 
