@@ -37,6 +37,7 @@ Surfaced from the May 2026 product/positioning review. Park here so they don't g
 - **Sign-up → first win in <60 seconds.** Most life-logger churn happens at the empty state. Pre-seed an example win that gracefully replaces. Onboarding work.
 - **Pricing tone decision.** "Pay what feels right, hobby project" and "Family tier $12/mo SaaS" don't fit together. Pick one. ([`commercial.md`](commercial.md))
 - **Don't surface Ourmoji externally.** It's gated, experimental, and tone-mismatched with the main pitch. Keep as a feature-flagged subscriber curiosity; don't reference it in homepage copy or marketing materials.
+- **Full offline-first entry queue.** Today the PWA is "offline-resilient" — cached pages render, a running timer keeps ticking — but creating, editing or syncing entries requires the network. Earned from the v0.7.0 Phase 1.6 audit. Doing this properly means IndexedDB-backed entry queueing, background sync, optimistic-update UI, and conflict handling on reconnect. Not a quick win — schedule as its own theme.
 
 ### v0.7.0 — Native Android + PWA Hardening
 

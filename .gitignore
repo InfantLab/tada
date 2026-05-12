@@ -6,6 +6,8 @@ node_modules/
 .output/
 .nuxt/
 dist/
+# symlink form created by @vite-pwa/nuxt during nuxi generate
+dist
 
 # Data (local development)
 data/

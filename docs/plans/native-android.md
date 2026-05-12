@@ -107,30 +107,32 @@ Classic iOS Safari trick — play a silent looping audio track to keep the page 
 
 - Behind a feature flag, off by default. Add only if iOS PWA users complain.
 
-### 1.5 "Screen off" mode toggle in session UI (0.5 day)
+### 1.5 No screen-off toggle — runtime picks the right path (resolved, 2026-05-12)
 
-Honest UX: a toggle that says "I'll lock my phone — fire bells via notifications" vs. "Screen will stay on." Sets user expectation correctly.
+The original plan called for a "Screen will stay on" vs "Lock the phone" toggle. Dropped: the runtime already makes the right choice without asking the user. Wake-lock is requested on every `beginSession()`, so the screen stays on while the page is foregrounded; if the user locks the phone anyway, the SW-scheduled bells fire via notifications. The `fireSessionBell` handler skips the notification when any visible client exists, so there's no double-ring when the page is alive ([`app/workers/sw.ts:131`](../../app/workers/sw.ts#L131)). Adding a toggle would push a decision onto the user that the system can answer itself.
 
-- Default: screen-on (current behaviour).
-- Toggle: schedules SW notifications for the whole session, dims the UI.
+### 1.6 Offline claim aligned with reality (resolved, 2026-05-12)
 
-### 1.6 Update philosophy claim about offline-first (0.25 day)
+Audited the actual offline behaviour: Workbox precaches static assets, navigations are NetworkFirst with `/offline.html` fallback, audio files are CacheFirst (30d), `/api/*` is NetworkOnly. An in-progress timed session keeps ticking because its state lives in `localStorage` and the page is fully client-side once loaded. Creating, editing or syncing entries needs the network — there is no IndexedDB queue and no background sync.
 
-[`design/philosophy.md`](../../design/philosophy.md) and [`docs/dev/v010-snagging-list.md`](../dev/v010-snagging-list.md) disagree on offline-first status. Either implement entry queueing or update the claim to match reality. Recommend the doc fix for now; full offline queueing is a Phase 7 concern.
+- [`design/philosophy.md`](../../design/philosophy.md) "Offline-first" claim rewritten to "Offline-resilient" with an honest description of what works and what doesn't.
+- [`docs/dev/v010-snagging-list.md`](../dev/v010-snagging-list.md) item 1.3 closed.
+- [`app/public/offline.html`](../../app/public/offline.html) copy updated so users hitting the fallback see something true ("Pages you've already opened still work…").
+- Full offline-first entry queueing is parked as a v0.8.0+ candidate in [`design/roadmap.md`](../../design/roadmap.md) — it's a real engineering project (IndexedDB queue, background sync, optimistic UI, conflict handling), not a quick win.
 
 **Phase 1 deliverable:** PWA bells reliably fire on Android Chrome with screen locked. iOS still requires native. Limitation documented honestly.
 
 ---
 
-## Phase 2 — Static export readiness (1-2 days)
+## Phase 2 — Static export readiness + offline read-cache (4-7 days)
 
-Capacitor needs a static `dist/` to bundle.
+Capacitor needs a static `dist/` to bundle. **Updated 2026-05-12:** Phase 2 also delivers the IndexedDB read-cache that makes offline integral to the Android app (option A from the offline scoping decision — see `MEMORY.md › project › v0.7.0 offline must be integral to Android`). Write-queue offline is parked for v0.8.0.
 
-### 2.1 Confirm `nuxi generate` builds clean (0.5 day)
+### 2.1 Confirm `nuxi generate` builds clean ✅ (resolved, 2026-05-12)
 
-- Run `nuxi generate`.
-- Identify any pages that error on prerender (likely candidates: dynamic entry routes, admin pages).
-- Fix each: add `routeRules` to skip prerender, or refactor to client-render after hydration.
+Spike result: all 48 routes prerendered cleanly in 46s. `.output/public/` is the static bundle. Service worker built to 26.33 kB (8.74 kB gzip) with 18 precache entries. No skipped pages, no errors. The Nitro prerender plugins (`ourmoji-scheduler`, `weekly-rhythms`) are gated on `import.meta.prerender` so they don't try to spin up during the build.
+
+No fallback to Capacitor `server.url` mode needed — the static-bundle path proceeds as planned.
 
 ### 2.2 Add `build:capacitor` script (0.25 day)
 
@@ -146,13 +148,26 @@ Two paths — investigate first:
 - **Lower-effort:** configure Capacitor's `server.url` to redirect `/api/*` to `https://tada.living/api/*`. No code changes needed.
 - **More work:** add a `useApi()` composable that reads `runtimeConfig.public.apiBaseUrl` and prepends to relative paths.
 
-### 2.4 Configurable server URL (0.5 day) — *if D1 = (B)*
+### 2.4 Configurable server URL (0.5 day) — D1 = (B), locked 2026-05-12
 
 - First-run settings page with server URL input.
-- Persist via `@capacitor/preferences`.
+- Persist via `@capacitor/preferences` (web fallback: `localStorage`).
 - Validate URL by hitting `/api/health` before saving.
+- Default `https://tada.living` so the typical Play Store user doesn't see the picker — surface it only when no value is persisted yet, or via Settings → Advanced.
 
-**Phase 2 deliverable:** `npm run build:capacitor` produces a static `dist/` that talks to a remote backend.
+### 2.5 IndexedDB read-cache for /api/* GETs (2-4 days) — option A, scoped 2026-05-12
+
+The offline gate for Android v1. Same code runs on the PWA.
+
+- `useApiCache` composable layered under `useApi()`. On a successful GET, write `{ url, body, status, etag, fetchedAt }` to IndexedDB keyed by request URL + auth-user-id.
+- On a failed GET (offline, 5xx, timeout), serve the cached body and surface a `fromCache: true` flag the UI can show as a subtle "cached" badge.
+- TTL: 7 days. Per-route override for endpoints that should never be cached (e.g. `/api/auth/*`, `/api/v1/health`).
+- Invalidate cache entries that share a path prefix with a successful mutation (e.g. `POST /api/v1/entries` busts `/api/v1/entries*` reads).
+- Online/offline detection via `navigator.onLine` + first-failed-request signal. Don't trust `navigator.onLine` alone — captive portals lie.
+- Mutations (POST/PUT/DELETE) while offline: return a clear "queued for next sync" toast and fail loudly (do **not** silently optimistic-update — that's option B, v0.8.0).
+- Tests: vitest unit tests for the cache layer covering hit/miss/stale/eviction; an integration test that simulates offline by stubbing `$fetch` to reject.
+
+**Phase 2 deliverable:** `npm run build:capacitor` produces a static `.output/public/` that talks to a remote backend with offline read-cache support. Browsing entries, timeline, rhythms works in airplane mode after first online load.
 
 ---
 
@@ -299,15 +314,15 @@ Session UI needs to know: "if running on Android, use native scheduled notificat
 
 | Phase                  | Days  | Cumulative |
 | ---------------------- | ----- | ---------- |
-| 0. Decisions + spike   | 0.5   | 0.5        |
-| 1. PWA hardening       | 3-5   | 4-5.5      |
-| 2. Static export       | 1-2   | 5-7.5      |
-| 3. Capacitor shell     | 2-3   | 7-10.5     |
-| 4. Native plugins      | 3-4   | 10-14.5    |
-| 5. Polish              | 2-3   | 12-17.5    |
-| 6. Distribution        | 2-3   | 14-20.5    |
+| 0. Decisions + spike       | 0.5   | 0.5        |
+| 1. PWA hardening           | 3-5   | 4-5.5      |
+| 2. Static export + offline | 4-7   | 8-12.5     |
+| 3. Capacitor shell         | 2-3   | 10-15.5    |
+| 4. Native plugins          | 3-4   | 13-19.5    |
+| 5. Polish                  | 2-3   | 15-22.5    |
+| 6. Distribution            | 2-3   | 17-25.5    |
 
-**Realistic range: 3-4 weeks of focused solo work.** Hobbyist pace (evenings + some weekends): 6-10 weeks.
+**Realistic range: 3.5-5 weeks of focused solo work.** Hobbyist pace (evenings + some weekends): 7-12 weeks. Update on 2026-05-12: Phase 2 grew by 3-5 days to absorb the offline read-cache that's now in v0.7.0 scope.
 
 ---
 

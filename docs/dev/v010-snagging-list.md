@@ -55,12 +55,11 @@ The roadmap claims v0.1.0 MVP is complete, but several features are placeholders
 **Issue:** Config references `/favicon.png` — verify it exists.  
 **Fix:** Add favicon to `public/` directory.
 
-### 1.3 🟡 No Offline-First Architecture
+### 1.3 🟢 Offline claim aligned with reality (v0.7.0 audit)
 
-**SDR Claim:** "Full functionality offline, sync when connected"  
-**Reality:** No IndexedDB implementation, no service worker data caching, no background sync.  
-**Impact:** App will not work offline beyond cached static assets.  
-**Recommendation:** Either implement basic offline support OR update roadmap to move this to v0.2.0.
+**SDR Claim (historical):** "Full functionality offline, sync when connected"
+**Reality:** Workbox precaches static assets, `NetworkFirst` for navigations with `/offline.html` fallback, `NetworkOnly` for `/api/*`. No IndexedDB queue, no background sync, no entry creation offline. An in-progress timed session continues to tick because state lives in `localStorage` and the page is fully client-side once loaded.
+**Resolution (May 2026, v0.7.0 Phase 1.6):** Updated [`design/philosophy.md`](../../design/philosophy.md) to claim "Offline-resilient" instead of "Offline-first" and to document precisely what works (timer continues, cached pages render) vs. what doesn't (entry create/edit/sync). Full offline queueing is deferred to a later release — tracked as a v0.8.0+ candidate.
 
 ---
 

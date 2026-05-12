@@ -142,7 +142,7 @@ Every word choice serves the philosophy of celebration over obligation.
 ### User Experience
 
 **Friction-free:** Capture in seconds, not minutes
-**Offline-first:** Works without internet
+**Offline-resilient (today):** Installs as a PWA; cached pages render and an in-progress timed session keeps ticking without a connection. Creating, editing or syncing entries still requires network — full offline-first queueing is a future goal, not a current claim.
 **Privacy-focused:** Your data is yours, always exportable
 **Self-hostable:** Run on your own server if you want
 **Open source:** Transparent, auditable, forkable
@@ -203,7 +203,7 @@ Ta-Da! stands on the shoulders of:
 
 - **SQLite** - Simple, local-first, no server complexity
 - **Nuxt/Vue** - Modern, reactive, excellent DX
-- **PWA** - Installable, works offline, feels native
+- **PWA** - Installable, feels native, cached shell keeps the timer running offline (entry creation/sync still needs the network — see _Offline-resilient_ above)
 - **Self-hostable** - Docker, one command, your server
 
 Every technical choice serves the philosophy: friction-free, privacy-focused, user-controlled.
