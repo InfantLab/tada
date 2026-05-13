@@ -56,16 +56,43 @@ java -version    # should show "openjdk version 17.x.x"
 ### Install Android command-line tools
 
 1. Download from `https://developer.android.com/studio#command-line-tools-only` — the "Command line tools only" zip (Windows).
-2. Extract to `C:\android-sdk\cmdline-tools\latest\` (note: the `latest` folder is required by Google's installer paths).
+2. Extract somewhere temporary first — the zip contains a single `cmdline-tools/` folder. You need to end up with this **exact** layout (Google's hard-coded convention):
+
+   ```
+   C:\android-sdk\
+     cmdline-tools\
+       latest\
+         bin\
+           sdkmanager.bat
+           avdmanager.bat
+         lib\
+         NOTICE.txt
+         source.properties
+   ```
+
+   The most common mistake is dragging the whole `cmdline-tools/` folder into `latest/`, which gives you `C:\android-sdk\cmdline-tools\latest\cmdline-tools\bin\...` — one level too deep. `sdkmanager.bat` must be at `cmdline-tools\latest\bin\sdkmanager.bat` exactly.
+
+   If you've already done that, fix in place:
+   ```powershell
+   Move-Item C:\android-sdk\cmdline-tools\latest\cmdline-tools\* C:\android-sdk\cmdline-tools\latest\
+   Remove-Item C:\android-sdk\cmdline-tools\latest\cmdline-tools
+   ```
+
 3. Set environment variables (System Properties → Environment Variables):
    - `ANDROID_HOME` = `C:\android-sdk`
    - Add to `PATH`: `%ANDROID_HOME%\cmdline-tools\latest\bin`, `%ANDROID_HOME%\platform-tools`
-4. Open a new Powershell, install the SDK pieces we need:
+4. **Close every Powershell window and open a fresh one** so the new env vars are picked up. Then verify:
 
-```powershell
-sdkmanager --licenses                                  # accept all
-sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
-```
+   ```powershell
+   where.exe sdkmanager.bat       # should print C:\android-sdk\cmdline-tools\latest\bin\sdkmanager.bat
+   ```
+
+5. Install the SDK pieces we need:
+
+   ```powershell
+   sdkmanager --licenses                                  # accept all
+   sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+   ```
 
 That's the entire native toolchain. ~1GB total.
 
