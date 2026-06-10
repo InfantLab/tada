@@ -16,9 +16,9 @@ const config: CapacitorConfig = {
   bundledWebRuntime: false,
 
   server: {
-    // The WebView's origin for relative paths inside the static bundle. We
-    // use a real https origin (not capacitor://) so cookies set by
-    // tada.living are honoured for first-party API calls — see Phase 3.2.
+    // The WebView's origin for relative paths inside the static bundle.
+    // Using a real https:// origin (not capacitor://) is required for
+    // CapacitorHttp native routing and keeps the origin well-formed.
     androidScheme: "https",
     // Hostname inside the WebView; the static bundle is served from here.
     hostname: "app.tada.living",
@@ -49,6 +49,15 @@ const config: CapacitorConfig = {
   },
 
   plugins: {
+    // Route all fetch/XHR calls through native Android networking.
+    // This bypasses WebView CORS enforcement (the browser CORS sandbox does
+    // not apply to native HTTP) and lets the native CookieManager handle
+    // Set-Cookie headers from cross-origin responses — solving the issue
+    // where the WebView silently dropped session cookies from tada.living
+    // when the page origin was the virtual https://app.tada.living hostname.
+    CapacitorHttp: {
+      enabled: true,
+    },
     SplashScreen: {
       launchShowDuration: 1000,
       backgroundColor: "#10b981",
