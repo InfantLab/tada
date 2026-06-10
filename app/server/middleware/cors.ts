@@ -9,17 +9,18 @@
 export default defineEventHandler((event) => {
   const origin = getRequestHeader(event, "origin");
 
-  // Get allowed origins from environment or use defaults
-  const allowedOrigins = process.env['CORS_ALLOWED_ORIGINS']
-    ? process.env['CORS_ALLOWED_ORIGINS'].split(",")
+  // Get allowed origins from environment or use defaults.
+  // CORS_ALLOWED_ORIGINS (comma-separated) overrides the default list, but
+  // https://app.tada.living is always appended so the Capacitor Android shell
+  // works even when the env var is set without it.
+  const envOrigins = process.env['CORS_ALLOWED_ORIGINS']
+    ? process.env['CORS_ALLOWED_ORIGINS'].split(",").map((s) => s.trim())
     : [
         "http://localhost:3000",
         "http://localhost:5173",
-        "https://tada.app", // Production domain
-        // Capacitor Android shell — the WebView's origin is the hostname
-        // configured in capacitor.config.ts (Phase 3.1).
-        "https://app.tada.living",
+        "https://tada.app",
       ];
+  const allowedOrigins = [...new Set([...envOrigins, "https://app.tada.living"])];
 
   // Check if origin is allowed
   if (origin && allowedOrigins.includes(origin)) {
