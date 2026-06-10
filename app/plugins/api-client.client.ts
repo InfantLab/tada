@@ -84,12 +84,12 @@ const NATIVE_DEFAULT_URL = "https://tada.living";
 
 export default defineNuxtPlugin(() => {
   const config = useRuntimeConfig();
-  const buildTime = String(config.public.apiBaseUrl ?? "");
-  const userOverride = readUserOverride();
-  // Capacitor fallback: if no URL is baked in or user-configured, and we're
-  // running on a native platform, default to the cloud backend.
+  // Normalise each candidate independently so an invalid baked-in value
+  // (e.g. a literal un-expanded bash expression) doesn't block the fallback.
+  const userOverrideUrl = normaliseBaseUrl(readUserOverride());
+  const buildTimeUrl = normaliseBaseUrl(String(config.public.apiBaseUrl ?? ""));
   const nativeFallback = Capacitor.isNativePlatform() ? NATIVE_DEFAULT_URL : "";
-  const baseURL = normaliseBaseUrl(userOverride || buildTime || nativeFallback);
+  const baseURL = userOverrideUrl || buildTimeUrl || nativeFallback;
 
   const configured = $fetch.create({
     ...(baseURL ? { baseURL } : {}),

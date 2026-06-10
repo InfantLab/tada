@@ -10,7 +10,10 @@ const loginTestStatus = ref<"idle" | "running" | "ok" | "fail">("idle");
 
 function resolveBase(): string {
   const cfg = useRuntimeConfig();
-  const baked = String(cfg.public.apiBaseUrl ?? "");
+  // Validate baked value — reject bash expansion literals like ${VAR:-default}
+  // that bun/Windows may not expand and which would block the native fallback.
+  const raw = String(cfg.public.apiBaseUrl ?? "");
+  const baked = /^https?:\/\//.test(raw) ? raw.replace(/\/+$/, "") : "";
   const nativeFallback = Capacitor.isNativePlatform() ? "https://tada.living" : "";
   return baked || nativeFallback || "";
 }

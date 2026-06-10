@@ -8,7 +8,7 @@
     "dev": "DATABASE_URL=file:../data/db.sqlite nuxt dev",
     "build": "nuxt build",
     "build:docker": "node scripts/capture-git-info.js && NUXT_TYPESCRIPT_TYPECHECK=false nuxt build",
-    "build:capacitor": "node scripts/capture-git-info.js && NUXT_TYPESCRIPT_TYPECHECK=false NUXT_PUBLIC_API_BASE_URL=${NUXT_PUBLIC_API_BASE_URL:-https://tada.living} nuxt generate",
+    "build:capacitor": "node scripts/capture-git-info.js && NUXT_TYPESCRIPT_TYPECHECK=false NUXT_PUBLIC_API_BASE_URL=https://tada.living nuxt generate",
     "android:sync": "bun run build:capacitor && bunx cap sync android",
     "android:dev": "node scripts/android-dev.js",
     "android:open": "npx cap open android",
