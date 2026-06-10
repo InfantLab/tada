@@ -18,17 +18,20 @@ definePageMeta({
 const config = useRuntimeConfig();
 const isCloudMode = config.public.isCloudMode;
 
-// App version - fetched dynamically
-const appVersion = ref("0.4.0a");
-const gitHash = ref("");
-// Fetch version info on mount
+// App version — baked in at build time (works offline + in APK)
+const appVersion = config.public.appVersion as string;
+const buildHash = config.public.gitShortHash as string;
+const buildTime = config.public.buildTime as string;
+// Server version — fetched at runtime to compare against APK build
+const serverVersion = ref("");
+const serverHash = ref("");
 onMounted(async () => {
   try {
     const versionInfo = await $fetch("/api/version");
-    appVersion.value = versionInfo.version;
-    gitHash.value = versionInfo.gitShortHash;
-  } catch (error) {
-    console.error("Failed to fetch version info:", error);
+    serverVersion.value = versionInfo.version;
+    serverHash.value = versionInfo.gitShortHash ?? "";
+  } catch {
+    // offline or server unreachable — APK version still shows above
   }
 });
 
@@ -2440,9 +2443,12 @@ onMounted(() => {
 
         <!-- Version footer (About page accessible via help panel) -->
         <div class="text-center py-4">
-          <p class="text-sm font-medium text-stone-600 dark:text-stone-300 mb-2">
-            Ta-Da! v{{ appVersion
-            }}<template v-if="gitHash"> <span class="font-normal text-stone-400 dark:text-stone-500">+{{ gitHash }}</span></template>
+          <p class="text-sm font-medium text-stone-600 dark:text-stone-300">
+            Ta-Da! v{{ appVersion }}<template v-if="buildHash"><span class="font-normal text-stone-400 dark:text-stone-500"> +{{ buildHash }}</span></template>
+          </p>
+          <p class="text-xs text-stone-400 dark:text-stone-500 mb-2">
+            <template v-if="buildTime">built {{ buildTime }} · </template>app
+            <template v-if="serverVersion"> · server v{{ serverVersion }}<template v-if="serverHash && serverHash !== buildHash"> +{{ serverHash }}</template></template>
           </p>
           <div class="flex items-center justify-center gap-4 text-sm">
             <NuxtLink

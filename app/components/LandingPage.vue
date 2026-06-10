@@ -1,10 +1,5 @@
 <script setup lang="ts">
-/**
- * Landing Page Component
- *
- * Marketing landing page for unauthenticated visitors.
- * Philosophy-driven messaging about mindful life tracking.
- */
+const runtimeConfig = useRuntimeConfig();
 
 const features = [
   {
@@ -258,6 +253,9 @@ const philosophyPoints = [
         </div>
         <p class="text-center text-sm text-stone-500 dark:text-stone-500 mt-6">
           Made with 💚 for mindful humans everywhere
+        </p>
+        <p class="text-center text-xs text-stone-400 dark:text-stone-600 mt-1">
+          v{{ runtimeConfig.public.appVersion }}<template v-if="runtimeConfig.public.gitShortHash"> +{{ runtimeConfig.public.gitShortHash }}</template>
         </p>
       </div>
     </footer>

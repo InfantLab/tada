@@ -1,5 +1,19 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 import pkg from "./package.json";
+import { execSync } from "child_process";
+
+function getGitShortHash(): string {
+  try {
+    return execSync("git rev-parse --short HEAD", { stdio: ["pipe", "pipe", "ignore"] })
+      .toString()
+      .trim();
+  } catch {
+    return "";
+  }
+}
+
+const _gitShortHash = getGitShortHash();
+const _buildTime = new Date().toISOString().slice(0, 16).replace("T", " "); // "2026-06-10 14:32"
 
 export default defineNuxtConfig({
   devtools: {
@@ -44,6 +58,8 @@ export default defineNuxtConfig({
     public: {
       appName: "Tada",
       appVersion: pkg.version,
+      gitShortHash: _gitShortHash,
+      buildTime: _buildTime,
       appUrl: process.env["APP_URL"] || "http://localhost:3000",
       // Base for API calls. Empty in SSR/PWA (same-origin relative URLs work);
       // set to https://tada.living for Capacitor/static builds so the APK
