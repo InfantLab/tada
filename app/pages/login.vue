@@ -233,6 +233,9 @@ async function handleSubmit() {
           </p>
         </div>
       </div>
+      <div class="text-center mt-4">
+        <NuxtLink to="/debug-auth" class="text-xs text-stone-400 underline">debug</NuxtLink>
+      </div>
     </div>
   </div>
 </template>
