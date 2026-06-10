@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { Capacitor } from "@capacitor/core";
 definePageMeta({ layout: "default", auth: false });
 
 // --- Login round-trip test ---
@@ -14,7 +13,9 @@ function resolveBase(): string {
   // that bun/Windows may not expand and which would block the native fallback.
   const raw = String(cfg.public.apiBaseUrl ?? "");
   const baked = /^https?:\/\//.test(raw) ? raw.replace(/\/+$/, "") : "";
-  const nativeFallback = Capacitor.isNativePlatform() ? "https://tada.living" : "";
+  const isCapacitorWebView =
+    typeof window !== "undefined" && window.location.hostname === "app.tada.living";
+  const nativeFallback = isCapacitorWebView ? "https://tada.living" : "";
   return baked || nativeFallback || "";
 }
 
@@ -142,8 +143,7 @@ async function run() {
 
   // 7. POST /api/auth/login — check CORS on actual request (not preflight)
   // set-cookie is always null from JS (forbidden header), so we don't show it.
-  // allow-origin will be null too if CapacitorHttp native routing is active
-  // (native HTTP bypasses CORS headers entirely — that is correct behaviour).
+  // allow-origin may be null in some WebView builds — that is noted below.
   const c7 = add("POST /api/auth/login (probe with bad credentials)");
   try {
     const res = await fetch(

@@ -11,7 +11,7 @@
  * Resolution order for the base URL, highest priority first:
  *   1. Per-user override stored in localStorage (Phase 2.4 server picker)
  *   2. Build-time `NUXT_PUBLIC_API_BASE_URL` baked into runtime config
- *   3. Native fallback: https://tada.living when Capacitor.isNativePlatform()
+ *   3. Native fallback: https://tada.living when hostname === app.tada.living
  *   4. No prefix — relative URLs resolve against the page origin (SSR/PWA)
  *
  * Offline cache behaviour (Phase 2.5):
@@ -26,7 +26,6 @@
  * Phase 2.3 + 2.5 of v0.7.0. See docs/plans/native-android.md.
  */
 
-import { Capacitor } from "@capacitor/core";
 import {
   isCacheable,
   get as cacheGet,
@@ -88,7 +87,12 @@ export default defineNuxtPlugin(() => {
   // (e.g. a literal un-expanded bash expression) doesn't block the fallback.
   const userOverrideUrl = normaliseBaseUrl(readUserOverride());
   const buildTimeUrl = normaliseBaseUrl(String(config.public.apiBaseUrl ?? ""));
-  const nativeFallback = Capacitor.isNativePlatform() ? NATIVE_DEFAULT_URL : "";
+  // Capacitor fallback via hostname — avoids bundling @capacitor/core which
+  // can conflict with the Capacitor bridge globals when bundled by Vite.
+  const isCapacitorWebView =
+    typeof window !== "undefined" &&
+    window.location.hostname === "app.tada.living";
+  const nativeFallback = isCapacitorWebView ? NATIVE_DEFAULT_URL : "";
   const baseURL = userOverrideUrl || buildTimeUrl || nativeFallback;
 
   const configured = $fetch.create({

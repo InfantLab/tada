@@ -49,15 +49,6 @@ const config: CapacitorConfig = {
   },
 
   plugins: {
-    // Route all fetch/XHR calls through native Android networking.
-    // This bypasses WebView CORS enforcement (the browser CORS sandbox does
-    // not apply to native HTTP) and lets the native CookieManager handle
-    // Set-Cookie headers from cross-origin responses — solving the issue
-    // where the WebView silently dropped session cookies from tada.living
-    // when the page origin was the virtual https://app.tada.living hostname.
-    CapacitorHttp: {
-      enabled: true,
-    },
     SplashScreen: {
       launchShowDuration: 1000,
       backgroundColor: "#10b981",
