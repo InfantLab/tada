@@ -117,7 +117,10 @@ export default defineNuxtPlugin(() => {
       }
       if (response.ok && isMutation(method)) {
         const path = stripOrigin(url).split("?")[0] ?? "";
-        if (path.startsWith("/api/")) await invalidatePrefix(path);
+        // Fire-and-forget: a hung or failed cache invalidation must never
+        // block the response (IDBTransaction.oncomplete can silently hang
+        // in some Android WebView versions).
+        if (path.startsWith("/api/")) void invalidatePrefix(path).catch(() => {});
       }
     },
 
