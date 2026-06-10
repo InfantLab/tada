@@ -16,8 +16,6 @@ export default defineEventHandler(async () => {
     };
   } catch (error: unknown) {
     logger.error("Failed to check users", error);
-    return {
-      hasUsers: false,
-    };
+    throw createError({ statusCode: 500, statusMessage: "Failed to check users" });
   }
 });

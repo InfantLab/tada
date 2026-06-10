@@ -11,6 +11,8 @@ const error = ref<string | null>(null);
 const mode = ref<"login" | "register">("login");
 
 // Check if any users exist - if not, force register mode
+// Always show the toggle — the has-users check is only meaningful for
+// brand-new blank-DB installs and is unreliable in the Capacitor WebView.
 const hasUsers = ref(true);
 
 onMounted(async () => {
@@ -25,18 +27,6 @@ onMounted(async () => {
     }
   } catch {
     // Not authenticated, continue
-  }
-
-  // Check if any users exist
-  try {
-    const response = await $fetch<{ hasUsers: boolean }>("/api/auth/has-users");
-    hasUsers.value = response.hasUsers;
-    if (!hasUsers.value) {
-      mode.value = "register";
-    }
-  } catch {
-    // If the check fails (network, CORS, etc.), stay in login mode.
-    // Only force register when we have a confirmed empty database.
   }
 });
 
