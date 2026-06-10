@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Capacitor } from "@capacitor/core";
 definePageMeta({ layout: "default", auth: false });
 
 // --- Login round-trip test ---
@@ -7,12 +8,17 @@ const loginPassword = ref("");
 const loginTestResult = ref("");
 const loginTestStatus = ref<"idle" | "running" | "ok" | "fail">("idle");
 
+function resolveBase(): string {
+  const cfg = useRuntimeConfig();
+  const baked = String(cfg.public.apiBaseUrl ?? "");
+  const nativeFallback = Capacitor.isNativePlatform() ? "https://tada.living" : "";
+  return baked || nativeFallback || "";
+}
+
 async function testLoginRoundTrip() {
   loginTestStatus.value = "running";
   loginTestResult.value = "Logging in…";
-  const cfg = useRuntimeConfig();
-  const apiBase = String(cfg.public.apiBaseUrl ?? "");
-  const base = apiBase || "";
+  const base = resolveBase();
 
   try {
     const loginRes = await fetch(base ? `${base}/api/auth/login` : "/api/auth/login", {
@@ -68,12 +74,14 @@ async function run() {
   checks.value = [];
   running.value = true;
 
-  // 1. Runtime config
+  // 1. Effective API base URL (baked-in OR Capacitor native fallback)
   const cfg = useRuntimeConfig();
   const apiBase = String(cfg.public.apiBaseUrl ?? "");
-  const c1 = add("apiBaseUrl (baked into bundle)");
-  if (apiBase) {
-    set(c1, "ok", apiBase);
+  const effectiveBase = resolveBase();
+  const c1 = add("Effective API base URL");
+  if (effectiveBase) {
+    const source = apiBase ? "baked-in" : "Capacitor native fallback";
+    set(c1, "ok", `${effectiveBase} (${source})`);
   } else {
     set(c1, "fail", "(empty) — all fetch calls will hit the local WebView bundle, not the server");
   }
@@ -136,7 +144,7 @@ async function run() {
   const c7 = add("POST /api/auth/login (probe with bad credentials)");
   try {
     const res = await fetch(
-      apiBase ? `${apiBase}/api/auth/login` : "/api/auth/login",
+      effectiveBase ? `${effectiveBase}/api/auth/login` : "/api/auth/login",
       {
         method: "POST",
         credentials: "include",

@@ -11,7 +11,8 @@
  * Resolution order for the base URL, highest priority first:
  *   1. Per-user override stored in localStorage (Phase 2.4 server picker)
  *   2. Build-time `NUXT_PUBLIC_API_BASE_URL` baked into runtime config
- *   3. No prefix — relative URLs resolve against the page origin (default)
+ *   3. Native fallback: https://tada.living when Capacitor.isNativePlatform()
+ *   4. No prefix — relative URLs resolve against the page origin (SSR/PWA)
  *
  * Offline cache behaviour (Phase 2.5):
  *   - Every successful /api/* GET response is written to IndexedDB.
@@ -25,6 +26,7 @@
  * Phase 2.3 + 2.5 of v0.7.0. See docs/plans/native-android.md.
  */
 
+import { Capacitor } from "@capacitor/core";
 import {
   isCacheable,
   get as cacheGet,
@@ -74,11 +76,20 @@ function isMutation(method: string): boolean {
   return m === "POST" || m === "PUT" || m === "PATCH" || m === "DELETE";
 }
 
+// The default cloud backend. Used as a fallback when running in Capacitor
+// native and no build-time or user-configured URL is available. This means
+// the env var baking step (NUXT_PUBLIC_API_BASE_URL) is not load-bearing —
+// the native context alone is enough to know which server to talk to.
+const NATIVE_DEFAULT_URL = "https://tada.living";
+
 export default defineNuxtPlugin(() => {
   const config = useRuntimeConfig();
   const buildTime = String(config.public.apiBaseUrl ?? "");
   const userOverride = readUserOverride();
-  const baseURL = normaliseBaseUrl(userOverride || buildTime);
+  // Capacitor fallback: if no URL is baked in or user-configured, and we're
+  // running on a native platform, default to the cloud backend.
+  const nativeFallback = Capacitor.isNativePlatform() ? NATIVE_DEFAULT_URL : "";
+  const baseURL = normaliseBaseUrl(userOverride || buildTime || nativeFallback);
 
   const configured = $fetch.create({
     ...(baseURL ? { baseURL } : {}),
