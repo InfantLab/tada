@@ -35,9 +35,8 @@ onMounted(async () => {
       mode.value = "register";
     }
   } catch {
-    // Assume no users exist if endpoint fails
-    mode.value = "register";
-    hasUsers.value = false;
+    // If the check fails (network, CORS, etc.), stay in login mode.
+    // Only force register when we have a confirmed empty database.
   }
 });
 

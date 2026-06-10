@@ -131,7 +131,7 @@ const philosophyPoints = [
           <div class="bg-white dark:bg-stone-800 rounded-2xl p-8 border border-stone-200 dark:border-stone-700">
             <h3 class="text-xl font-bold text-stone-800 dark:text-stone-100 mb-2">Free</h3>
             <p class="text-3xl font-bold text-stone-800 dark:text-stone-100 mb-4">
-              $0
+              £0
               <span class="text-base font-normal text-stone-500">/forever</span>
             </p>
             <ul class="space-y-3 mb-6">
