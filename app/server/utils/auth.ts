@@ -9,10 +9,17 @@ const SESSION_COOKIE_NAME = "auth_session";
 const SESSION_EXPIRY_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 const SESSION_REFRESH_THRESHOLD_MS = 15 * 24 * 60 * 60 * 1000; // refresh when <15 days remain
 
+const isProduction = process.env["NODE_ENV"] === "production";
 const COOKIE_ATTRIBUTES = {
   httpOnly: true,
-  sameSite: "lax" as const,
-  secure: process.env["NODE_ENV"] === "production",
+  // SameSite=None is required for the Capacitor Android WebView: the static
+  // bundle is served from https://app.tada.living but API calls go to
+  // https://tada.living. Even though they share the same registrable domain,
+  // Android WebView won't include a Lax cookie on cross-origin fetch requests.
+  // SameSite=None explicitly allows cross-origin credential sharing.
+  // Requires Secure=true, which is always true in production (HTTPS).
+  sameSite: isProduction ? ("none" as const) : ("lax" as const),
+  secure: isProduction,
   path: "/",
 };
 
