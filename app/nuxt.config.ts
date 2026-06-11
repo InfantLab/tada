@@ -178,6 +178,17 @@ export default defineNuxtConfig({
 
   // Nitro server configuration
   nitro: {
+    // Allow the Capacitor WebView (origin: https://app.tada.living) to fetch
+    // Nuxt static assets cross-origin. Nitro serves /_nuxt/ files directly
+    // from disk, bypassing server middleware, so CORS must be set via routeRules.
+    routeRules: {
+      "/_nuxt/**": {
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+        },
+      },
+    },
+
     // Enable SQLite in production + OpenAPI/Scalar docs
     experimental: {
       database: true,

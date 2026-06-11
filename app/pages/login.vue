@@ -9,21 +9,40 @@ const confirmPassword = ref("");
 const isLoading = ref(false);
 const error = ref<string | null>(null);
 const mode = ref<"login" | "register">("login");
+const debugApiUrl = ref("");
 
-// Check if any users exist - if not, force register mode
-// Always show the toggle — the has-users check is only meaningful for
-// brand-new blank-DB installs and is unreliable in the Capacitor WebView.
+// Always show the toggle.
 const hasUsers = ref(true);
 
+// Resolve the API base URL the same way debug-auth does — bypasses the
+// $fetch plugin so this works regardless of plugin initialisation state.
+function resolveApiBase(): string {
+  const cfg = useRuntimeConfig();
+  const raw = String(cfg.public.apiBaseUrl ?? "");
+  const baked = /^https?:\/\//.test(raw) ? raw.replace(/\/+$/, "") : "";
+  const isCapacitorWebView =
+    typeof window !== "undefined" &&
+    window.location.hostname === "app.tada.living";
+  const nativeFallback = isCapacitorWebView ? "https://tada.living" : "";
+  return baked || nativeFallback || "";
+}
+
 onMounted(async () => {
-  // Check if already authenticated - redirect to home
+  const base = resolveApiBase();
+  debugApiUrl.value = base || "(same-origin)";
+  console.log("[TADA] login mounted, api base:", base);
+
+  // Check if already authenticated - redirect to home.
+  // Use raw fetch to avoid $fetch plugin issues.
   try {
-    const session = await $fetch<{ user?: { id: string } }>(
-      "/api/auth/session",
-    );
-    if (session.user) {
-      navigateTo("/");
-      return;
+    const url = base ? `${base}/api/auth/session` : "/api/auth/session";
+    const res = await fetch(url, { credentials: "include" });
+    if (res.ok) {
+      const session = await res.json() as { user?: { id: string } | null };
+      if (session.user) {
+        navigateTo("/");
+        return;
+      }
     }
   } catch {
     // Not authenticated, continue
@@ -43,7 +62,6 @@ async function handleSubmit() {
       error.value = "Passwords do not match";
       return;
     }
-
     if (password.value.length < 8) {
       error.value = "Password must be at least 8 characters";
       return;
@@ -51,32 +69,46 @@ async function handleSubmit() {
   }
 
   isLoading.value = true;
+  console.log("[TADA] login: submit", mode.value);
 
   try {
-    const endpoint =
-      mode.value === "login" ? "/api/auth/login" : "/api/auth/register";
+    const base = resolveApiBase();
+    const endpoint = mode.value === "login" ? "/api/auth/login" : "/api/auth/register";
+    const url = base ? `${base}${endpoint}` : endpoint;
+    console.log("[TADA] login: POST →", url);
 
-    await $fetch<unknown>(endpoint, {
+    // Use raw fetch — bypasses the $fetch plugin entirely, same approach as
+    // debug-auth's round-trip test which is known to work in Capacitor.
+    const res = await fetch(url, {
       method: "POST",
-      body: {
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
         username: username.value,
         password: password.value,
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      },
+      }),
     });
 
-    // Redirect to intended page or home
+    console.log("[TADA] login: response", res.status);
+
+    if (!res.ok) {
+      let msg = "Authentication failed";
+      try {
+        const data = await res.json() as { statusMessage?: string; message?: string };
+        msg = data.statusMessage || data.message || msg;
+      } catch { /* non-JSON error body */ }
+      throw new Error(msg);
+    }
+
+    console.log("[TADA] login: success, navigating");
     const redirect = useRoute().query["redirect"] as string | undefined;
     navigateTo(redirect || "/");
   } catch (err: unknown) {
-    console.error("Auth failed:", err);
-    if (err && typeof err === "object" && "data" in err) {
-      const errorData = err.data as { statusMessage?: string };
-      error.value = errorData.statusMessage || "Authentication failed";
-    } else {
-      error.value = "Authentication failed";
-    }
+    console.error("[TADA] login: error", err);
+    error.value = err instanceof Error ? err.message : "Authentication failed";
   } finally {
+    console.log("[TADA] login: finally");
     isLoading.value = false;
   }
 }
@@ -233,7 +265,8 @@ async function handleSubmit() {
           </p>
         </div>
       </div>
-      <div class="text-center mt-4">
+      <div class="text-center mt-4 space-y-1">
+        <p class="text-xs text-stone-400">api: {{ debugApiUrl }}</p>
         <NuxtLink to="/debug-auth" class="text-xs text-stone-400 underline">debug</NuxtLink>
       </div>
     </div>

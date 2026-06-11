@@ -144,7 +144,7 @@ async function run() {
   // 7. POST /api/auth/login — check CORS on actual request (not preflight)
   // set-cookie is always null from JS (forbidden header), so we don't show it.
   // allow-origin may be null in some WebView builds — that is noted below.
-  const c7 = add("POST /api/auth/login (probe with bad credentials)");
+  const c7 = add("POST /api/auth/login via raw fetch (probe)");
   try {
     const res = await fetch(
       effectiveBase ? `${effectiveBase}/api/auth/login` : "/api/auth/login",
@@ -169,7 +169,36 @@ async function run() {
     set(c7, "fail", `CORS blocked or network error: ${msg}`);
   }
 
+  // 8. navigator.onLine
+  const c8 = add("navigator.onLine");
+  set(c8, navigator.onLine ? "ok" : "warn",
+    navigator.onLine ? "true — device reports network up" : "FALSE — device thinks it is offline; mutations will be blocked"
+  );
 
+  // 9. $fetch POST login (plugin-wrapped) with hard timeout
+  // This is the EXACT same call login.vue makes. If it times out, the plugin
+  // onResponse hook or the wrapped function is still hanging.
+  const c9 = add("POST /api/auth/login via $fetch (plugin-wrapped, 5s timeout)");
+  try {
+    const result = await Promise.race([
+      $fetch<unknown>("/api/auth/login", {
+        method: "POST",
+        body: { username: "__probe__", password: "__probe__", timezone: "UTC" },
+      }),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("TIMEOUT — $fetch hung for 5 s")), 5000)
+      ),
+    ]);
+    set(c9, "warn", `Unexpected success: ${JSON.stringify(result)}`);
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e);
+    if (msg.startsWith("TIMEOUT")) {
+      set(c9, "fail", msg + " — onResponse hook or network still blocking");
+    } else {
+      // 400/401 is expected with bad credentials — means $fetch is working
+      set(c9, "ok", `Failed as expected (not hung): ${msg}`);
+    }
+  }
 
   running.value = false;
 }

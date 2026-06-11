@@ -126,6 +126,34 @@ Ta-Da! shows up on the phone's app drawer. The bundled build hits `https://tada.
 
 ---
 
+## Debug iteration loop (login / CORS / cookies / native WebView behaviour)
+
+Use this when the bug requires the phone to talk to the **real** `https://tada.living` server — authentication, session cookies, CORS headers, IndexedDB behaviour in the Android WebView. Live Reload won't reproduce these issues because it routes API calls through the local dev server, not production.
+
+### Step 1 — devcontainer: rebuild + sync
+
+```sh
+cd app
+bun run android:sync    # nuxt generate (bakes https://tada.living as API base) + cap sync
+```
+
+Takes ~30–45 s. This writes the updated web bundle into `app/android/app/src/main/assets/public/`.
+
+### Step 2 — Windows Powershell: compile + install
+
+```powershell
+cd path\to\tada\app\android
+.\gradlew installDebug
+```
+
+Takes ~30–60 s first time (Gradle downloads caches), ~15 s after that.
+
+> **Do NOT use `android-reinstall.ps1` for debug iteration.** That script runs its own `bun run android:sync` from the Windows checkout, overwriting whatever the devcontainer just built with only committed code. Always go straight to `gradlew installDebug` from `app\android\`.
+
+That's it — total round-trip per code change is about 1 minute. No GitHub Actions needed. No Android Studio.
+
+---
+
 ## Day-to-day: Capacitor Live Reload
 
 This is the workflow you'll use 95% of the time.
@@ -259,9 +287,95 @@ None of these require Android Studio.
 
 ---
 
+## Debugging WebView JavaScript
+
+### The critical gotcha: `adb logcat` does NOT show JavaScript
+
+Android logcat only captures Java/native output. WebView JavaScript `console.log`, `console.error`, etc. go through the Chrome DevTools Protocol and are completely silent to logcat by default — no amount of `adb logcat | findstr` or `Select-String` will show them.
+
+There are two ways to see JS output:
+
+---
+
+### Option A — Chrome Remote Debugging (interactive, no rebuild needed)
+
+Use this for exploratory debugging, inspecting the DOM, Network tab, etc. Works with any build.
+
+1. Phone connected via USB, app open.
+2. Open **Chrome** on Windows (not Edge, not Firefox — Chrome).
+3. Go to `chrome://inspect/#devices`.
+4. Under **Remote Targets** you should see `living.tada.app` with your WebView listed.  
+   If you see nothing: check the phone isn't locked, and that USB debugging is still enabled.
+5. Click **inspect** — full DevTools opens (Console, Network, Sources, etc.).
+6. **Console tab** shows all `console.log/warn/error` output in real time.
+
+> **What to look for for login failures:** Open DevTools, reload the app, and watch the Console. Any uncaught exception during plugin initialisation will be shown here and will explain why buttons don't respond (Vue event handlers are not attached when hydration throws).
+>
+> Key `[TADA]` log lines to confirm the app is working:
+> ```
+> [TADA] api-client plugin init, baseURL: https://tada.living
+> [TADA] api-client plugin ready
+> [TADA] login mounted, api base: https://tada.living
+> [TADA] login: submit login
+> [TADA] login: POST → https://tada.living/api/auth/login
+> [TADA] login: response 200
+> [TADA] login: success, navigating
+> ```
+> If the sequence stops early, the line it stops at is the root cause.
+
+---
+
+### Option B — `TadaJS` logcat tag (streaming to devcontainer, no Chrome required)
+
+`MainActivity.java` contains a `BridgeWebChromeClient` subclass that overrides `onConsoleMessage` and forwards every JS console line to Android's `Log` system under the tag `TadaJS`. This lets you stream JS output through `adb logcat` and into the devcontainer.
+
+**Windows Powershell — start streaming:**
+
+```powershell
+cd path\to\tada\app\scripts
+.\android-log.ps1 -Clear
+```
+
+The script:
+- Clears the logcat ring buffer
+- Streams `TadaJS` (all JS) + `Capacitor:E` (native bridge hard errors) to the terminal
+- Simultaneously writes to `android-js.log` in the repo root
+
+**Devcontainer — read the same stream:**
+
+```sh
+tail -f /workspaces/tada/android-js.log
+```
+
+Both windows see the same output. No copy-paste. The log file is gitignored.
+
+---
+
+### Option C — Chrome DevTools Protocol from devcontainer (advanced)
+
+If you want to pipe CDP output through a script:
+
+**Windows Powershell — forward the debugger port:**
+
+```powershell
+adb forward tcp:9222 localabstract:chrome_devtools_remote
+```
+
+**Devcontainer — query inspectable pages:**
+
+```sh
+curl http://localhost:9222/json
+```
+
+This lists the inspectable WebView targets. Each entry has a `webSocketDebuggerUrl` you can connect to with any CDP client to stream `Runtime.consoleAPICalled` events programmatically.
+
+---
+
 ## If something's off
 
 - **Phone can't reach `http://<wsl-ip>:3000`** — run the `netsh interface portproxy` + `New-NetFirewallRule` snippet the helper prints. Test from Windows Powershell with `curl http://<wsl-ip>:3000` first.
 - **`adb devices` shows nothing** — USB cable might be charge-only. Swap. Or check that USB debugging is still enabled (Android sometimes auto-disables it after a system update).
 - **Login works on Live Reload but breaks in self-contained debug APK** — the credentials/CORS fix from Phase 3.2 only takes effect after `cap sync` runs. Re-run `bun run android:sync` from inside the devcontainer if you've changed `nuxt.config.ts` or the api-client plugin.
+- **Buttons on the login screen don't respond / app is visually frozen** — Vue hydration failed. An uncaught JavaScript exception during plugin initialisation prevented Vue from attaching event handlers to the pre-rendered HTML. Use Chrome Remote Debugging (Option A above) and look at the Console tab for the exception. The `[TADA] api-client plugin` and `[TADA] login mounted` lines tell you how far initialisation got.
+- **`android-log.ps1` streams nothing** — the build on the phone predates the `TadaJS` WebChromeClient override in `MainActivity.java`. Rebuild and reinstall with `bun run android:sync` (devcontainer) + `gradlew installDebug` (Windows). Then use Chrome Remote Debugging in the meantime.
 - **Splash flashes white before brand colour** — Phase 5 polish; Capacitor's `androidScaleType: "CENTER_CROP"` should fix it. File it but don't block on it.
