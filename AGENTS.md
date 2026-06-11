@@ -423,6 +423,77 @@ GET    /api/import/logs                  # Import audit trail
 - Database: `import_recipes` and `import_logs` tables for recipes and audit trail
 - See Task 3.5 status: Timezone/format selectors UI still needed
 
+## Android (Capacitor)
+
+The Android shell (`app/android/`) wraps the static Nuxt bundle. The devcontainer has **no Android SDK** — Gradle runs on the Windows host.
+
+### Build cycle
+
+```bash
+# devcontainer
+cd app && bun run android:sync    # nuxt generate + cap sync android
+
+# Windows PowerShell
+cd app\android && .\gradlew installDebug
+```
+
+### Capacitor fetch architecture — CRITICAL
+
+The WebView origin is `https://app.tada.living`; the API server is `https://tada.living`. These are cross-origin.
+
+**❌ NEVER set a global `baseURL` on `$fetch.create()`.**
+
+Setting `$fetch.create({ baseURL: "https://tada.living" })` routes ALL `$fetch` calls — including Nuxt-internal `/_nuxt/builds/meta/` manifest checks — to `tada.living`. Once CORS on those paths works, the manifest returns a different build ID than the baked bundle and **Nuxt enters a reload loop that freezes the UI** (buttons grey on press but navigation never fires).
+
+**✅ The correct pattern** — `api-client.client.ts` uses `onRequest` to scope `baseURL` to `/api/` paths only:
+
+```ts
+$fetch.create({
+  onRequest({ request, options }) {
+    const url = typeof request === "string" ? request : String(request);
+    if (apiBase && url.startsWith("/api/")) {
+      options.baseURL = apiBase;        // only API calls go to tada.living
+      options.credentials = "include";  // cross-origin session cookie
+    }
+    // /_nuxt/* stays same-origin → app.tada.living (the local bundle)
+  },
+})
+```
+
+**❌ Never `await cachePut(...)`** inside an `onResponse` interceptor. `IDBTransaction.oncomplete` silently hangs on some Android WebView versions, causing `$fetch` to never resolve. Always fire-and-forget: `void cachePut(...).catch(() => {})`.
+
+**`experimental.appManifest: false`** is set in `nuxt.config.ts` — the manifest check is meaningless for a baked bundle and was the original trigger for the reload loop. Do not re-enable it.
+
+### WebView details
+
+- Origin: `https://app.tada.living` — hostname in `capacitor.config.ts`
+- API target: `https://tada.living` — set at `nuxt generate` time via `NUXT_PUBLIC_API_BASE_URL`
+- Cookies: `SameSite=None; Secure` + `credentials:"include"` fetch + `Access-Control-Allow-Credentials: true`
+- `setAcceptThirdPartyCookies(true)` in `MainActivity.java`
+
+### JS logging from the WebView
+
+```powershell
+# Windows — stream JS console to terminal + repo-root android-js.log
+cd app\scripts && .\android-log.ps1 -Clear
+```
+
+```bash
+# devcontainer — read the same stream
+tail -f /workspaces/tada/android-js.log
+```
+
+### Troubleshooting
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| Buttons grey on press but no navigation | Nuxt reload loop from global `baseURL` on `$fetch` | Check `api-client.client.ts` — `baseURL` must only apply inside `onRequest` for `/api/` paths |
+| Spinner (`✨`) on index never clears | `await cachePut()` hangs in `onResponse` | Make all IndexedDB writes fire-and-forget |
+| CORS errors for `/_nuxt/builds/meta/` | Same global `baseURL` issue | See above — or check `appManifest: false` in `nuxt.config.ts` |
+| No JS logs in `android-log.ps1` | Old build — predates `TadaJS` WebChromeClient in `MainActivity.java` | Rebuild: `android:sync` + `gradlew installDebug` |
+
+---
+
 ## Quick Troubleshooting
 
 - **Module errors:** `bun install`
