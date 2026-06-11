@@ -1,48 +1,61 @@
 /**
  * Create Android notification channels on startup.
  *
- * Android 8+ requires all notifications to belong to a channel. The channel
- * controls whether sound, vibration, and heads-up banners are enabled — and
- * these settings are set once at channel creation. Individual notification
- * payloads cannot override channel-level sound/importance.
+ * Android 8+ requires all notifications to belong to a channel. Critically,
+ * the channel — not the individual notification — controls which sound plays.
+ * A notification's own `sound` field is ignored when a channelId is set.
  *
- * Capacitor makes createChannel() idempotent: calling it again with the same
- * ID is a safe no-op on Android (name/description can update; sound/importance
- * cannot change after the first creation — user controls those from then on).
+ * The only way to play per-session bell sounds (bell, gong, chime, cymbal,
+ * twinkle, gong2) is to create one channel per sound. Each channel references
+ * its corresponding file in res/raw/. When scheduling a bell notification,
+ * use bellChannelId(soundUrl) to pick the right channel.
  *
- * Two channels:
- *   tada_bells  — session interval bells (HIGH importance, bell sound, vibration)
- *   tada_push   — weekly rhythm push notifications (DEFAULT importance, system sound)
+ * createChannel() is idempotent — safe to call on every app launch.
+ * Sound/importance cannot change after first creation (Android enforces this);
+ * to update, bump the channel ID suffix (e.g. _v2) and stop using the old one.
  */
 
 import { Capacitor } from "@capacitor/core";
 import { LocalNotifications } from "@capacitor/local-notifications";
 
+// All bundled bell sounds. Each gets its own channel so the right file plays.
+export const BELL_SOUNDS = ["bell", "gong", "gong2", "chime", "cymbal", "twinkle"] as const;
+export type BellSound = typeof BELL_SOUNDS[number];
+
+/** Returns the channel ID to use when scheduling a notification for this sound. */
+export function bellChannelId(soundName: string | undefined): string {
+  return BELL_SOUNDS.includes(soundName as BellSound)
+    ? `tada_bell_${soundName}`
+    : "tada_bell_bell"; // fallback
+}
+
 export default defineNuxtPlugin(async () => {
   if (!Capacitor.isNativePlatform()) return;
 
   try {
-    await LocalNotifications.createChannel({
-      id: "tada_bells",
-      name: "Session Bells",
-      description: "Interval bells during meditation and focus sessions",
-      importance: 5, // IMPORTANCE_HIGH — heads-up even while phone is in use
-      sound: "bell", // res/raw/bell.mp3 — the default bell; individual notifications may override
-      vibration: true,
-      visibility: 1, // VISIBILITY_PUBLIC
-    });
+    // One channel per bell sound — Android uses the channel's sound, not the notification's.
+    for (const sound of BELL_SOUNDS) {
+      await LocalNotifications.createChannel({
+        id: `tada_bell_${sound}`,
+        name: `Session Bells (${sound.charAt(0).toUpperCase() + sound.slice(1)})`,
+        description: "Interval bells during meditation and focus sessions",
+        importance: 5, // IMPORTANCE_HIGH — heads-up even while phone is in use
+        sound,         // filename in res/raw/ without extension
+        vibration: true,
+        visibility: 1, // VISIBILITY_PUBLIC
+      });
+    }
 
+    // Rhythm push notifications (weekly celebrations + encouragements)
     await LocalNotifications.createChannel({
       id: "tada_push",
       name: "Rhythm Updates",
       description: "Weekly celebration and encouragement notifications",
-      importance: 3, // IMPORTANCE_DEFAULT — appears in shade, plays system sound
+      importance: 3, // IMPORTANCE_DEFAULT
       vibration: false,
       visibility: 1,
     });
   } catch {
-    // Channel creation failures are non-fatal — notifications fall back to the
-    // system default channel (no sound, which is the bug we're fixing, but
-    // a crash here would be worse).
+    // Non-fatal — worst case notifications fall back to system default channel.
   }
 });

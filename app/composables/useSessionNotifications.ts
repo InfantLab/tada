@@ -10,6 +10,7 @@
 
 import { Capacitor } from "@capacitor/core";
 import { LocalNotifications } from "@capacitor/local-notifications";
+import { bellChannelId } from "~/plugins/notification-channels.client";
 
 export type SessionBell = {
   atMs: number;
@@ -76,8 +77,7 @@ export function useSessionNotifications() {
           title: bellTitle(bell),
           body: "",
           schedule: { at: new Date(bell.atMs), allowWhileIdle: true },
-          channelId: "tada_bells",
-          sound: soundName(bell.soundUrl),
+          channelId: bellChannelId(soundName(bell.soundUrl)),
           smallIcon: "ic_stat_icon_config_sample",
           extra: { sessionId, kind: bell.kind },
         };
