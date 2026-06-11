@@ -32,6 +32,7 @@
     "admin": "bun run scripts/admin.ts"
   },
   "dependencies": {
+    "@capacitor/push-notifications": "^8.1.1",
     "@libsql/client": "^0.17.0",
     "bcryptjs": "^3.0.3",
     "drizzle-orm": "^0.38.3",

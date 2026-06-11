@@ -10,6 +10,15 @@ import { getExporter } from "~/registry/exporters";
 const { success: showSuccess, error: showError } = useToast();
 const { timelineStyle, setTimelineStyle } = useTimelineStyle();
 
+// Push notifications
+const {
+  isSupported: nativePushSupported,
+  isSubscribed: nativePushSubscribed,
+  isLoading: nativePushLoading,
+  subscribe: nativePushSubscribe,
+  unsubscribe: nativePushUnsubscribe,
+} = useNativePush();
+
 definePageMeta({
   layout: "default",
 });
@@ -38,6 +47,7 @@ onMounted(async () => {
 // User preferences
 const settings = ref({
   theme: "system" as "light" | "dark" | "system",
+  fontSize: "normal" as "compact" | "normal" | "large" | "xlarge",
   notifications: true,
   timezone: "UTC",
   captureMood: true,
@@ -552,6 +562,22 @@ function applyTheme(themeId: string) {
   saveSettings();
 }
 
+// Font size options — applied to <html> font-size so all rem units scale
+const fontSizes = [
+  { id: "compact", name: "Compact", pct: "87.5%" },
+  { id: "normal", name: "Normal", pct: "100%" },
+  { id: "large", name: "Large", pct: "112.5%" },
+  { id: "xlarge", name: "X-Large", pct: "125%" },
+];
+
+function applyFontSize(id: string) {
+  settings.value.fontSize = id as typeof settings.value.fontSize;
+  const size = fontSizes.find((f) => f.id === id)?.pct ?? "100%";
+  document.documentElement.style.fontSize = size;
+  localStorage.setItem("font-size", id);
+  saveSettings();
+}
+
 // Timezone detection and load settings
 onMounted(() => {
   settings.value.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -565,6 +591,14 @@ onMounted(() => {
     }
   } catch (error) {
     console.error("Failed to load settings:", error);
+  }
+
+  // Restore font size (also stored separately for fast boot restoration)
+  const savedSize = localStorage.getItem("font-size") ?? settings.value.fontSize;
+  const sizeEntry = fontSizes.find((f) => f.id === savedSize);
+  if (sizeEntry) {
+    settings.value.fontSize = sizeEntry.id as typeof settings.value.fontSize;
+    document.documentElement.style.fontSize = sizeEntry.pct;
   }
 
   // Load saved BYOK keys
@@ -2075,6 +2109,37 @@ onMounted(() => {
               </div>
             </div>
 
+            <!-- Font size -->
+            <div class="p-4">
+              <label
+                class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-3"
+              >
+                Text size
+              </label>
+              <div class="grid grid-cols-4 gap-2">
+                <button
+                  v-for="size in fontSizes"
+                  :key="size.id"
+                  class="flex flex-col items-center gap-1 p-3 rounded-lg border-2 transition-colors"
+                  :class="
+                    settings.fontSize === size.id
+                      ? 'border-tada-300 bg-tada-100/20 dark:border-tada-600 dark:bg-tada-600/10'
+                      : 'border-stone-200 dark:border-stone-600 hover:border-stone-300'
+                  "
+                  @click="applyFontSize(size.id)"
+                >
+                  <span
+                    class="font-medium text-stone-700 dark:text-stone-200"
+                    :style="{ fontSize: size.pct }"
+                    >A</span
+                  >
+                  <span class="text-xs text-stone-500 dark:text-stone-400">{{
+                    size.name
+                  }}</span>
+                </button>
+              </div>
+            </div>
+
             <!-- Push Notifications -->
             <div class="p-4">
               <div class="flex items-center justify-between">
@@ -2090,20 +2155,25 @@ onMounted(() => {
                 </div>
                 <button
                   type="button"
-                  class="relative w-12 h-7 rounded-full transition-colors"
+                  class="relative w-12 h-7 rounded-full transition-colors disabled:opacity-50"
                   :class="
-                    settings.notifications
+                    (nativePushSupported ? nativePushSubscribed : settings.notifications)
                       ? 'bg-tada-600 dark:bg-tada-600'
                       : 'bg-stone-300 dark:bg-stone-600'
                   "
+                  :disabled="nativePushLoading"
                   role="switch"
-                  :aria-checked="settings.notifications"
+                  :aria-checked="nativePushSupported ? nativePushSubscribed : settings.notifications"
                   aria-label="Toggle push notifications"
-                  @click="settings.notifications = !settings.notifications"
+                  @click="
+                    nativePushSupported
+                      ? (nativePushSubscribed ? nativePushUnsubscribe() : nativePushSubscribe())
+                      : (settings.notifications = !settings.notifications)
+                  "
                 >
                   <span
                     class="absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform"
-                    :class="settings.notifications ? 'translate-x-5' : ''"
+                    :class="(nativePushSupported ? nativePushSubscribed : settings.notifications) ? 'translate-x-5' : ''"
                   />
                 </button>
               </div>

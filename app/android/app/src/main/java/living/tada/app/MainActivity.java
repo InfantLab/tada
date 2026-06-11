@@ -19,6 +19,9 @@ public class MainActivity extends BridgeActivity {
         CookieManager.getInstance().setAcceptThirdPartyCookies(
             getBridge().getWebView(), true
         );
+        // Pin text zoom to 100% — Android font-size accessibility setting otherwise
+        // bleeds into the WebView and makes all text too large.
+        getBridge().getWebView().getSettings().setTextZoom(100);
         // Forward WebView console.log/warn/error to adb logcat under tag "TadaJS".
         // Without this override, WebView JavaScript output is completely invisible
         // to logcat — it only appears in Chrome Remote Debugging (chrome://inspect).

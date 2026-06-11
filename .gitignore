@@ -56,4 +56,7 @@ old_data/
 
 # Claude
 .claude/worktrees/
-**/.claude/settings.local.json
+**/.claude/settings.local.json# Scratch directory for temporary files (secrets, uploads, etc.)
+tmp/
+tada-logcat.txt
+android-js.log

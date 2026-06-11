@@ -58,9 +58,11 @@ const config: CapacitorConfig = {
       splashImmersive: false,
     },
     LocalNotifications: {
-      // Phase 4.1 wires session bells; defaults are fine for now.
       iconColor: "#10b981",
       smallIcon: "ic_stat_icon_config_sample",
+    },
+    PushNotifications: {
+      presentationOptions: ["badge", "sound", "alert"],
     },
   },
 };

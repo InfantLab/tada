@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1042573493090",
+    "project_id": "tada-living",
+    "storage_bucket": "tada-living.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1042573493090:android:5925af563a1f865913a23b",
+        "android_client_info": {
+          "package_name": "living.tada.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB4RpURLuG6tGOD-6zwglCwOr6nilZdpuY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

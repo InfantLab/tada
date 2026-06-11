@@ -10,11 +10,13 @@ import { db } from "~/server/db";
 import { withRetry } from "~/server/db/operations";
 import {
   pushSubscriptions,
+  fcmTokens,
   systemMessages,
   systemMessageDeliveries,
 } from "~/server/db/schema";
 import { createLogger } from "~/server/utils/logger";
 import { sendPushNotification } from "~/server/utils/push";
+import { sendFcmNotification, isFcmConfigured } from "~/server/utils/fcm";
 
 const logger = createLogger("service:weekly-rhythms:push-delivery");
 
@@ -147,9 +149,74 @@ export async function deliverPushForMessage(
     }
   }
 
+  logger.info("VAPID push delivery complete", { messageId, userId, successCount, failureCount });
+
+  // ── FCM delivery (native Android / iOS) ────────────────────────────────
+  if (isFcmConfigured()) {
+    const tokens = await withRetry(() =>
+      db
+        .select()
+        .from(fcmTokens)
+        .where(and(eq(fcmTokens.userId, userId), isNull(fcmTokens.disabledAt))),
+    );
+
+    for (const tok of tokens) {
+      try {
+        await sendFcmNotification({ token: tok.token, title, body, data: { messageId, url: "/rhythms" } });
+
+        await withRetry(() =>
+          db.insert(systemMessageDeliveries).values({
+            id: crypto.randomUUID(),
+            messageId,
+            channel: "push",
+            status: "sent",
+            attemptNumber: 1,
+            scheduledFor: now,
+            attemptedAt: now,
+            provider: "fcm",
+            createdAt: now,
+          }),
+        );
+
+        await withRetry(() =>
+          db.update(fcmTokens).set({ lastUsedAt: now }).where(eq(fcmTokens.id, tok.id)),
+        );
+
+        successCount++;
+      } catch (err: unknown) {
+        const statusCode = (err as { statusCode?: number })?.statusCode;
+        if (statusCode === 410) {
+          logger.info("FCM token expired, disabling", { tokenId: tok.id, userId });
+          await withRetry(() =>
+            db.update(fcmTokens).set({ disabledAt: now }).where(eq(fcmTokens.id, tok.id)),
+          );
+        } else {
+          logger.error("FCM notification failed", err as Error, { tokenId: tok.id, userId });
+        }
+
+        await withRetry(() =>
+          db.insert(systemMessageDeliveries).values({
+            id: crypto.randomUUID(),
+            messageId,
+            channel: "push",
+            status: "failed",
+            attemptNumber: 1,
+            scheduledFor: now,
+            attemptedAt: now,
+            provider: "fcm",
+            failureCode: statusCode ? String(statusCode) : "unknown",
+            failureMessage: String(err).substring(0, 200),
+            createdAt: now,
+          }),
+        );
+
+        failureCount++;
+      }
+    }
+  }
+
   logger.info("Push delivery complete", { messageId, userId, successCount, failureCount });
 
-  // If ALL deliveries failed, mark the message as failed
   if (successCount === 0 && failureCount > 0) {
     await withRetry(() =>
       db

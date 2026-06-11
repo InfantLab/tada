@@ -1202,6 +1202,25 @@ export const pushSubscriptions = sqliteTable("push_subscriptions", {
 export type PushSubscription = typeof pushSubscriptions.$inferSelect;
 export type NewPushSubscription = typeof pushSubscriptions.$inferInsert;
 
+// FCM device tokens (native Android / iOS via @capacitor/push-notifications).
+// Separate from push_subscriptions (VAPID) — different protocol, different fields.
+export const fcmTokens = sqliteTable("fcm_tokens", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  token: text("token").notNull().unique(),
+  createdAt: text("created_at")
+    .notNull()
+    .default(sql`(datetime('now'))`),
+  lastUsedAt: text("last_used_at"),
+  failureCount: integer("failure_count").notNull().default(0),
+  disabledAt: text("disabled_at"),
+});
+
+export type FcmToken = typeof fcmTokens.$inferSelect;
+export type NewFcmToken = typeof fcmTokens.$inferInsert;
+
 // ============================================================================
 // Ourmoji Module — Dream Experiment Tables (013-ourmoji-module)
 // ============================================================================

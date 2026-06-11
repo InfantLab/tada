@@ -106,6 +106,19 @@ function handleKeydown(event: KeyboardEvent) {
 // Add keyboard listener on mount
 onMounted(() => {
   window.addEventListener("keydown", handleKeydown);
+
+  // Restore user font size preference on every page load
+  const fontSizeId = localStorage.getItem("font-size");
+  if (fontSizeId) {
+    const pctMap: Record<string, string> = {
+      compact: "87.5%",
+      normal: "100%",
+      large: "112.5%",
+      xlarge: "125%",
+    };
+    const pct = pctMap[fontSizeId];
+    if (pct) document.documentElement.style.fontSize = pct;
+  }
 });
 
 onUnmounted(() => {
