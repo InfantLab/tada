@@ -26,7 +26,6 @@ function isMutation(method: string): boolean {
 }
 
 export default defineNuxtPlugin(() => {
-  // Wrap everything so a plugin crash never blocks Vue hydration.
   try {
     const config = useRuntimeConfig();
     const buildTimeUrl = normaliseBaseUrl(String(config.public.apiBaseUrl ?? ""));
@@ -34,20 +33,32 @@ export default defineNuxtPlugin(() => {
       typeof window !== "undefined" &&
       window.location.hostname === "app.tada.living";
     const nativeFallback = isCapacitorWebView ? "https://tada.living" : "";
-    const baseURL = buildTimeUrl || nativeFallback;
+    const apiBase = buildTimeUrl || nativeFallback;
 
-    console.log("[TADA] api-client plugin init, baseURL:", baseURL || "(none)");
+    console.log("[TADA] api-client plugin init, apiBase:", apiBase || "(same-origin)");
 
     (globalThis as unknown as { $fetch: typeof $fetch }).$fetch = $fetch.create({
-      ...(baseURL ? { baseURL } : {}),
-      credentials: baseURL ? "include" : "same-origin",
+      // IMPORTANT: no global baseURL here. Setting baseURL globally makes ALL
+      // $fetch calls (including Nuxt-internal /_nuxt/ manifest + payload fetches)
+      // go to tada.living instead of the local Capacitor bundle at app.tada.living.
+      // That causes build-ID mismatches which put Nuxt into a reload loop that
+      // locks the UI. We scope baseURL + credentials to /api/ only, in onRequest.
+      onRequest({ request, options }) {
+        const url = typeof request === "string" ? request : String(request);
+        if (apiBase && url.startsWith("/api/")) {
+          options.baseURL = apiBase;
+          options.credentials = "include";
+        }
+      },
 
       async onResponse({ request, response, options }) {
         try {
           const method = String(options.method ?? "GET");
           const url = typeof request === "string" ? request : String(request);
           if (response.ok && isCacheable(url, method)) {
-            await cachePut(url, response._data, response.status).catch(() => {});
+            // Fire-and-forget: IDBTransaction.oncomplete can silently hang on
+            // some Android WebView versions — never await IndexedDB writes.
+            void cachePut(url, response._data, response.status).catch(() => {});
           }
           if (response.ok && isMutation(method)) {
             const path = stripOrigin(url).split("?")[0] ?? "";

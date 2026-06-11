@@ -181,17 +181,6 @@ export default defineNuxtConfig({
     // Allow the Capacitor WebView (origin: https://app.tada.living) to fetch
     // Nuxt static assets cross-origin. Nitro serves /_nuxt/ files directly
     // from disk, bypassing server middleware, so CORS must be set via routeRules.
-    routeRules: {
-      "/_nuxt/**": {
-        headers: {
-          // Capacitor WebView origin is app.tada.living (cross-origin from tada.living).
-          // Wildcard is rejected when credentials:include is in play, so we pin the origin.
-          "Access-Control-Allow-Origin": "https://app.tada.living",
-          "Access-Control-Allow-Credentials": "true",
-        },
-      },
-    },
-
     // Enable SQLite in production + OpenAPI/Scalar docs
     experimental: {
       database: true,
@@ -332,6 +321,10 @@ export default defineNuxtConfig({
     componentIslands: true,
     // Use serial builds until Vite Environment API manifest issue is resolved
     viteEnvironmentApi: false,
+    // Disable the app manifest check in Capacitor: the WebView serves a baked-in
+    // static bundle — there is no live deployment to detect, and the cross-origin
+    // fetch was causing Nuxt reload loops in the Android WebView.
+    appManifest: false,
   },
 
   compatibilityDate: "2026-01-10",
