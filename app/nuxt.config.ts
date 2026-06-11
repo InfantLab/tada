@@ -184,7 +184,10 @@ export default defineNuxtConfig({
     routeRules: {
       "/_nuxt/**": {
         headers: {
-          "Access-Control-Allow-Origin": "*",
+          // Capacitor WebView origin is app.tada.living (cross-origin from tada.living).
+          // Wildcard is rejected when credentials:include is in play, so we pin the origin.
+          "Access-Control-Allow-Origin": "https://app.tada.living",
+          "Access-Control-Allow-Credentials": "true",
         },
       },
     },
