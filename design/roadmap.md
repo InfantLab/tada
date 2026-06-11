@@ -31,8 +31,8 @@ What's coming next. For what already shipped, see [CHANGELOG.md](../CHANGELOG.md
 
 Surfaced from the May 2026 product/positioning review. Park here so they don't get lost; promote into a versioned theme when prioritised.
 
-- **Random-interval pings (Reporter-style).** Opt-in mode that prompts "what are you doing?" at random intervals to surface entries you'd otherwise miss. Philosophically aligned with "noticing your life as you live it." Depends on reliable scheduled notifications, so blocked behind v0.7.0.
-- **Apple Health / Health Connect integration (minimal).** Meditation minutes, both directions. Plum Village does this; lowers friction. Cheap once we have a native Android wrapper.
+- **Random-interval pings (Reporter-style).** Opt-in mode that prompts "what are you doing?" at random intervals to surface entries you'd otherwise miss. Philosophically aligned with "noticing your life as you live it." Was blocked behind v0.7.0 reliable notifications — now unblocked.
+- **Apple Health / Health Connect integration (minimal).** Meditation minutes, both directions. Plum Village does this; lowers friction. Now unblocked since we have the native Android wrapper.
 - **Lead with Wins on the homepage.** The `/tada` voice-first wins flow is the strongest unique entry point and the one that demos the moat. Current homepage emphasises generic timer screens. UX/copy work, not a versioned theme.
 - **Sign-up → first win in <60 seconds.** Most life-logger churn happens at the empty state. Pre-seed an example win that gracefully replaces. Onboarding work.
 - **Pricing tone decision.** "Pay what feels right, hobby project" and "Family tier $12/mo SaaS" don't fit together. Pick one. ([`commercial.md`](commercial.md))

@@ -76,7 +76,9 @@ export function useSessionNotifications() {
           title: bellTitle(bell),
           body: "",
           schedule: { at: new Date(bell.atMs), allowWhileIdle: true },
+          channelId: "tada_bells",
           sound: soundName(bell.soundUrl),
+          smallIcon: "ic_stat_icon_config_sample",
           extra: { sessionId, kind: bell.kind },
         };
       }),
