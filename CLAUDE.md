@@ -82,7 +82,7 @@ app/
 |---|---|
 | `app/server/db/schema.ts` | Database schema — edit here, then `db:generate` + `db:migrate` |
 | `app/utils/categoryDefaults.ts` | Ontology: categories, subcategories, emojis, colours |
-| `app/plugins/api-client.client.ts` | Global `$fetch` override: bakes in `baseURL` + `credentials:"include"` for Capacitor; drives IndexedDB offline cache |
+| `app/plugins/api-client.client.ts` | Global `$fetch` override: intercepts `/api/` calls to prepend `https://tada.living` and add `credentials:"include"`; drives IndexedDB offline cache. **See Capacitor fetch rules below before editing.** |
 | `app/composables/useEntryEngine.ts` | Entry CRUD (create, read, update, delete) |
 | `app/composables/useEntrySave.ts` | Voice/batch entry creation flow |
 | `app/layouts/default.vue` | Main nav layout |
@@ -173,6 +173,30 @@ Windows pastes the printed commands (`$env:CAP_SERVER_URL=...` + `cap sync` + `i
 - API base: `https://tada.living` — baked in at `nuxt generate` time via `NUXT_PUBLIC_API_BASE_URL`
 - Cross-origin credential flow: `SameSite=None; Secure` cookies + `credentials:"include"` fetch + `Access-Control-Allow-Credentials: true`
 - `setAcceptThirdPartyCookies(true)` set in `MainActivity.java`
+
+### Capacitor fetch architecture — critical rules
+
+**Never set a global `baseURL` on `$fetch.create()`.**
+
+The WebView origin is `app.tada.living` and the API server is `tada.living`. The temptation is to do `$fetch.create({ baseURL: "https://tada.living" })` globally, but this routes **all** `$fetch` calls — including Nuxt-internal `/_nuxt/builds/meta/` manifest checks — to `tada.living` instead of the local bundle. Once CORS is fixed for those paths the manifest fetch succeeds, but its build ID differs from the baked bundle, and **Nuxt enters a reload loop that freezes the UI** (buttons respond to touch but navigation never fires).
+
+The correct pattern, enforced in `api-client.client.ts`:
+```ts
+$fetch.create({
+  onRequest({ request, options }) {
+    const url = typeof request === "string" ? request : String(request);
+    if (apiBase && url.startsWith("/api/")) {
+      options.baseURL = apiBase;       // only API calls go to tada.living
+      options.credentials = "include"; // cross-origin session cookie
+    }
+    // /_nuxt/* stays same-origin → app.tada.living (the local bundle)
+  },
+})
+```
+
+**`experimental.appManifest: false` is set in `nuxt.config.ts`** — the app manifest check is meaningless for a baked Capacitor bundle and was the trigger for the reload loop. Do not re-enable it.
+
+**IndexedDB writes must be fire-and-forget** — `IDBTransaction.oncomplete` can silently hang on some Android WebView versions. Always use `void cachePut(...).catch(() => {})`, never `await cachePut(...)`. If `cachePut` is awaited inside `onResponse`, the entire `$fetch` call hangs and any page that waits on the result shows a spinner forever.
 
 ## CI Pipeline (`.github/workflows/ci.yml`)
 
