@@ -9,14 +9,43 @@
 import { Capacitor } from "@capacitor/core";
 import { PushNotifications } from "@capacitor/push-notifications";
 
-export function useNativePush() {
-  const isNative = Capacitor.isNativePlatform();
+const isNative = Capacitor.isNativePlatform();
 
+// Module-level singleton state — shared across every call to useNativePush(),
+// since the underlying native listeners are global to the WebView and must
+// only be attached once (re-attaching on every subscribe() call stacks up
+// duplicate listeners that misdeliver events to stale callbacks).
+const isSubscribed = ref(false);
+const isLoading = ref(false);
+const error = ref<string | null>(null);
+const currentToken = ref<string | null>(null);
+
+let listenersAttached = false;
+// The "registration" event only fires once per actual FCM token generation —
+// calling register() again on an already-registered device does not
+// reliably refire it. Each in-flight subscribe() call parks its resolver
+// here so whichever event fires next (even from a stale call) can settle it.
+let pendingResolve: ((token: string | null) => void) | null = null;
+
+function ensureListeners(): void {
+  if (!isNative || listenersAttached) return;
+  listenersAttached = true;
+
+  void PushNotifications.addListener("registration", (t) => {
+    currentToken.value = t.value;
+    localStorage.setItem("fcm-token", t.value);
+    pendingResolve?.(t.value);
+    pendingResolve = null;
+  });
+
+  void PushNotifications.addListener("registrationError", () => {
+    pendingResolve?.(null);
+    pendingResolve = null;
+  });
+}
+
+export function useNativePush() {
   const isSupported = isNative;
-  const isSubscribed = ref(false);
-  const isLoading = ref(false);
-  const error = ref<string | null>(null);
-  const currentToken = ref<string | null>(null);
 
   // Restore persisted token on mount so isSubscribed reflects reality
   onMounted(() => {
@@ -32,6 +61,7 @@ export function useNativePush() {
     if (!isNative) return;
     isLoading.value = true;
     error.value = null;
+    ensureListeners();
 
     try {
       const perm = await PushNotifications.requestPermissions();
@@ -42,21 +72,23 @@ export function useNativePush() {
 
       await PushNotifications.register();
 
-      // The token arrives asynchronously via the "registration" event.
-      // We set up a one-shot listener and wait for it (or timeout).
-      const token = await new Promise<string | null>((resolve) => {
-        const timeout = setTimeout(() => resolve(null), 10_000);
+      // Reuse an already-known token instead of waiting on a native
+      // "registration" event that may never fire again for this device.
+      let token = currentToken.value ?? localStorage.getItem("fcm-token");
 
-        void PushNotifications.addListener("registration", (t) => {
-          clearTimeout(timeout);
-          resolve(t.value);
-        });
+      if (!token) {
+        token = await new Promise<string | null>((resolve) => {
+          const timeout = setTimeout(() => {
+            pendingResolve = null;
+            resolve(null);
+          }, 10_000);
 
-        void PushNotifications.addListener("registrationError", () => {
-          clearTimeout(timeout);
-          resolve(null);
+          pendingResolve = (t) => {
+            clearTimeout(timeout);
+            resolve(t);
+          };
         });
-      });
+      }
 
       if (!token) {
         error.value = "Failed to obtain FCM token";
@@ -93,8 +125,9 @@ export function useNativePush() {
         }).catch(() => {}); // Best-effort — don't block UI on network failure
       }
 
-      localStorage.removeItem("fcm-token");
-      currentToken.value = null;
+      // Keep the token cached — the underlying FCM registration doesn't
+      // change just because the user toggled the UI off, and re-subscribing
+      // needs it to avoid waiting on a native event that won't refire.
       isSubscribed.value = false;
     } catch (err: unknown) {
       error.value = err instanceof Error ? err.message : "Failed to disable push notifications";

@@ -15,9 +15,14 @@ const {
   isSupported: nativePushSupported,
   isSubscribed: nativePushSubscribed,
   isLoading: nativePushLoading,
+  error: nativePushError,
   subscribe: nativePushSubscribe,
   unsubscribe: nativePushUnsubscribe,
 } = useNativePush();
+
+watch(nativePushError, (message) => {
+  if (message) showError(message);
+});
 
 definePageMeta({
   layout: "default",

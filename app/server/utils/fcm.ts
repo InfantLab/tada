@@ -115,7 +115,7 @@ export async function sendFcmNotification(message: FcmMessage): Promise<void> {
           data: message.data,
           android: {
             notification: {
-              icon: "ic_stat_icon_config_sample",
+              icon: "ic_stat_notify",
               color: "#10b981",
               channel_id: "tada_push",
             },
