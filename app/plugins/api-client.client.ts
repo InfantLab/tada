@@ -1,17 +1,10 @@
 import {
   isCacheable,
-  get as cacheGet,
   put as cachePut,
   invalidatePrefix,
   stripOrigin,
 } from "~/utils/apiCache";
-
-export class OfflineWriteError extends Error {
-  code = "OFFLINE_WRITE" as const;
-  constructor(method: string, path: string) {
-    super(`Offline — ${method} ${path} will need to wait for connection.`);
-  }
-}
+import { createOfflineAwareFetch, flushQueue } from "~/utils/offlineFetch";
 
 function normaliseBaseUrl(url: string): string {
   const trimmed = url.trim().replace(/\/+$/, "");
@@ -37,7 +30,7 @@ export default defineNuxtPlugin(() => {
 
     console.log("[TADA] api-client plugin init, apiBase:", apiBase || "(same-origin)");
 
-    (globalThis as unknown as { $fetch: typeof $fetch }).$fetch = $fetch.create({
+    const baseFetch = $fetch.create({
       // IMPORTANT: no global baseURL here. Setting baseURL globally makes ALL
       // $fetch calls (including Nuxt-internal /_nuxt/ manifest + payload fetches)
       // go to tada.living instead of the local Capacitor bundle at app.tada.living.
@@ -68,20 +61,31 @@ export default defineNuxtPlugin(() => {
           // Cache failures must never break the response path.
         }
       },
-
-      async onResponseError({ request, response, options }) {
-        try {
-          const method = String(options.method ?? "GET");
-          const url = typeof request === "string" ? request : String(request);
-          if (response.status >= 500 && isCacheable(url, method)) {
-            const hit = await cacheGet(url);
-            if (hit) (response as { _data: unknown })._data = hit.body;
-          }
-        } catch {
-          // Cache failures must never break the error path.
-        }
-      },
     });
+
+    (globalThis as unknown as { $fetch: typeof $fetch }).$fetch = Object.assign(
+      createOfflineAwareFetch(baseFetch),
+      baseFetch,
+    ) as typeof $fetch;
+
+    async function runFlush() {
+      const { synced, dropped } = await flushQueue(baseFetch);
+      if (synced > 0) {
+        useToast().success(
+          `Synced ${synced} offline ${synced === 1 ? "entry" : "entries"}`,
+        );
+      }
+      if (dropped > 0) {
+        useToast().error(
+          `${dropped} offline ${dropped === 1 ? "entry" : "entries"} couldn't be synced`,
+        );
+      }
+    }
+
+    if (typeof window !== "undefined") {
+      window.addEventListener("online", () => void runFlush());
+    }
+    void runFlush();
 
     console.log("[TADA] api-client plugin ready");
   } catch (err) {

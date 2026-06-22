@@ -27,6 +27,7 @@ import {
   parseNaturalLanguage,
   type ParsedEntry,
 } from "~/utils/naturalLanguageParser";
+import { OfflineWriteError } from "~/utils/offlineWriteError";
 
 // =============================================================================
 // Types
@@ -140,6 +141,11 @@ export function useEntryEngine() {
       });
       return null;
     } catch (err) {
+      if (err instanceof OfflineWriteError) {
+        toast.warning("Saved offline — will sync when you're back online");
+        return null;
+      }
+
       const message = err instanceof Error ? err.message : "Unknown error";
       error.value = message;
 

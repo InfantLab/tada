@@ -18,7 +18,7 @@
  */
 
 const DB_NAME = "tada-api-cache";
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORE = "responses";
 const DEFAULT_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -46,6 +46,12 @@ function openDb(): Promise<IDBDatabase | null> {
       const db = req.result;
       if (!db.objectStoreNames.contains(STORE)) {
         db.createObjectStore(STORE, { keyPath: "url" });
+      }
+      // Shared DB with writeQueue.ts — both modules must agree on a single
+      // version and create both stores, since whichever module opens the
+      // DB first runs the upgrade for both.
+      if (!db.objectStoreNames.contains("pendingWrites")) {
+        db.createObjectStore("pendingWrites", { keyPath: "id" });
       }
     };
     req.onsuccess = () => resolve(req.result);

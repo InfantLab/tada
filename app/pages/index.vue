@@ -2,6 +2,9 @@
 // Timeline page - the main view showing all entries chronologically
 // Shows landing page for unauthenticated users
 
+import { isNetworkError } from "~/utils/networkError";
+import { LAST_AUTHENTICATED_KEY } from "~/utils/authState";
+
 definePageMeta({
   layout: "default",
   auth: false, // Allow public access - we handle auth check manually
@@ -17,8 +20,18 @@ onMounted(async () => {
       user: { id: string; username: string } | null;
     }>("/api/auth/session");
     isAuthenticated.value = !!response.user;
-  } catch {
-    isAuthenticated.value = false;
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem(LAST_AUTHENTICATED_KEY, String(isAuthenticated.value));
+    }
+  } catch (err) {
+    // A network error (offline) doesn't mean the user logged out — trust
+    // the last confirmed auth state instead of showing the landing page,
+    // which is what cold-opening the app in airplane mode used to do.
+    const lastKnown =
+      typeof localStorage !== "undefined"
+        ? localStorage.getItem(LAST_AUTHENTICATED_KEY)
+        : null;
+    isAuthenticated.value = isNetworkError(err) && lastKnown === "true";
   } finally {
     isCheckingAuth.value = false;
   }

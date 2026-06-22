@@ -4,6 +4,9 @@
  * Allows public pages (login, landing, legal, blog)
  */
 
+import { isNetworkError } from "~/utils/networkError";
+import { LAST_AUTHENTICATED_KEY } from "~/utils/authState";
+
 const publicPaths = ["/", "/login", "/register", "/privacy", "/terms", "/dpa", "/help", "/feedback", "/verify-email", "/debug-auth"];
 const publicPrefixes = ["/blog", "/api/v1"];
 
@@ -24,10 +27,26 @@ export default defineNuxtRouteMiddleware(async (to) => {
       user: { id: string; username: string; timezone: string } | null;
     }>("/api/auth/session");
     if (!response.user) {
+      if (typeof localStorage !== "undefined") {
+        localStorage.setItem(LAST_AUTHENTICATED_KEY, "false");
+      }
       return navigateTo(`/login?redirect=${encodeURIComponent(to.path)}`);
     }
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem(LAST_AUTHENTICATED_KEY, "true");
+    }
   } catch (error) {
-    // If session check fails, redirect to login
+    // A network error (offline) doesn't mean the user logged out — trust
+    // the last confirmed auth state instead of bouncing to /login, which
+    // is itself unreachable offline. Only a real "not logged in" response
+    // (handled above) or no prior signal at all falls back to redirecting.
+    if (
+      isNetworkError(error) &&
+      typeof localStorage !== "undefined" &&
+      localStorage.getItem(LAST_AUTHENTICATED_KEY) === "true"
+    ) {
+      return;
+    }
     console.error("Auth middleware error:", error);
     return navigateTo(`/login?redirect=${encodeURIComponent(to.path)}`);
   }

@@ -11,6 +11,7 @@
 
 import type { Entry } from "~/server/db/schema";
 import { resolveEmojiForNewEntry } from "~/utils/categoryDefaults";
+import { OfflineWriteError } from "~/utils/offlineWriteError";
 
 export interface EntryData {
   // Required for creation
@@ -109,7 +110,7 @@ export interface UseEntrySaveReturn {
 }
 
 export const useEntrySave = (): UseEntrySaveReturn => {
-  const { error: showError, success: showSuccess } = useToast();
+  const { error: showError, success: showSuccess, warning: showWarning } = useToast();
   const { preferences } = usePreferences();
   const router = useRouter();
 
@@ -190,6 +191,10 @@ export const useEntrySave = (): UseEntrySaveReturn => {
 
       return entry;
     } catch (err) {
+      if (err instanceof OfflineWriteError) {
+        showWarning("Saved offline — will sync when you're back online");
+        return null;
+      }
       console.error("Failed to create voice entry:", err);
       const message =
         err instanceof Error ? err.message : "Failed to save journal entry";
@@ -218,6 +223,7 @@ export const useEntrySave = (): UseEntrySaveReturn => {
 
     const created: Entry[] = [];
     const failed: string[] = [];
+    let savedOffline = 0;
 
     try {
       // Create each tada sequentially to maintain order
@@ -251,6 +257,10 @@ export const useEntrySave = (): UseEntrySaveReturn => {
           });
           created.push(entry);
         } catch (err) {
+          if (err instanceof OfflineWriteError) {
+            savedOffline++;
+            continue;
+          }
           console.error(`Failed to create tada "${tada.title}":`, err);
           failed.push(tada.title);
         }
@@ -262,6 +272,12 @@ export const useEntrySave = (): UseEntrySaveReturn => {
           options.successMessage ||
           `${created.length} tada${created.length !== 1 ? "s" : ""} saved! 🎯`;
         showSuccess(message);
+      }
+
+      if (savedOffline > 0) {
+        showWarning(
+          `${savedOffline} tada${savedOffline !== 1 ? "s" : ""} saved offline — will sync when you're back online`,
+        );
       }
 
       // Show warning if some failed
