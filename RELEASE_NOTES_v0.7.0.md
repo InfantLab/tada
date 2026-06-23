@@ -13,7 +13,8 @@ The headline release for Android. Ta-Da! is now a proper native Android app via 
 Ta-Da! ships as a native Android APK wrapping the existing Nuxt frontend. The same codebase runs everywhere — web, PWA, and native Android — with the native layer adding the capabilities that a browser tab simply cannot provide.
 
 - Install from Google Play (closed testing) or sideload the debug APK
-- Full offline read access with IndexedDB cache
+- Full offline read access with IndexedDB cache — opening the app with no signal shows your existing data instead of bouncing to login
+- Writes made offline (e.g. finishing a meditation session) queue locally and sync automatically once you're back online
 - Session auth via `SameSite=None; Secure` cookies, working cross-origin between the WebView (`app.tada.living`) and the API server (`tada.living`)
 
 ### Session Bells in the Background
@@ -21,7 +22,7 @@ Ta-Da! ships as a native Android APK wrapping the existing Nuxt frontend. The sa
 **This was the primary reason for building the native app.** When a meditation or focus session is running and you lock your phone or switch apps, the interval bells now fire reliably.
 
 - On native Android: bells are scheduled as OS-level local notifications via `@capacitor/local-notifications` with `allowWhileIdle: true`, which fires them even during Android Doze mode
-- Bell sounds (bell, chime, cymbal, gong, gong2, twinkle) are bundled in the APK
+- Bell sounds (bell, chime, cymbal, gong, gong2, twinkle) are bundled in the APK, each on its own notification channel so the right sound always plays
 - On web/PWA: the existing service worker scheduling is unchanged
 
 ### Native Push Notifications (FCM)
@@ -29,9 +30,10 @@ Ta-Da! ships as a native Android APK wrapping the existing Nuxt frontend. The sa
 Weekly rhythm celebrations and mid-week encouragements now reach you as native Android notifications, not just in-app banners or email.
 
 - Firebase Cloud Messaging (FCM) integration via a zero-dependency JWT implementation — no `firebase-admin` bundle bloat
-- Settings → Push notifications toggle on Android requests FCM permission and registers your device token
+- Settings → Push notifications toggle on Android requests FCM permission and registers your device token; toggling off and back on reuses the existing registration rather than re-prompting
 - Server delivers to both FCM (native) and VAPID (web PWA) subscribers in parallel
 - Token lifecycle managed: expired/unregistered tokens are auto-disabled after 410 responses
+- Surfaces a clear error if registration fails (e.g. permission denied) instead of leaving the toggle in a confusing state
 
 ### In-App Text Size Control
 
@@ -90,12 +92,12 @@ Full single-line JSON of the Firebase service account private key. Add to CapRov
 - **Apple Health / Health Connect** — meditation minutes, both directions
 - **Google Play open beta** — once 12 closed testers have run for 14 days
 - **iOS** — pending Apple Developer account ($99/yr); architecture is already in place
-- **Full offline entry queue** — IndexedDB-backed write queue, background sync, conflict handling
+- **Richer offline conflict handling** — basic write queueing now works; optimistic-update UI and conflict resolution on reconnect are still open
 
 ---
 
 ## Known Limitations
 
 - iOS not yet supported (same Capacitor codebase; blocked on Apple Developer cost)
-- Bell sounds in background notifications use the FCM default sound channel on first install; a dedicated `tada_push` notification channel will be created on next release
 - Text size preference does not sync across devices (stored in device localStorage only)
+- Tapping a delivered push notification opens the app but doesn't deep-link to `/rhythms`, even though the FCM payload carries the target URL — no `pushNotificationActionPerformed` listener wired up yet

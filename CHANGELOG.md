@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-06-22
+
+### Theme: Native Android
+
+Ta-Da! ships as a native Android app via Capacitor, with reliable background session bells and native push notifications. Full details in [RELEASE_NOTES_v0.7.0.md](RELEASE_NOTES_v0.7.0.md).
+
+### Added
+
+- **Native Android app** wrapping the existing Nuxt frontend — same codebase across web, PWA, and native Android
+- **Session bells fire reliably in the background**: OS-level local notifications via `@capacitor/local-notifications` (`allowWhileIdle: true`), surviving Doze mode and locked screens. One notification channel per bell sound (bell, chime, cymbal, gong, gong2, twinkle) so the right sound always plays.
+- **Native push notifications (FCM)**: weekly rhythm celebrations and encouragements now reach Android as system notifications, not just in-app banners or email. Zero-dependency JWT-based FCM v1 implementation (no `firebase-admin`).
+- **In-app text size control**: Settings → Appearance, four steps (Compact → X-Large), persists across sessions
+- New `fcm_tokens` table and `POST`/`DELETE /api/push/fcm-token` endpoints
+
+### Fixed
+
+- **FCM push notifications couldn't be re-enabled after being toggled off**: `subscribe()` attached fresh native listeners on every call instead of once, and `unsubscribe()` discarded the cached device token — so re-subscribing waited indefinitely on a native `registration` event that FCM doesn't reliably refire for an already-registered device. Listeners are now a module-level singleton; a known token is reused instead.
+- **Push notification errors failed silently**: the Settings toggle gave no feedback when registration failed. Errors now surface as a toast.
+- **Missing notification icon**: both the FCM payload and local-notification config referenced `ic_stat_icon_config_sample`, a Capacitor documentation placeholder that was never actually created. Replaced with a real status-bar icon derived from the app mark.
+- **App version display was stale**: `package.json` version and the Android `versionCode`/`versionName` had drifted out of sync with actual commits, so the version shown in Settings didn't reliably indicate what was actually installed. Both now move together.
+- **Airplane-mode / offline cold-open bug**: a connectivity failure was treated the same as "logged out," bouncing users to the login page even when the offline IndexedDB cache had their data. Offline writes (e.g. finishing a meditation session) also silently failed instead of queueing. Auth now trusts the last confirmed session state on a network error; writes queue in IndexedDB and replay FIFO on reconnect.
+
 ## [0.6.4] - 2026-04-21
 
 ### Added

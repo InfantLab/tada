@@ -2,7 +2,7 @@
 
 What's coming next. For what already shipped, see [CHANGELOG.md](../CHANGELOG.md) and the release notes.
 
-**Current Version:** v0.6.1 (March 2026) | **Next:** v0.7.0
+**Current Version:** v0.6.1 (March 2026) | **In progress:** v0.7.0 (Android closed testing — not yet on Google Play)
 
 ---
 
@@ -22,10 +22,10 @@ What's coming next. For what already shipped, see [CHANGELOG.md](../CHANGELOG.md
 
 ## Upcoming
 
-| Version    | Theme                                | Target  |
-| ---------- | ------------------------------------ | ------- |
-| **v0.7.0** | Native Android + PWA Hardening       | 2026 Q2 |
-| **v0.8.0** | Features & Integrations              | 2026+   |
+| Version    | Theme                                | Target  | Status                                                       |
+| ---------- | ------------------------------------ | ------- | -------------------------------------------------------------- |
+| **v0.7.0** | Native Android + PWA Hardening       | 2026 Q2 | 🚧 Built, debug-signed, FCM/bells/offline-sync working — pending Google Play closed testing |
+| **v0.8.0** | Features & Integrations              | 2026+   |                                                                |
 
 ### Candidate features for v0.8.0+ (not committed)
 
