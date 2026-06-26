@@ -468,24 +468,23 @@ export function useTranscription(): UseTranscriptionReturn {
       headers["x-user-api-key"] = userApiKey.ciphertext;
     }
 
-    // Call server-side transcription endpoint
-    const response = await fetch("/api/voice/transcribe", {
-      method: "POST",
-      headers,
-      body: formData,
-    });
-
-    progress.value = 80;
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
+    // Call server-side transcription endpoint.
+    // Must use $fetch (not native fetch) so the api-client plugin can rewrite
+    // the URL to https://tada.living in the Capacitor WebView.
+    let data: { text: string; provider: string };
+    try {
+      data = await $fetch<{ text: string; provider: string }>(
+        "/api/voice/transcribe",
+        { method: "POST", headers, body: formData },
+      );
+    } catch (err) {
+      const fetchErr = err as { data?: { statusMessage?: string }; status?: number };
       const errorMessage =
-        (errorData as { statusMessage?: string }).statusMessage ||
-        `Server error: ${response.status}`;
+        fetchErr.data?.statusMessage || `Server error: ${fetchErr.status ?? "unknown"}`;
       throw new Error(errorMessage);
     }
 
-    const data = (await response.json()) as { text: string; provider: string };
+    progress.value = 80;
 
     return {
       text: data.text.trim(),

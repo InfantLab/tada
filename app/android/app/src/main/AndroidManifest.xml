@@ -48,6 +48,11 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Microphone access for voice entry recording -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- Required by Capacitor's WebView onPermissionRequest alongside RECORD_AUDIO;
+         without it Android denies the combined permission check and getUserMedia fails -->
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <!-- Allow checking connectivity for offline detection (Phase 2.5 cache layer) -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!-- Notifications for session bells (Phase 4.1) — Android 13+ requires runtime grant -->
