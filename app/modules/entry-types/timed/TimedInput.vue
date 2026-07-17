@@ -723,6 +723,7 @@ function beginSession() {
   // Persist session draft for crash recovery
   persistDraft({
     version: 1,
+    sessionId: sessionId.value,
     sessionStartTime: sessionStartTime.value,
     elapsedSeconds: 0,
     wasPaused: false,
@@ -1066,6 +1067,11 @@ function handleRecoveryResume() {
   const draft = recoveredDraft.value;
   if (!draft) return;
 
+  // The crashed session's own sessionId is about to be replaced below, so
+  // cancel its native alarms now — otherwise they're orphaned in AlarmManager
+  // and fire alongside the newly-scheduled bells (duplicate bells).
+  if (draft.sessionId) void notifications.cancel(draft.sessionId);
+
   // Restore session configuration from draft
   timerMode.value = draft.timerMode;
   selectedCategory.value = draft.selectedCategory;
@@ -1101,7 +1107,7 @@ function handleRecoveryResume() {
   sessionId.value = newSessionId();
 
   // Re-persist and start updates
-  persistDraft({ ...draft, lastSeenAt: Date.now() });
+  persistDraft({ ...draft, sessionId: sessionId.value, lastSeenAt: Date.now() });
   startPeriodicUpdates(
     () => elapsedSeconds.value,
     () => isPaused.value,
@@ -1119,6 +1125,10 @@ function handleRecoveryResume() {
 function handleRecoverySave() {
   const draft = recoveredDraft.value;
   if (!draft) return;
+
+  // Cancel the crashed session's native alarms — saveSession() below never
+  // adopts the old sessionId, so it would otherwise be unreachable.
+  if (draft.sessionId) void notifications.cancel(draft.sessionId);
 
   // Restore configuration so saveSession works correctly
   timerMode.value = draft.timerMode;
@@ -1146,6 +1156,8 @@ function handleRecoverySave() {
 }
 
 function handleRecoveryDiscard() {
+  const draft = recoveredDraft.value;
+  if (draft?.sessionId) void notifications.cancel(draft.sessionId);
   clearDraft();
 }
 

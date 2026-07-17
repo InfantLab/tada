@@ -55,11 +55,31 @@ export function useSessionNotifications() {
   // (Falls back to getPending scan if this composable instance is fresh.)
   const sessionIds = new Map<string, number[]>();
 
+  // Android 12+ silently downgrades allowWhileIdle alarms to inexact/Doze-batched
+  // ones unless the user has granted "Alarms & reminders". Check once per app
+  // session and send the user to the system settings screen if it's off.
+  let exactAlarmsChecked = false;
+  async function ensureExactAlarms(): Promise<void> {
+    if (exactAlarmsChecked) return;
+    exactAlarmsChecked = true;
+    try {
+      const { exact_alarm } = await LocalNotifications.checkExactNotificationSetting();
+      if (exact_alarm !== "granted") {
+        await LocalNotifications.changeExactNotificationSetting();
+      }
+    } catch {
+      // Plugin/OS version without this API (pre-Android 12) — exact alarms
+      // are unrestricted there, nothing to do.
+    }
+  }
+
   // ── Native path ──────────────────────────────────────────────────────────
 
   async function scheduleNative(sessionId: string, bells: SessionBell[]): Promise<void> {
     const perm = await LocalNotifications.requestPermissions();
     if (perm.display !== "granted") return;
+
+    await ensureExactAlarms();
 
     await cancelNative(sessionId);
 
@@ -69,7 +89,7 @@ export function useSessionNotifications() {
 
     const ids: number[] = [];
     await LocalNotifications.schedule({
-      notifications: future.map((bell, i) => {
+      notifications: future.map((bell) => {
         const id = bellId(sessionId, bells.indexOf(bell));
         ids.push(id);
         return {

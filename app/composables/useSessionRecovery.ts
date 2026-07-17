@@ -19,6 +19,7 @@ const PERSIST_INTERVAL_MS = 5_000; // 5 seconds
 
 export interface SessionDraft {
   version: 1;
+  sessionId: string;
   sessionStartTime: number;
   elapsedSeconds: number;
   wasPaused: boolean;

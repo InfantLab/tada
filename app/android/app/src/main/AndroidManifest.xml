@@ -57,6 +57,10 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!-- Notifications for session bells (Phase 4.1) — Android 13+ requires runtime grant -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Exact alarm scheduling for session bells. Without this, Android 12+ silently
+         downgrades LocalNotifications' allowWhileIdle schedules to inexact alarms that
+         Doze can batch/delay by several minutes while the screen is locked. -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <!-- Wake the screen for session timing (Phase 4.3) -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <!-- Active-session foreground service (Phase 4.2). FGS_SPECIAL_USE is the
